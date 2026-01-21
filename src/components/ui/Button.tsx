@@ -1,52 +1,74 @@
-import { TouchableOpacity } from "react-native";
-import { clsx } from "clsx";
-import { Typography } from "@/src/components/ui";
+import { Animated, Pressable, Text } from "react-native";
+import { twMerge } from "tailwind-merge";
 
-type ButtonVariant = "primary" | "secondary" | "accent";
-type ButtonSize = "sm" | "md";
-
-type ButtonProps = {
+interface CustomBtn {
   title: string;
-  onPress?: () => void;
-  disabled?: boolean;
-  variant?: ButtonVariant;
+  onPress: () => void;
+  size?: "sm" | "md";
+  variant?: "primary" | "secondary" | "clear";
   fullWidth?: boolean;
-  size?: ButtonSize;
-};
+  disabled?: boolean;
+}
 
-export function Button({
+export const Button: React.FC<CustomBtn> = ({
   title,
   onPress,
-  disabled = false,
-  variant = "primary",
-  fullWidth,
   size = "md",
-}: ButtonProps) {
+  variant = "primary",
+  fullWidth = false,
+  disabled = false,
+}) => {
+  const backgroundColorRef = new Animated.Value(0);
+
+  const handlePress = () => {
+    Animated.timing(backgroundColorRef, {
+      toValue: 1,
+      duration: 60,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleRelease = () => {
+    Animated.timing(backgroundColorRef, {
+      toValue: 0,
+      duration: 60,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const backgroundColor = backgroundColorRef.interpolate({
+    inputRange: [0, 1],
+    outputRange: [styles.variants[variant].from, styles.variants[variant].to],
+  });
+
   return (
-    <TouchableOpacity
+    <Pressable
+      onPressIn={handlePress}
+      onPressOut={handleRelease}
       onPress={onPress}
-      disabled={disabled}
-      className={clsx(
-        styles.base,
-        styles.sizes[size],
-        fullWidth && styles.fullWidth,
-        styles.variants[variant],
-        disabled && styles.disabled,
-      )}
     >
-      <Typography
-        weight="regular"
-        className={clsx(
-          styles.textBase,
-          styles.textVariants[variant],
-          disabled && styles.textDisabled,
+      <Animated.View
+        className={twMerge(
+          styles.base,
+          styles.sizes[size],
+          fullWidth && styles.fullWidth,
+          disabled && styles.disabled,
         )}
+        style={{ backgroundColor }}
       >
-        {title}
-      </Typography>
-    </TouchableOpacity>
+        <Text
+          className={[
+            styles.textBase,
+            styles.textVariants[variant],
+            disabled && styles.textDisabled,
+          ].join(" ")}
+        >
+          {title}
+        </Text>
+      </Animated.View>
+    </Pressable>
   );
-}
+};
 
 const styles = {
   base: "items-center justify-center rounded-medium",
@@ -56,16 +78,25 @@ const styles = {
   },
   fullWidth: "w-full",
   variants: {
-    primary: "bg-primary",
-    secondary: "bg-secondary",
-    accent: "bg-accent",
+    primary: {
+      from: "#000000",
+      to: "#3C3C3C",
+    },
+    secondary: {
+      from: "#E5E7EB",
+      to: "#D1D5DB",
+    },
+    clear: {
+      from: "transparent",
+      to: "rgba(0,0,0,0.06)",
+    },
   },
   disabled: "bg-secondary/50",
-  textBase: "text-body font-inter-semibold",
+  textBase: "font-inter-semibold text-body",
   textVariants: {
-    primary: "text-light",
+    primary: "text-secondary",
     secondary: "text-dark",
-    accent: "text-light",
+    clear: "text-primary",
   },
   textDisabled: "text-textDisabled",
 };

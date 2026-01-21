@@ -67,8 +67,8 @@ const styles = {
     },
 
     variants: {
-      primary: "text-grey-light",
-      secondary: "text-grey",
+      primary: "text-gray-light",
+      secondary: "text-gray",
       accent: "text-accent-azure",
       info: "text-accent",
       success: "text-accent-green",

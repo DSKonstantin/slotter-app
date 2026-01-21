@@ -5,3 +5,5 @@ export { Checkbox } from "./Checkbox";
 export { Typography } from "./Typography";
 export { Tag } from "./Tag";
 export { Badge } from "./Badge";
+export { IconButton } from "./IconButton";
+export { BottomModal } from "./BottomModal";

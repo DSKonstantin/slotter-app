@@ -1,19 +1,8 @@
 export const Routers = {
-  public: {
-    root: "/",
-  },
-
+  root: "/",
   auth: {
-    modal: {
-      root: "/(auth)/",
-      confirm: "/(auth)/confirm",
-      success: "/(auth)/success",
-    },
-  },
-
-  client: {
-    root: "/(client)",
-    home: "/(client)/home",
-    profile: "/(client)/profile",
+    root: "/(auth)",
+    login: "/(auth)/login",
+    register: "/(auth)/register",
   },
 } as const;

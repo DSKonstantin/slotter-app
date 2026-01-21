@@ -72,7 +72,7 @@ const styles = {
       accent: "text-accent-azure",
       success: "text-accent-green",
       warning: "text-accent-darkYellow",
-      default: "text-grey",
+      default: "text-gray",
       error: "text-accent-red",
     },
   },

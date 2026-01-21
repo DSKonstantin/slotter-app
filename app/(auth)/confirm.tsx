@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/otpConfirm";
 
-export default function Confirm() {
+export default function AuthConfirm() {
   const { phone } = useLocalSearchParams<{ phone?: string }>();
 
   return (

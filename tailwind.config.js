@@ -25,7 +25,7 @@ module.exports = {
       borderRadius: {
         small: "",
         medium: "25px",
-        large: "",
+        large: "36px",
       },
       lineHeight: {},
       boxShadow: {},

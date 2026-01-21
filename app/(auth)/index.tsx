@@ -1,51 +1,15 @@
-import { Button, View } from "react-native";
-import { useState } from "react";
-import { router } from "expo-router";
-
-import { Tabs } from "@/src/components/ui";
-import { RegisterForm } from "@/src/components/auth/registerForm";
-import { LoginForm } from "@/src/components/auth/loginForm";
+import AuthHeader from "@/src/components/auth/header";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AuthHome from "@/src/components/auth/home";
+import { View } from "react-native";
 
 export default function AuthIndex() {
-  const [tab, setTab] = useState<"login" | "register">("register");
-
   return (
-    <View className="flex-1 px-5 pt-10">
-      <Tabs
-        value={tab}
-        options={[
-          { label: "Войти", value: "login" },
-          { label: "Зарегистрироваться", value: "register" },
-        ]}
-        onChange={setTab}
-      />
-
-      {tab === "register" && (
-        <RegisterForm
-          onSubmit={({ phone }) =>
-            router.push({
-              pathname: "/(auth)/confirm",
-              params: { phone },
-            })
-          }
-        />
-      )}
-
-      {tab === "login" && (
-        <LoginForm
-          onSubmit={({ phone }) =>
-            router.push({
-              pathname: "/(auth)/confirm",
-              params: { phone },
-            })
-          }
-        />
-      )}
-
-      <Button
-        title="Открыть auth modal (test)"
-        onPress={() => router.push("/")}
-      />
-    </View>
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+      <View className="px-5">
+        <AuthHeader showBack={false} />
+      </View>
+      <AuthHome />
+    </SafeAreaView>
   );
 }
