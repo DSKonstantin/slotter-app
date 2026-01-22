@@ -3,6 +3,16 @@ export const Routers = {
   auth: {
     root: "/(auth)",
     login: "/(auth)/login",
+    verify: "/(auth)/verify",
+    enterCode: "/(auth)/enter-code",
     register: "/(auth)/register",
+    experience: "/(auth)/experience",
+    database: "/(auth)/database",
+    databaseSuccess: "/(auth)/database-success",
+    personalInformation: "/(auth)/personal-information",
+    service: "/(auth)/service",
+    schedule: "/(auth)/schedule",
+    notification: "/(auth)/notification",
+    link: "/(auth)/link",
   },
 } as const;

@@ -1,4 +1,4 @@
-import AuthHeader from "@/src/components/auth/header";
+import AuthHeader from "@/src/components/auth/layout/header";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthHome from "@/src/components/auth/home";
 import { View } from "react-native";

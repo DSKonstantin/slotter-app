@@ -1,4 +1,4 @@
-const colors = require("./src/styles/colors");
+const colors = require("./src/styles/colorsTailwind");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
       },
       letterSpacing: {},
       borderRadius: {
-        small: "",
+        small: "14px",
         medium: "25px",
         large: "36px",
       },

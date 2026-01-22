@@ -1,26 +1,38 @@
-import React from "react";
-import { TextInput, TextInputProps, View } from "react-native";
+import React, { ReactNode } from "react";
+import { TextInputProps } from "react-native";
 import { Controller, useFormContext } from "react-hook-form";
+import { Input } from "@/src/components/ui";
 
 type RHFTextFieldProps = {
   name: string;
+  label?: string;
+  startAdornment?: ReactNode;
+  endAdornment?: ReactNode;
 } & TextInputProps;
 
-export function RHFTextField({ name, ...other }: RHFTextFieldProps) {
+export function RHFTextField({
+  name,
+  label,
+  startAdornment,
+  endAdornment,
+  ...other
+}: RHFTextFieldProps) {
   const { control } = useFormContext();
 
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState: { error } }) => (
-        <View>
-          <TextInput
-            {...field}
-            className="border border-gray-300 rounded-xl px-4 py-3"
-            {...other}
-          />
-        </View>
+      render={({ field: { onChange, value }, fieldState: { error } }) => (
+        <Input
+          value={value}
+          onChangeText={onChange}
+          label={label}
+          error={error}
+          startAdornment={startAdornment}
+          endAdornment={endAdornment}
+          {...other}
+        />
       )}
     />
   );

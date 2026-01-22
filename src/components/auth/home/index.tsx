@@ -29,7 +29,7 @@ const AuthHome = () => {
           <Button
             title="Я тут впервые"
             variant="clear"
-            onPress={() => router.push(Routers.auth.register)}
+            onPress={() => router.push(Routers.auth.verify)}
           />
           <Button
             title="Войти в аккаунт"

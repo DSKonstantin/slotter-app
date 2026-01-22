@@ -7,3 +7,6 @@ export { Tag } from "./Tag";
 export { Badge } from "./Badge";
 export { IconButton } from "./IconButton";
 export { BottomModal } from "./BottomModal";
+export { Card } from "./Card";
+export { Avatar } from "./Avatar";
+export { Divider } from "./Divider";

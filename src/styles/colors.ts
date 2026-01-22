@@ -1,4 +1,4 @@
-module.exports = {
+export const colors = {
   primary: {
     DEFAULT: "#000000",
     dark: "#000000",
@@ -11,7 +11,6 @@ module.exports = {
     DEFAULT: "#222222",
     dark: "#222222",
   },
-
   background: {
     DEFAULT: "#F2F2F6",
   },
@@ -29,6 +28,10 @@ module.exports = {
   gray: {
     DEFAULT: "#8E8E93",
     light: "#D1D1D6",
+    muted: "#C7C7CC",
+    lighter: "#E5E5EA",
+    medium: "#AEAEB2",
+    separators: "#E6E6E6",
   },
   slate: {
     DEFAULT: "#1f2937",

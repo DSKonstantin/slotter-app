@@ -1,9 +1,8 @@
 import React from "react";
-import { AuthScreenLayout } from "@/src/components/auth/layout";
-import AuthHeader from "@/src/components/auth/header";
+import Register from "@/src/components/auth/register";
 
-const AuthRegister = () => {
-  return <AuthScreenLayout header={<AuthHeader />}></AuthScreenLayout>;
-};
+function AuthRegister() {
+  return <Register />;
+}
 
 export default AuthRegister;

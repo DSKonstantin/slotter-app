@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 type AuthScreenLayoutProps = {
   header?: ReactNode;
   children: ReactNode;

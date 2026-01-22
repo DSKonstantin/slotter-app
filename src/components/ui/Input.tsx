@@ -1,10 +1,12 @@
 import { ReactNode, useState } from "react";
 import { View, TextInput, Text, TextInputProps } from "react-native";
 import { twMerge } from "tailwind-merge";
+import { FieldError } from "react-hook-form";
+import { colors } from "@/src/styles/colors";
 
 type InputProps = {
   label?: string;
-  error?: string;
+  error?: FieldError | undefined;
   disabled?: boolean;
 
   startAdornment?: ReactNode;
@@ -48,8 +50,8 @@ export function Input({
             setFocused(false);
             props.onBlur?.(e);
           }}
-          className={styles.input}
-          placeholderTextColor="#8E8E93"
+          className={twMerge(styles.input)}
+          placeholderTextColor={colors.gray.muted}
         />
 
         {endAdornment && (
@@ -57,27 +59,30 @@ export function Input({
         )}
       </View>
 
-      {error && <Text className={styles.errorText}>{error}</Text>}
+      <View className={styles.errorContainer}>
+        {error && <Text className={styles.errorText}>{error?.message}</Text>}
+      </View>
     </View>
   );
 }
 
 const styles = {
-  label: "mb-1 text-gray text-caption",
+  label: "mb-2 font-inter-medium text-gray text-caption",
 
-  base: "flex-row items-center h-[48px] rounded-full px-4 bg-secondary border border-transparent",
+  base: "flex-row items-center h-[48px] rounded-small px-4 bg-secondary border border-transparent",
 
   focus: "border-accent",
 
-  error: "border-red-500",
+  error: "border-accent-red",
 
   disabled: "bg-gray-muted",
 
-  input: "flex-1 font-inter-regular text-body text-primary",
+  input: "flex-1 font-inter-regular text-primary text-[16px]",
 
   adornmentStart: "mr-2",
 
   adornmentEnd: "ml-2",
 
-  errorText: "mt-1 text-red-500 text-caption",
+  errorContainer: "min-h-[20px]",
+  errorText: "mt-[2px] text-accent-red text-caption",
 };

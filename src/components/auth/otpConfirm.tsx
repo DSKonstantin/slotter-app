@@ -1,5 +1,5 @@
-import { View, Text } from "react-native";
-import { useEffect, useState } from "react";
+import { View } from "react-native";
+import { useState } from "react";
 import Countdown from "react-countdown";
 import {
   CodeField,
@@ -8,16 +8,21 @@ import {
   useClearByFocusCell,
 } from "react-native-confirmation-code-field";
 
-import { Button } from "@/src/components/ui";
+import { Button, Typography } from "@/src/components/ui";
 
 type OtpConfirmProps = {
   length?: number;
-  onComplete?: (code: string) => void;
+  onChange: (value: string) => void;
+  onComplete?: (value: string) => void;
 };
 
 const RESEND_TIMEOUT = 30 * 1000;
 
-export function OtpConfirm({ length = 6, onComplete }: OtpConfirmProps) {
+export function OtpConfirm({
+  length = 6,
+  onChange,
+  onComplete,
+}: OtpConfirmProps) {
   const [value, setValue] = useState("");
   const [countdownKey, setCountdownKey] = useState(0);
 
@@ -27,12 +32,6 @@ export function OtpConfirm({ length = 6, onComplete }: OtpConfirmProps) {
     setValue,
   });
 
-  useEffect(() => {
-    if (value.length === length) {
-      onComplete?.(value);
-    }
-  }, [value, length, onComplete]);
-
   return (
     <>
       <CodeField
@@ -40,21 +39,30 @@ export function OtpConfirm({ length = 6, onComplete }: OtpConfirmProps) {
         {...props}
         value={value}
         autoFocus={true}
-        onChangeText={setValue}
+        onChangeText={(text) => {
+          setValue(text);
+          onChange(text);
+
+          if (text.length === length) {
+            onComplete?.(text);
+          }
+        }}
         cellCount={length}
         keyboardType="number-pad"
         textContentType="oneTimeCode"
+        rootStyle={{ gap: 16 }}
         renderCell={({ index, symbol, isFocused }) => (
           <View
             key={index}
             onLayout={getCellOnLayoutHandler(index)}
-            className={`h-12 w-12 items-center justify-center rounded-xl border ${
-              isFocused ? "border-sky-500" : "border-gray-300"
-            } bg-white`}
+            style={{ flex: 1, aspectRatio: 1 }}
+            className={`items-center justify-center rounded-xl border ${
+              isFocused ? "border-primary bg-gray-lighter" : "border-gray-muted"
+            }`}
           >
-            <Text className="text-lg">
+            <Typography className="text-lg">
               {symbol || (isFocused ? <Cursor /> : null)}
-            </Text>
+            </Typography>
           </View>
         )}
       />
@@ -64,12 +72,13 @@ export function OtpConfirm({ length = 6, onComplete }: OtpConfirmProps) {
         date={Date.now() + RESEND_TIMEOUT}
         renderer={({ seconds, completed }) =>
           !completed ? (
-            <Text className="mt-4 text-center text-sm text-gray-500">
+            <Typography className="mt-4 text-center text-caption text-gray">
               Отправить повторно через {seconds} сек
-            </Text>
+            </Typography>
           ) : (
             <View className="mt-4">
               <Button
+                size="sm"
                 title="Отправить код повторно"
                 onPress={() => setCountdownKey((k) => k + 1)}
               />
