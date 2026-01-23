@@ -1,9 +1,7 @@
 import React from "react";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { View } from "react-native";
-import { Card, Typography } from "@/src/components/ui";
-import Feather from "@expo/vector-icons/Feather";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import { Card, StSvg, Typography } from "@/src/components/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
@@ -27,9 +25,9 @@ const Experience = () => {
               router.push(Routers.auth.database);
             }}
             rightIcon={
-              <Feather name="chevron-right" size={24} color="#8E8E93" />
+              <StSvg name="Expand_right_light" size={24} color="#8E8E93" />
             }
-            leftIcon={<AntDesign name="star" size={24} color="black" />}
+            leftIcon={<StSvg name="Star_fill" size={24} color="black" />}
           />
           <Card
             title="Вёл запись вручную"
@@ -38,9 +36,9 @@ const Experience = () => {
               router.push(Routers.auth.database);
             }}
             rightIcon={
-              <Feather name="chevron-right" size={24} color="#8E8E93" />
+              <StSvg name="Expand_right_light" size={24} color="#8E8E93" />
             }
-            leftIcon={<AntDesign name="star" size={24} color="black" />}
+            leftIcon={<StSvg name="File_dock_fill" size={24} color="black" />}
           />
           <Card
             title="Только начинаю"
@@ -49,9 +47,9 @@ const Experience = () => {
               router.push(Routers.auth.personalInformation);
             }}
             rightIcon={
-              <Feather name="chevron-right" size={24} color="#8E8E93" />
+              <StSvg name="Expand_right_light" size={24} color="#8E8E93" />
             }
-            leftIcon={<AntDesign name="star" size={24} color="black" />}
+            leftIcon={<StSvg name="Blank_fill" size={24} color="black" />}
           />
         </View>
       </View>

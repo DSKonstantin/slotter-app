@@ -9,7 +9,7 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
-import { Typography } from "@/src/components/ui";
+import { StSvg, Typography } from "@/src/components/ui";
 import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
 
 type ServiceFormValues = {};
@@ -32,7 +32,18 @@ const Service = () => {
       <AuthScreenLayout
         header={<AuthHeader />}
         footer={
-          <AuthFooter title="Далее" onSubmit={methods.handleSubmit(onSubmit)} />
+          <AuthFooter
+            primary={{
+              title: "Сохранить",
+              onPress: methods.handleSubmit(onSubmit),
+            }}
+            secondary={{
+              title: "Пропустить",
+              onPress: () => {
+                router.push(Routers.auth.schedule);
+              },
+            }}
+          />
         }
       >
         <View className="mt-4">
@@ -40,15 +51,26 @@ const Service = () => {
         </View>
         <View className="mt-8 gap-2">
           <Typography weight="semibold" className="text-display mb-2">
-            Твоя визитка
+            Первая услуга
           </Typography>
           <Typography weight="medium" className="text-body text-gray">
-            Чтобы клиенты знали, к кому идут
+            Добавь самую популярную
           </Typography>
 
           <View className="gap-2 mt-9">
-            <RHFTextField name="name" label="Имя" placeholder="Иван" />
+            <RHFTextField name="name" label="Название" placeholder="Стрижка" />
           </View>
+        </View>
+        <View className="flex-row flex-1 mt-3 gap-3">
+          <RHFTextField name="name" label="Цена" placeholder="1 500 ₽" />
+          <RHFTextField
+            name="name"
+            label="Время"
+            placeholder="1 час"
+            endAdornment={
+              <StSvg name="Expand_down_light" size={24} color="#8E8E93" />
+            }
+          />
         </View>
       </AuthScreenLayout>
     </FormProvider>

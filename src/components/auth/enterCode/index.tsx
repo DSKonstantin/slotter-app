@@ -4,7 +4,7 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { View } from "react-native";
 import { Typography } from "@/src/components/ui";
-import { OtpConfirm } from "@/src/components/auth/otpConfirm";
+import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 
@@ -23,10 +23,10 @@ const EnterCode = () => {
       header={<AuthHeader />}
       footer={
         <AuthFooter
-          title="Далее"
-          disabled={code.length < 6}
-          onSubmit={() => {
-            onSubmit();
+          primary={{
+            title: "Далее",
+            disabled: code.length < 6,
+            onPress: () => onSubmit(),
           }}
         />
       }

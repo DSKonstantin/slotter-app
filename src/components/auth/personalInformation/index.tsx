@@ -4,7 +4,7 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
-import { Avatar, Divider, Typography } from "@/src/components/ui";
+import { Avatar, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -12,6 +12,7 @@ import { StepProgress } from "@/src/components/ui/StepProgress";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 
 type PersonalInformationFormValues = {};
 
@@ -20,7 +21,14 @@ const PersonalInformation = () => {
 
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
-    defaultValues: {},
+    defaultValues: {
+      name: "",
+      surname: "",
+      profession: "",
+      atHome: false,
+      online: false,
+      onRoad: false,
+    },
   });
 
   const onSubmit = (data: PersonalInformationFormValues) => {
@@ -33,7 +41,12 @@ const PersonalInformation = () => {
       <AuthScreenLayout
         header={<AuthHeader />}
         footer={
-          <AuthFooter title="Далее" onSubmit={methods.handleSubmit(onSubmit)} />
+          <AuthFooter
+            primary={{
+              title: "Далее",
+              onPress: methods.handleSubmit(onSubmit),
+            }}
+          />
         }
       >
         <View className="mt-4">
@@ -50,21 +63,13 @@ const PersonalInformation = () => {
           <View className="flex-1 items-center my-4">
             <Avatar
               size="xl"
-              fallbackIcon={
-                <MaterialCommunityIcons
-                  name="camera-party-mode"
-                  size={40}
-                  color="#8E8E93"
-                />
-              }
+              fallbackIcon={<StSvg name="Camera" size={40} color="#8E8E93" />}
             />
           </View>
 
           <View className="gap-2">
             <RHFTextField name="name" label="Имя" placeholder="Иван" />
-
             <RHFTextField name="surname" label="Фамилия" placeholder="Иванов" />
-
             <RHFTextField
               name="profession"
               label="Профессия"
@@ -75,10 +80,14 @@ const PersonalInformation = () => {
 
         <Divider />
 
-        <View className="mt-5">
-          <Typography weight="medium" className="text-gray text-caption">
-            Формат работы
-          </Typography>
+        <Typography weight="medium" className="text-gray text-caption mt-5">
+          Формат работы
+        </Typography>
+
+        <View className="mt-2 mb-5 gap-2">
+          <Item title="Дома/в студии" right={<RHFSwitch name="atHome" />} />
+          <Item title="Онлайн" right={<RHFSwitch name="online" />} />
+          <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
         </View>
 
         <RHFTextField

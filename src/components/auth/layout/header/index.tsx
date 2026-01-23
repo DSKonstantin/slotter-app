@@ -6,10 +6,8 @@ import {
   BottomModal,
   Button,
   Typography,
+  StSvg,
 } from "@/src/components/ui";
-import Fontisto from "@expo/vector-icons/Fontisto";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 type AuthHeaderProps = {
   showBack?: boolean;
@@ -28,9 +26,7 @@ export default function AuthHeader({
       <View className="flex-row items-center justify-between">
         {showBack ? (
           <IconButton
-            icon={
-              <Ionicons name="chevron-back-sharp" size={28} color="black" />
-            }
+            icon={<StSvg name="Expand_left" size={24} color="black" />}
             onPress={() => router.back()}
           />
         ) : (
@@ -39,7 +35,7 @@ export default function AuthHeader({
 
         {showSupport && (
           <IconButton
-            icon={<Fontisto name="headphone" size={28} color="black" />}
+            icon={<StSvg name="Headphones_fill" size={24} color="black" />}
             onPress={() => setSupportVisible(true)}
           />
         )}
@@ -58,12 +54,10 @@ export default function AuthHeader({
 
         <View className="flex-row justify-center items-center my-6">
           <IconButton
-            icon={<FontAwesome5 name="whatsapp" size={28} color="#37DB3A" />}
+            icon={<StSvg name="SocialWhatsApp" size={28} color="#37DB3A" />}
           />
           <IconButton
-            icon={
-              <FontAwesome5 name="telegram-plane" size={28} color="#37B5DB" />
-            }
+            icon={<StSvg name="SocialTelegram" size={24} color="#37B5DB" />}
           />
         </View>
 

@@ -1,25 +1,26 @@
+import * as Yup from "yup";
 import React from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { View } from "react-native";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { FormProvider, useForm } from "react-hook-form";
-import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Typography } from "@/src/components/ui";
 import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { phoneField } from "@/src/validation/fields/phone";
 
 type VerifyFormValues = {
   phone: string;
 };
 
-const Verify = () => {
-  const VerifySchema = Yup.object().shape({
-    phone: Yup.string().required("Введите номер телефона"),
-  });
+const VerifySchema = Yup.object().shape({
+  phone: phoneField,
+});
 
+const Verify = () => {
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
@@ -38,8 +39,10 @@ const Verify = () => {
         header={<AuthHeader />}
         footer={
           <AuthFooter
-            title="Получить код"
-            onSubmit={methods.handleSubmit(onSubmit)}
+            primary={{
+              title: "Получить код",
+              onPress: methods.handleSubmit(onSubmit),
+            }}
           />
         }
       >

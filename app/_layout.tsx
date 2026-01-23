@@ -5,7 +5,6 @@ import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
 import {
-  useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
@@ -13,7 +12,7 @@ import {
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { StatusBar } from "expo-status-bar";
 import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
-
+import { useFonts } from "expo-font";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -22,6 +21,7 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 
   useEffect(() => {

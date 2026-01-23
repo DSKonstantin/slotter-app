@@ -1,27 +1,38 @@
 import React from "react";
+import { View } from "react-native";
 import { Button } from "@/src/components/ui";
 
-type AuthFooterProps = {
-  onSubmit: () => void;
+type AuthFooterAction = {
   title: string;
+  onPress: () => void;
   variant?: "primary" | "secondary" | "accent" | "clear";
   disabled?: boolean;
 };
 
-const AuthFooter = ({
-  onSubmit,
-  title,
-  variant = "primary",
-  disabled = false,
-}: AuthFooterProps) => {
+type AuthFooterProps = {
+  primary: AuthFooterAction;
+  secondary?: AuthFooterAction;
+};
+
+const AuthFooter = ({ primary, secondary }: AuthFooterProps) => {
   return (
-    <Button
-      title={title}
-      variant={variant}
-      onPress={onSubmit}
-      disabled={disabled}
-      fullWidth
-    />
+    <View className="gap-3">
+      <Button
+        title={primary.title}
+        variant={primary.variant ?? "primary"}
+        onPress={primary.onPress}
+        disabled={primary.disabled}
+      />
+
+      {secondary && (
+        <Button
+          title={secondary.title}
+          variant={secondary.variant ?? "clear"}
+          onPress={secondary.onPress}
+          disabled={secondary.disabled}
+        />
+      )}
+    </View>
   );
 };
 

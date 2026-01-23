@@ -24,7 +24,7 @@ export function Input({
   const [focused, setFocused] = useState(false);
 
   return (
-    <View className="w-full">
+    <View className="flex-1">
       {label && <Text className={styles.label}>{label}</Text>}
 
       <View

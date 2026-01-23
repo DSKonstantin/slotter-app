@@ -1,4 +1,4 @@
-import { Animated, Pressable, Text } from "react-native";
+import { Animated, Pressable, PressableProps, Text } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { useCallback, useRef } from "react";
 
@@ -9,6 +9,9 @@ interface CustomBtn {
   variant?: "primary" | "secondary" | "accent" | "clear";
   fullWidth?: boolean;
   disabled?: boolean;
+
+  buttonProps?: PressableProps;
+  containerClassName?: string; //
 }
 
 export const Button: React.FC<CustomBtn> = ({
@@ -18,6 +21,8 @@ export const Button: React.FC<CustomBtn> = ({
   variant = "primary",
   fullWidth = false,
   disabled = false,
+  buttonProps,
+  containerClassName,
 }) => {
   const backgroundColorRef = useRef(new Animated.Value(0)).current;
 
@@ -51,6 +56,7 @@ export const Button: React.FC<CustomBtn> = ({
       onPressIn={handlePress}
       onPressOut={handleRelease}
       onPress={onPress}
+      {...buttonProps}
     >
       <Animated.View
         className={twMerge(
@@ -58,6 +64,7 @@ export const Button: React.FC<CustomBtn> = ({
           styles.sizes[size],
           fullWidth && styles.fullWidth,
           disabled && styles.disabled[variant],
+          containerClassName,
         )}
         style={{
           ...(!disabled && { backgroundColor }),
@@ -83,14 +90,14 @@ const styles = {
     sm: "h-[40px] px-3",
     md: "h-[50px] px-4",
   },
-  fullWidth: "w-full",
+  fullWidth: "",
   variants: {
     primary: {
       from: "#000000",
       to: "rgba(60, 60, 67, 0.6)",
     },
     secondary: {
-      from: "#E5E7EB",
+      from: "#FFFFFF",
       to: "#E5E7EB",
     },
     accent: {

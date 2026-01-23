@@ -10,21 +10,20 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { passwordField } from "@/src/validation/fields/password";
 
 type RegisterFormValues = {
   email: string;
 };
 
-const Register = () => {
-  const VerifySchema = Yup.object().shape({
-    password: Yup.string()
-      .min(6, "Пароль должен содержать минимум 6 символов")
-      .required("Введите пароль"),
-    email: Yup.string()
-      .email("Введите корректный email")
-      .required("Введите email"),
-  });
+const VerifySchema = Yup.object().shape({
+  password: passwordField,
+  email: Yup.string()
+    .email("Введите корректный email")
+    .required("Введите email"),
+});
 
+const Register = () => {
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
@@ -44,8 +43,10 @@ const Register = () => {
         header={<AuthHeader />}
         footer={
           <AuthFooter
-            title="Создать профиль"
-            onSubmit={methods.handleSubmit(onSubmit)}
+            primary={{
+              title: "Создать профиль",
+              onPress: methods.handleSubmit(onSubmit),
+            }}
           />
         }
       >

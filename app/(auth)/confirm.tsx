@@ -1,7 +1,7 @@
 import { View, Text, Linking } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/src/components/ui";
-import { OtpConfirm } from "@/src/components/auth/otpConfirm";
+import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 
 export default function AuthConfirm() {
   const { phone } = useLocalSearchParams<{ phone?: string }>();

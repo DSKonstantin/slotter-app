@@ -13,6 +13,7 @@ export const colors = {
   },
   background: {
     DEFAULT: "#F2F2F6",
+    switch: "#D1D1D1",
   },
   accent: {
     DEFAULT: "#0088FF",

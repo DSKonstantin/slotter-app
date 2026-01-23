@@ -8,20 +8,19 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { passwordField } from "@/src/validation/fields/password";
 
 type LoginFormValues = {
   identifier: string;
   password: string;
 };
 
-const Login = () => {
-  const VerifySchema = Yup.object().shape({
-    identifier: Yup.string().required("Введите номер телефона или email"),
-    password: Yup.string()
-      .min(6, "Пароль должен содержать минимум 6 символов")
-      .required("Введите пароль"),
-  });
+const VerifySchema = Yup.object().shape({
+  identifier: Yup.string().required("Введите номер телефона или email"),
+  password: passwordField,
+});
 
+const Login = () => {
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
@@ -40,9 +39,11 @@ const Login = () => {
         header={<AuthHeader />}
         footer={
           <AuthFooter
-            title="Войти"
-            variant="accent"
-            onSubmit={methods.handleSubmit(onSubmit)}
+            primary={{
+              title: "Войти",
+              variant: "accent",
+              onPress: methods.handleSubmit(onSubmit),
+            }}
           />
         }
       >
