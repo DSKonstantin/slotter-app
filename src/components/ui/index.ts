@@ -1,5 +1,6 @@
 export { Button } from "./Button";
-export { Input } from "./Input";
+export { Input } from "./fields/Input";
+export { DropDown } from "./fields/DropDown";
 export { Tabs } from "./Tabs";
 export { Checkbox } from "./Checkbox";
 export { Typography } from "./Typography";

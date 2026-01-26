@@ -7,10 +7,12 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Typography } from "@/src/components/ui";
-import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { phoneField } from "@/src/validation/fields/phone";
+import { maskPhone } from "@/src/utils/mask/maskPhone";
+import { unMask } from "react-native-mask-text";
 
 type VerifyFormValues = {
   phone: string;
@@ -29,13 +31,15 @@ const Verify = () => {
   });
 
   const onSubmit = (data: VerifyFormValues) => {
-    console.log("SUBMIT", data);
+    const { phone } = data;
+    console.log("SUBMIT", `+${unMask(phone)}`);
     router.push(Routers.auth.enterCode);
   };
 
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
+        avoidKeyboard
         header={<AuthHeader />}
         footer={
           <AuthFooter
@@ -55,7 +59,12 @@ const Verify = () => {
           </Typography>
 
           <View className="mt-9">
-            <RHFTextField name="phone" placeholder="+ 7 999 000-00-00" />
+            <RhfTextField
+              name="phone"
+              placeholder="+ 7 999 000-00-00"
+              maskFn={maskPhone}
+              keyboardType="phone-pad"
+            />
           </View>
         </View>
       </AuthScreenLayout>

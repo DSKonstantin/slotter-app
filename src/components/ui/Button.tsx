@@ -1,17 +1,24 @@
-import { Animated, Pressable, PressableProps, Text } from "react-native";
+import { Animated, Pressable, PressableProps, Text, View } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { useCallback, useRef } from "react";
 
 interface CustomBtn {
   title: string;
   onPress: () => void;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   variant?: "primary" | "secondary" | "accent" | "clear";
+  textVariant?: "default" | "accent";
+  direction?: "horizontal" | "vertical";
+
   fullWidth?: boolean;
   disabled?: boolean;
 
+  iconLeft?: React.ReactNode;
+  iconRight?: React.ReactNode;
+
   buttonProps?: PressableProps;
-  containerClassName?: string; //
+  containerClassName?: string;
+  textClassName?: string;
 }
 
 export const Button: React.FC<CustomBtn> = ({
@@ -19,10 +26,15 @@ export const Button: React.FC<CustomBtn> = ({
   onPress,
   size = "md",
   variant = "primary",
+  textVariant = "default",
+  direction = "horizontal",
   fullWidth = false,
   disabled = false,
+  iconLeft,
+  iconRight,
   buttonProps,
   containerClassName,
+  textClassName,
 }) => {
   const backgroundColorRef = useRef(new Animated.Value(0)).current;
 
@@ -62,6 +74,7 @@ export const Button: React.FC<CustomBtn> = ({
         className={twMerge(
           styles.base,
           styles.sizes[size],
+          styles.directions[direction],
           fullWidth && styles.fullWidth,
           disabled && styles.disabled[variant],
           containerClassName,
@@ -70,25 +83,34 @@ export const Button: React.FC<CustomBtn> = ({
           ...(!disabled && { backgroundColor }),
         }}
       >
+        {iconLeft && <View>{iconLeft}</View>}
         <Text
-          className={[
+          className={twMerge(
             styles.textBase,
             styles.textVariants[variant],
+            textVariant === "accent" && styles.textAccent,
             disabled && styles.textDisabled,
-          ].join(" ")}
+            textClassName,
+          )}
         >
           {title}
         </Text>
+        {iconRight && <View>{iconRight}</View>}
       </Animated.View>
     </Pressable>
   );
 };
 
 const styles = {
-  base: "items-center justify-center rounded-medium",
+  base: "items-center justify-center rounded-medium gap-2",
+  directions: {
+    horizontal: "flex-row",
+    vertical: "flex-col",
+  },
   sizes: {
     sm: "h-[40px] px-3",
     md: "h-[50px] px-4",
+    lg: "h-[80px] px-4",
   },
   fullWidth: "",
   variants: {
@@ -115,12 +137,13 @@ const styles = {
     accent: "bg-[rgba(60,60,67,0.18)]",
     clear: "transparent",
   },
-  textBase: "font-inter-semibold text-body",
+  textBase: "font-inter-semibold text-[16px] leading-[1.5]",
   textVariants: {
     primary: "text-secondary",
     secondary: "text-dark",
     accent: "text-secondary",
     clear: "text-primary",
   },
+  textAccent: "text-accent",
   textDisabled: "text-textDisabled",
 };

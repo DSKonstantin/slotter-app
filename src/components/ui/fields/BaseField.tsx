@@ -1,30 +1,35 @@
-import { ReactNode, useState } from "react";
-import { View, TextInput, Text, TextInputProps } from "react-native";
+import React, { ReactNode, useState } from "react";
+import { View, Text } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
-import { colors } from "@/src/styles/colors";
 
-type InputProps = {
+type BaseFieldProps = {
   label?: string;
-  error?: FieldError | undefined;
+  error?: FieldError;
   disabled?: boolean;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
-} & TextInputProps;
 
-export function Input({
+  renderControl: (params: {
+    disabled?: boolean;
+    focused: boolean;
+    setFocused: (v: boolean) => void;
+  }) => ReactNode;
+};
+
+export function BaseField({
   label,
   error,
   disabled,
   startAdornment,
   endAdornment,
-  ...props
-}: InputProps) {
+  renderControl,
+}: BaseFieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
-    <View className="flex-1">
+    <View className="flex-grow">
       {label && <Text className={styles.label}>{label}</Text>}
 
       <View
@@ -39,20 +44,7 @@ export function Input({
           <View className={styles.adornmentStart}>{startAdornment}</View>
         )}
 
-        <TextInput
-          {...props}
-          editable={!disabled}
-          onFocus={(e) => {
-            setFocused(true);
-            props.onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setFocused(false);
-            props.onBlur?.(e);
-          }}
-          className={twMerge(styles.input)}
-          placeholderTextColor={colors.gray.muted}
-        />
+        {renderControl({ disabled, focused, setFocused })}
 
         {endAdornment && (
           <View className={styles.adornmentEnd}>{endAdornment}</View>
@@ -60,7 +52,7 @@ export function Input({
       </View>
 
       <View className={styles.errorContainer}>
-        {error && <Text className={styles.errorText}>{error?.message}</Text>}
+        {error && <Text className={styles.errorText}>{error.message}</Text>}
       </View>
     </View>
   );
@@ -69,7 +61,7 @@ export function Input({
 const styles = {
   label: "mb-2 font-inter-medium text-gray text-caption",
 
-  base: "flex-row items-center h-[48px] rounded-small px-4 bg-secondary border border-transparent",
+  base: "flex-row items-center h-[48px] rounded-small bg-secondary border border-transparent",
 
   focus: "border-accent",
 
@@ -77,12 +69,10 @@ const styles = {
 
   disabled: "bg-gray-muted",
 
-  input: "flex-1 font-inter-regular text-primary text-[16px]",
+  adornmentStart: "mx-2",
 
-  adornmentStart: "mr-2",
-
-  adornmentEnd: "ml-2",
+  adornmentEnd: "mx-2",
 
   errorContainer: "min-h-[20px]",
-  errorText: "mt-[2px] text-accent-red text-caption",
+  errorText: "font-inter-medium mt-[2px] text-accent-red text-caption",
 };

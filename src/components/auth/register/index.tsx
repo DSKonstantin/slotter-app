@@ -7,7 +7,7 @@ import { Typography } from "@/src/components/ui";
 import * as Yup from "yup";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { passwordField } from "@/src/validation/fields/password";
@@ -41,6 +41,7 @@ const Register = () => {
     <FormProvider {...methods}>
       <AuthScreenLayout
         header={<AuthHeader />}
+        avoidKeyboard
         footer={
           <AuthFooter
             primary={{
@@ -58,13 +59,13 @@ const Register = () => {
             Защити базу клиентов паролем и привяжи почту для восстановления
           </Typography>
           <View className="gap-2 mt-9">
-            <RHFTextField
+            <RhfTextField
               name="password"
               label="Пароль"
               placeholder="••••••••"
               secureTextEntry
             />
-            <RHFTextField
+            <RhfTextField
               name="email"
               label="Электронная почта"
               placeholder="master@example.com"

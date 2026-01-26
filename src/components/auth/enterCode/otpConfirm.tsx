@@ -38,7 +38,7 @@ export function OtpConfirm({
         ref={ref}
         {...props}
         value={value}
-        autoFocus={true}
+        autoFocus
         onChangeText={(text) => {
           setValue(text);
           onChange(text);

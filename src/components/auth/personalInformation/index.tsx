@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { Avatar, Divider, Item, StSvg, Typography } from "@/src/components/ui";
-import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { StepProgress } from "@/src/components/ui/StepProgress";
@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
+import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
 
 type PersonalInformationFormValues = {};
 
@@ -36,9 +37,12 @@ const PersonalInformation = () => {
     router.push(Routers.auth.service);
   };
 
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
+        avoidKeyboard
         header={<AuthHeader />}
         footer={
           <AuthFooter
@@ -60,22 +64,29 @@ const PersonalInformation = () => {
             Чтобы клиенты знали, к кому идут
           </Typography>
 
-          <View className="flex-1 items-center my-4">
-            <Avatar
-              size="xl"
-              fallbackIcon={<StSvg name="Camera" size={40} color="#8E8E93" />}
-            />
+          <View className="items-center my-4">
+            <ImagePickerTrigger
+              title="Загрузить аватар"
+              onPick={(asset) => setAvatarUri(asset.uri)}
+              options={{ aspect: [1, 1] }}
+            >
+              <Avatar
+                size="xl"
+                uri={avatarUri ?? undefined}
+                fallbackIcon={<StSvg name="Camera" size={40} color="#8E8E93" />}
+              />
+            </ImagePickerTrigger>
           </View>
+        </View>
 
-          <View className="gap-2">
-            <RHFTextField name="name" label="Имя" placeholder="Иван" />
-            <RHFTextField name="surname" label="Фамилия" placeholder="Иванов" />
-            <RHFTextField
-              name="profession"
-              label="Профессия"
-              placeholder="Барбер"
-            />
-          </View>
+        <View className="gap-2">
+          <RhfTextField name="name" label="Имя" placeholder="Иван" />
+          <RhfTextField name="surname" label="Фамилия" placeholder="Иванов" />
+          <RhfTextField
+            name="profession"
+            label="Профессия"
+            placeholder="Барбер"
+          />
         </View>
 
         <Divider />
@@ -90,7 +101,7 @@ const PersonalInformation = () => {
           <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
         </View>
 
-        <RHFTextField
+        <RhfTextField
           name="address"
           label="Адрес"
           placeholder="Москва, ул. Пушкина, 5"

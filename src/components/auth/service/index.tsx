@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import * as Yup from "yup";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -9,10 +9,19 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
-import { StSvg, Typography } from "@/src/components/ui";
-import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
+import { StSvg, Typography, SelectField } from "@/src/components/ui";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import useLayout from "@/src/hooks/useLayout";
+import { RHFSelect } from "@/src/components/hookForm/rhf-select";
+import { HOURS_OPTIONS } from "@/src/constants/hoursOptions";
 
 type ServiceFormValues = {};
+
+const data = Array(5)
+  .fill(null)
+  .map((_, i) => ({
+    value: `Option ${i + 1}`,
+  }));
 
 const Service = () => {
   const VerifySchema = Yup.object().shape({});
@@ -27,10 +36,24 @@ const Service = () => {
     router.push(Routers.auth.schedule);
   };
 
+  const [layout, onLayout] = useLayout();
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  console.log(layout, "layout");
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState([
+    { label: "Apple 🍎", value: "apple" },
+    { label: "Banana 🍌", value: "banana" },
+    { label: "Orange 🍊", value: "orange" },
+  ]);
+
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
         header={<AuthHeader />}
+        avoidKeyboard
         footer={
           <AuthFooter
             primary={{
@@ -58,19 +81,38 @@ const Service = () => {
           </Typography>
 
           <View className="gap-2 mt-9">
-            <RHFTextField name="name" label="Название" placeholder="Стрижка" />
+            <RhfTextField name="name" label="Название" placeholder="Стрижка" />
           </View>
         </View>
-        <View className="flex-row flex-1 mt-3 gap-3">
-          <RHFTextField name="name" label="Цена" placeholder="1 500 ₽" />
-          <RHFTextField
-            name="name"
-            label="Время"
-            placeholder="1 час"
-            endAdornment={
-              <StSvg name="Expand_down_light" size={24} color="#8E8E93" />
-            }
-          />
+        <View className="flex-row mt-3 gap-3">
+          <View className="flex-1">
+            <RhfTextField name="price" label="Цена" placeholder="1 500 ₽" />
+          </View>
+          <View className="flex-1">
+            <RHFSelect
+              name="fruit"
+              label="Время"
+              placeholder="1 час"
+              items={HOURS_OPTIONS as any}
+            />
+          </View>
+        </View>
+
+        <View className="gap-2">
+          <Typography weight="medium" className="text-caption text-gray">
+            Фото услуги (необязательно)
+          </Typography>
+
+          <View className="p-6 border justify-center items-center border-gray rounded-3xl border-dashed gap-1">
+            <StSvg name="layers" size={40} color="black" />
+            <Typography weight="medium" className="text-body">
+              Добавить фото
+            </Typography>
+          </View>
+
+          <Typography weight="medium" className="text-caption text-gray">
+            Постарайся выбрать крутые фотки, с ними клиентов будет больше
+          </Typography>
         </View>
       </AuthScreenLayout>
     </FormProvider>

@@ -21,6 +21,7 @@ const EnterCode = () => {
   return (
     <AuthScreenLayout
       header={<AuthHeader />}
+      avoidKeyboard
       footer={
         <AuthFooter
           primary={{

@@ -6,30 +6,46 @@ type AuthScreenLayoutProps = {
   header?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+
+  avoidKeyboard?: boolean;
+
+  contentBottomPadding?: number;
 };
 
 export function AuthScreenLayout({
   header,
   children,
   footer,
+  avoidKeyboard = false,
+  contentBottomPadding = 100,
 }: AuthScreenLayoutProps) {
+  const Content = (
+    <ScrollView
+      className="flex-1 px-5"
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingBottom: footer ? contentBottomPadding : 0,
+      }}
+      keyboardShouldPersistTaps="handled"
+    >
+      {header}
+      {children}
+    </ScrollView>
+  );
+
   return (
     <SafeAreaView className="flex-1">
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          className="flex-1 px-5"
-          contentContainerStyle={{ paddingBottom: 100 }}
-          keyboardShouldPersistTaps="handled"
+      {avoidKeyboard ? (
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          {header}
-          {children}
-        </ScrollView>
-
-        {footer && <View className="px-5">{footer}</View>}
-      </KeyboardAvoidingView>
+          {Content}
+        </KeyboardAvoidingView>
+      ) : (
+        Content
+      )}
+      {footer && <View className="px-5">{footer}</View>}
     </SafeAreaView>
   );
 }

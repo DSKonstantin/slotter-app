@@ -9,9 +9,10 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
-import { Button, StSvg, Typography } from "@/src/components/ui";
-import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
+import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { days } from "@/src/constants/days";
+import { maskTime } from "@/src/utils/mask/maskTime";
 
 type ScheduleFormValues = {
   workingTimeFrom: string;
@@ -22,9 +23,16 @@ type ScheduleFormValues = {
 const Schedule = () => {
   const [activeDays, setActiveDays] = useState<string[]>([]);
   const VerifySchema = Yup.object().shape({
-    workingTimeFrom: Yup.string().required(),
-    workingTimeTo: Yup.string().required(),
-    workingDays: Yup.array().min(1).required(),
+    workingTimeFrom: Yup.string()
+      .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
+      .required("Укажите время начала"),
+    workingTimeTo: Yup.string()
+      .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
+      .required("Укажите время окончания"),
+    workingDays: Yup.array()
+      .of(Yup.string())
+      .min(1, "Выберите минимум один рабочий день")
+      .required("Выберите рабочие дни"),
   });
 
   const methods = useForm({
@@ -44,6 +52,10 @@ const Schedule = () => {
 
       methods.setValue("workingDays", next);
 
+      if (next.length > 0) {
+        methods.clearErrors("workingDays");
+      }
+
       return next;
     });
   };
@@ -57,6 +69,7 @@ const Schedule = () => {
     <FormProvider {...methods}>
       <AuthScreenLayout
         header={<AuthHeader />}
+        avoidKeyboard
         footer={
           <AuthFooter
             primary={{
@@ -78,7 +91,7 @@ const Schedule = () => {
             Нажми на дни, когда ты принимаешь
           </Typography>
 
-          <View className="flex-row my-5 gap-2">
+          <View className="flex-row mt-5 gap-2">
             {days.map((day) => (
               <Button
                 key={day.id}
@@ -92,20 +105,42 @@ const Schedule = () => {
               />
             ))}
           </View>
+          <View className="min-h-[20px]">
+            {methods.formState.errors.workingDays && (
+              <Typography
+                weight="medium"
+                className="text-accent-red text-caption mt-[2px]"
+              >
+                {methods.formState.errors.workingDays.message as string}
+              </Typography>
+            )}
+          </View>
 
+          <Typography weight="medium" className="text-gray text-caption">
+            Время работы
+          </Typography>
           <View className="flex-row gap-2">
-            <RHFTextField
-              name="workingTimeFrom"
-              label="Время работы"
-              placeholder="9:00"
-              endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
-            />
-            <RHFTextField
-              label=" "
-              name="workingTimeTo"
-              placeholder="18:00"
-              endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
-            />
+            <View className="flex-1">
+              <RhfTextField
+                name="workingTimeFrom"
+                placeholder="9:00"
+                maskFn={maskTime}
+                endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
+              />
+            </View>
+
+            <View className="w-5 items-center mt-[25px]">
+              <Divider />
+            </View>
+
+            <View className="flex-1">
+              <RhfTextField
+                name="workingTimeTo"
+                placeholder="18:00"
+                maskFn={maskTime}
+                endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
+              />
+            </View>
           </View>
 
           <Typography weight="medium" className="text-caption text-gray">

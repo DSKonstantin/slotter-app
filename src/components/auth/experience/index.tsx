@@ -2,14 +2,13 @@ import React from "react";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { View } from "react-native";
 import { Card, StSvg, Typography } from "@/src/components/ui";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { AuthScreenLayout } from "@/src/components/auth/layout";
 
 const Experience = () => {
   return (
-    <SafeAreaView className="flex-1 px-5">
-      <AuthHeader />
+    <AuthScreenLayout header={<AuthHeader />}>
       <View className="mt-14">
         <Typography weight="semibold" className="text-display mb-2">
           Опыт работы
@@ -53,7 +52,7 @@ const Experience = () => {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </AuthScreenLayout>
   );
 };
 

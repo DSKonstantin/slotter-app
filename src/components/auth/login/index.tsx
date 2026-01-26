@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { Typography } from "@/src/components/ui";
-import { RHFTextField } from "@/src/components/hookForm/rhfTextField";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { FormProvider, useForm } from "react-hook-form";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -56,12 +56,12 @@ const Login = () => {
           </Typography>
 
           <View className="gap-2 mt-9">
-            <RHFTextField
+            <RhfTextField
               name="identifier"
               label="Телефон или электронная почта"
               placeholder="+ 7 999 000-00-00"
             />
-            <RHFTextField
+            <RhfTextField
               name="password"
               label="Пароль"
               placeholder="••••••••"

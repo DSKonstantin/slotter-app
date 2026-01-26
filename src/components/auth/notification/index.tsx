@@ -6,8 +6,12 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { useNotifications } from "@/src/hooks/useNotifications";
+import { scheduleLocalNotification } from "@/src/utils/notifications";
 
 const Notification = () => {
+  const { expoPushToken, notification } = useNotifications();
+
   return (
     <AuthScreenLayout
       header={<AuthHeader />}
@@ -15,7 +19,9 @@ const Notification = () => {
         <AuthFooter
           primary={{
             title: "Разрешить доступ",
-            onPress: () => {},
+            onPress: () => {
+              scheduleLocalNotification();
+            },
           }}
           secondary={{
             title: "Настрою потом",
@@ -26,7 +32,7 @@ const Notification = () => {
         />
       }
     >
-      <View className="mt-16">
+      <View className="flex-1 justify-center items-center">
         <View className="items-center mb-3">
           <StSvg name="Bell_pin_fill" size={60} color="black" />
         </View>

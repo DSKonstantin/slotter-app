@@ -4,10 +4,25 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { View } from "react-native";
+import { Pressable, Share, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
+import * as Clipboard from "expo-clipboard";
 
 const Link = () => {
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync("slotter.app/ivan_barber");
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: "slotter.app/ivan_barber",
+      });
+    } catch (e) {
+      console.log("Share error:", e);
+    }
+  };
+
   return (
     <AuthScreenLayout
       header={<AuthHeader />}
@@ -15,7 +30,9 @@ const Link = () => {
         <AuthFooter
           primary={{
             title: "Поделиться ссылкой",
-            onPress: () => {},
+            onPress: () => {
+              handleShare();
+            },
           }}
           secondary={{
             title: "Перейти в кабинет",
@@ -26,7 +43,7 @@ const Link = () => {
         />
       }
     >
-      <View className="mt-16">
+      <View className="flex-1 justify-center items-center">
         <View className="items-center mb-3">
           <StSvg name="Check_fill" size={60} color="black" />
         </View>
@@ -40,13 +57,15 @@ const Link = () => {
           Твоя ссылка для записи создана
         </Typography>
 
-        <View>
-          <Typography weight="medium" className="text-accent">
+        <Pressable
+          onPress={handleCopy}
+          className="flex-row justify-center items-center mt-5 bg-white w-full rounded-2xl p-4 border border-dashed border-gray gap-1.5"
+        >
+          <Typography weight="medium" className="text-body text-accent">
             slotter.app/ivan_barber
           </Typography>
-
-          <StSvg name="Copy_alt" size={60} color="#0088FF" />
-        </View>
+          <StSvg name="Copy_alt" size={24} color="#0088FF" />
+        </Pressable>
       </View>
     </AuthScreenLayout>
   );
