@@ -108,9 +108,9 @@ const styles = {
     vertical: "flex-col",
   },
   sizes: {
-    sm: "h-[40px] px-3",
-    md: "h-[50px] px-4",
-    lg: "h-[80px] px-4",
+    sm: "h-[40px] px-2",
+    md: "h-[50px] px-2",
+    lg: "h-[80px] px-2",
   },
   fullWidth: "",
   variants: {

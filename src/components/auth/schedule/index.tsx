@@ -124,6 +124,7 @@ const Schedule = () => {
               <RhfTextField
                 name="workingTimeFrom"
                 placeholder="9:00"
+                hideErrorText
                 maskFn={maskTime}
                 endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
               />
@@ -137,6 +138,7 @@ const Schedule = () => {
               <RhfTextField
                 name="workingTimeTo"
                 placeholder="18:00"
+                hideErrorText
                 maskFn={maskTime}
                 endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
               />

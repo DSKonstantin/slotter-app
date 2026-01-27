@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import * as Yup from "yup";
+import { Image } from "expo-image";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
@@ -9,21 +10,17 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
-import { StSvg, Typography, SelectField } from "@/src/components/ui";
+import { StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import useLayout from "@/src/hooks/useLayout";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { HOURS_OPTIONS } from "@/src/constants/hoursOptions";
+import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
+import { PickedFile } from "@/src/hooks/useImagePicker";
 
 type ServiceFormValues = {};
 
-const data = Array(5)
-  .fill(null)
-  .map((_, i) => ({
-    value: `Option ${i + 1}`,
-  }));
-
 const Service = () => {
+  const [images, setImages] = useState<PickedFile[]>([]);
   const VerifySchema = Yup.object().shape({});
 
   const methods = useForm({
@@ -35,19 +32,6 @@ const Service = () => {
     console.log("SUBMIT", data);
     router.push(Routers.auth.schedule);
   };
-
-  const [layout, onLayout] = useLayout();
-  const [selectedItem, setSelectedItem] = useState(null);
-
-  console.log(layout, "layout");
-
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(null);
-  const [items, setItems] = useState([
-    { label: "Apple 🍎", value: "apple" },
-    { label: "Banana 🍌", value: "banana" },
-    { label: "Orange 🍊", value: "orange" },
-  ]);
 
   return (
     <FormProvider {...methods}>
@@ -79,7 +63,6 @@ const Service = () => {
           <Typography weight="medium" className="text-body text-gray">
             Добавь самую популярную
           </Typography>
-
           <View className="gap-2 mt-9">
             <RhfTextField name="name" label="Название" placeholder="Стрижка" />
           </View>
@@ -103,12 +86,93 @@ const Service = () => {
             Фото услуги (необязательно)
           </Typography>
 
-          <View className="p-6 border justify-center items-center border-gray rounded-3xl border-dashed gap-1">
-            <StSvg name="layers" size={40} color="black" />
-            <Typography weight="medium" className="text-body">
-              Добавить фото
-            </Typography>
-          </View>
+          <ImagePickerTrigger
+            title="Загрузить фото"
+            onPick={(assets) => {
+              console.log(assets);
+              setImages((prev) => [
+                assets,
+                assets,
+                assets,
+                assets,
+                assets,
+                assets,
+                assets,
+              ]);
+              // setImages((prev) => [...prev, ...assets]);
+            }}
+            options={{ aspect: [1, 1] }}
+          >
+            <View className="p-2 border justify-center items-center border-gray rounded-3xl border-dashed gap-1 h-[116px]">
+              {images.length === 0 ? (
+                <>
+                  <StSvg name="layers" size={40} color="black" />
+                  <Typography weight="medium" className="text-body">
+                    Добавить фото
+                  </Typography>
+                </>
+              ) : (
+                <View className="flex-row items-center">
+                  <View style={{ width: 120, height: 72 }}>
+                    {images
+                      .slice(0, 4)
+                      .reverse()
+                      .map((img, i) => {
+                        const offset = i * 10;
+                        const isTop = i === 4 - 1;
+
+                        console.log(offset, "offset");
+
+                        return (
+                          <View
+                            key={img.uri}
+                            style={{
+                              position: "absolute",
+                              left: offset,
+                              top: offset - 15,
+                              width: 72,
+                              height: 72,
+                              borderRadius: 16,
+                              overflow: "hidden",
+                              borderWidth: 1,
+                              borderColor: "#fff",
+                            }}
+                          >
+                            <Image
+                              source={{ uri: img.uri }}
+                              style={{ width: "100%", height: "100%" }}
+                            />
+
+                            {4 > 0 && isTop && (
+                              <View
+                                style={{
+                                  position: "absolute",
+                                  inset: 0,
+                                  backgroundColor: "rgba(0,0,0,0.45)",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Typography
+                                  className="text-white text-body"
+                                  weight="semibold"
+                                >
+                                  +{4}
+                                </Typography>
+                              </View>
+                            )}
+                          </View>
+                        );
+                      })}
+                  </View>
+
+                  <Typography className="ml-2 text-caption text-gray">
+                    {images.length} фото
+                  </Typography>
+                </View>
+              )}
+            </View>
+          </ImagePickerTrigger>
 
           <Typography weight="medium" className="text-caption text-gray">
             Постарайся выбрать крутые фотки, с ними клиентов будет больше

@@ -1,7 +1,6 @@
 import React from "react";
-import { Pressable, View } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { useImagePicker } from "@/src/hooks/useImagePicker";
+import { Pressable } from "react-native";
+import { PickedFile, useImagePicker } from "@/src/hooks/useImagePicker";
 
 type ImagePickerTriggerProps = {
   children: React.ReactNode;
@@ -15,7 +14,7 @@ type ImagePickerTriggerProps = {
     allowsEditing?: boolean;
   };
 
-  onPick: (asset: ImagePicker.ImagePickerAsset) => void;
+  onPick: (asset: PickedFile) => void;
 };
 
 export function ImagePickerTrigger({

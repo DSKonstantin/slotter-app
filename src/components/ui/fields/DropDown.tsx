@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
 import { BaseField } from "./BaseField";
 import { FieldError } from "react-hook-form";
+import { colors } from "@/src/styles/colors";
+import { StSvg } from "@/src/components/ui/StSvg";
 
 type SelectFieldProps = {
   label?: string;
@@ -37,6 +39,11 @@ export function DropDown({
           open={open}
           value={value}
           items={innerItems}
+          theme={"LIGHT"}
+          itemSeparator={true}
+          itemSeparatorStyle={{
+            backgroundColor: colors.gray.separators,
+          }}
           setOpen={setOpen}
           setValue={(cb) => {
             const next = cb(value);
@@ -47,11 +54,43 @@ export function DropDown({
           onOpen={() => setFocused(true)}
           onClose={() => setFocused(false)}
           disabled={disabled}
+          ArrowDownIconComponent={() => (
+            <StSvg
+              name="Expand_down_light"
+              size={24}
+              color={colors.gray.muted}
+            />
+          )}
+          ArrowUpIconComponent={() => (
+            <StSvg name="Expand_up_light" size={24} color={colors.gray.muted} />
+          )}
           style={{ borderWidth: 0, backgroundColor: "transparent", flex: 1 }}
-          dropDownContainerStyle={{ borderWidth: 0 }}
+          dropDownContainerStyle={{
+            borderRadius: 16,
+            borderWidth: 0,
+          }}
+          labelStyle={{
+            ...styles.text,
+            color: colors.primary.DEFAULT,
+          }}
+          placeholderStyle={{
+            ...styles.text,
+            color: colors.gray.muted,
+          }}
+          listItemLabelStyle={{
+            ...styles.text,
+          }}
+          listItemContainerStyle={{}}
           listMode="SCROLLVIEW"
         />
       )}
     />
   );
 }
+
+const styles = {
+  text: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+  },
+};

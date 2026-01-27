@@ -6,6 +6,7 @@ import { Input } from "@/src/components/ui";
 type RHFTextFieldProps = {
   name: string;
   label?: string;
+  hideErrorText?: boolean;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   maskFn?: (value: string) => string;
@@ -16,6 +17,7 @@ export function RhfTextField({
   label,
   startAdornment,
   endAdornment,
+  hideErrorText,
   maskFn,
   ...other
 }: RHFTextFieldProps) {
@@ -33,6 +35,7 @@ export function RhfTextField({
           }}
           label={label}
           error={error}
+          hideErrorText={hideErrorText}
           startAdornment={startAdornment}
           endAdornment={endAdornment}
           {...other}

@@ -23,7 +23,7 @@ export default function AuthHeader({
 
   return (
     <>
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between mt-2">
         {showBack ? (
           <IconButton
             icon={<StSvg name="Expand_left" size={24} color="black" />}
@@ -52,7 +52,7 @@ export default function AuthHeader({
           Мы на связи, выбери где удобнее:
         </Typography>
 
-        <View className="flex-row justify-center items-center my-6">
+        <View className="flex-row justify-center items-center my-6 gap-10">
           <IconButton
             icon={<StSvg name="SocialWhatsApp" size={28} color="#37DB3A" />}
           />

@@ -8,6 +8,7 @@ type InputProps = {
   label?: string;
   error?: FieldError;
   disabled?: boolean;
+  hideErrorText?: boolean;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -16,6 +17,7 @@ type InputProps = {
 export function Input({
   label,
   error,
+  hideErrorText,
   disabled,
   startAdornment,
   endAdornment,
@@ -25,6 +27,7 @@ export function Input({
     <BaseField
       label={label}
       error={error}
+      hideErrorText={hideErrorText}
       disabled={disabled}
       startAdornment={startAdornment}
       endAdornment={endAdornment}

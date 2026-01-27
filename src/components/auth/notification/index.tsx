@@ -6,12 +6,9 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { useNotifications } from "@/src/hooks/useNotifications";
 import { scheduleLocalNotification } from "@/src/utils/notifications";
 
 const Notification = () => {
-  const { expoPushToken, notification } = useNotifications();
-
   return (
     <AuthScreenLayout
       header={<AuthHeader />}

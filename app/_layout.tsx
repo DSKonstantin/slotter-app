@@ -13,6 +13,8 @@ import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { StatusBar } from "expo-status-bar";
 import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
 import { useFonts } from "expo-font";
+import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -36,10 +38,12 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
+      <AutocompleteDropdownContextProvider>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </AutocompleteDropdownContextProvider>
     </ThemeProvider>
   );
 }

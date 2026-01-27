@@ -5,6 +5,7 @@ import { FieldError } from "react-hook-form";
 
 type BaseFieldProps = {
   label?: string;
+  hideErrorText?: boolean;
   error?: FieldError;
   disabled?: boolean;
 
@@ -23,6 +24,7 @@ export function BaseField({
   error,
   disabled,
   startAdornment,
+  hideErrorText = false,
   endAdornment,
   renderControl,
 }: BaseFieldProps) {
@@ -51,9 +53,11 @@ export function BaseField({
         )}
       </View>
 
-      <View className={styles.errorContainer}>
-        {error && <Text className={styles.errorText}>{error.message}</Text>}
-      </View>
+      {!hideErrorText && (
+        <View className={styles.errorContainer}>
+          {error && <Text className={styles.errorText}>{error.message}</Text>}
+        </View>
+      )}
     </View>
   );
 }

@@ -11,9 +11,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { StepProgress } from "@/src/components/ui/StepProgress";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
+import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 
 type PersonalInformationFormValues = {};
 
@@ -26,6 +26,7 @@ const PersonalInformation = () => {
       name: "",
       surname: "",
       profession: "",
+      address: "",
       atHome: false,
       online: false,
       onRoad: false,
@@ -78,7 +79,6 @@ const PersonalInformation = () => {
             </ImagePickerTrigger>
           </View>
         </View>
-
         <View className="gap-2">
           <RhfTextField name="name" label="Имя" placeholder="Иван" />
           <RhfTextField name="surname" label="Фамилия" placeholder="Иванов" />
@@ -88,23 +88,24 @@ const PersonalInformation = () => {
             placeholder="Барбер"
           />
         </View>
-
         <Divider />
-
         <Typography weight="medium" className="text-gray text-caption mt-5">
           Формат работы
         </Typography>
-
         <View className="mt-2 mb-5 gap-2">
           <Item title="Дома/в студии" right={<RHFSwitch name="atHome" />} />
           <Item title="Онлайн" right={<RHFSwitch name="online" />} />
           <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
         </View>
-
-        <RhfTextField
-          name="address"
+        <RHFAutocomplete
           label="Адрес"
           placeholder="Москва, ул. Пушкина, 5"
+          name="address"
+          dataSet={[
+            { id: "1", title: "Alpha" },
+            { id: "2", title: "Beta" },
+            { id: "3", title: "Gamma" },
+          ]}
         />
       </AuthScreenLayout>
     </FormProvider>
