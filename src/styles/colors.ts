@@ -33,6 +33,7 @@ export const colors = {
     lighter: "#E5E5EA",
     medium: "#AEAEB2",
     separators: "#E6E6E6",
+    dark: "#3C3C43",
   },
   slate: {
     DEFAULT: "#1f2937",

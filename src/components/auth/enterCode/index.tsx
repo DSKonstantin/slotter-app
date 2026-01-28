@@ -40,7 +40,7 @@ const EnterCode = () => {
           Проверь смс. Обычно приходит быстро
         </Typography>
         <View className="mt-9">
-          <OtpConfirm onChange={setCode} onComplete={setCode} />
+          <OtpConfirm onChange={setCode} onComplete={() => {}} />
         </View>
       </View>
     </AuthScreenLayout>

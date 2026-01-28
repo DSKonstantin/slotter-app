@@ -54,9 +54,7 @@ export function BaseField({
       </View>
 
       {!hideErrorText && (
-        <View className={styles.errorContainer}>
-          {error && <Text className={styles.errorText}>{error.message}</Text>}
-        </View>
+        <Text className={styles.errorText}>{error?.message ?? " "}</Text>
       )}
     </View>
   );
@@ -77,6 +75,6 @@ const styles = {
 
   adornmentEnd: "mx-2",
 
-  errorContainer: "min-h-[20px]",
-  errorText: "font-inter-medium mt-[2px] text-accent-red text-caption",
+  errorText:
+    "min-h-[20px] font-inter-medium mt-[2px] text-accent-red text-caption",
 };

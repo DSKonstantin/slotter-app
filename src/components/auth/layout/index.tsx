@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 type AuthScreenLayoutProps = {
   header?: ReactNode;
@@ -8,7 +9,6 @@ type AuthScreenLayoutProps = {
   footer?: ReactNode;
 
   avoidKeyboard?: boolean;
-
   contentBottomPadding?: number;
 };
 
@@ -17,35 +17,25 @@ export function AuthScreenLayout({
   children,
   footer,
   avoidKeyboard = false,
-  contentBottomPadding = 100,
 }: AuthScreenLayoutProps) {
-  const Content = (
-    <ScrollView
-      className="flex-1 px-5"
-      contentContainerStyle={{
-        flexGrow: 1,
-        paddingBottom: footer ? contentBottomPadding : 0,
-      }}
-      keyboardShouldPersistTaps="handled"
-    >
-      {header}
-      {children}
-    </ScrollView>
-  );
+  const ScrollWrapper = avoidKeyboard ? KeyboardAwareScrollView : ScrollView;
 
   return (
     <SafeAreaView className="flex-1">
-      {avoidKeyboard ? (
-        <KeyboardAvoidingView
-          className="flex-1"
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          {Content}
-        </KeyboardAvoidingView>
-      ) : (
-        Content
-      )}
-      {footer && <View className="px-5">{footer}</View>}
+      <ScrollWrapper
+        className="flex-1 px-5"
+        {...(avoidKeyboard
+          ? { bottomOffset: 20 }
+          : {
+              contentContainerStyle: {
+                flex: 1,
+              },
+            })}
+      >
+        {header}
+        {children}
+      </ScrollWrapper>
+      {footer && <View className="px-5 py-2 bg-background">{footer}</View>}
     </SafeAreaView>
   );
 }

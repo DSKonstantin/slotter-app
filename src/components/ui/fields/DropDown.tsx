@@ -43,7 +43,11 @@ export function DropDown({
           itemSeparator={true}
           itemSeparatorStyle={{
             backgroundColor: colors.gray.separators,
+            marginHorizontal: 16,
           }}
+          TickIconComponent={() => (
+            <StSvg name="Done_round" size={24} color={colors.accent.DEFAULT} />
+          )}
           setOpen={setOpen}
           setValue={(cb) => {
             const next = cb(value);
@@ -77,10 +81,14 @@ export function DropDown({
             ...styles.text,
             color: colors.gray.muted,
           }}
+          listItemContainerStyle={{
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            height: "auto",
+          }}
           listItemLabelStyle={{
             ...styles.text,
           }}
-          listItemContainerStyle={{}}
           listMode="SCROLLVIEW"
         />
       )}

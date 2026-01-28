@@ -102,7 +102,7 @@ export const Button: React.FC<CustomBtn> = ({
 };
 
 const styles = {
-  base: "items-center justify-center rounded-medium gap-2",
+  base: "items-center justify-center rounded-medium gap-1",
   directions: {
     horizontal: "flex-row",
     vertical: "flex-col",
@@ -145,5 +145,5 @@ const styles = {
     clear: "text-primary",
   },
   textAccent: "text-accent",
-  textDisabled: "text-textDisabled",
+  textDisabled: "text-gray-dark",
 };

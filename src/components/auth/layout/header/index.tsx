@@ -3,10 +3,10 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 import {
   IconButton,
-  BottomModal,
   Button,
   Typography,
   StSvg,
+  StModal,
 } from "@/src/components/ui";
 
 type AuthHeaderProps = {
@@ -40,7 +40,7 @@ export default function AuthHeader({
           />
         )}
       </View>
-      <BottomModal
+      <StModal
         visible={supportVisible}
         onClose={() => setSupportVisible(false)}
       >
@@ -67,7 +67,7 @@ export default function AuthHeader({
             setSupportVisible(false);
           }}
         />
-      </BottomModal>
+      </StModal>
     </>
   );
 }

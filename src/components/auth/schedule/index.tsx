@@ -17,7 +17,7 @@ import { maskTime } from "@/src/utils/mask/maskTime";
 type ScheduleFormValues = {
   workingTimeFrom: string;
   workingTimeTo: string;
-  workingDays: string[];
+  workingDays: (string | undefined)[];
 };
 
 const Schedule = () => {
@@ -126,7 +126,9 @@ const Schedule = () => {
                 placeholder="9:00"
                 hideErrorText
                 maskFn={maskTime}
+                maxLength={5}
                 endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
+                keyboardType="phone-pad"
               />
             </View>
 
@@ -140,7 +142,9 @@ const Schedule = () => {
                 placeholder="18:00"
                 hideErrorText
                 maskFn={maskTime}
+                maxLength={5}
                 endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
+                keyboardType="phone-pad"
               />
             </View>
           </View>

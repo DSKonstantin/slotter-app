@@ -14,8 +14,8 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { HOURS_OPTIONS } from "@/src/constants/hoursOptions";
-import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
 import { PickedFile } from "@/src/hooks/useImagePicker";
+import { ServiceImagesPicker } from "@/src/components/auth/service/ServiceImagesPicker";
 
 type ServiceFormValues = {};
 
@@ -69,7 +69,12 @@ const Service = () => {
         </View>
         <View className="flex-row mt-3 gap-3">
           <View className="flex-1">
-            <RhfTextField name="price" label="Цена" placeholder="1 500 ₽" />
+            <RhfTextField
+              name="price"
+              label="Цена"
+              placeholder="1 500 ₽"
+              keyboardType="phone-pad"
+            />
           </View>
           <View className="flex-1">
             <RHFSelect
@@ -82,101 +87,91 @@ const Service = () => {
         </View>
 
         <View className="gap-2">
-          <Typography weight="medium" className="text-caption text-gray">
-            Фото услуги (необязательно)
-          </Typography>
+          {/*<Typography weight="medium" className="text-caption text-gray">*/}
+          {/*  Фото услуги (необязательно)*/}
+          {/*</Typography>*/}
 
-          <ImagePickerTrigger
-            title="Загрузить фото"
-            onPick={(assets) => {
-              console.log(assets);
-              setImages((prev) => [
-                assets,
-                assets,
-                assets,
-                assets,
-                assets,
-                assets,
-                assets,
-              ]);
-              // setImages((prev) => [...prev, ...assets]);
-            }}
-            options={{ aspect: [1, 1] }}
-          >
-            <View className="p-2 border justify-center items-center border-gray rounded-3xl border-dashed gap-1 h-[116px]">
-              {images.length === 0 ? (
-                <>
-                  <StSvg name="layers" size={40} color="black" />
-                  <Typography weight="medium" className="text-body">
-                    Добавить фото
-                  </Typography>
-                </>
-              ) : (
-                <View className="flex-row items-center">
-                  <View style={{ width: 120, height: 72 }}>
-                    {images
-                      .slice(0, 4)
-                      .reverse()
-                      .map((img, i) => {
-                        const offset = i * 10;
-                        const isTop = i === 4 - 1;
+          <ServiceImagesPicker value={images} onChange={setImages} max={10} />
 
-                        console.log(offset, "offset");
+          {/*<ImagePickerTrigger*/}
+          {/*  title="Загрузить фото"*/}
+          {/*  onPick={(assets) => {*/}
+          {/*    setImages((prev) => [...prev, assets]);*/}
+          {/*  }}*/}
+          {/*  options={{ aspect: [1, 1] }}*/}
+          {/*>*/}
+          {/*  <View className="p-2 border justify-center items-center border-gray rounded-3xl border-dashed gap-1 h-[116px]">*/}
+          {/*    {images.length === 0 ? (*/}
+          {/*      <>*/}
+          {/*        <StSvg name="layers" size={40} color="black" />*/}
+          {/*        <Typography weight="medium" className="text-body">*/}
+          {/*          Добавить фото*/}
+          {/*        </Typography>*/}
+          {/*      </>*/}
+          {/*    ) : (*/}
+          {/*      <View className="flex-row items-center">*/}
+          {/*        <View style={{ width: 120, height: 72 }}>*/}
+          {/*          {images*/}
+          {/*            .slice(0, 4)*/}
+          {/*            .reverse()*/}
+          {/*            .map((img, i) => {*/}
+          {/*              const offset = i * 10;*/}
+          {/*              const isTop = i === 4 - 1;*/}
 
-                        return (
-                          <View
-                            key={img.uri}
-                            style={{
-                              position: "absolute",
-                              left: offset,
-                              top: offset - 15,
-                              width: 72,
-                              height: 72,
-                              borderRadius: 16,
-                              overflow: "hidden",
-                              borderWidth: 1,
-                              borderColor: "#fff",
-                            }}
-                          >
-                            <Image
-                              source={{ uri: img.uri }}
-                              style={{ width: "100%", height: "100%" }}
-                            />
+          {/*              return (*/}
+          {/*                <View*/}
+          {/*                  key={img.uri}*/}
+          {/*                  style={{*/}
+          {/*                    position: "absolute",*/}
+          {/*                    left: offset,*/}
+          {/*                    top: offset - 15,*/}
+          {/*                    width: 72,*/}
+          {/*                    height: 72,*/}
+          {/*                    borderRadius: 16,*/}
+          {/*                    overflow: "hidden",*/}
+          {/*                    borderWidth: 1,*/}
+          {/*                    borderColor: "#fff",*/}
+          {/*                  }}*/}
+          {/*                >*/}
+          {/*                  <Image*/}
+          {/*                    source={{ uri: img.uri }}*/}
+          {/*                    style={{ width: "100%", height: "100%" }}*/}
+          {/*                  />*/}
 
-                            {4 > 0 && isTop && (
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  backgroundColor: "rgba(0,0,0,0.45)",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Typography
-                                  className="text-white text-body"
-                                  weight="semibold"
-                                >
-                                  +{4}
-                                </Typography>
-                              </View>
-                            )}
-                          </View>
-                        );
-                      })}
-                  </View>
+          {/*                  {4 > 0 && isTop && (*/}
+          {/*                    <View*/}
+          {/*                      style={{*/}
+          {/*                        position: "absolute",*/}
+          {/*                        inset: 0,*/}
+          {/*                        backgroundColor: "rgba(0,0,0,0.45)",*/}
+          {/*                        alignItems: "center",*/}
+          {/*                        justifyContent: "center",*/}
+          {/*                      }}*/}
+          {/*                    >*/}
+          {/*                      <Typography*/}
+          {/*                        className="text-white text-body"*/}
+          {/*                        weight="semibold"*/}
+          {/*                      >*/}
+          {/*                        +{images.length - 4}*/}
+          {/*                      </Typography>*/}
+          {/*                    </View>*/}
+          {/*                  )}*/}
+          {/*                </View>*/}
+          {/*              );*/}
+          {/*            })}*/}
+          {/*        </View>*/}
 
-                  <Typography className="ml-2 text-caption text-gray">
-                    {images.length} фото
-                  </Typography>
-                </View>
-              )}
-            </View>
-          </ImagePickerTrigger>
+          {/*        <Typography className="ml-2 text-caption text-gray">*/}
+          {/*          {images.length} фото*/}
+          {/*        </Typography>*/}
+          {/*      </View>*/}
+          {/*    )}*/}
+          {/*  </View>*/}
+          {/*</ImagePickerTrigger>*/}
 
-          <Typography weight="medium" className="text-caption text-gray">
-            Постарайся выбрать крутые фотки, с ними клиентов будет больше
-          </Typography>
+          {/*<Typography weight="medium" className="text-caption text-gray">*/}
+          {/*  Постарайся выбрать крутые фотки, с ними клиентов будет больше*/}
+          {/*</Typography>*/}
         </View>
       </AuthScreenLayout>
     </FormProvider>

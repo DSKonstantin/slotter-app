@@ -5,6 +5,8 @@ import {
   IAutocompleteDropdownRef,
 } from "react-native-autocomplete-dropdown";
 import { BaseField } from "@/src/components/ui/fields/BaseField";
+import { View } from "react-native";
+import { colors } from "@/src/styles/colors";
 
 export type AutocompleteItem = {
   id: string;
@@ -46,7 +48,7 @@ export function Autocomplete({
             dropdownController.current = controller;
           }}
           clearOnFocus={false}
-          closeOnBlur={false}
+          closeOnBlur={true}
           closeOnSubmit={false}
           showChevron={false}
           showClear={false}
@@ -72,10 +74,21 @@ export function Autocomplete({
           }}
           suggestionsListContainerStyle={{
             borderRadius: 16,
+            backgroundColor: "white",
           }}
           suggestionsListTextStyle={{
             ...styles.text,
+            color: "black",
           }}
+          ItemSeparatorComponent={() => (
+            <View
+              style={{
+                height: 1,
+                backgroundColor: colors.gray.separators,
+                marginHorizontal: 16,
+              }}
+            />
+          )}
           textInputProps={{
             placeholder: placeholder,
             style: {
@@ -96,6 +109,7 @@ export function Autocomplete({
 
 const styles = {
   text: {
+    color: "black",
     fontFamily: "Inter_400Regular",
     fontSize: 16,
   },

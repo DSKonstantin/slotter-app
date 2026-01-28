@@ -6,7 +6,7 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { scheduleLocalNotification } from "@/src/utils/notifications";
+// import { scheduleLocalNotification } from "@/src/utils/notifications";
 
 const Notification = () => {
   return (
@@ -17,7 +17,7 @@ const Notification = () => {
           primary={{
             title: "Разрешить доступ",
             onPress: () => {
-              scheduleLocalNotification();
+              // scheduleLocalNotification();
             },
           }}
           secondary={{
@@ -29,7 +29,7 @@ const Notification = () => {
         />
       }
     >
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 justify-center items-center mb-14">
         <View className="items-center mb-3">
           <StSvg name="Bell_pin_fill" size={60} color="black" />
         </View>

@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Countdown from "react-countdown";
 import {
   CodeField,
@@ -32,6 +32,10 @@ export function OtpConfirm({
     setValue,
   });
 
+  useEffect(() => {
+    onChange(value);
+  }, [onChange, value]);
+
   return (
     <>
       <CodeField
@@ -41,7 +45,6 @@ export function OtpConfirm({
         autoFocus
         onChangeText={(text) => {
           setValue(text);
-          onChange(text);
 
           if (text.length === length) {
             onComplete?.(text);

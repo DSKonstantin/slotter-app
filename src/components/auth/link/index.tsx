@@ -43,7 +43,7 @@ const Link = () => {
         />
       }
     >
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 justify-center items-center mb-14">
         <View className="items-center mb-3">
           <StSvg name="Check_fill" size={60} color="black" />
         </View>

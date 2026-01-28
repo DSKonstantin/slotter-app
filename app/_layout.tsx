@@ -14,6 +14,7 @@ import { StatusBar } from "expo-status-bar";
 import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
 import { useFonts } from "expo-font";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,12 +39,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}>
-      <AutocompleteDropdownContextProvider>
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </AutocompleteDropdownContextProvider>
+      <KeyboardProvider>
+        <AutocompleteDropdownContextProvider>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </AutocompleteDropdownContextProvider>
+      </KeyboardProvider>
     </ThemeProvider>
   );
 }
