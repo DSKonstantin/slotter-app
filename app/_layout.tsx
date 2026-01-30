@@ -15,8 +15,18 @@ import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
 import { useFonts } from "expo-font";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import * as Notifications from "expo-notifications";
 
 SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

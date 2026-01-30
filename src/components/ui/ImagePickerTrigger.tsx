@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Pressable } from "react-native";
-import { PickedFile, useImagePicker } from "@/src/hooks/useImagePicker";
+import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
+import type { DocumentPickerAsset } from "expo-document-picker";
+import { ImagePickerMenu } from "@/src/components/auth/service/ImagePickerMenu";
+import { useImagePicker } from "@/src/hooks/useImagePicker";
 
 type ImagePickerTriggerProps = {
   children: React.ReactNode;
@@ -8,32 +11,61 @@ type ImagePickerTriggerProps = {
   title?: string;
   message?: string;
 
-  options?: {
-    aspect?: [number, number];
-    quality?: number;
-    allowsEditing?: boolean;
-  };
+  options?: ImagePickerOptions;
+  includeFiles?: boolean;
 
-  onPick: (asset: PickedFile) => void;
+  disabled?: boolean;
+
+  onPick: (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => void;
 };
 
 export function ImagePickerTrigger({
   children,
-  onPick,
   title,
   message,
   options,
+  includeFiles,
+  disabled,
+  onPick,
 }: ImagePickerTriggerProps) {
-  const { openPickerMenu } = useImagePicker();
+  const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
+  const [visible, setVisible] = useState(false);
 
-  const handlePress = () => {
-    openPickerMenu({
-      title,
-      message,
-      options,
-      onPick,
-    });
-  };
+  const close = useCallback(() => setVisible(false), []);
 
-  return <Pressable onPress={handlePress}>{children}</Pressable>;
+  const open = useCallback(() => {
+    if (disabled) return;
+    setVisible(true);
+  }, [disabled]);
+
+  return (
+    <>
+      <Pressable disabled={disabled} onPress={open}>
+        {children}
+      </Pressable>
+
+      <ImagePickerMenu
+        visible={visible}
+        title={title}
+        message={message}
+        showFiles={includeFiles}
+        onClose={close}
+        onCamera={async () => {
+          const assets = await pickFromCamera(options);
+          if (assets) onPick(assets);
+          close();
+        }}
+        onGallery={async () => {
+          const assets = await pickFromGallery(options);
+          if (assets) onPick(assets);
+          close();
+        }}
+        onFiles={async () => {
+          const assets = await pickFromFiles(options);
+          if (assets) onPick(assets);
+          close();
+        }}
+      />
+    </>
+  );
 }

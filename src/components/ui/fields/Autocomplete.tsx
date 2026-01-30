@@ -52,13 +52,6 @@ export function Autocomplete({
           closeOnSubmit={false}
           showChevron={false}
           showClear={false}
-          // initialValue={{
-          //   id: typeof value === "string" && value.length ? value : "",
-          // }}
-          // onSelectItem={onSelectItem}
-          // onSelectItem={item => {
-          //   item && setSelectedItem(item.id)
-          // }}
           onChangeText={(text) => {
             if (!text?.trim()) {
               dropdownController.current?.setItem?.({ id: "" });

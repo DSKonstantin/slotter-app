@@ -64,7 +64,15 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Разрешите $(PRODUCT_NAME) доступ к вашим фотографиям",
+          "cameraPermission": "Разрешить $(PRODUCT_NAME) открыть камеру"
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -12,8 +12,8 @@ import { StepProgress } from "@/src/components/ui/StepProgress";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
-import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
 import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
+import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
 
 type PersonalInformationFormValues = {};
 
@@ -68,8 +68,8 @@ const PersonalInformation = () => {
           <View className="items-center my-4">
             <ImagePickerTrigger
               title="Загрузить аватар"
-              onPick={(asset) => setAvatarUri(asset.uri)}
               options={{ aspect: [1, 1] }}
+              onPick={(assets) => setAvatarUri(assets[0]?.uri)}
             >
               <Avatar
                 size="xl"

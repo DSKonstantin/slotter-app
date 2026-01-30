@@ -12,7 +12,6 @@ import { StepProgress } from "@/src/components/ui/StepProgress";
 import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { days } from "@/src/constants/days";
-import { maskTime } from "@/src/utils/mask/maskTime";
 
 type ScheduleFormValues = {
   workingTimeFrom: string;
@@ -24,10 +23,10 @@ const Schedule = () => {
   const [activeDays, setActiveDays] = useState<string[]>([]);
   const VerifySchema = Yup.object().shape({
     workingTimeFrom: Yup.string()
-      .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
+      // .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
       .required("Укажите время начала"),
     workingTimeTo: Yup.string()
-      .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
+      // .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
       .required("Укажите время окончания"),
     workingDays: Yup.array()
       .of(Yup.string())
@@ -125,7 +124,6 @@ const Schedule = () => {
                 name="workingTimeFrom"
                 placeholder="9:00"
                 hideErrorText
-                maskFn={maskTime}
                 maxLength={5}
                 endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
                 keyboardType="phone-pad"
@@ -141,7 +139,6 @@ const Schedule = () => {
                 name="workingTimeTo"
                 placeholder="18:00"
                 hideErrorText
-                maskFn={maskTime}
                 maxLength={5}
                 endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
                 keyboardType="phone-pad"

@@ -6,18 +6,27 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-// import { scheduleLocalNotification } from "@/src/utils/notifications";
+import { useNotificationPermission } from "@/src/hooks/useNotificationPermission";
 
 const Notification = () => {
+  const { status, isGranted, canAskAgain, requestOrOpenSettings, refresh } =
+    useNotificationPermission();
+
   return (
     <AuthScreenLayout
       header={<AuthHeader />}
       footer={
         <AuthFooter
           primary={{
-            title: "Разрешить доступ",
-            onPress: () => {
-              // scheduleLocalNotification();
+            title: canAskAgain ? "Разрешить доступ" : "Открыть настройки",
+            onPress: async () => {
+              await requestOrOpenSettings();
+
+              const next = await refresh();
+
+              if (next.status === "granted") {
+                router.push(Routers.auth.link);
+              }
             },
           }}
           secondary={{

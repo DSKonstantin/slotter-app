@@ -7,6 +7,7 @@ type StModalProps = {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  containerClassName?: string;
   props?: ModalProps;
 };
 
@@ -16,6 +17,7 @@ export const StModal = ({
   visible,
   onClose,
   children,
+  containerClassName = "bg-light",
   ...props
 }: StModalProps) => {
   const { bottom } = useSafeAreaInsets();
@@ -35,7 +37,7 @@ export const StModal = ({
       {...props}
     >
       <View
-        className="rounded-t-large bg-white px-5 pt-3"
+        className={`rounded-t-large px-5 pt-3 ${containerClassName}`}
         style={{ paddingBottom: bottom + 8 }}
       >
         <View className="items-center mb-3">

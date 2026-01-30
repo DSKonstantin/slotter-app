@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import * as Yup from "yup";
-import { Image } from "expo-image";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
@@ -10,17 +9,23 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
-import { StSvg, Typography } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { HOURS_OPTIONS } from "@/src/constants/hoursOptions";
-import { PickedFile } from "@/src/hooks/useImagePicker";
-import { ServiceImagesPicker } from "@/src/components/auth/service/ServiceImagesPicker";
+import {
+  ServiceImagesPicker,
+  ServicePhotosValue,
+} from "@/src/components/auth/service/ServiceImagesPicker";
 
 type ServiceFormValues = {};
 
 const Service = () => {
-  const [images, setImages] = useState<PickedFile[]>([]);
+  const [photos, setPhotos] = useState<ServicePhotosValue>({
+    titlePhoto: { assets: [], max: 1 },
+    otherPhoto: { assets: [], max: 4 },
+  });
+
   const VerifySchema = Yup.object().shape({});
 
   const methods = useForm({
@@ -67,7 +72,7 @@ const Service = () => {
             <RhfTextField name="name" label="Название" placeholder="Стрижка" />
           </View>
         </View>
-        <View className="flex-row mt-3 gap-3">
+        <View className="flex-row my-2 gap-3">
           <View className="flex-1">
             <RhfTextField
               name="price"
@@ -86,93 +91,7 @@ const Service = () => {
           </View>
         </View>
 
-        <View className="gap-2">
-          {/*<Typography weight="medium" className="text-caption text-gray">*/}
-          {/*  Фото услуги (необязательно)*/}
-          {/*</Typography>*/}
-
-          <ServiceImagesPicker value={images} onChange={setImages} max={10} />
-
-          {/*<ImagePickerTrigger*/}
-          {/*  title="Загрузить фото"*/}
-          {/*  onPick={(assets) => {*/}
-          {/*    setImages((prev) => [...prev, assets]);*/}
-          {/*  }}*/}
-          {/*  options={{ aspect: [1, 1] }}*/}
-          {/*>*/}
-          {/*  <View className="p-2 border justify-center items-center border-gray rounded-3xl border-dashed gap-1 h-[116px]">*/}
-          {/*    {images.length === 0 ? (*/}
-          {/*      <>*/}
-          {/*        <StSvg name="layers" size={40} color="black" />*/}
-          {/*        <Typography weight="medium" className="text-body">*/}
-          {/*          Добавить фото*/}
-          {/*        </Typography>*/}
-          {/*      </>*/}
-          {/*    ) : (*/}
-          {/*      <View className="flex-row items-center">*/}
-          {/*        <View style={{ width: 120, height: 72 }}>*/}
-          {/*          {images*/}
-          {/*            .slice(0, 4)*/}
-          {/*            .reverse()*/}
-          {/*            .map((img, i) => {*/}
-          {/*              const offset = i * 10;*/}
-          {/*              const isTop = i === 4 - 1;*/}
-
-          {/*              return (*/}
-          {/*                <View*/}
-          {/*                  key={img.uri}*/}
-          {/*                  style={{*/}
-          {/*                    position: "absolute",*/}
-          {/*                    left: offset,*/}
-          {/*                    top: offset - 15,*/}
-          {/*                    width: 72,*/}
-          {/*                    height: 72,*/}
-          {/*                    borderRadius: 16,*/}
-          {/*                    overflow: "hidden",*/}
-          {/*                    borderWidth: 1,*/}
-          {/*                    borderColor: "#fff",*/}
-          {/*                  }}*/}
-          {/*                >*/}
-          {/*                  <Image*/}
-          {/*                    source={{ uri: img.uri }}*/}
-          {/*                    style={{ width: "100%", height: "100%" }}*/}
-          {/*                  />*/}
-
-          {/*                  {4 > 0 && isTop && (*/}
-          {/*                    <View*/}
-          {/*                      style={{*/}
-          {/*                        position: "absolute",*/}
-          {/*                        inset: 0,*/}
-          {/*                        backgroundColor: "rgba(0,0,0,0.45)",*/}
-          {/*                        alignItems: "center",*/}
-          {/*                        justifyContent: "center",*/}
-          {/*                      }}*/}
-          {/*                    >*/}
-          {/*                      <Typography*/}
-          {/*                        className="text-white text-body"*/}
-          {/*                        weight="semibold"*/}
-          {/*                      >*/}
-          {/*                        +{images.length - 4}*/}
-          {/*                      </Typography>*/}
-          {/*                    </View>*/}
-          {/*                  )}*/}
-          {/*                </View>*/}
-          {/*              );*/}
-          {/*            })}*/}
-          {/*        </View>*/}
-
-          {/*        <Typography className="ml-2 text-caption text-gray">*/}
-          {/*          {images.length} фото*/}
-          {/*        </Typography>*/}
-          {/*      </View>*/}
-          {/*    )}*/}
-          {/*  </View>*/}
-          {/*</ImagePickerTrigger>*/}
-
-          {/*<Typography weight="medium" className="text-caption text-gray">*/}
-          {/*  Постарайся выбрать крутые фотки, с ними клиентов будет больше*/}
-          {/*</Typography>*/}
-        </View>
+        <ServiceImagesPicker value={photos} onChange={setPhotos} />
       </AuthScreenLayout>
     </FormProvider>
   );

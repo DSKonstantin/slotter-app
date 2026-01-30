@@ -1,149 +1,437 @@
-import React, { useMemo, useState } from "react";
-import { Dimensions, Pressable, View } from "react-native";
+import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
+import type { DocumentPickerAsset } from "expo-document-picker";
+
+import React, { useState, useCallback } from "react";
+import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { nanoid } from "nanoid/non-secure";
 
-import { Typography, StSvg, Button } from "@/src/components/ui";
-import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
-import { StModal } from "@/src/components/ui/StModal";
-import { PickedFile, useImagePicker } from "@/src/hooks/useImagePicker";
+import { Typography, StSvg, Divider } from "@/src/components/ui";
+import { useImagePicker } from "@/src/hooks/useImagePicker";
+import { ImagePickerMenu } from "@/src/components/auth/service/ImagePickerMenu";
 
-export type ServiceImage = PickedFile & { id: string };
+export type PhotoAsset =
+  | (ImagePickerAsset & { id: string })
+  | (DocumentPickerAsset & { id: string });
 
-type ServiceImagesPickerProps = {
-  value: ServiceImage[];
-  onChange: (next: ServiceImage[]) => void;
-
-  max?: number;
+export type ServicePhotosValue = {
+  titlePhoto: { assets: PhotoAsset[]; max: number };
+  otherPhoto: { assets: PhotoAsset[]; max: number };
 };
 
-export function ServiceImagesPicker({
-  value,
-  onChange,
-  max = 10,
-}: ServiceImagesPickerProps) {
-  const { openPickerMenu } = useImagePicker();
+type Props = {
+  value: ServicePhotosValue;
+  onChange: (next: ServicePhotosValue) => void;
+};
 
-  const images = value ?? [];
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const selected = useMemo(
-    () => images.find((x) => x.id === selectedId) ?? null,
-    [images, selectedId],
-  );
-
-  const canAddMore = images.length < max;
-
-  const addImage = (asset: PickedFile) => {
-    if (!canAddMore) return;
-
-    const next: ServiceImage = {
-      ...asset,
-      id: nanoid(),
+type MenuState =
+  | { open: false }
+  | {
+      open: true;
+      title: string;
+      message?: string;
+      mode: "title" | "other";
+      action: "add" | "replace";
+      replaceId?: string;
+      onCamera: () => void | Promise<void>;
+      onGallery: () => void | Promise<void>;
+      onFiles?: () => void | Promise<void>;
     };
 
-    onChange([...images, next]);
-  };
+export function ServiceImagesPicker({ value, onChange }: Props) {
+  const [menu, setMenu] = useState<MenuState>({ open: false });
+  const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
+  const title = value.titlePhoto.assets[0] ?? null;
+  const other = value.otherPhoto.assets;
 
-  const removeImage = (id: string) => {
-    onChange(images.filter((x) => x.id !== id));
-    setSelectedId(null);
-  };
+  const closeMenu = useCallback(() => setMenu({ open: false }), []);
 
-  const replaceImage = (id: string) => {
-    openPickerMenu({
-      title: "Заменить фото",
+  const update = useCallback(
+    (patch: Partial<ServicePhotosValue>) => {
+      onChange({ ...value, ...patch });
+    },
+    [onChange, value],
+  );
+
+  const setTitle = useCallback(
+    (asset: ImagePickerAsset | DocumentPickerAsset) => {
+      const next: PhotoAsset = { ...asset, id: nanoid() };
+
+      update({
+        titlePhoto: {
+          ...value.titlePhoto,
+          assets: [next],
+        },
+      });
+    },
+    [update, value.titlePhoto],
+  );
+
+  const addOther = useCallback(
+    (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => {
+      if (!assets?.length) return;
+
+      const mapped: PhotoAsset[] = assets.map((a) => ({ ...a, id: nanoid() }));
+
+      const next = [...other, ...mapped].slice(0, value.otherPhoto.max);
+
+      update({
+        otherPhoto: {
+          ...value.otherPhoto,
+          assets: next,
+        },
+      });
+    },
+    [other, update, value.otherPhoto],
+  );
+
+  const replaceOther = useCallback(
+    (id: string, asset: ImagePickerAsset | DocumentPickerAsset) => {
+      const next = other.map((x) => (x.id === id ? { ...asset, id } : x));
+
+      update({
+        otherPhoto: {
+          ...value.otherPhoto,
+          assets: next,
+        },
+      });
+    },
+    [other, update, value.otherPhoto],
+  );
+
+  const openTitleMenu = useCallback(() => {
+    const options: ImagePickerOptions = {
+      allowsMultipleSelection: false,
+      aspect: [4, 3],
+      quality: 1,
+    };
+
+    setMenu({
+      open: true,
+      mode: "title",
+      action: "replace",
+      title: title ? "Заменить титульное фото" : "Добавить титульное фото",
       message: "Выберите источник",
-      options: { aspect: [1, 1], allowsEditing: true },
-      onPick: (asset) => {
-        onChange(
-          images.map((img) => (img.id === id ? { ...img, ...asset } : img)),
-        );
-        setSelectedId(null);
+      onCamera: async () => {
+        const assets = await pickFromCamera(options);
+        const a = assets?.[0];
+        if (a) setTitle(a);
+        closeMenu();
+      },
+
+      onGallery: async () => {
+        const assets = await pickFromGallery(options);
+        const a = assets?.[0];
+        if (a) setTitle(a);
+        closeMenu();
+      },
+
+      onFiles: async () => {
+        const assets = await pickFromFiles(options);
+        const a = assets?.[0];
+        if (a) setTitle(a);
+        closeMenu();
       },
     });
-  };
+  }, [
+    title,
+    pickFromCamera,
+    setTitle,
+    closeMenu,
+    pickFromGallery,
+    pickFromFiles,
+  ]);
+
+  const openOtherAddMenu = useCallback(() => {
+    const options: ImagePickerOptions = {
+      allowsMultipleSelection: true,
+      aspect: [4, 3],
+      quality: 1,
+      orderedSelection: true,
+      selectionLimit: value.otherPhoto.max - other.length,
+    };
+
+    setMenu({
+      open: true,
+      mode: "other",
+      action: "add",
+      title: "Добавить фото услуги",
+      message: "Выберите источник",
+
+      onCamera: async () => {
+        const assets = await pickFromCamera(options);
+        if (assets?.length) addOther(assets);
+        closeMenu();
+      },
+
+      onGallery: async () => {
+        const assets = await pickFromGallery(options);
+        if (assets?.length) addOther(assets);
+        closeMenu();
+      },
+
+      onFiles: async () => {
+        const assets = await pickFromFiles(options);
+        if (assets?.length) addOther(assets);
+        closeMenu();
+      },
+    });
+  }, [
+    value.otherPhoto.max,
+    other.length,
+    pickFromCamera,
+    addOther,
+    pickFromGallery,
+    pickFromFiles,
+  ]);
+
+  const openOtherReplaceMenu = useCallback(
+    (id: string) => {
+      const options: ImagePickerOptions = {
+        allowsMultipleSelection: false,
+        aspect: [4, 3],
+        quality: 1,
+      };
+
+      setMenu({
+        open: true,
+        title: "Заменить фото услуги",
+        message: "Выберите источник",
+        mode: "other",
+        action: "replace",
+
+        onCamera: async () => {
+          const assets = await pickFromCamera(options);
+          const a = assets?.[0];
+          if (a) replaceOther(id, a);
+          closeMenu();
+        },
+
+        onGallery: async () => {
+          const assets = await pickFromGallery(options);
+          const a = assets?.[0];
+          if (a) replaceOther(id, a);
+          closeMenu();
+        },
+
+        onFiles: async () => {
+          const assets = await pickFromFiles(options);
+          const a = assets?.[0];
+          if (a) replaceOther(id, a);
+          closeMenu();
+        },
+      });
+    },
+    [pickFromCamera, replaceOther, closeMenu, pickFromGallery, pickFromFiles],
+  );
+
+  const removeTitle = useCallback(() => {
+    update({
+      titlePhoto: {
+        ...value.titlePhoto,
+        assets: [],
+      },
+    });
+  }, [update, value.titlePhoto]);
+
+  const removeOtherById = useCallback(
+    (id: string) => {
+      update({
+        otherPhoto: {
+          ...value.otherPhoto,
+          assets: other.filter((x) => x.id !== id),
+        },
+      });
+    },
+    [other, update, value.otherPhoto],
+  );
 
   return (
-    <View className="gap-2">
-      <Typography weight="medium" className="text-caption text-gray">
-        Фото услуги (необязательно)
-      </Typography>
+    <>
+      <View className="mb-3">
+        <Typography weight="medium" className="text-caption text-gray mb-2">
+          Фото услуги (необязательно)
+        </Typography>
 
-      {/* ✅ ADD / PREVIEW */}
-      <ImagePickerTrigger
-        title="Загрузить фото"
-        disabled={!canAddMore}
-        onPick={(asset) => addImage(asset)}
-        options={{ aspect: [1, 1] }}
-      >
-        <View className="p-2 border justify-center items-center border-gray rounded-3xl border-dashed gap-1 h-[116px]">
-          <StSvg name="layers" size={40} color="black" />
-          <Typography weight="medium" className="text-body">
-            Добавить фото
-          </Typography>
-        </View>
-      </ImagePickerTrigger>
-      <Typography weight="medium" className="text-caption text-gray">
-        Постарайся выбрать крутые фотки, с ними клиентов будет больше
-      </Typography>
+        <View className="flex-row items-stretch gap-3 h-[153px]">
+          <View className="flex-1">
+            <Typography className="text-caption text-gray mb-3">
+              Титульное фото
+            </Typography>
 
-      {/* ✅ THUMBNAILS */}
-      {images.length > 0 && (
-        <View className="flex-row flex-wrap gap-2 mt-1">
-          {images.map((img) => (
-            <Pressable
-              key={img.id}
-              onPress={() => setSelectedId(img.id)}
-              className="relative"
-            >
-              <Image
-                source={{ uri: img.uri }}
-                style={{
-                  width: 128,
-                  height: 128,
-                  borderRadius: 16,
-                }}
-              />
+            <Pressable onPress={openTitleMenu} className="flex-1">
+              {title ? (
+                <PhotoPreview
+                  uri={title.uri}
+                  radius={20}
+                  mode="title"
+                  onRemove={removeTitle}
+                />
+              ) : (
+                <EmptySlot variant="title" />
+              )}
             </Pressable>
-          ))}
-        </View>
-      )}
+          </View>
 
-      {/* ✅ ACTIONS MODAL */}
-      <StModal visible={!!selectedId} onClose={() => setSelectedId(null)}>
-        <View className="gap-3 pb-3">
-          <Typography weight="semibold" className="text-display">
-            Фото
-          </Typography>
+          <View className="flex-1">
+            <Typography className="text-caption text-gray mb-3">
+              Остальные фото
+            </Typography>
 
-          {!!selected && (
-            <View className="items-center">
-              <Image
-                source={{ uri: selected.uri }}
-                style={{
-                  width: "100%",
-                  aspectRatio: 1,
-                  borderRadius: 24,
-                }}
-              />
+            <View className="flex-row flex-wrap flex-1 gap-2 mb-2">
+              {Array.from({ length: 2 }).map((_, i) => {
+                const img = other[i];
+
+                return (
+                  <View key={i} className="flex-1">
+                    <Pressable
+                      onPress={() => {
+                        if (img) openOtherReplaceMenu(img.id);
+                        else openOtherAddMenu();
+                      }}
+                    >
+                      {img ? (
+                        <PhotoPreview
+                          uri={img.uri}
+                          radius={14}
+                          mode="other"
+                          onRemove={() => removeOtherById(img.id)}
+                        />
+                      ) : (
+                        <EmptySlot variant="other" />
+                      )}
+                    </Pressable>
+                  </View>
+                );
+              })}
             </View>
-          )}
+            <View className="flex-row flex-wrap flex-1 gap-2">
+              {Array.from({ length: 2 }).map((_, i) => {
+                const img = other[i + 2];
 
-          <Button
-            title="Заменить"
-            onPress={() => selectedId && replaceImage(selectedId)}
-            disabled={!selectedId}
-          />
-
-          <Button
-            title="Удалить"
-            variant="clear"
-            onPress={() => selectedId && removeImage(selectedId)}
-            disabled={!selectedId}
-          />
+                return (
+                  <View key={i} className="flex-1">
+                    <Pressable
+                      onPress={() => {
+                        if (img) openOtherReplaceMenu(img.id);
+                        else openOtherAddMenu();
+                      }}
+                    >
+                      {img ? (
+                        <PhotoPreview
+                          uri={img.uri}
+                          radius={14}
+                          mode="other"
+                          onRemove={() => removeOtherById(img.id)}
+                        />
+                      ) : (
+                        <EmptySlot variant="other" />
+                      )}
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
         </View>
-      </StModal>
+
+        <Typography className="text-caption text-gray mt-6 mb-3">
+          Требования
+        </Typography>
+
+        <View className="bg-light rounded-3xl p-5 gap-1">
+          <View className="gap-4">
+            <Typography className="text-body">
+              Формат JPG или PNG, до 5 МБ
+            </Typography>
+            <Divider className="mb-4" />
+          </View>
+
+          <View className="gap-4">
+            <Typography className="text-body">
+              Минимум 800×600 px (лучше 1200×900)
+            </Typography>
+            <Divider className="mb-4" />
+          </View>
+
+          <View className="gap-4">
+            <Typography className="text-body">
+              Без водяных знаков и чужих логотипов
+            </Typography>
+            <Divider className="mb-4" />
+          </View>
+
+          <View className="gap-4">
+            <Typography className="text-body">
+              Хорошее освещение, чёткий фокус
+            </Typography>
+          </View>
+        </View>
+      </View>
+      {menu.open && (
+        <ImagePickerMenu
+          visible={menu.open}
+          onClose={closeMenu}
+          title={menu.open ? menu.title : ""}
+          message={menu.open ? menu.message : ""}
+          onCamera={menu?.onCamera}
+          onGallery={menu.onGallery}
+          onFiles={menu.onFiles}
+        />
+      )}
+    </>
+  );
+}
+
+function PhotoPreview({
+  uri,
+  radius,
+  mode,
+  onRemove,
+}: {
+  uri: string;
+  radius: number;
+  mode: "title" | "other";
+  onRemove: () => void;
+}) {
+  return (
+    <View className="relative">
+      <Image
+        source={{ uri }}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: radius,
+        }}
+        contentFit="cover"
+      />
+
+      <Pressable
+        onPress={onRemove}
+        hitSlop={10}
+        className="absolute -top-2 -right-2 rounded-full w-[24px] h-[24px] bg-white items-center justify-center"
+      >
+        <StSvg name="Close_round_fill_light" size={18} color="#000000" />
+      </Pressable>
+    </View>
+  );
+}
+
+function EmptySlot({ variant }: { variant: "title" | "other" }) {
+  return (
+    <View
+      className="border border-gray border-dashed rounded-small justify-center items-center"
+      style={{
+        height: variant === "title" ? 123 : 58,
+      }}
+    >
+      <View className="items-center justify-center">
+        <StSvg
+          name="Add_ring_fill_light"
+          size={variant === "title" ? 40 : 24}
+          color="#AEAEB2"
+        />
+      </View>
     </View>
   );
 }

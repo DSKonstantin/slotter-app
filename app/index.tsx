@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { Button } from "@/src/components/ui";
 import { router } from "expo-router";
+import Test from "@/src/components/ui/fields/Test";
 
 export default function Index() {
   return (
@@ -13,6 +14,8 @@ export default function Index() {
         title="personal"
         onPress={() => router.replace("/(auth)/personal-information")}
       />
+
+      <Test />
     </View>
   );
 }

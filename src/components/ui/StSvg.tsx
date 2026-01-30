@@ -9,7 +9,7 @@ export const StSvg = createIconSetFromIcoMoon(
 // import React from "react";
 // import createIconSet from "@react-native-vector-icons/icomoon";
 // import icoMoonConfig from "./selection.json";
-// import { IconProps } from "@react-native-vector-icons/common";
+// import { IconProps } from "@react-native-vector-icons/shared";
 //
 // const SvgIcon = createIconSet(icoMoonConfig);
 //
