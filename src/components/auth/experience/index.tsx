@@ -5,6 +5,7 @@ import { Card, StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
+import { colors } from "@/src/styles/colors";
 
 const Experience = () => {
   return (
@@ -13,7 +14,7 @@ const Experience = () => {
         <Typography weight="semibold" className="text-display mb-2">
           Опыт работы
         </Typography>
-        <Typography weight="medium" className="text-body text-gray">
+        <Typography weight="medium" className="text-body text-neutral-500">
           Поможем настроить приложение под тебя
         </Typography>
         <View className="gap-3 mt-9">
@@ -24,9 +25,15 @@ const Experience = () => {
               router.push(Routers.auth.database);
             }}
             rightIcon={
-              <StSvg name="Expand_right_light" size={24} color="#8E8E93" />
+              <StSvg
+                name="Expand_right_light"
+                size={24}
+                color={colors.neutral[500]}
+              />
             }
-            leftIcon={<StSvg name="Star_fill" size={24} color="black" />}
+            leftIcon={
+              <StSvg name="Star_fill" size={24} color={colors.neutral[900]} />
+            }
           />
           <Card
             title="Вёл запись вручную"
@@ -35,9 +42,19 @@ const Experience = () => {
               router.push(Routers.auth.database);
             }}
             rightIcon={
-              <StSvg name="Expand_right_light" size={24} color="#8E8E93" />
+              <StSvg
+                name="Expand_right_light"
+                size={24}
+                color={colors.neutral[500]}
+              />
             }
-            leftIcon={<StSvg name="File_dock_fill" size={24} color="black" />}
+            leftIcon={
+              <StSvg
+                name="File_dock_fill"
+                size={24}
+                color={colors.neutral[900]}
+              />
+            }
           />
           <Card
             title="Только начинаю"
@@ -46,9 +63,15 @@ const Experience = () => {
               router.push(Routers.auth.personalInformation);
             }}
             rightIcon={
-              <StSvg name="Expand_right_light" size={24} color="#8E8E93" />
+              <StSvg
+                name="Expand_right_light"
+                size={24}
+                color={colors.neutral[500]}
+              />
             }
-            leftIcon={<StSvg name="Blank_fill" size={24} color="black" />}
+            leftIcon={
+              <StSvg name="Blank_fill" size={24} color={colors.neutral[900]} />
+            }
           />
         </View>
       </View>

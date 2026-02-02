@@ -50,12 +50,12 @@ const styles = {
   },
 
   variants: {
-    primary: "bg-primary",
+    primary: "bg-background-black",
     secondary: "bg-background",
-    accent: "bg-accent",
-    info: "bg-accent-blueLight",
-    success: "bg-accent-slotterGreen",
-    warning: "bg-accent-yellow",
+    accent: "bg-primary-blue-500",
+    info: "bg-primary-blue-100",
+    success: "bg-primary-green-500",
+    warning: "bg-accent-yellow-500",
   },
 
   text: {
@@ -67,12 +67,12 @@ const styles = {
     },
 
     variants: {
-      primary: "text-gray-light",
-      secondary: "text-gray",
-      accent: "text-accent-azure",
-      info: "text-accent",
-      success: "text-accent-green",
-      warning: "text-accent-darkYellow",
+      primary: "text-neutral-200",
+      secondary: "text-neutral-500",
+      accent: "text-accent-azure-500",
+      info: "text-primary-blue-500",
+      success: "text-primary-green-700",
+      warning: "text-accent-yellow-700",
     },
   },
 

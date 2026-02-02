@@ -20,12 +20,12 @@ const AuthHome = () => {
             Управляй своим{" "}
             <Typography
               weight="semibold"
-              className="text-display text-accent text-center"
+              className="text-display text-primary-blue-500 text-center"
             >
               бизнесом
             </Typography>
           </Typography>
-          <Typography weight="medium" className="text-gray text-center">
+          <Typography weight="medium" className="text-neutral-500 text-center">
             Веди запись, график и базу клиентов {"\n"} в одном приложении
           </Typography>
         </View>

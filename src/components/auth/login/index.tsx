@@ -51,7 +51,7 @@ const Login = () => {
           <Typography weight="semibold" className="text-display mb-2">
             С возвращением!
           </Typography>
-          <Typography weight="medium" className="text-body text-gray">
+          <Typography weight="medium" className="text-body text-neutral-500">
             Введи номер, мы найдем профиль
           </Typography>
 

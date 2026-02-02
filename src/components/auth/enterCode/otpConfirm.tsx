@@ -60,7 +60,7 @@ export function OtpConfirm({
             onLayout={getCellOnLayoutHandler(index)}
             style={{ flex: 1, aspectRatio: 1 }}
             className={`items-center justify-center rounded-xl border ${
-              isFocused ? "border-primary bg-gray-lighter" : "border-gray-muted"
+              isFocused ? "border-primary bg-neutral-100" : "border-neutral-300"
             }`}
           >
             <Typography className="text-lg">
@@ -75,7 +75,7 @@ export function OtpConfirm({
         date={Date.now() + RESEND_TIMEOUT}
         renderer={({ seconds, completed }) =>
           !completed ? (
-            <Typography className="mt-4 text-center text-caption text-gray">
+            <Typography className="mt-4 text-center text-caption text-neutral-500">
               Отправить повторно через {seconds} сек
             </Typography>
           ) : (

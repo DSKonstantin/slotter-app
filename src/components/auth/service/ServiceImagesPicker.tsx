@@ -9,6 +9,7 @@ import { nanoid } from "nanoid/non-secure";
 import { Typography, StSvg, Divider } from "@/src/components/ui";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 import { ImagePickerMenu } from "@/src/components/auth/service/ImagePickerMenu";
+import { colors } from "@/src/styles/colors";
 
 export type PhotoAsset =
   | (ImagePickerAsset & { id: string })
@@ -181,6 +182,7 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
     other.length,
     pickFromCamera,
     addOther,
+    closeMenu,
     pickFromGallery,
     pickFromFiles,
   ]);
@@ -249,13 +251,16 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
   return (
     <>
       <View className="mb-3">
-        <Typography weight="medium" className="text-caption text-gray mb-2">
+        <Typography
+          weight="medium"
+          className="text-caption text-neutral-500 mb-2"
+        >
           Фото услуги (необязательно)
         </Typography>
 
         <View className="flex-row items-stretch gap-3 h-[153px]">
           <View className="flex-1">
-            <Typography className="text-caption text-gray mb-3">
+            <Typography className="text-caption text-neutral-500 mb-3">
               Титульное фото
             </Typography>
 
@@ -274,7 +279,7 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
           </View>
 
           <View className="flex-1">
-            <Typography className="text-caption text-gray mb-3">
+            <Typography className="text-caption text-neutral-500 mb-3">
               Остальные фото
             </Typography>
 
@@ -335,7 +340,7 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
           </View>
         </View>
 
-        <Typography className="text-caption text-gray mt-6 mb-3">
+        <Typography className="text-caption text-neutral-500 mt-6 mb-3">
           Требования
         </Typography>
 
@@ -411,7 +416,11 @@ function PhotoPreview({
         hitSlop={10}
         className="absolute -top-2 -right-2 rounded-full w-[24px] h-[24px] bg-white items-center justify-center"
       >
-        <StSvg name="Close_round_fill_light" size={18} color="#000000" />
+        <StSvg
+          name="Close_round_fill_light"
+          size={18}
+          color={colors.neutral[900]}
+        />
       </Pressable>
     </View>
   );
@@ -420,7 +429,7 @@ function PhotoPreview({
 function EmptySlot({ variant }: { variant: "title" | "other" }) {
   return (
     <View
-      className="border border-gray border-dashed rounded-small justify-center items-center"
+      className="border border-neutral-500 border-dashed rounded-small justify-center items-center"
       style={{
         height: variant === "title" ? 123 : 58,
       }}
@@ -429,7 +438,7 @@ function EmptySlot({ variant }: { variant: "title" | "other" }) {
         <StSvg
           name="Add_ring_fill_light"
           size={variant === "title" ? 40 : 24}
-          color="#AEAEB2"
+          color={colors.neutral[400]}
         />
       </View>
     </View>

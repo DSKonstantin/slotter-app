@@ -17,7 +17,7 @@ export const StModal = ({
   visible,
   onClose,
   children,
-  containerClassName = "bg-light",
+  containerClassName = "bg-background-surface",
   ...props
 }: StModalProps) => {
   const { bottom } = useSafeAreaInsets();

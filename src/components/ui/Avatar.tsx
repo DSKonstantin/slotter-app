@@ -36,7 +36,7 @@ export function Avatar({ uri, name, size = "md", fallbackIcon }: AvatarProps) {
         borderRadius: dimension / 2,
       }}
       className={twMerge(
-        "items-center justify-center bg-gray-lighter overflow-hidden",
+        "items-center justify-center bg-neutral-100 overflow-hidden",
       )}
     >
       {uri ? (
@@ -45,7 +45,7 @@ export function Avatar({ uri, name, size = "md", fallbackIcon }: AvatarProps) {
           style={{ width: dimension, height: dimension }}
         />
       ) : initials ? (
-        <Text className="font-inter-semibold text-gray">{initials}</Text>
+        <Text className="font-inter-semibold text-neutral-500">{initials}</Text>
       ) : (
         fallbackIcon
       )}

@@ -34,7 +34,7 @@ export function ImagePickerMenu({
         </Typography>
 
         {!!message && (
-          <Typography className="text-caption text-gray text-center">
+          <Typography className="text-caption text-neutral-500 text-center">
             {message}
           </Typography>
         )}

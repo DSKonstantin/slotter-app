@@ -2,47 +2,60 @@ export const colors = {
   primary: {
     DEFAULT: "#000000",
     dark: "#000000",
+
+    blue: {
+      100: "#E1EFFF",
+      500: "#0088FF",
+      700: "#747996",
+    },
+
+    green: {
+      100: "#CAFFEF",
+      500: "#C8F660",
+      700: "#349B59",
+      800: "#649200",
+    },
   },
+
   secondary: {
     DEFAULT: "#FFFFFF",
     dark: "#FFFFFF",
   },
+
   tertiary: {
-    DEFAULT: "#222222",
-    dark: "#222222",
+    DEFAULT: "#000000",
+    dark: "#000000",
   },
+
+  gray: {
+    separators: "#E6E6E6",
+  },
+
+  neutral: {
+    0: "#FFFFFF",
+    100: "#E5E5EA",
+    200: "#D1D1D6",
+    300: "#C7C7CC",
+    400: "#AEAEB2",
+    500: "#8E8E93",
+    900: "#000000",
+  },
+
   background: {
     DEFAULT: "#F2F2F6",
+    surface: "#FFFFFF",
+    black: "#111111",
     switch: "#D1D1D1",
   },
+
   accent: {
-    DEFAULT: "#0088FF",
-    blueLight: "#E1EFFF",
-    green: "#349B59",
-    slotterGreen: "#C8F660",
-    yellow: "#F6F360",
-    darkYellow: "#928F00",
-    azure: "#6EF6FF",
-    red: "#FF383C",
-    redLight: "#FFE2E6",
+    azure: { 500: "#CCFC0B" },
+    yellow: { 500: "#F6F360", 700: "#928F00" },
+    red: { 500: "#FF383C" },
+    indigo: { 500: "#6155F5" },
+    purple: { 500: "#CB30E0" },
+    brown: { 500: "#AC7F5E" },
+    mint: { 500: "#00C8B3" },
+    orange: { 500: "#FF8D28" },
   },
-  gray: {
-    DEFAULT: "#8E8E93",
-    light: "#D1D1D6",
-    muted: "#C7C7CC",
-    lighter: "#E5E5EA",
-    medium: "#AEAEB2",
-    separators: "#E6E6E6",
-    dark: "#3C3C43",
-  },
-  slate: {
-    DEFAULT: "#1f2937",
-  },
-  dark: {
-    DEFAULT: "#000000",
-  },
-  light: {
-    DEFAULT: "#ffffff",
-  },
-  overlay: "#000000",
 };

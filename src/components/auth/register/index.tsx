@@ -55,7 +55,7 @@ const Register = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Безопасность
           </Typography>
-          <Typography weight="medium" className="text-body text-gray">
+          <Typography weight="medium" className="text-body text-neutral-500">
             Защити базу клиентов паролем и привяжи почту для восстановления
           </Typography>
           <View className="gap-2 mt-9">

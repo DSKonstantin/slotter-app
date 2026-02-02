@@ -7,9 +7,10 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { useNotificationPermission } from "@/src/hooks/useNotificationPermission";
+import { colors } from "@/src/styles/colors";
 
 const Notification = () => {
-  const { status, isGranted, canAskAgain, requestOrOpenSettings, refresh } =
+  const { canAskAgain, requestOrOpenSettings, refresh } =
     useNotificationPermission();
 
   return (
@@ -40,7 +41,7 @@ const Notification = () => {
     >
       <View className="flex-1 justify-center items-center mb-14">
         <View className="items-center mb-3">
-          <StSvg name="Bell_pin_fill" size={60} color="black" />
+          <StSvg name="Bell_pin_fill" size={60} color={colors.neutral[900]} />
         </View>
 
         <Typography weight="semibold" className="text-display text-center">
@@ -48,7 +49,7 @@ const Notification = () => {
         </Typography>
         <Typography
           weight="medium"
-          className="text-body text-center text-gray mt-2"
+          className="text-body text-center text-neutral-500 mt-2"
         >
           Разреши нам напоминать о записях, сообщениях и изменениях. Никакого
           спама, честно

@@ -12,6 +12,7 @@ import { StepProgress } from "@/src/components/ui/StepProgress";
 import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { days } from "@/src/constants/days";
+import { colors } from "@/src/styles/colors";
 
 type ScheduleFormValues = {
   workingTimeFrom: string;
@@ -86,7 +87,7 @@ const Schedule = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Дни работы
           </Typography>
-          <Typography weight="medium" className="text-body text-gray">
+          <Typography weight="medium" className="text-body text-neutral-500">
             Нажми на дни, когда ты принимаешь
           </Typography>
 
@@ -108,14 +109,14 @@ const Schedule = () => {
             {methods.formState.errors.workingDays && (
               <Typography
                 weight="medium"
-                className="text-accent-red text-caption mt-[2px]"
+                className="text-accent-red-500 text-caption mt-[2px]"
               >
                 {methods.formState.errors.workingDays.message as string}
               </Typography>
             )}
           </View>
 
-          <Typography weight="medium" className="text-gray text-caption">
+          <Typography weight="medium" className="text-neutral-500 text-caption">
             Время работы
           </Typography>
           <View className="flex-row gap-2">
@@ -125,7 +126,9 @@ const Schedule = () => {
                 placeholder="9:00"
                 hideErrorText
                 maxLength={5}
-                endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
+                endAdornment={
+                  <StSvg name="Time" size={24} color={colors.neutral[500]} />
+                }
                 keyboardType="phone-pad"
               />
             </View>
@@ -140,13 +143,15 @@ const Schedule = () => {
                 placeholder="18:00"
                 hideErrorText
                 maxLength={5}
-                endAdornment={<StSvg name="Time" size={24} color="#8E8E93" />}
+                endAdornment={
+                  <StSvg name="Time" size={24} color={colors.neutral[500]} />
+                }
                 keyboardType="phone-pad"
               />
             </View>
           </View>
 
-          <Typography weight="medium" className="text-caption text-gray">
+          <Typography weight="medium" className="text-caption text-neutral-500">
             Свободный или сменный график (2/2) можно будет настроить в календаре
             позже
           </Typography>

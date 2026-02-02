@@ -5,6 +5,7 @@ import { Button, StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
+import { colors } from "@/src/styles/colors";
 
 const Database = () => {
   return (
@@ -13,7 +14,7 @@ const Database = () => {
         <Typography weight="semibold" className="text-display mb-2">
           База клиентов
         </Typography>
-        <Typography weight="medium" className="text-body text-gray">
+        <Typography weight="medium" className="text-body text-neutral-500">
           Поможем настроить приложение под тебя
         </Typography>
         <View className="gap-3 mt-9 flex-row">
@@ -25,7 +26,11 @@ const Database = () => {
               textVariant="accent"
               size="lg"
               iconLeft={
-                <StSvg name="Arhive_alt_add_fill" size={24} color="#0088FF" />
+                <StSvg
+                  name="Arhive_alt_add_fill"
+                  size={24}
+                  color={colors.primary.blue[500]}
+                />
               }
               onPress={() => {
                 router.push(Routers.auth.databaseSuccess);
@@ -37,7 +42,9 @@ const Database = () => {
               title="Нет, начну с нуля"
               direction="vertical"
               size="lg"
-              iconLeft={<StSvg name="Blank_fill" size={24} color="#FFFFFF" />}
+              iconLeft={
+                <StSvg name="Blank_fill" size={24} color={colors.neutral[0]} />
+              }
               onPress={() => {
                 router.push(Routers.auth.personalInformation);
               }}

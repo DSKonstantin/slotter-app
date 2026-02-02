@@ -8,6 +8,7 @@ import {
   StSvg,
   StModal,
 } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 
 type AuthHeaderProps = {
   showBack?: boolean;
@@ -26,7 +27,9 @@ export default function AuthHeader({
       <View className="flex-row items-center justify-between mt-2">
         {showBack ? (
           <IconButton
-            icon={<StSvg name="Expand_left" size={24} color="black" />}
+            icon={
+              <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />
+            }
             onPress={() => router.back()}
           />
         ) : (
@@ -35,7 +38,13 @@ export default function AuthHeader({
 
         {showSupport && (
           <IconButton
-            icon={<StSvg name="Headphones_fill" size={24} color="black" />}
+            icon={
+              <StSvg
+                name="Headphones_fill"
+                size={24}
+                color={colors.neutral[900]}
+              />
+            }
             onPress={() => setSupportVisible(true)}
           />
         )}
@@ -48,7 +57,7 @@ export default function AuthHeader({
           Нужна помощь?
         </Typography>
 
-        <Typography className="text-gray text-body text-center">
+        <Typography className="text-neutral-500 text-body text-center">
           Мы на связи, выбери где удобнее:
         </Typography>
 

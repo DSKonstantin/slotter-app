@@ -65,7 +65,7 @@ const Service = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Первая услуга
           </Typography>
-          <Typography weight="medium" className="text-body text-gray">
+          <Typography weight="medium" className="text-body text-neutral-500">
             Добавь самую популярную
           </Typography>
           <View className="gap-2 mt-9">

@@ -34,8 +34,8 @@ export const Card = ({
     <Pressable
       onPress={onPress}
       className={twMerge(
-        "flex-row rounded-2xl bg-white p-4 border border-transparent",
-        active && "border border-accent",
+        "flex-row rounded-2xl bg-background-surface p-4 border border-transparent",
+        active && "border border-primary-blue-500",
       )}
     >
       {leftIcon && <View className="mr-3">{leftIcon}</View>}
@@ -49,7 +49,7 @@ export const Card = ({
         </View>
 
         {subtitle && (
-          <Text className="font-inter-medium text-caption text-gray mt-1">
+          <Text className="font-inter-medium text-caption text-neutral-500 mt-1">
             {subtitle}
           </Text>
         )}

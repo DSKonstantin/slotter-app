@@ -17,7 +17,7 @@ export function StepProgress({ steps, currentStep }: StepProgressProps) {
             key={index}
             className={twMerge(
               "h-2 flex-1 rounded-full",
-              isActive ? "bg-accent" : "bg-gray-lighter",
+              isActive ? "bg-primary-blue-500" : "bg-neutral-100",
             )}
           />
         );

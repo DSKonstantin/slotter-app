@@ -36,7 +36,7 @@ const EnterCode = () => {
         <Typography weight="semibold" className="text-display mb-2">
           Мы отправили код
         </Typography>
-        <Typography weight="medium" className="text-body text-gray">
+        <Typography weight="medium" className="text-body text-neutral-500">
           Проверь смс. Обычно приходит быстро
         </Typography>
         <View className="mt-9">

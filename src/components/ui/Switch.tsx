@@ -33,7 +33,7 @@ export function Switch({
 
   const bgColor = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.background.switch, colors.accent.slotterGreen],
+    outputRange: [colors.background.switch, colors.primary.green[500]],
   });
 
   const handleToggle = () => {
@@ -78,7 +78,7 @@ export function Switch({
               transform: [{ translateX }],
             },
           ]}
-          className="bg-secondary shadow-sm"
+          className="bg-background-surface shadow-sm"
         />
       </Animated.View>
     </Pressable>

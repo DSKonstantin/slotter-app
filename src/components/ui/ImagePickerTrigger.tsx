@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Pressable } from "react-native";
 import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";

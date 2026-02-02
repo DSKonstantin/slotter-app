@@ -14,6 +14,7 @@ import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
+import { colors } from "@/src/styles/colors";
 
 type PersonalInformationFormValues = {};
 
@@ -61,7 +62,7 @@ const PersonalInformation = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Твоя визитка
           </Typography>
-          <Typography weight="medium" className="text-body text-gray">
+          <Typography weight="medium" className="text-body text-neutral-500">
             Чтобы клиенты знали, к кому идут
           </Typography>
 
@@ -74,7 +75,9 @@ const PersonalInformation = () => {
               <Avatar
                 size="xl"
                 uri={avatarUri ?? undefined}
-                fallbackIcon={<StSvg name="Camera" size={40} color="#8E8E93" />}
+                fallbackIcon={
+                  <StSvg name="Camera" size={40} color={colors.neutral[500]} />
+                }
               />
             </ImagePickerTrigger>
           </View>
@@ -89,7 +92,10 @@ const PersonalInformation = () => {
           />
         </View>
         <Divider />
-        <Typography weight="medium" className="text-gray text-caption mt-5">
+        <Typography
+          weight="medium"
+          className="text-neutral-500 text-caption mt-5"
+        >
           Формат работы
         </Typography>
         <View className="mt-2 mb-5 gap-2">

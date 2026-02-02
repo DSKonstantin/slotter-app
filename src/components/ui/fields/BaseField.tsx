@@ -61,20 +61,20 @@ export function BaseField({
 }
 
 const styles = {
-  label: "mb-2 font-inter-medium text-gray text-caption",
+  label: "mb-2 font-inter-medium text-neutral-500 text-caption",
 
-  base: "flex-row items-center h-[48px] rounded-small bg-secondary border border-transparent",
+  base: "flex-row items-center h-[48px] rounded-small bg-background-surface border border-transparent",
 
-  focus: "border-accent",
+  focus: "border-primary-blue-500",
 
-  error: "border-accent-red",
+  error: "border-accent-red-500",
 
-  disabled: "bg-gray-muted",
+  disabled: "bg-neutral-300",
 
   adornmentStart: "mx-2",
 
   adornmentEnd: "mx-2",
 
   errorText:
-    "min-h-[20px] font-inter-medium mt-[2px] text-accent-red text-caption",
+    "min-h-[20px] font-inter-medium mt-[2px] text-accent-red-500 text-caption",
 };

@@ -46,6 +46,7 @@ const Test = () => {
         <RNDateTimePicker
           value={time}
           mode="time"
+          themeVariant="light"
           is24Hour
           display="spinner"
           onChange={onChangeAndroid}
@@ -58,11 +59,12 @@ const Test = () => {
             Выберите время
           </Typography>
 
-          <View className="mt-6">
+          <View className="mt-6 items-center">
             <RNDateTimePicker
               value={tempTime}
               mode="time"
               is24Hour
+              themeVariant="light"
               display="spinner"
               onChange={onChangeIOS}
             />

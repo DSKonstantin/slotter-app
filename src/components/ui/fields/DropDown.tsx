@@ -46,7 +46,11 @@ export function DropDown({
             marginHorizontal: 16,
           }}
           TickIconComponent={() => (
-            <StSvg name="Done_round" size={24} color={colors.accent.DEFAULT} />
+            <StSvg
+              name="Done_round"
+              size={24}
+              color={colors.primary.blue[500]}
+            />
           )}
           setOpen={setOpen}
           setValue={(cb) => {
@@ -62,11 +66,15 @@ export function DropDown({
             <StSvg
               name="Expand_down_light"
               size={24}
-              color={colors.gray.muted}
+              color={colors.neutral[300]}
             />
           )}
           ArrowUpIconComponent={() => (
-            <StSvg name="Expand_up_light" size={24} color={colors.gray.muted} />
+            <StSvg
+              name="Expand_up_light"
+              size={24}
+              color={colors.neutral[300]}
+            />
           )}
           style={{ borderWidth: 0, backgroundColor: "transparent", flex: 1 }}
           dropDownContainerStyle={{
@@ -79,7 +87,7 @@ export function DropDown({
           }}
           placeholderStyle={{
             ...styles.text,
-            color: colors.gray.muted,
+            color: colors.neutral[300],
           }}
           listItemContainerStyle={{
             paddingVertical: 10,
