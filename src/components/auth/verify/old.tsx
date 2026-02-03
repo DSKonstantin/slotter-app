@@ -6,7 +6,7 @@ import { View } from "react-native";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Typography, Button } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
@@ -64,21 +64,7 @@ const Verify = () => {
               placeholder="+ 7 999 000-00-00"
               maskFn={maskPhone}
               maxLength={16}
-              hideErrorText
               keyboardType="number-pad"
-            />
-            <Typography
-              weight="medium"
-              className="text-caption text-neutral-500 my-2"
-            >
-              Мы отправим код подтверждения в Telegram. Это бесплатно и
-              безопасно
-            </Typography>
-
-            <Button
-              title="Восстановить вход"
-              variant="clear"
-              onPress={() => {}}
             />
           </View>
         </View>

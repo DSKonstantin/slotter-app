@@ -32,6 +32,7 @@ const Notification = () => {
           }}
           secondary={{
             title: "Настрою потом",
+            variant: "clear",
             onPress: () => {
               router.push(Routers.auth.link);
             },

@@ -10,9 +10,11 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
 import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
-import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { days } from "@/src/constants/days";
 import { colors } from "@/src/styles/colors";
+import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { formatTime } from "@/src/utils/date/formatTime";
+import { BreaksFieldArray } from "@/src/components/auth/schedule/breaksFieldArray";
 
 type ScheduleFormValues = {
   workingTimeFrom: string;
@@ -33,6 +35,7 @@ const Schedule = () => {
       .of(Yup.string())
       .min(1, "Выберите минимум один рабочий день")
       .required("Выберите рабочие дни"),
+    breaks: Yup.array(),
   });
 
   const methods = useForm({
@@ -41,6 +44,7 @@ const Schedule = () => {
       workingTimeFrom: "",
       workingTimeTo: "",
       workingDays: [],
+      breaks: [],
     },
   });
 
@@ -76,6 +80,13 @@ const Schedule = () => {
               title: "Завершить",
               variant: "accent",
               onPress: methods.handleSubmit(onSubmit),
+            }}
+            secondary={{
+              title: "Пропустить",
+              variant: "clear",
+              onPress: () => {
+                router.push(Routers.auth.notification);
+              },
             }}
           />
         }
@@ -121,15 +132,13 @@ const Schedule = () => {
           </Typography>
           <View className="flex-row gap-2">
             <View className="flex-1">
-              <RhfTextField
+              <RhfDatePicker
                 name="workingTimeFrom"
                 placeholder="9:00"
                 hideErrorText
-                maxLength={5}
                 endAdornment={
                   <StSvg name="Time" size={24} color={colors.neutral[500]} />
                 }
-                keyboardType="phone-pad"
               />
             </View>
 
@@ -138,23 +147,23 @@ const Schedule = () => {
             </View>
 
             <View className="flex-1">
-              <RhfTextField
+              <RhfDatePicker
                 name="workingTimeTo"
                 placeholder="18:00"
                 hideErrorText
-                maxLength={5}
                 endAdornment={
                   <StSvg name="Time" size={24} color={colors.neutral[500]} />
                 }
-                keyboardType="phone-pad"
               />
             </View>
           </View>
 
-          <Typography weight="medium" className="text-caption text-neutral-500">
+          <Typography weight="medium" className="text-caption text-neutral-900">
             Свободный или сменный график (2/2) можно будет настроить в календаре
             позже
           </Typography>
+
+          <BreaksFieldArray />
         </View>
       </AuthScreenLayout>
     </FormProvider>

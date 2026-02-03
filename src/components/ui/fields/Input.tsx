@@ -45,7 +45,7 @@ export function Input({
             props.onBlur?.(e);
           }}
           className={styles.input}
-          placeholderTextColor={colors.gray.muted}
+          placeholderTextColor={colors.neutral[300]}
         />
       )}
     />

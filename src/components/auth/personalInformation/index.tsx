@@ -13,8 +13,8 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
-import { ImagePickerTrigger } from "@/src/components/ui/ImagePickerTrigger";
 import { colors } from "@/src/styles/colors";
+import ImagePickerTrigger from "@/src/components/shared/imagePickerTrigger";
 
 type PersonalInformationFormValues = {};
 

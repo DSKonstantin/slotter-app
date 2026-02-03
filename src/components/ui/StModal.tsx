@@ -1,7 +1,8 @@
 import React from "react";
-import { Dimensions, View } from "react-native";
+import { Dimensions, View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
+import { BlurView } from "expo-blur";
 
 type StModalProps = {
   visible: boolean;
@@ -17,7 +18,6 @@ export const StModal = ({
   visible,
   onClose,
   children,
-  containerClassName = "bg-background-surface",
   ...props
 }: StModalProps) => {
   const { bottom } = useSafeAreaInsets();
@@ -37,9 +37,14 @@ export const StModal = ({
       {...props}
     >
       <View
-        className={`rounded-t-large px-5 pt-3 ${containerClassName}`}
+        className={`relative rounded-t-large px-5 pt-3 bg-white/90 overflow-hidden`}
         style={{ paddingBottom: bottom + 8 }}
       >
+        <BlurView
+          intensity={50}
+          tint="light"
+          style={[StyleSheet.absoluteFillObject]}
+        />
         <View className="items-center mb-3">
           <View className="w-[83px] h-1 rounded-large bg-[#78788029]" />
         </View>

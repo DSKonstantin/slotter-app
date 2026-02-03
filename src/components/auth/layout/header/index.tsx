@@ -63,9 +63,11 @@ export default function AuthHeader({
 
         <View className="flex-row justify-center items-center my-6 gap-10">
           <IconButton
+            buttonClassName={"border border-neutral-100"}
             icon={<StSvg name="SocialWhatsApp" size={28} color="#37DB3A" />}
           />
           <IconButton
+            buttonClassName={"border border-neutral-100"}
             icon={<StSvg name="SocialTelegram" size={24} color="#37B5DB" />}
           />
         </View>

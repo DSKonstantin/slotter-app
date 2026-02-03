@@ -51,6 +51,7 @@ const Service = () => {
             }}
             secondary={{
               title: "Пропустить",
+              variant: "clear",
               onPress: () => {
                 router.push(Routers.auth.schedule);
               },

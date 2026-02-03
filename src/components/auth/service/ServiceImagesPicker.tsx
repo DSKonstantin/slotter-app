@@ -8,8 +8,8 @@ import { nanoid } from "nanoid/non-secure";
 
 import { Typography, StSvg, Divider } from "@/src/components/ui";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
-import { ImagePickerMenu } from "@/src/components/auth/service/ImagePickerMenu";
 import { colors } from "@/src/styles/colors";
+import ImagePickerMenu from "@/src/components/shared/imagePickerMenu";
 
 export type PhotoAsset =
   | (ImagePickerAsset & { id: string })
@@ -344,7 +344,7 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
           Требования
         </Typography>
 
-        <View className="bg-light rounded-3xl p-5 gap-1">
+        <View className="bg-background-surface rounded-3xl p-5 gap-1">
           <View className="gap-4">
             <Typography className="text-body">
               Формат JPG или PNG, до 5 МБ

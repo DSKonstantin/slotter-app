@@ -37,6 +37,7 @@ const Link = () => {
           }}
           secondary={{
             title: "Перейти в кабинет",
+            variant: "clear",
             onPress: () => {
               router.push(Routers.auth.root);
             },

@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { Pressable } from "react-native";
 import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
-import { ImagePickerMenu } from "@/src/components/auth/service/ImagePickerMenu";
+import ImagePickerMenu from "@/src/components/shared/imagePickerMenu";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 
 type ImagePickerTriggerProps = {
@@ -19,7 +19,7 @@ type ImagePickerTriggerProps = {
   onPick: (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => void;
 };
 
-export function ImagePickerTrigger({
+const ImagePickerTrigger = ({
   children,
   title,
   message,
@@ -27,7 +27,7 @@ export function ImagePickerTrigger({
   includeFiles,
   disabled,
   onPick,
-}: ImagePickerTriggerProps) {
+}: ImagePickerTriggerProps) => {
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
   const [visible, setVisible] = useState(false);
 
@@ -68,4 +68,6 @@ export function ImagePickerTrigger({
       />
     </>
   );
-}
+};
+
+export default ImagePickerTrigger;

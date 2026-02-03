@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Pressable } from "react-native";
+import { twMerge } from "tailwind-merge";
 
 type IconButtonSize = "sm" | "md";
 
@@ -8,6 +9,7 @@ type IconButtonProps = {
   onPress?: () => void;
   size?: IconButtonSize;
   disabled?: boolean;
+  buttonClassName?: string;
 };
 
 export function IconButton({
@@ -15,12 +17,13 @@ export function IconButton({
   onPress,
   size = "md",
   disabled,
+  buttonClassName,
 }: IconButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className={`${styles.base} ${styles.size[size]}`}
+      className={twMerge(styles.base, styles.size[size], buttonClassName)}
     >
       {icon}
     </Pressable>

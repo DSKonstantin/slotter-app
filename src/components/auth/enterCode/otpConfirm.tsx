@@ -9,6 +9,7 @@ import {
 } from "react-native-confirmation-code-field";
 
 import { Button, Typography } from "@/src/components/ui";
+import { ResendCodeButton } from "@/src/components/auth/enterCode/ResendCodeButton";
 
 type OtpConfirmProps = {
   length?: number;
@@ -70,24 +71,11 @@ export function OtpConfirm({
         )}
       />
 
-      <Countdown
-        key={countdownKey}
-        date={Date.now() + RESEND_TIMEOUT}
-        renderer={({ seconds, completed }) =>
-          !completed ? (
-            <Typography className="mt-4 text-center text-caption text-neutral-500">
-              Отправить повторно через {seconds} сек
-            </Typography>
-          ) : (
-            <View className="mt-4">
-              <Button
-                size="sm"
-                title="Отправить код повторно"
-                onPress={() => setCountdownKey((k) => k + 1)}
-              />
-            </View>
-          )
-        }
+      <ResendCodeButton
+        seconds={30}
+        onResend={async () => {
+          console.log("RESEND");
+        }}
       />
     </>
   );

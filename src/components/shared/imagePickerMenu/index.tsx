@@ -16,7 +16,7 @@ type ImagePickerMenuProps = {
   onFiles?: () => void;
 };
 
-export function ImagePickerMenu({
+const ImagePickerMenu = ({
   visible,
   title = "Загрузить фото",
   message = "Выберите источник",
@@ -25,7 +25,7 @@ export function ImagePickerMenu({
   onCamera,
   onGallery,
   onFiles,
-}: ImagePickerMenuProps) {
+}: ImagePickerMenuProps) => {
   return (
     <StModal visible={visible} onClose={onClose}>
       <View className="gap-3 pb-3">
@@ -52,4 +52,6 @@ export function ImagePickerMenu({
       </View>
     </StModal>
   );
-}
+};
+
+export default ImagePickerMenu;

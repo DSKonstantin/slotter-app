@@ -1,8 +1,8 @@
-import { Animated, Pressable, PressableProps, Text, View } from "react-native";
+import { memo, useCallback, useMemo, useRef } from "react";
+import { Animated, Pressable, PressableProps, Text } from "react-native";
 import { twMerge } from "tailwind-merge";
-import { useCallback, useRef } from "react";
 
-interface CustomBtn {
+export interface CustomBtn {
   title: string;
   onPress: () => void;
   size?: "sm" | "md" | "lg";
@@ -21,14 +21,13 @@ interface CustomBtn {
   textClassName?: string;
 }
 
-export const Button: React.FC<CustomBtn> = ({
+export const ButtonComponent: React.FC<CustomBtn> = ({
   title,
   onPress,
   size = "md",
   variant = "primary",
   textVariant = "default",
   direction = "horizontal",
-  fullWidth = false,
   disabled = false,
   iconLeft,
   iconRight,
@@ -36,38 +35,36 @@ export const Button: React.FC<CustomBtn> = ({
   containerClassName,
   textClassName,
 }) => {
-  const backgroundColorRef = useRef(new Animated.Value(0)).current;
+  const anim = useRef(new Animated.Value(0)).current;
 
-  const handlePress = useCallback(() => {
+  const handlePressIn = useCallback(() => {
     if (disabled) return;
-
-    Animated.timing(backgroundColorRef, {
+    Animated.timing(anim, {
       toValue: 1,
       duration: 60,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
-  }, [backgroundColorRef, disabled]);
+  }, [anim, disabled]);
 
-  const handleRelease = useCallback(() => {
+  const handlePressOut = useCallback(() => {
     if (disabled) return;
-
-    Animated.timing(backgroundColorRef, {
+    Animated.timing(anim, {
       toValue: 0,
       duration: 60,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
-  }, [backgroundColorRef, disabled]);
+  }, [anim, disabled]);
 
-  const backgroundColor = backgroundColorRef.interpolate({
-    inputRange: [0, 1],
-    outputRange: [styles.variants[variant].from, styles.variants[variant].to],
-  });
+  const opacity = useMemo(() => {
+    return anim.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
+  }, [anim]);
 
   return (
     <Pressable
-      onPressIn={handlePress}
-      onPressOut={handleRelease}
       onPress={onPress}
+      disabled={disabled}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       {...buttonProps}
     >
       <Animated.View
@@ -75,15 +72,14 @@ export const Button: React.FC<CustomBtn> = ({
           styles.base,
           styles.sizes[size],
           styles.directions[direction],
-          fullWidth && styles.fullWidth,
-          disabled && styles.disabled[variant],
+          styles.bgColors[variant],
           containerClassName,
         )}
         style={{
-          ...(!disabled && { backgroundColor }),
+          opacity: disabled ? 0.4 : opacity,
         }}
       >
-        {iconLeft && <View>{iconLeft}</View>}
+        {iconLeft && iconLeft}
         <Text
           className={twMerge(
             styles.textBase,
@@ -95,14 +91,14 @@ export const Button: React.FC<CustomBtn> = ({
         >
           {title}
         </Text>
-        {iconRight && <View>{iconRight}</View>}
+        {iconRight && iconRight}
       </Animated.View>
     </Pressable>
   );
 };
 
 const styles = {
-  base: "items-center justify-center rounded-medium gap-1",
+  base: "items-center justify-center rounded-medium gap-2",
   directions: {
     horizontal: "flex-row",
     vertical: "flex-col",
@@ -112,32 +108,15 @@ const styles = {
     md: "h-[50px] px-2",
     lg: "h-[80px] px-2",
   },
-  fullWidth: "",
-  variants: {
-    primary: {
-      from: "#000000",
-      to: "rgba(60, 60, 67, 0.6)",
-    },
-    secondary: {
-      from: "#FFFFFF",
-      to: "#E5E7EB",
-    },
-    accent: {
-      from: "#0088FF",
-      to: "rgba(34, 43, 89, 0.63)",
-    },
-    clear: {
-      from: "transparent",
-      to: "rgba(0,0,0,0.06)",
-    },
-  },
-  disabled: {
-    primary: "bg-[rgba(60,60,67,0.18)]",
+
+  bgColors: {
+    primary: "bg-background-black",
     secondary: "bg-background-surface",
-    accent: "bg-[rgba(60,60,67,0.18)]",
+    accent: "bg-primary-blue-500",
     clear: "transparent",
   },
-  textBase: "font-inter-semibold text-[16px] leading-[1.5]",
+
+  textBase: "font-inter-semibold text-[16px]",
   textVariants: {
     primary: "text-neutral-0",
     secondary: "text-neutral-900",
@@ -147,3 +126,5 @@ const styles = {
   textAccent: "text-primary-blue-500",
   textDisabled: "text-neutral-0",
 };
+
+export const Button = memo(ButtonComponent);
