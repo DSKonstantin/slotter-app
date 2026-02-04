@@ -103,7 +103,8 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
   const openTitleMenu = useCallback(() => {
     const options: ImagePickerOptions = {
       allowsMultipleSelection: false,
-      aspect: [4, 3],
+      allowsEditing: false,
+      aspect: [1, 1],
       quality: 1,
     };
 
@@ -251,16 +252,16 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
   return (
     <>
       <View className="mb-3">
-        <Typography
-          weight="medium"
-          className="text-caption text-neutral-500 mb-2"
-        >
+        <Typography className="text-caption text-neutral-500 mb-2">
           Фото услуги (необязательно)
         </Typography>
 
         <View className="flex-row items-stretch gap-3 h-[153px]">
           <View className="flex-1">
-            <Typography className="text-caption text-neutral-500 mb-3">
+            <Typography
+              weight="regular"
+              className="text-caption text-neutral-500 mb-3"
+            >
               Титульное фото
             </Typography>
 
@@ -279,7 +280,10 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
           </View>
 
           <View className="flex-1">
-            <Typography className="text-caption text-neutral-500 mb-3">
+            <Typography
+              weight="regular"
+              className="text-caption text-neutral-500 mb-3"
+            >
               Остальные фото
             </Typography>
 
@@ -346,28 +350,28 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
 
         <View className="bg-background-surface rounded-3xl p-5 gap-1">
           <View className="gap-4">
-            <Typography className="text-body">
+            <Typography weight="regular" className="text-body">
               Формат JPG или PNG, до 5 МБ
             </Typography>
             <Divider className="mb-4" />
           </View>
 
           <View className="gap-4">
-            <Typography className="text-body">
+            <Typography weight="regular" className="text-body">
               Минимум 800×600 px (лучше 1200×900)
             </Typography>
             <Divider className="mb-4" />
           </View>
 
           <View className="gap-4">
-            <Typography className="text-body">
+            <Typography weight="regular" className="text-body">
               Без водяных знаков и чужих логотипов
             </Typography>
             <Divider className="mb-4" />
           </View>
 
           <View className="gap-4">
-            <Typography className="text-body">
+            <Typography weight="regular" className="text-body">
               Хорошее освещение, чёткий фокус
             </Typography>
           </View>

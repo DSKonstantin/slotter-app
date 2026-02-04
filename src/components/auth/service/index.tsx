@@ -18,7 +18,7 @@ import {
   ServicePhotosValue,
 } from "@/src/components/auth/service/ServiceImagesPicker";
 
-type ServiceFormValues = {};
+type ServiceFormValues = object;
 
 const Service = () => {
   const [photos, setPhotos] = useState<ServicePhotosValue>({
@@ -30,7 +30,9 @@ const Service = () => {
 
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
-    defaultValues: {},
+    defaultValues: {
+      name: "",
+    },
   });
 
   const onSubmit = (data: ServiceFormValues) => {
@@ -66,7 +68,7 @@ const Service = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Первая услуга
           </Typography>
-          <Typography weight="medium" className="text-body text-neutral-500">
+          <Typography className="text-body text-neutral-500">
             Добавь самую популярную
           </Typography>
           <View className="gap-2 mt-9">

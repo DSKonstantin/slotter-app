@@ -6,7 +6,7 @@ import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
-const MAX_BREAKS = 2;
+const MAX_BREAKS = 3;
 
 // import type { ScheduleFormValues } from "./Schedule";
 
@@ -32,7 +32,7 @@ export const BreaksFieldArray = () => {
   return (
     <View className="mt-2 gap-3">
       {fields.length > 0 && (
-        <Typography weight="medium" className="text-caption text-neutral-500">
+        <Typography className="text-caption text-neutral-500">
           Перерывы
         </Typography>
       )}
@@ -95,8 +95,8 @@ export const BreaksFieldArray = () => {
       )}
 
       {!canAddMore && (
-        <Typography weight="medium" className="text-caption text-neutral-900">
-          Можно добавить максимум 2 перерыва
+        <Typography className="text-caption text-neutral-900">
+          Можно добавить максимум {MAX_BREAKS} перерыва
         </Typography>
       )}
     </View>

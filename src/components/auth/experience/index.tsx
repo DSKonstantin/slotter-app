@@ -14,7 +14,7 @@ const Experience = () => {
         <Typography weight="semibold" className="text-display mb-2">
           Опыт работы
         </Typography>
-        <Typography weight="medium" className="text-body text-neutral-500">
+        <Typography className="text-body text-neutral-500">
           Поможем настроить приложение под тебя
         </Typography>
         <View className="gap-3 mt-9">

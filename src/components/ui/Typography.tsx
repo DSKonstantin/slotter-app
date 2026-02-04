@@ -7,7 +7,7 @@ type TextProps = {
 } & RNTextProps;
 
 export function Typography({
-  weight = "regular",
+  weight = "medium",
   className,
   ...props
 }: TextProps) {

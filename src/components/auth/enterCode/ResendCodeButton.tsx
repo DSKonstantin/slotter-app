@@ -19,10 +19,7 @@ export const ResendCodeButton: React.FC<Props> = ({
   return (
     <View className="items-center mt-4">
       {!timer.isFinished && (
-        <Typography
-          weight="medium"
-          className="text-center text-caption text-neutral-500"
-        >
+        <Typography className="text-center text-caption text-neutral-500">
           Повторить через {timer.secondsLeft}с
         </Typography>
       )}

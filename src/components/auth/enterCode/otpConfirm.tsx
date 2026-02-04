@@ -1,6 +1,5 @@
 import { View } from "react-native";
 import { useEffect, useState } from "react";
-import Countdown from "react-countdown";
 import {
   CodeField,
   Cursor,
@@ -8,7 +7,7 @@ import {
   useClearByFocusCell,
 } from "react-native-confirmation-code-field";
 
-import { Button, Typography } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { ResendCodeButton } from "@/src/components/auth/enterCode/ResendCodeButton";
 
 type OtpConfirmProps = {
@@ -17,15 +16,12 @@ type OtpConfirmProps = {
   onComplete?: (value: string) => void;
 };
 
-const RESEND_TIMEOUT = 30 * 1000;
-
 export function OtpConfirm({
   length = 6,
   onChange,
   onComplete,
 }: OtpConfirmProps) {
   const [value, setValue] = useState("");
-  const [countdownKey, setCountdownKey] = useState(0);
 
   const ref = useBlurOnFulfill({ value, cellCount: length });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({

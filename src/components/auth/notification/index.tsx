@@ -48,10 +48,7 @@ const Notification = () => {
         <Typography weight="semibold" className="text-display text-center">
           Чтобы жить стало проще
         </Typography>
-        <Typography
-          weight="medium"
-          className="text-body text-center text-neutral-500 mt-2"
-        >
+        <Typography className="text-body text-center text-neutral-500 mt-2">
           Разреши нам напоминать о записях, сообщениях и изменениях. Никакого
           спама, честно
         </Typography>

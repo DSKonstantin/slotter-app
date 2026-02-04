@@ -15,8 +15,9 @@ import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePickerTrigger";
+import { CameraType } from "expo-image-picker";
 
-type PersonalInformationFormValues = {};
+type PersonalInformationFormValues = object;
 
 const PersonalInformation = () => {
   const VerifySchema = Yup.object().shape({});
@@ -62,14 +63,14 @@ const PersonalInformation = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Твоя визитка
           </Typography>
-          <Typography weight="medium" className="text-body text-neutral-500">
+          <Typography className="text-body text-neutral-500">
             Чтобы клиенты знали, к кому идут
           </Typography>
 
           <View className="items-center my-4">
             <ImagePickerTrigger
               title="Загрузить аватар"
-              options={{ aspect: [1, 1] }}
+              options={{ aspect: [1, 1], cameraType: CameraType.front }}
               onPick={(assets) => setAvatarUri(assets[0]?.uri)}
             >
               <Avatar
@@ -92,10 +93,7 @@ const PersonalInformation = () => {
           />
         </View>
         <Divider />
-        <Typography
-          weight="medium"
-          className="text-neutral-500 text-caption mt-5"
-        >
+        <Typography className="text-neutral-500 text-caption mt-5">
           Формат работы
         </Typography>
         <View className="mt-2 mb-5 gap-2">

@@ -1,5 +1,4 @@
-import { memo, useCallback, useMemo, useRef } from "react";
-import { Animated, Pressable, PressableProps, Text } from "react-native";
+import { TouchableOpacityProps, Text, TouchableOpacity } from "react-native";
 import { twMerge } from "tailwind-merge";
 
 export interface CustomBtn {
@@ -11,17 +10,17 @@ export interface CustomBtn {
   direction?: "horizontal" | "vertical";
 
   fullWidth?: boolean;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
 
-  buttonProps?: PressableProps;
+  buttonProps?: TouchableOpacityProps;
   containerClassName?: string;
   textClassName?: string;
 }
 
-export const ButtonComponent: React.FC<CustomBtn> = ({
+export const Button: React.FC<CustomBtn> = ({
   title,
   onPress,
   size = "md",
@@ -35,65 +34,35 @@ export const ButtonComponent: React.FC<CustomBtn> = ({
   containerClassName,
   textClassName,
 }) => {
-  const anim = useRef(new Animated.Value(0)).current;
-
-  const handlePressIn = useCallback(() => {
-    if (disabled) return;
-    Animated.timing(anim, {
-      toValue: 1,
-      duration: 60,
-      useNativeDriver: true,
-    }).start();
-  }, [anim, disabled]);
-
-  const handlePressOut = useCallback(() => {
-    if (disabled) return;
-    Animated.timing(anim, {
-      toValue: 0,
-      duration: 60,
-      useNativeDriver: true,
-    }).start();
-  }, [anim, disabled]);
-
-  const opacity = useMemo(() => {
-    return anim.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
-  }, [anim]);
-
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      activeOpacity={0.7}
       {...buttonProps}
+      className={twMerge(
+        styles.base,
+        styles.sizes[size],
+        styles.directions[direction],
+        styles.bgColors[variant],
+        disabled && "opacity-40",
+        containerClassName,
+      )}
     >
-      <Animated.View
+      {iconLeft && iconLeft}
+      <Text
         className={twMerge(
-          styles.base,
-          styles.sizes[size],
-          styles.directions[direction],
-          styles.bgColors[variant],
-          containerClassName,
+          styles.textBase,
+          styles.textVariants[variant],
+          textVariant === "accent" && styles.textAccent,
+          disabled && styles.textDisabled,
+          textClassName,
         )}
-        style={{
-          opacity: disabled ? 0.4 : opacity,
-        }}
       >
-        {iconLeft && iconLeft}
-        <Text
-          className={twMerge(
-            styles.textBase,
-            styles.textVariants[variant],
-            textVariant === "accent" && styles.textAccent,
-            disabled && styles.textDisabled,
-            textClassName,
-          )}
-        >
-          {title}
-        </Text>
-        {iconRight && iconRight}
-      </Animated.View>
-    </Pressable>
+        {title}
+      </Text>
+      {iconRight && iconRight}
+    </TouchableOpacity>
   );
 };
 
@@ -126,5 +95,3 @@ const styles = {
   textAccent: "text-primary-blue-500",
   textDisabled: "text-neutral-0",
 };
-
-export const Button = memo(ButtonComponent);

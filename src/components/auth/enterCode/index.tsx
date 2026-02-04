@@ -45,7 +45,7 @@ const EnterCode = () => {
         <Typography weight="semibold" className="text-display mb-2">
           Код из Telegram
         </Typography>
-        <Typography weight="medium" className="text-body text-neutral-500">
+        <Typography className="text-body text-neutral-500">
           Мы отправили сообщение от сервисного бота
         </Typography>
 

@@ -57,7 +57,10 @@ export default function AuthHeader({
           Нужна помощь?
         </Typography>
 
-        <Typography className="text-neutral-500 text-body text-center">
+        <Typography
+          weight="regular"
+          className="text-neutral-500 text-body text-center"
+        >
           Мы на связи, выбери где удобнее:
         </Typography>
 

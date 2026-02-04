@@ -13,7 +13,6 @@ import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { days } from "@/src/constants/days";
 import { colors } from "@/src/styles/colors";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
-import { formatTime } from "@/src/utils/date/formatTime";
 import { BreaksFieldArray } from "@/src/components/auth/schedule/breaksFieldArray";
 
 type ScheduleFormValues = {
@@ -98,7 +97,7 @@ const Schedule = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Дни работы
           </Typography>
-          <Typography weight="medium" className="text-body text-neutral-500">
+          <Typography className="text-body text-neutral-500">
             Нажми на дни, когда ты принимаешь
           </Typography>
 
@@ -118,16 +117,13 @@ const Schedule = () => {
           </View>
           <View className="min-h-[20px]">
             {methods.formState.errors.workingDays && (
-              <Typography
-                weight="medium"
-                className="text-accent-red-500 text-caption mt-[2px]"
-              >
+              <Typography className="text-accent-red-500 text-caption mt-[2px]">
                 {methods.formState.errors.workingDays.message as string}
               </Typography>
             )}
           </View>
 
-          <Typography weight="medium" className="text-neutral-500 text-caption">
+          <Typography className="text-neutral-500 text-caption">
             Время работы
           </Typography>
           <View className="flex-row gap-2">
@@ -158,7 +154,7 @@ const Schedule = () => {
             </View>
           </View>
 
-          <Typography weight="medium" className="text-caption text-neutral-900">
+          <Typography className="text-caption text-neutral-900">
             Свободный или сменный график (2/2) можно будет настроить в календаре
             позже
           </Typography>

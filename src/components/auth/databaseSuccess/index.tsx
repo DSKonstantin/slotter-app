@@ -26,17 +26,11 @@ const DatabaseSuccess = () => {
         <Typography weight="semibold" className="text-display text-center">
           Договорились!
         </Typography>
-        <Typography
-          weight="medium"
-          className="text-body text-neutral-500 text-center"
-        >
+        <Typography className="text-body text-neutral-500 text-center">
           Мы активировали инструмент импорта{"\n"}для твоего аккаунта
         </Typography>
 
-        <Typography
-          weight="medium"
-          className="text-body text-neutral-500 text-center"
-        >
+        <Typography className="text-body text-neutral-500 text-center">
           Сейчас давай быстренько настроим услуги {"\n"}и график, а сразу после
           этого мы покажем,{"\n"}как загрузить клиентов
         </Typography>

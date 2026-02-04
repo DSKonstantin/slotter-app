@@ -1,19 +1,22 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { StSvg } from "@/src/components/ui";
+import StTabBar from "@/src/components/navigation/tabBar";
 
 export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <StSvg name="Home" color={color} size={size} />
-          ),
-        }}
-      />
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          position: "absolute",
+        },
+      }}
+      tabBar={(props) => <StTabBar {...props} />}
+    >
+      <Tabs.Screen name="home" options={{ title: "Главная" }} />
+      <Tabs.Screen name="calendar" options={{ title: "Календарь" }} />
+      <Tabs.Screen name="chat" options={{ title: "Чат" }} />
+      <Tabs.Screen name="clients" options={{ title: "Клиенты" }} />
     </Tabs>
   );
 }

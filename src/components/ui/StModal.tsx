@@ -20,7 +20,7 @@ export const StModal = ({
   children,
   ...props
 }: StModalProps) => {
-  const { bottom } = useSafeAreaInsets();
+  const { bottom, left, right } = useSafeAreaInsets();
 
   return (
     <Modal
@@ -37,19 +37,25 @@ export const StModal = ({
       {...props}
     >
       <View
-        className={`relative rounded-t-large px-5 pt-3 bg-white/90 overflow-hidden`}
-        style={{ paddingBottom: bottom + 8 }}
+        className="relative rounded-t-large bg-white/90 overflow-hidden"
+        style={{
+          paddingBottom: bottom,
+          paddingLeft: left,
+          paddingRight: right,
+        }}
       >
         <BlurView
           intensity={50}
           tint="light"
           style={[StyleSheet.absoluteFillObject]}
         />
-        <View className="items-center mb-3">
-          <View className="w-[83px] h-1 rounded-large bg-[#78788029]" />
-        </View>
+        <View className="px-5 py-3">
+          <View className="items-center mb-3">
+            <View className="w-[83px] h-1 rounded-large bg-[#78788029]" />
+          </View>
 
-        {children}
+          {children}
+        </View>
       </View>
     </Modal>
   );

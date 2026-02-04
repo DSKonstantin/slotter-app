@@ -15,6 +15,9 @@ import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
 import { useFonts } from "expo-font";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Toasts } from "@backpackapp-io/react-native-toast";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,17 +41,24 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}>
-      <KeyboardProvider>
-        <AutocompleteDropdownContextProvider>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </AutocompleteDropdownContextProvider>
-      </KeyboardProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
+        >
+          <KeyboardProvider>
+            <AutocompleteDropdownContextProvider>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+              <Toasts overrideDarkMode={true} />
+              <StatusBar style="auto" />
+            </AutocompleteDropdownContextProvider>
+          </KeyboardProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -54,7 +54,7 @@ const Verify = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Твой номер
           </Typography>
-          <Typography weight="medium" className="text-body text-neutral-500">
+          <Typography className="text-body text-neutral-500">
             Мы отправим код подтверждения
           </Typography>
 

@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
-import { Pressable } from "react-native";
+import { TouchableOpacity } from "react-native";
 import { twMerge } from "tailwind-merge";
 
-type IconButtonSize = "sm" | "md";
+type IconButtonSize = "sm" | "md" | "lg";
 
 type IconButtonProps = {
   icon: ReactNode;
@@ -20,19 +20,26 @@ export function IconButton({
   buttonClassName,
 }: IconButtonProps) {
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      className={twMerge(styles.base, styles.size[size], buttonClassName)}
+      activeOpacity={0.7}
+      className={twMerge(
+        styles.base,
+        styles.size[size],
+        disabled && "opacity-30",
+        buttonClassName,
+      )}
     >
       {icon}
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 
 const styles = {
-  base: "items-center justify-center rounded-full bg-white/80",
+  base: "items-center justify-center rounded-full bg-background-surface",
   size: {
+    lg: "h-[62px] w-[62px]",
     md: "h-[48px] w-[48px]",
     sm: "h-[36px] w-[36px]",
   },

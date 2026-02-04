@@ -16,4 +16,10 @@ export const Routers = {
     notification: "/(auth)/notification",
     link: "/(auth)/link",
   },
+  tabs: {
+    home: "/(tabs)/home",
+    calendar: "/(tabs)/calendar",
+    chat: "/(tabs)/chat",
+    clients: "/(tabs)/clients",
+  },
 } as const;

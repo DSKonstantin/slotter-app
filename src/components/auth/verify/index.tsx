@@ -54,7 +54,7 @@ const Verify = () => {
           <Typography weight="semibold" className="text-display mb-2">
             Твой номер
           </Typography>
-          <Typography weight="medium" className="text-body text-neutral-500">
+          <Typography className="text-body text-neutral-500">
             Мы отправим код подтверждения
           </Typography>
 
@@ -67,10 +67,7 @@ const Verify = () => {
               hideErrorText
               keyboardType="number-pad"
             />
-            <Typography
-              weight="medium"
-              className="text-caption text-neutral-500 my-2"
-            >
+            <Typography className="text-caption text-neutral-500 my-2">
               Мы отправим код подтверждения в Telegram. Это бесплатно и
               безопасно
             </Typography>
@@ -78,7 +75,9 @@ const Verify = () => {
             <Button
               title="Восстановить вход"
               variant="clear"
-              onPress={() => {}}
+              onPress={() => {
+                router.push(Routers.auth.restoreLogin);
+              }}
             />
           </View>
         </View>

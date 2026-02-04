@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthFooter from "@/src/components/auth/layout/footer";
@@ -10,9 +10,21 @@ import * as Clipboard from "expo-clipboard";
 import { colors } from "@/src/styles/colors";
 
 const Link = () => {
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync("slotter.app/ivan_barber");
-  };
+  const link = "slotter.app/ivan_barber";
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCopy = useCallback(async () => {
+    await Clipboard.setStringAsync(link);
+
+    setCopied(true);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(() => {
+      setCopied(false);
+    }, 1500);
+  }, [link]);
 
   const handleShare = async () => {
     try {
@@ -52,10 +64,7 @@ const Link = () => {
         <Typography weight="semibold" className="text-display text-center">
           Всё готово!
         </Typography>
-        <Typography
-          weight="medium"
-          className="text-body text-center text-neutral-500 mt-2"
-        >
+        <Typography className="text-body text-center text-neutral-500 mt-2">
           Твоя ссылка для записи создана
         </Typography>
 
@@ -63,13 +72,14 @@ const Link = () => {
           onPress={handleCopy}
           className="flex-row justify-center items-center mt-5 bg-background-surface w-full rounded-2xl p-4 border border-dashed border-neutral-500 gap-1.5"
         >
-          <Typography
-            weight="medium"
-            className="text-body text-primary-blue-500"
-          >
-            slotter.app/ivan_barber
+          <Typography className="text-body text-primary-blue-500">
+            {copied ? "Скопировано" : link}
           </Typography>
-          <StSvg name="Copy_alt" size={24} color={colors.primary.blue[500]} />
+          <StSvg
+            name={copied ? "Done_round" : "Copy_alt"}
+            size={24}
+            color={colors.primary.blue[500]}
+          />
         </Pressable>
       </View>
     </AuthScreenLayout>

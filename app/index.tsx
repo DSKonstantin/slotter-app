@@ -1,38 +1,55 @@
 import { View } from "react-native";
-import { Button } from "@/src/components/ui";
+import { Button, StSvg } from "@/src/components/ui";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { colors } from "@/src/styles/colors";
 
 export default function Index() {
   return (
-    <View className="mt-8 gap-2">
+    <SafeAreaView className="mt-8 gap-2">
       <Button
         title="Войти / Зарегистрироваться"
         onPress={() => router.replace("/(auth)")}
       />
       <Button
-        title="personal"
+        title="Персонал"
         onPress={() => router.replace("/(auth)/personal-information")}
       />
 
+      <Button title="Tab" onPress={() => router.replace("/(tabs)/home")} />
+
       <Button
-        title="personal"
+        title="Success"
         variant="secondary"
-        onPress={() => router.replace("/(auth)/personal-information")}
+        onPress={() => {
+          toast.success("Success!", {
+            icon: (
+              <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />
+            ),
+            isSwipeable: true,
+            onHide: (_, reason) => console.log("toast closed:", reason),
+          });
+        }}
       />
 
       <Button
-        title="clear"
-        variant="clear"
-        onPress={() => router.replace("/(auth)/personal-information")}
+        title="Error"
+        variant="secondary"
+        onPress={() => {
+          toast.error("Wow. That Sucked!");
+        }}
       />
 
       <Button
-        title="clear"
-        variant="accent"
-        onPress={() => router.replace("/(auth)/personal-information")}
+        title="Loading"
+        variant="secondary"
+        onPress={() => {
+          toast.loading("I am loading. Dismiss me whenever...");
+        }}
       />
 
       <View className="bg-primary-blue-100"></View>
-    </View>
+    </SafeAreaView>
   );
 }

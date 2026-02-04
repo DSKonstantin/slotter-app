@@ -25,7 +25,7 @@ const AuthHome = () => {
               бизнесом
             </Typography>
           </Typography>
-          <Typography weight="medium" className="text-neutral-500 text-center">
+          <Typography className="text-neutral-500 text-center">
             Веди запись, график и базу клиентов {"\n"} в одном приложении
           </Typography>
         </View>
