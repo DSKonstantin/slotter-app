@@ -4,13 +4,7 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Typography, StSvg, IconButton } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { LinearGradient } from "expo-linear-gradient";
-
-const TABS = [
-  { key: "home", label: "Главная", icon: "Home" },
-  { key: "calendar", label: "Календарь", icon: "Date_range_fill" },
-  { key: "chat", label: "Чат", icon: "Notification" },
-  { key: "clients", label: "Клиенты", icon: "Group_fill" },
-] as const;
+import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 
 const StTabBar: React.FC<BottomTabBarProps> = ({
   state,
@@ -26,6 +20,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
+        height: TAB_BAR_HEIGHT + insets.bottom,
         paddingLeft: insets.left,
         paddingRight: insets.right,
         paddingBottom: insets.bottom,
@@ -41,11 +36,11 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          height: 140,
+          height: TAB_BAR_HEIGHT + insets.bottom + 8,
         }}
         pointerEvents="none"
       />
-      <View className="flex-row items-center justify-between pt-3 px-5 bg-transparent">
+      <View className="flex-row items-center justify-between px-5 bg-transparent">
         <View className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1">
           {TABS.map((tab) => {
             const isActive = activeRoute === tab.key;
@@ -54,7 +49,8 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
               <Pressable
                 key={tab.key}
                 onPress={() => navigation.navigate(tab.key)}
-                className={`flex-1 px-2 py-1.5 items-center justify-center gap-0.5
+                className={`flex-1 px-2 py-1.5 items-center justify-center
+                h-[58px] gap-0.5
                 rounded-full ${isActive ? "bg-neutral-100" : "transparent"}`}
               >
                 <StSvg
@@ -65,7 +61,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
 
                 <Typography
                   weight={isActive ? "semibold" : "medium"}
-                  className="text-[10px] leading-3"
+                  className="text-[10px] leading-none"
                   style={{
                     color: isActive ? colors.neutral[900] : colors.neutral[500],
                   }}

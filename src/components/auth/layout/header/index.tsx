@@ -24,7 +24,7 @@ export default function AuthHeader({
 
   return (
     <>
-      <View className="flex-row items-center justify-between mt-2">
+      <View className="flex-row items-center justify-between">
         {showBack ? (
           <IconButton
             icon={

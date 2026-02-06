@@ -14,7 +14,7 @@ import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { colors } from "@/src/styles/colors";
-import ImagePickerTrigger from "@/src/components/shared/imagePickerTrigger";
+import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { CameraType } from "expo-image-picker";
 
 type PersonalInformationFormValues = object;

@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { Pressable } from "react-native";
 import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
-import ImagePickerMenu from "@/src/components/shared/imagePickerMenu";
+import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 
 type ImagePickerTriggerProps = {

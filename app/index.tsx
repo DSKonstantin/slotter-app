@@ -1,9 +1,8 @@
 import { View } from "react-native";
-import { Button, StSvg } from "@/src/components/ui";
+import { Button } from "@/src/components/ui";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { colors } from "@/src/styles/colors";
 
 export default function Index() {
   return (
@@ -24,9 +23,6 @@ export default function Index() {
         variant="secondary"
         onPress={() => {
           toast.success("Success!", {
-            icon: (
-              <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />
-            ),
             isSwipeable: true,
             onHide: (_, reason) => console.log("toast closed:", reason),
           });

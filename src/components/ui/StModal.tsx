@@ -37,11 +37,11 @@ export const StModal = ({
       {...props}
     >
       <View
-        className="relative rounded-t-large bg-white/90 overflow-hidden"
+        className="py-3 relative rounded-t-large bg-white/90 overflow-hidden"
         style={{
           paddingBottom: bottom,
-          paddingLeft: left,
-          paddingRight: right,
+          paddingLeft: 20 + left,
+          paddingRight: 20 + right,
         }}
       >
         <BlurView
@@ -49,13 +49,11 @@ export const StModal = ({
           tint="light"
           style={[StyleSheet.absoluteFillObject]}
         />
-        <View className="px-5 py-3">
-          <View className="items-center mb-3">
-            <View className="w-[83px] h-1 rounded-large bg-[#78788029]" />
-          </View>
-
-          {children}
+        <View className="items-center mb-3">
+          <View className="w-[83px] h-1 rounded-large bg-[#78788029]" />
         </View>
+
+        {children}
       </View>
     </Modal>
   );

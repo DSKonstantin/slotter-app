@@ -13,7 +13,7 @@ const SIZE_MAP = {
 type AvatarProps = {
   uri?: string;
   name?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   fallbackIcon?: React.ReactNode;
 };
 

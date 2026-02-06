@@ -14,6 +14,7 @@ module.exports = {
       "inter-regular": ["Inter_400Regular"],
       "inter-medium": ["Inter_500Medium"],
       "inter-semibold": ["Inter_600SemiBold"],
+      "inter-bold": ["Inter_700Bold"],
     },
     extend: {
       fontSize: {
@@ -24,12 +25,16 @@ module.exports = {
       letterSpacing: {},
       borderRadius: {
         small: "14px",
+        base: "20px",
         medium: "25px",
         large: "36px",
       },
       lineHeight: {},
       boxShadow: {},
       opacity: {},
+      spacing: {
+        screen: 20,
+      },
       colors,
     },
   },

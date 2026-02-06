@@ -47,7 +47,7 @@ const styles = {
 
   sizes: {
     sm: "h-[26px] px-2",
-    md: "h-9 px-3",
+    md: "h-[36px] px-2",
   },
 
   variants: {

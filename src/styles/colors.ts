@@ -38,12 +38,15 @@ export const colors = {
     300: "#C7C7CC",
     400: "#AEAEB2",
     500: "#8E8E93",
+    600: "#838383",
+    700: "#5C5C5C",
     900: "#000000",
   },
 
   background: {
     DEFAULT: "#F2F2F6",
     surface: "#FFFFFF",
+    card: "#F2F2F7",
     black: "#111111",
     switch: "#D1D1D1",
   },

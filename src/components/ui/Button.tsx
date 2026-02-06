@@ -16,7 +16,7 @@ export interface CustomBtn {
   iconRight?: React.ReactNode;
 
   buttonProps?: TouchableOpacityProps;
-  containerClassName?: string;
+  buttonClassName?: string;
   textClassName?: string;
 }
 
@@ -31,7 +31,7 @@ export const Button: React.FC<CustomBtn> = ({
   iconLeft,
   iconRight,
   buttonProps,
-  containerClassName,
+  buttonClassName,
   textClassName,
 }) => {
   return (
@@ -46,7 +46,7 @@ export const Button: React.FC<CustomBtn> = ({
         styles.directions[direction],
         styles.bgColors[variant],
         disabled && "opacity-40",
-        containerClassName,
+        buttonClassName,
       )}
     >
       {iconLeft && iconLeft}

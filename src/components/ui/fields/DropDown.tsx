@@ -41,6 +41,7 @@ export function DropDown({
           items={innerItems}
           theme={"LIGHT"}
           itemSeparator={true}
+          disableBorderRadius={false}
           itemSeparatorStyle={{
             backgroundColor: colors.gray.separators,
             marginHorizontal: 16,

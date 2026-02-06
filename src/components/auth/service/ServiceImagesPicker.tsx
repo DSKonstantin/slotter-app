@@ -9,7 +9,7 @@ import { nanoid } from "nanoid/non-secure";
 import { Typography, StSvg, Divider } from "@/src/components/ui";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 import { colors } from "@/src/styles/colors";
-import ImagePickerMenu from "@/src/components/shared/imagePickerMenu";
+import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 
 export type PhotoAsset =
   | (ImagePickerAsset & { id: string })

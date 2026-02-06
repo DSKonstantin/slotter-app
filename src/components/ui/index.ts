@@ -16,3 +16,4 @@ export { Divider } from "./Divider";
 export { Item } from "./Item";
 export { Switch } from "./Switch";
 export { StSvg } from "./StSvg";
+export { PaginationDots } from "./PaginationDots";

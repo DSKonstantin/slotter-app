@@ -11,11 +11,11 @@ import AuthHeader from "@/src/components/auth/layout/header";
 const AuthHome = () => {
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
-      <View className="px-5">
+      <View className="px-screen">
         <AuthHeader showBack={false} />
       </View>
       <View className="flex-1 justify-between">
-        <View className="justify-center items-center px-5 flex-1">
+        <View className="justify-center items-center px-screen flex-1">
           <Typography weight="semibold" className="text-display mb-2">
             Управляй своим{" "}
             <Typography
@@ -31,7 +31,7 @@ const AuthHome = () => {
         </View>
 
         <View className="gap-8">
-          <View className="gap-4 px-5">
+          <View className="gap-4 px-screen">
             <Button
               title="Я тут впервые"
               variant="clear"

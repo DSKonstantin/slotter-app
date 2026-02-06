@@ -108,10 +108,7 @@ const Schedule = () => {
                 title={day.label}
                 variant={activeDays.includes(day.id) ? "primary" : "secondary"}
                 onPress={() => toggleDay(day.id)}
-                buttonProps={{
-                  className: "flex-1",
-                }}
-                containerClassName="h-auto aspect-square rounded-[99px]"
+                buttonClassName="flex-1 h-auto aspect-square rounded-[99px]"
               />
             ))}
           </View>

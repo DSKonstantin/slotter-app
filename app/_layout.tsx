@@ -8,6 +8,7 @@ import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
+  Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { StatusBar } from "expo-status-bar";
@@ -27,6 +28,7 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    Inter_700Bold,
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 

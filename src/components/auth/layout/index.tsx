@@ -22,8 +22,9 @@ export function AuthScreenLayout({
 
   return (
     <SafeAreaView className="flex-1">
+      <View className="px-screen py-2 bg-background">{header}</View>
       <ScrollWrapper
-        className="flex-1 px-5"
+        className="flex-1 px-screen"
         {...(avoidKeyboard
           ? { bottomOffset: 20 }
           : {
@@ -32,10 +33,9 @@ export function AuthScreenLayout({
               },
             })}
       >
-        {header}
         {children}
       </ScrollWrapper>
-      {footer && <View className="px-5 py-2 bg-background">{footer}</View>}
+      {footer && <View className="px-screen py-2 bg-background">{footer}</View>}
     </SafeAreaView>
   );
 }
