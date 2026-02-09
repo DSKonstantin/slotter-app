@@ -3,21 +3,23 @@ import React from "react";
 import { View } from "react-native";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { BottomTabHeaderProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
 type ToolbarTopProps = {
+  title: string;
   showBack?: boolean;
   rightButton?: React.ReactNode;
-} & Partial<BottomTabHeaderProps>;
+};
 
 const ToolbarTop = ({
+  title,
   showBack = true,
   rightButton,
-  navigation,
 }: ToolbarTopProps) => {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   return (
@@ -53,11 +55,7 @@ const ToolbarTop = ({
           icon={
             <StSvg name="Arrow_left" size={24} color={colors.neutral[900]} />
           }
-          onPress={() => {
-            if (navigation?.canGoBack()) {
-              navigation.goBack();
-            }
-          }}
+          onPress={() => router.back()}
         />
       ) : (
         <View className="w-[48px]" />
@@ -65,7 +63,7 @@ const ToolbarTop = ({
 
       <View className="rounded-full h-[48px] px-5 items-center justify-center bg-background-surface">
         <Typography weight="semibold" className="text-[17px] leading-[22px]">
-          Аккаунт
+          {title}
         </Typography>
       </View>
 

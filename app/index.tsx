@@ -15,9 +15,7 @@ export default function Index() {
         title="Персонал"
         onPress={() => router.replace("/(auth)/personal-information")}
       />
-
       <Button title="Tab" onPress={() => router.replace("/(tabs)/home")} />
-
       <Button
         title="Success"
         variant="secondary"
@@ -28,7 +26,6 @@ export default function Index() {
           });
         }}
       />
-
       <Button
         title="Error"
         variant="secondary"
@@ -36,7 +33,6 @@ export default function Index() {
           toast.error("Wow. That Sucked!");
         }}
       />
-
       <Button
         title="Loading"
         variant="secondary"
@@ -44,7 +40,6 @@ export default function Index() {
           toast.loading("I am loading. Dismiss me whenever...");
         }}
       />
-
       <View className="bg-primary-blue-100"></View>
     </SafeAreaView>
   );

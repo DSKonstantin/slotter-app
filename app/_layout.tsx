@@ -19,6 +19,8 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toasts } from "@backpackapp-io/react-native-toast";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Provider } from "react-redux";
+import { store } from "@/src/store/redux/store";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,24 +45,32 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
-        >
-          <KeyboardProvider>
-            <AutocompleteDropdownContextProvider>
-              <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-              <Toasts overrideDarkMode={true} />
-              <StatusBar style="auto" />
-            </AutocompleteDropdownContextProvider>
-          </KeyboardProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <Provider store={store}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
+          >
+            <KeyboardProvider>
+              <AutocompleteDropdownContextProvider>
+                <Stack>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+                <Toasts overrideDarkMode={true} />
+                <StatusBar style="auto" />
+              </AutocompleteDropdownContextProvider>
+            </KeyboardProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </Provider>
   );
 }

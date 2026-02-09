@@ -23,6 +23,9 @@ export const PresetDateDropdown = <T extends ItemType<string>>({
       items={items}
       setOpen={setOpen}
       zIndex={3000}
+      props={{
+        hitSlop: { top: 10, bottom: 10 },
+      }}
       zIndexInverse={1000}
       disableBorderRadius={false}
       placeholder="день"
@@ -57,6 +60,7 @@ export const PresetDateDropdown = <T extends ItemType<string>>({
       }}
       containerStyle={{
         width: 92,
+        height: 33,
       }}
       dropDownContainerStyle={{
         width: 149,
@@ -64,6 +68,7 @@ export const PresetDateDropdown = <T extends ItemType<string>>({
         borderColor: colors.neutral[200],
         backgroundColor: colors.neutral[0],
         padding: 0,
+        marginTop: 4,
       }}
       textStyle={{
         fontSize: 16,

@@ -11,13 +11,10 @@ import Animated, {
 // import { useColorScheme } from "@/src/hooks/use-color-scheme";
 // import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const HEADER_HEIGHT = 522;
 
 type Props = PropsWithChildren<{
-  headerImage: ReactElement;
+  headerImage?: ReactElement;
+  headerContent?: ReactElement;
   headerBackgroundColor: { dark: string; light: string };
   headerHeight?: number;
   contentInset?: {
@@ -31,6 +28,7 @@ type Props = PropsWithChildren<{
 export default function ParallaxScrollView({
   children,
   headerImage,
+  headerContent,
   headerBackgroundColor,
   headerHeight = 360,
   contentInset = {},
@@ -46,14 +44,14 @@ export default function ParallaxScrollView({
         {
           translateY: interpolate(
             scrollOffset.value,
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75],
+            [-headerHeight, 0, headerHeight],
+            [-headerHeight / 2, 0, headerHeight * 0.75],
           ),
         },
         {
           scale: interpolate(
             scrollOffset.value,
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+            [-headerHeight, 0, headerHeight],
             [2, 1, 1],
           ),
         },
@@ -69,25 +67,31 @@ export default function ParallaxScrollView({
         flex: 1,
         // backgroundColor: colors.background.black,
         marginTop: contentInset.top ?? 0,
-        // backgroundColor: "green",
       }}
       contentContainerStyle={{
         backgroundColor: colors.background.DEFAULT,
       }}
       scrollEventThrottle={16}
     >
-      <Animated.View
-        style={[
-          styles.header,
-          {
-            height: headerHeight,
-            backgroundColor: headerBackgroundColor[colorScheme],
-          },
-          headerAnimatedStyle,
-        ]}
+      <View
+        className="relative"
+        style={[styles.header, { height: headerHeight }]}
       >
-        {headerImage}
-      </Animated.View>
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              height: headerHeight,
+              backgroundColor: headerBackgroundColor[colorScheme],
+            },
+            headerAnimatedStyle,
+          ]}
+        >
+          {headerImage && headerImage}
+        </Animated.View>
+        {headerContent && headerContent}
+      </View>
+
       <View
         style={[
           styles.content,
