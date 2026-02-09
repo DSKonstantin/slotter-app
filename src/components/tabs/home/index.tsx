@@ -18,6 +18,7 @@ import DateHeader from "@/src/components/tabs/home/dateHeader";
 
 const Home = () => {
   const { bottom, top, left, right } = useSafeAreaInsets();
+  console.log("Test");
 
   return (
     <ParallaxScrollView

@@ -33,6 +33,8 @@ const Login = () => {
     console.log("SUBMIT", data);
   };
 
+  console.log("Test");
+
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout

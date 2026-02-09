@@ -37,6 +37,8 @@ const RestoreLogin = () => {
     router.push(Routers.auth.enterCode);
   };
 
+  console.log("Test");
+
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout

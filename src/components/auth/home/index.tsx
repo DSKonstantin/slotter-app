@@ -9,6 +9,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AuthHeader from "@/src/components/auth/layout/header";
 
 const AuthHome = () => {
+  console.log("Test");
+
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       <View className="px-screen">
