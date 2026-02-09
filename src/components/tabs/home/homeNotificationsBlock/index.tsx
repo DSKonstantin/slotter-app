@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder, View } from "react-native";
 
 import { colors } from "@/src/styles/colors";
-import SpecialistHomeNotifications from "@/src/components/shared/cards/specialistHomeNotifications";
+import SpecialistHomeNotifications from "@/src/components/tabs/home/specialistHomeNotifications";
 import { PaginationDots } from "@/src/components/ui";
+import SpecialistHomeNotificationsEmpty from "@/src/components/tabs/home/specialistHomeAssistantEmpty";
 
 const SWIPE_THRESHOLD = 40;
 
@@ -67,11 +68,18 @@ const HomeNotificationsBlock = () => {
     [],
   );
 
+  const handlePress = () => {
+    console.log("Notification pressed", index);
+  };
+
   return (
     <View {...panResponder.panHandlers}>
       <View className="bg-background-card rounded-base overflow-hidden">
         <Animated.View style={{ opacity }}>
-          <SpecialistHomeNotifications data={NOTIFICATIONS[index]} />
+          <SpecialistHomeNotifications
+            data={NOTIFICATIONS[index]}
+            onPress={handlePress}
+          />
         </Animated.View>
       </View>
 

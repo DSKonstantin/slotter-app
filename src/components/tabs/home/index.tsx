@@ -1,6 +1,6 @@
 import React from "react";
-import {  View } from "react-native";
-import { Typography, Avatar, StSvg, Divider, Tag } from "@/src/components/ui";
+import { View } from "react-native";
+import { StSvg, Divider, Tag } from "@/src/components/ui";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -8,11 +8,13 @@ import {
 import ParallaxScrollView from "@/src/components/parallaxScrollView";
 import { colors } from "@/src/styles/colors";
 import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
-import photoImage from "@/assets/mock/images/Photo.png";
 import HomeCard from "@/src/components/shared/cards/homeCard";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
-import HomeNotificationsBlock from "@/src/components/tabs/home/HomeNotificationsBlock";
+import HomeNotificationsBlock from "@/src/components/tabs/home/homeNotificationsBlock";
+import SpecialistHomeAssistantEmpty from "@/src/components/tabs/home/specialistHomeAssistantEmpty";
+import SpecialistHomeAssistant from "@/src/components/tabs/home/specialistHomeAssistant";
+import DateHeader from "@/src/components/tabs/home/dateHeader";
 
 const Home = () => {
   const { bottom, top, left, right } = useSafeAreaInsets();
@@ -35,77 +37,10 @@ const Home = () => {
           className="flex-1 px-screen pb-4 justify-between"
           edges={["left", "right"]}
         >
-          <View className="flex-1 justify-center">
-            <View className="flex-row justify-between">
-              <View className="flex-row justify-center gap-2">
-                <Typography
-                  weight="bold"
-                  className="text-5xl text-neutral-0 leading-[40px]"
-                >
-                  Вт
-                </Typography>
-                <View className="bg-primary-green-500 w-[26px] h-[26px] rounded-lg" />
-              </View>
-
-              <View className="items-end">
-                <Typography
-                  weight="semibold"
-                  className="text-2xl text-neutral-600 text-right"
-                >
-                  Декабрь 16
-                </Typography>
-                <Typography
-                  weight="semibold"
-                  className="text-2xl text-neutral-700 text-right"
-                >
-                  2025
-                </Typography>
-              </View>
-            </View>
-            <View className="mt-8">
-              <View className="flex-row gap-1 items-center">
-                <Typography className="text-neutral-700 text-2xl">
-                  Доброе утро,
-                </Typography>
-                <Avatar size="xs" uri={photoImage} />
-                <Typography className="text-neutral-0 text-2xl">
-                  Ирина
-                </Typography>
-              </View>
-
-              <View className="flex-row gap-1 items-center">
-                <Typography className="text-neutral-700 text-2xl">
-                  У тебя сегодня
-                </Typography>
-                <StSvg
-                  name="Date_range_fill"
-                  size={24}
-                  color={colors.neutral[0]}
-                />
-                <Typography className="text-neutral-0 text-2xl">
-                  4 записи
-                </Typography>
-              </View>
-
-              <View className="flex-row gap-1 items-center">
-                <Typography className="text-neutral-700 text-2xl">
-                  Ближайшая начнется в
-                </Typography>
-                <Typography className="text-neutral-0 text-2xl">
-                  14:00
-                </Typography>
-              </View>
-
-              <View className="flex-row gap-1 items-center">
-                <Typography className="text-neutral-700 text-2xl">
-                  Доход за день
-                </Typography>
-                <StSvg name="Wallet_fill" size={24} color={colors.neutral[0]} />
-                <Typography className="text-neutral-0 text-2xl">
-                  8 500 ₽
-                </Typography>
-              </View>
-            </View>
+          <View className="flex-1 justify-center gap-8 mt-4">
+            <DateHeader />
+            <SpecialistHomeAssistant />
+            {/*<SpecialistHomeAssistantEmpty />*/}
           </View>
 
           <View className="gap-2">

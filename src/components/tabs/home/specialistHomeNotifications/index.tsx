@@ -16,23 +16,17 @@ type Props = {
 const SpecialistHomeNotifications = ({ data, onPress }: Props) => {
   return (
     <TouchableOpacity
-      className="flex-row justify-between items-center bg-background-card rounded-base p-4 overflow-hidden"
-      activeOpacity={0.85}
+      className="flex-row justify-between items-center bg-background-card rounded-base px-4 py-2 overflow-hidden"
+      activeOpacity={0.7}
       onPress={onPress}
     >
       <View className="flex-row items-center gap-3 flex-1 min-w-0">
         <StSvg name={data.iconName} size={32} color={data.iconColor} />
 
-        <View className="gap-2 min-h-[72px] justify-center">
-          <View className="justify-center">
-            <Typography
-              weight="semibold"
-              className="text-body"
-              numberOfLines={2}
-            >
-              {data.title}
-            </Typography>
-          </View>
+        <View className="gap-2 min-h-[71px] justify-center">
+          <Typography weight="semibold" className="text-body" numberOfLines={2}>
+            {data.title}
+          </Typography>
           <View className="flex-row items-center">
             <Typography
               weight="semibold"

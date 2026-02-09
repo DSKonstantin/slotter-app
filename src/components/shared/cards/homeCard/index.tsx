@@ -27,7 +27,7 @@ const HomeCard = ({
     <TouchableOpacity
       disabled={disabled}
       onPress={onPress}
-      activeOpacity={0.85}
+      activeOpacity={0.7}
       style={{
         opacity: disabled ? 0.4 : 1,
       }}
