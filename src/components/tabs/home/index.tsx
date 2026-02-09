@@ -39,8 +39,8 @@ const Home = () => {
         >
           <View className="flex-1 justify-center gap-8 mt-4">
             <DateHeader />
-            <SpecialistHomeAssistant />
-            {/*<SpecialistHomeAssistantEmpty />*/}
+            {/*<SpecialistHomeAssistant />*/}
+            <SpecialistHomeAssistantEmpty />
           </View>
 
           <View className="gap-2">
