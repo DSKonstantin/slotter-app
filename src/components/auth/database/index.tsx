@@ -25,7 +25,7 @@ const Database = () => {
               direction="vertical"
               textVariant="accent"
               size="lg"
-              iconLeft={
+              leftIcon={
                 <StSvg
                   name="Arhive_alt_add_fill"
                   size={24}
@@ -42,7 +42,7 @@ const Database = () => {
               title="Нет, начну с нуля"
               direction="vertical"
               size="lg"
-              iconLeft={
+              leftIcon={
                 <StSvg name="Blank_fill" size={24} color={colors.neutral[0]} />
               }
               onPress={() => {

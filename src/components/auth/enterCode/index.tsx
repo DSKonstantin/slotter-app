@@ -28,7 +28,7 @@ const EnterCode = () => {
           primary={{
             title: "Войти",
             variant: "accent",
-            iconRight: (
+            rightIcon: (
               <StSvg
                 name="Sign_in_squre_fill"
                 size={24}

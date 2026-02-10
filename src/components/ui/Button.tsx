@@ -12,8 +12,8 @@ export interface CustomBtn {
   fullWidth?: boolean;
   disabled?: boolean | undefined;
 
-  iconLeft?: React.ReactNode;
-  iconRight?: React.ReactNode;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 
   buttonProps?: TouchableOpacityProps;
   buttonClassName?: string;
@@ -28,8 +28,8 @@ export const Button: React.FC<CustomBtn> = ({
   textVariant = "default",
   direction = "horizontal",
   disabled = false,
-  iconLeft,
-  iconRight,
+  leftIcon,
+  rightIcon,
   buttonProps,
   buttonClassName,
   textClassName,
@@ -49,7 +49,7 @@ export const Button: React.FC<CustomBtn> = ({
         buttonClassName,
       )}
     >
-      {iconLeft && iconLeft}
+      {leftIcon && leftIcon}
       <Text
         className={twMerge(
           styles.textBase,
@@ -61,7 +61,7 @@ export const Button: React.FC<CustomBtn> = ({
       >
         {title}
       </Text>
-      {iconRight && iconRight}
+      {rightIcon && rightIcon}
     </TouchableOpacity>
   );
 };
@@ -73,9 +73,9 @@ const styles = {
     vertical: "flex-col",
   },
   sizes: {
-    sm: "h-[40px] px-2",
-    md: "h-[50px] px-2",
-    lg: "h-[80px] px-2",
+    sm: "h-[40px] px-4",
+    md: "h-[50px] px-4",
+    lg: "h-[80px] px-4",
   },
 
   bgColors: {

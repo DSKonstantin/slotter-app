@@ -40,9 +40,9 @@ export const colors = {
     500: "#8E8E93",
     600: "#838383",
     700: "#5C5C5C",
+    800: "#3C3C43",
     900: "#000000",
   },
-
   background: {
     DEFAULT: "#F2F2F6",
     surface: "#FFFFFF",

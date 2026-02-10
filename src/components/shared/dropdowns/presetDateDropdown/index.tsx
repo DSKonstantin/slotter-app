@@ -80,13 +80,14 @@ export const PresetDateDropdown = <T extends ItemType<string>>({
         textTransform: "lowercase",
         fontFamily: "inter-semibold",
         fontSize: 16,
+        color: colors.neutral[900],
       }}
       placeholderStyle={{
         fontFamily: "inter-regular",
         fontSize: 16,
       }}
       selectedItemLabelStyle={{
-        color: colors.neutral[500],
+        color: colors.neutral[900],
         fontFamily: "inter-semibold",
       }}
       listItemContainerStyle={{

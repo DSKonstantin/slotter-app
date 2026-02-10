@@ -84,7 +84,7 @@ export const BreaksFieldArray = () => {
           title="Добавить перерыв"
           variant="clear"
           onPress={addBreak}
-          iconRight={
+          rightIcon={
             <StSvg
               name="Add_round_fill"
               size={24}
