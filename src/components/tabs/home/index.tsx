@@ -1,10 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { StSvg, Divider, Tag } from "@/src/components/ui";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ParallaxScrollView from "@/src/components/parallaxScrollView";
 import { colors } from "@/src/styles/colors";
 import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
@@ -32,10 +29,13 @@ const Home = () => {
         left,
         bottom: TAB_BAR_HEIGHT + bottom + 16,
       }}
-      headerImage={
-        <SafeAreaView
+      headerContent={
+        <View
           className="flex-1 px-screen pb-4 justify-between"
-          edges={["left", "right"]}
+          style={{
+            marginLeft: left,
+            marginRight: right,
+          }}
         >
           <View className="flex-1 justify-center gap-8 mt-4">
             <DateHeader />
@@ -47,7 +47,7 @@ const Home = () => {
             <ScheduleSelectRow />
             <HomeNotificationsBlock />
           </View>
-        </SafeAreaView>
+        </View>
       }
     >
       <View className="flex-1 px-screen pt-2">
