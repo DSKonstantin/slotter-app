@@ -6,10 +6,24 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { colors } from "@/src/styles/colors";
+import AuthFooter from "@/src/components/auth/layout/footer";
 
 const Experience = () => {
   return (
-    <AuthScreenLayout header={<AuthHeader />}>
+    <AuthScreenLayout
+      header={<AuthHeader />}
+      footer={
+        <AuthFooter
+          primary={{
+            title: "Пропустить",
+            variant: "clear",
+            onPress: () => {
+              router.push(Routers.auth.database);
+            },
+          }}
+        />
+      }
+    >
       <View className="mt-14">
         <Typography weight="semibold" className="text-display mb-2">
           Опыт работы

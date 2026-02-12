@@ -4,12 +4,12 @@ import Svg, { Circle } from "react-native-svg";
 import { colors } from "@/src/styles/colors";
 
 interface Props {
-  progress?: number; // 0 → 1
+  progress?: number;
   isSelected?: boolean;
 }
 
-const SIZE = 42;
-const STROKE_WIDTH = 3;
+const SIZE = 44;
+const STROKE_WIDTH = 2;
 const RADIUS = (SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -22,6 +22,7 @@ const CircularProgressDayComponent = ({
       <Svg width={SIZE} height={SIZE}>
         <Circle
           stroke={colors.primary.blue[500]}
+          strokeOpacity={0.2}
           fill="none"
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -29,7 +30,11 @@ const CircularProgressDayComponent = ({
           strokeWidth={STROKE_WIDTH}
           strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
           strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
-          transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+          transform={`
+              rotate(90 ${SIZE / 2} ${SIZE / 2})
+              scale(-1,1)
+              translate(-${SIZE},0)
+          `}
           strokeLinecap="round"
         />
       </Svg>

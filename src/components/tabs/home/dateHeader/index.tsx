@@ -8,7 +8,7 @@ const DateHeader = () => {
       <View className="flex-row justify-center gap-2 items-center">
         <Typography
           weight="bold"
-          className="text-5xl text-neutral-0 leading-[40px]"
+          className="text-5xl text-neutral-0 leading-none"
         >
           Вт
         </Typography>

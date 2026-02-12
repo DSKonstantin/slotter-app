@@ -11,9 +11,14 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { passwordField } from "@/src/validation/fields/password";
+import { useUpdateUserMutation } from "@/src/store/redux/services/userApi";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/src/store/redux/store";
+import { setUser } from "@/src/store/redux/slices/authSlice";
 
 type RegisterFormValues = {
   email: string;
+  password: string;
 };
 
 const VerifySchema = Yup.object().shape({
@@ -24,17 +29,38 @@ const VerifySchema = Yup.object().shape({
 });
 
 const Register = () => {
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const [updateUser, { isLoading }] = useUpdateUserMutation();
+
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
       password: "",
-      email: "",
+      email: user?.email ?? "",
     },
   });
 
-  const onSubmit = (data: RegisterFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
+    if (!user) return;
+
     console.log("SUBMIT", data);
-    router.push(Routers.auth.experience);
+    try {
+      const updatedUser = await updateUser({
+        id: user.id,
+        data: {
+          email: data.email,
+          password: data.password,
+        },
+      }).unwrap();
+
+      dispatch(setUser(updatedUser));
+
+      router.push(Routers.auth.experience);
+    } catch (error) {
+      console.log("UPDATE USER ERROR:", error);
+    }
   };
 
   return (
@@ -46,6 +72,7 @@ const Register = () => {
           <AuthFooter
             primary={{
               title: "Создать профиль",
+              disabled: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
           />

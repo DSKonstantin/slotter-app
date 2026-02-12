@@ -9,17 +9,25 @@ import {
 
 import { Typography } from "@/src/components/ui";
 import { ResendCodeButton } from "@/src/components/auth/enterCode/ResendCodeButton";
+import { UserType } from "@/src/store/redux/services/api-types";
+import { useTelegramLoginMutation } from "@/src/store/redux/services/authApi";
 
 type OtpConfirmProps = {
   length?: number;
   onChange: (value: string) => void;
   onComplete?: (value: string) => void;
+  telegramLogin: ReturnType<typeof useTelegramLoginMutation>[0];
+  phone: string;
+  userType: UserType;
 };
 
 export function OtpConfirm({
   length = 6,
   onChange,
   onComplete,
+  telegramLogin,
+  phone,
+  userType,
 }: OtpConfirmProps) {
   const [value, setValue] = useState("");
 
@@ -70,7 +78,10 @@ export function OtpConfirm({
       <ResendCodeButton
         seconds={30}
         onResend={async () => {
-          console.log("RESEND");
+          await telegramLogin({
+            phone,
+            type: userType,
+          });
         }}
       />
     </>

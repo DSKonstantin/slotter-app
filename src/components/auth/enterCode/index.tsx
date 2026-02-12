@@ -5,18 +5,43 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
+import { useDispatch } from "react-redux";
+import {
+  useTelegramLoginMutation,
+  useConfirmTelegramLoginMutation,
+} from "@/src/store/redux/services/authApi";
+import { UserType } from "@/src/store/redux/services/api-types";
+import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { setUser } from "@/src/store/redux/slices/authSlice";
 
 const EnterCode = () => {
-  const [code, setCode] = useState("");
+  const dispatch = useDispatch();
 
-  const onSubmit = () => {
+  const { phone } = useLocalSearchParams<{
+    phone: string;
+  }>();
+
+  const [code, setCode] = useState("");
+  const [telegramLogin] = useTelegramLoginMutation();
+  const [confirmTelegramLogin, { isLoading }] =
+    useConfirmTelegramLoginMutation();
+
+  const onSubmit = async () => {
     if (!code || code.length < 6) return;
     console.log("SUBMIT CODE:", code);
+    try {
+      const result = await confirmTelegramLogin({
+        phone,
+        code,
+      }).unwrap();
 
-    router.replace(Routers.auth.register);
+      await accessTokenStorage.set(result.token);
+      dispatch(setUser(result.resource));
+      router.replace(Routers.auth.register);
+    } catch (e) {}
   };
 
   return (
@@ -35,7 +60,7 @@ const EnterCode = () => {
                 color={colors.neutral[0]}
               />
             ),
-            disabled: code.length < 6,
+            disabled: code.length < 6 || isLoading,
             onPress: () => onSubmit(),
           }}
         />
@@ -55,7 +80,13 @@ const EnterCode = () => {
           </View>
         </View>
 
-        <OtpConfirm onChange={setCode} onComplete={() => {}} />
+        <OtpConfirm
+          onChange={setCode}
+          onComplete={() => {}}
+          telegramLogin={telegramLogin}
+          phone={phone}
+          userType={UserType.USER}
+        />
       </View>
     </AuthScreenLayout>
   );

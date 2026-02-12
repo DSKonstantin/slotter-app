@@ -1,46 +1,21 @@
-import { View } from "react-native";
-import { Button } from "@/src/components/ui";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { useSelector } from "react-redux";
+import { Redirect } from "expo-router";
+import { RootState } from "@/src/store/redux/store";
+import getRedirectPath from "@/src/utils/getOnboardingStep";
 
 export default function Index() {
-  return (
-    <SafeAreaView className="mt-8 gap-2">
-      <Button
-        title="Войти / Зарегистрироваться"
-        onPress={() => router.replace("/(auth)")}
-      />
-      <Button
-        title="Персонал"
-        onPress={() => router.replace("/(auth)/personal-information")}
-      />
-      <Button title="Tab" onPress={() => router.replace("/(tabs)/home")} />
-      <Button
-        title="Success"
-        variant="secondary"
-        onPress={() => {
-          toast.success("Success!", {
-            isSwipeable: true,
-            onHide: (_, reason) => console.log("toast closed:", reason),
-          });
-        }}
-      />
-      <Button
-        title="Error"
-        variant="secondary"
-        onPress={() => {
-          toast.error("Wow. That Sucked!");
-        }}
-      />
-      <Button
-        title="Loading"
-        variant="secondary"
-        onPress={() => {
-          toast.loading("I am loading. Dismiss me whenever...");
-        }}
-      />
-      <View className="bg-primary-blue-100"></View>
-    </SafeAreaView>
-  );
+  const user = useSelector((state: RootState) => state.auth.user);
+  const status = useSelector((state: RootState) => state.auth.status);
+
+  if (status === "idle" || status === "loading") {
+    return null;
+  }
+
+  console.log(user, "user");
+
+  if (status === "authenticated" && user) {
+    return <Redirect href={getRedirectPath(user)} />;
+  }
+
+  return <Redirect href="/(auth)" />;
 }

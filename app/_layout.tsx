@@ -1,6 +1,6 @@
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
@@ -22,10 +22,12 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
+import { AuthProvider } from "@/src/providers/ auth/AuthProvider";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [authReady, setAuthReady] = useState(false);
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -36,10 +38,10 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hide();
+    if (fontsLoaded && authReady) {
+      SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [authReady, fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;
@@ -54,17 +56,22 @@ export default function RootLayout() {
           >
             <KeyboardProvider>
               <AutocompleteDropdownContextProvider>
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
+                <AuthProvider onReady={() => setAuthReady(true)}>
+                  <Stack>
+                    <Stack.Screen
+                      name="index"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack>
+                </AuthProvider>
                 <Toasts overrideDarkMode={true} />
                 <StatusBar style="auto" />
               </AutocompleteDropdownContextProvider>
