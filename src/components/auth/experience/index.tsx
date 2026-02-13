@@ -18,7 +18,7 @@ const Experience = () => {
             title: "Пропустить",
             variant: "clear",
             onPress: () => {
-              router.push(Routers.auth.database);
+              router.push(Routers.auth.personalInformation);
             },
           }}
         />

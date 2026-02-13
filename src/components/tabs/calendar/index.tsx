@@ -1,40 +1,63 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import {
   IconButton,
   SegmentedControl,
   StSvg,
   Button,
+  StModal,
+  Typography,
+  Checkbox,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { TAB_BAR_HEIGHT, TOOLBAR_HEIGHT } from "@/src/constants/tabs";
-import DateSelector from "./day/DateSelector";
-import TimeSlotList from "./day/TimeSlotList";
-import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { TouchableOpacity, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import CalendarActionButton from "@/src/components/tabs/calendar/сalendarActionButton";
 import MonthCalendarView from "@/src/components/tabs/calendar/month";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/src/store/redux/store";
+import {
+  setMode,
+  setSelectedDate,
+  toggleFilter,
+} from "@/src/store/redux/slices/calendarSlice";
+import DayCalendarView from "@/src/components/tabs/calendar/day";
 
 const TabCalendar = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { mode, date } = useLocalSearchParams<{
     mode?: string;
     date?: string;
   }>();
 
-  const { bottom, top, left, right } = useSafeAreaInsets();
-  const selectedDate = date ? new Date(date) : new Date();
+  const dispatch = useDispatch();
+  const { top } = useSafeAreaInsets();
 
-  const handleSelectDate = (newDate: Date) => {
-    router.setParams({
-      mode: mode ?? "day",
-      date: newDate.toISOString(),
-    });
-  };
+  const calendarMode = useSelector((state: RootState) => state.calendar.mode);
+  const filters = useSelector((state: RootState) => state.calendar.filters);
+  const reduxDate = useSelector(
+    (state: RootState) => state.calendar.selectedDate,
+  );
+
+  const handleOpen = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (mode) {
+      dispatch(setMode(mode === "month" ? "month" : "day"));
+    }
+
+    if (date) {
+      dispatch(setSelectedDate(date));
+    }
+  }, [mode, date, dispatch]);
 
   return (
     <>
@@ -49,7 +72,7 @@ const TabCalendar = () => {
                 color={colors.neutral[900]}
               />
             }
-            onPress={() => {}}
+            onPress={handleOpen}
           />
         }
       />
@@ -62,11 +85,12 @@ const TabCalendar = () => {
         <View className="flex-1 mt-4 gap-4">
           <SegmentedControl
             className="mx-screen"
-            value={mode === "month" ? "month" : "day"}
+            value={calendarMode}
             onChange={(value) => {
+              dispatch(setMode(value as "day" | "month"));
               router.setParams({
                 mode: value,
-                date: selectedDate.toISOString(),
+                date: reduxDate,
               });
             }}
             options={[
@@ -74,32 +98,57 @@ const TabCalendar = () => {
               { label: "Месяц", value: "month" },
             ]}
           />
-          {mode === "month" ? (
-            <View className="px-screen">
-              <MonthCalendarView
-                selectedDate={selectedDate}
-                onSelectDate={handleSelectDate}
-              />
-            </View>
-          ) : (
-            <>
-              <DateSelector
-                selectedDate={selectedDate}
-                onSelectDate={handleSelectDate}
-              />
-              <TimeSlotList />
-            </>
-          )}
+          {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
         </View>
       </View>
-      <CalendarActionButton
-        mode={mode}
-        onPress={() => {
-          if (mode === "month") {
-          } else {
-          }
-        }}
-      />
+
+      <StModal visible={isOpen} onClose={handleClose}>
+        <View className="gap-6">
+          <Typography weight="semibold" className="text-display text-center">
+            Фильтры
+          </Typography>
+
+          <View className="gap-2">
+            <Typography className="text-caption text-neutral-500">
+              Показывать:
+            </Typography>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => dispatch(toggleFilter("showConfirmed"))}
+              className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
+            >
+              <Checkbox pressable={false} value={filters.showConfirmed} />
+              <Typography weight="regular" className="text-body">
+                Подтвержденные записи
+              </Typography>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => dispatch(toggleFilter("showPending"))}
+              className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
+            >
+              <Checkbox pressable={false} value={filters.showPending} />
+              <Typography weight="regular" className="text-body">
+                Ожидающие подтверждения
+              </Typography>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => dispatch(toggleFilter("showCancelled"))}
+              className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
+            >
+              <Checkbox pressable={false} value={filters.showCancelled} />
+              <Typography weight="regular" className="text-body">
+                Отмененные
+              </Typography>
+            </TouchableOpacity>
+          </View>
+
+          <Button title="Применить" onPress={handleClose} />
+        </View>
+      </StModal>
     </>
   );
 };

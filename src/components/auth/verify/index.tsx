@@ -55,19 +55,17 @@ const Verify = () => {
     },
   });
 
-  const { seconds, start, reset } = useCountDown({
+  const { seconds, start, pause, reset } = useCountDown({
     seconds: telegramState.expiresIn ?? 0,
     autoStart: false,
   });
 
   const buttonTitle = useMemo(() => {
-    if (telegramState.telegramLink && seconds > 0) return `Открыть Telegram`;
-    if (telegramState.telegramLink && seconds === 0)
-      return "Получить новый код";
+    if (telegramState.telegramLink) return `Открыть Telegram`;
     return "Получить код";
-  }, [seconds, telegramState.telegramLink]);
+  }, [telegramState.telegramLink]);
 
-  const { data } = useTelegramRegisterStatusQuery(
+  const { data, error } = useTelegramRegisterStatusQuery(
     { uuid: telegramState.uuid! },
     {
       pollingInterval: 5000,
@@ -89,7 +87,7 @@ const Verify = () => {
   const onSubmit = async (data: VerifyFormValues) => {
     const phone = `+${unMask(data.phone)}`;
 
-    if (telegramState.telegramLink && seconds > 0) {
+    if (telegramState.telegramLink) {
       setTelegramState((prev) => ({
         ...prev,
         isModalVisible: true,
@@ -109,9 +107,6 @@ const Verify = () => {
         expiresIn: result.expires_in,
         isModalVisible: true,
       });
-
-      reset();
-      start();
     } catch (error: any) {
       if (error?.status === 422) {
         try {
@@ -132,21 +127,57 @@ const Verify = () => {
   };
 
   useEffect(() => {
-    if (data?.status === "confirmed") {
-      if (data.token) {
-        accessTokenStorage.set(data.token);
+    const errorStatus = (error as any)?.status;
+
+    const clearState = () => {
+      pause();
+      setTelegramState({
+        uuid: null,
+        telegramLink: null,
+        isModalVisible: false,
+        expiresIn: null,
+      });
+    };
+
+    const handleConfirmed = async () => {
+      if (!data || data.status !== "confirmed") return;
+
+      if (!data.token) {
+        clearState();
+        console.warn("Confirmed without token");
+        return;
       }
 
-      setTelegramState((prev) => ({
-        ...prev,
-        isModalVisible: false,
-      }));
+      try {
+        await accessTokenStorage.set(data.token);
 
-      dispatch(setUser(data.resource));
+        dispatch(setUser(data.resource));
 
-      router.replace(Routers.auth.enterCode);
+        clearState();
+
+        router.replace(Routers.auth.register);
+      } catch (e) {
+        console.error("Token save failed:", e);
+      }
+    };
+
+    if (data?.status === "confirmed") {
+      handleConfirmed();
+      return;
     }
-  }, [data, dispatch]);
+
+    if (errorStatus === 404) {
+      clearState();
+      return;
+    }
+  }, [data, error, telegramState.uuid, dispatch, pause]);
+
+  useEffect(() => {
+    if (telegramState.expiresIn) {
+      reset();
+      start();
+    }
+  }, [reset, start, telegramState.expiresIn]);
 
   return (
     <>
@@ -159,6 +190,7 @@ const Verify = () => {
               primary={{
                 title: buttonTitle,
                 disabled: isLoading,
+                loading: isLoading,
                 onPress: methods.handleSubmit(onSubmit),
               }}
             />

@@ -9,6 +9,14 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { passwordField } from "@/src/validation/fields/password";
+import { useLoginMutation } from "@/src/store/redux/services/authApi";
+import { useDispatch } from "react-redux";
+import { UserType } from "@/src/store/redux/services/api-types";
+import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { setUser } from "@/src/store/redux/slices/authSlice";
+import { Routers } from "@/src/constants/routers";
+import { router } from "expo-router";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 type LoginFormValues = {
   identifier: string;
@@ -21,6 +29,9 @@ const VerifySchema = Yup.object().shape({
 });
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const [login, { isLoading }] = useLoginMutation();
+
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
@@ -29,8 +40,25 @@ const Login = () => {
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log("SUBMIT", data);
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      const isEmail = data.identifier.includes("@");
+
+      const result = await login({
+        email: isEmail ? data.identifier : null,
+        phone: isEmail ? "" : data.identifier,
+        password: data.password,
+        type: UserType.USER,
+      }).unwrap();
+
+      await accessTokenStorage.set(result.token);
+
+      dispatch(setUser(result.resource));
+
+      router.replace(Routers.tabs.home);
+    } catch (error: any) {
+      toast.error(error?.data?.error);
+    }
   };
 
   return (
@@ -42,6 +70,8 @@ const Login = () => {
             primary={{
               title: "Войти",
               variant: "accent",
+              disabled: isLoading,
+              loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
           />

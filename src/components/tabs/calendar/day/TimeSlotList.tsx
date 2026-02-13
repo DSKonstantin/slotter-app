@@ -1,76 +1,50 @@
+import type { Schedule } from "@/src/store/redux/slices/calendarSlice";
 import React from "react";
 import { View, ScrollView } from "react-native";
-import { Typography } from "@/src/components/ui";
+import { Divider, Typography } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 
-const mockSlots = [
-  {
-    id: "1",
-    variant: "free",
-    startTime: "9:00",
-    endTime: "10:00",
-  },
-  {
-    id: "2",
-    variant: "booked",
-    startTime: "10:00",
-    endTime: "11:00",
-    client: "Анна Петрова",
-    price: "3 500 ₽",
-    service: "Стрижка + укладка",
-    additional: "+ 2 доп.",
-    status: "confirmed",
-  },
-  {
-    id: "3",
-    variant: "booked",
-    startTime: "11:00",
-    endTime: "13:00",
-    client: "Мария Иванова",
-    price: "5 000 ₽",
-    service: "Окрашивание",
-    status: "pending",
-  },
-  {
-    id: "4",
-    variant: "free",
-    startTime: "13:00",
-    endTime: "15:00",
-  },
-  {
-    id: "5",
-    variant: "booked",
-    startTime: "15:00",
-    endTime: "16:30",
-    client: "Ольга Сидорова",
-    price: "4 000 ₽",
-    service: "Укладка вечерняя",
-    additional: "+ 1 доп.",
-    status: "confirmed",
-  },
-  {
-    id: "6",
-    variant: "free",
-    startTime: "16:30",
-    endTime: "17:00",
-  },
-];
+const HOUR_HEIGHT = 64;
+const MINUTE_HEIGHT = HOUR_HEIGHT / 60;
 
-const TimeSlotList: React.FC = () => {
+type TimeSlotListProps = {
+  schedule: Schedule;
+};
+
+const TimeSlotList: React.FC = ({ schedule }: TimeSlotListProps) => {
   const { bottom } = useSafeAreaInsets();
 
   const renderTimeMarkers = () => {
-    const hours = [];
-    for (let i = 9; i <= 17; i++) {
-      hours.push(
-        <View key={i} className="h-[64px] justify-start pt-2">
-          <Typography className="text-sm text-gray-500">{i}:00</Typography>
+    const startHour = 9;
+    const endHour = 17;
+
+    const markers = [];
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+      markers.push(
+        <View
+          key={hour}
+          style={{
+            height: HOUR_HEIGHT,
+          }}
+          className="relative justify-start items-start"
+        >
+          {/* Верхняя линия */}
+          {/*<Divider className="absolute top-0 left-0 right-0" />*/}
+
+          <Divider className="absolute left-0 right-0 bottom-0" />
+
+          <Typography className="text-sm text-gray-500">{hour}:00</Typography>
+
+          {/* Нижняя линия */}
+          {/*<Divider className="absolute bottom-0 left-0 right-0" />*/}
         </View>,
       );
     }
-    return hours;
+
+    return markers;
   };
 
   return (
@@ -81,11 +55,11 @@ const TimeSlotList: React.FC = () => {
         paddingBottom: TAB_BAR_HEIGHT + bottom + 74,
       }}
     >
-      <View className="flex-row">
-        <View className="w-12">{renderTimeMarkers()}</View>
+      <View className="flex-row gap-2.5 items-start">
+        <View className="w-12 h-full">{renderTimeMarkers()}</View>
 
         <View className="flex-1 gap-1">
-          {mockSlots.map((slot) => (
+          {schedule.map((slot) => (
             <SlotCard
               key={slot.id}
               variant={slot.variant}

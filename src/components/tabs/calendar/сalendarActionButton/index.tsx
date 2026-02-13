@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { Button, StSvg } from "@/src/components/ui";
@@ -7,11 +7,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   mode?: string;
-  onPress?: () => void;
+  onPress: () => void;
 }
 
 const CalendarActionButton = ({ mode, onPress }: Props) => {
   const { bottom, left, right } = useSafeAreaInsets();
+
+  const handlePress = useCallback(() => {
+    onPress();
+  }, [onPress]);
 
   return (
     <View
@@ -25,7 +29,7 @@ const CalendarActionButton = ({ mode, onPress }: Props) => {
     >
       {mode === "month" ? (
         <Button
-          onPress={() => {}}
+          onPress={handlePress}
           title="Настроить расписание"
           rightIcon={
             <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />
@@ -33,7 +37,7 @@ const CalendarActionButton = ({ mode, onPress }: Props) => {
         />
       ) : (
         <Button
-          onPress={() => {}}
+          onPress={handlePress}
           title="Настроить день"
           rightIcon={
             <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />

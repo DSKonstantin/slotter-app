@@ -8,6 +8,7 @@ type RHFAutocompleteProps = {
   name: string;
   label?: string;
   disabled?: boolean;
+  hideErrorText?: boolean;
   placeholder?: string;
   // dataSet: AutocompleteItem[];
   dataSet: any;
@@ -17,6 +18,7 @@ export function RHFAutocomplete({
   name,
   label,
   disabled,
+  hideErrorText,
   placeholder,
   dataSet,
 }: RHFAutocompleteProps) {
@@ -26,10 +28,12 @@ export function RHFAutocomplete({
     <Controller
       name={name}
       control={control}
-      render={({ field: { onChange }, fieldState: { error } }) => (
+      render={({ field: { onChange, value }, fieldState: { error } }) => (
         <Autocomplete
+          value={value}
           label={label}
           disabled={disabled}
+          hideErrorText={hideErrorText}
           placeholder={placeholder}
           dataSet={dataSet}
           error={error as FieldError}

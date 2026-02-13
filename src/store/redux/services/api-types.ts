@@ -44,27 +44,21 @@ export namespace API {
     expires_in: number;
   }
 
-  export interface TelegramRegisterStatusResponse {
+  export interface TelegramRegisterStatusResponse extends AuthResponse {
     status: "pending" | "confirmed";
-    token: string;
-    resource: User;
   }
 
-  export interface TelegramLoginResponse {
-    resource: User;
-    token: string;
-  }
-
-  export interface ConfirmLoginResponse extends AuthResponse {}
-
-  export interface UpdateUserPayload {
-    email?: string;
-    password?: string;
-  }
+  export interface TelegramLoginResponse extends AuthResponse {}
 
   export interface MeResponse {
     status: "authorized" | "unauthorized";
     resource_type: "user" | "customer";
     resource: User;
   }
+
+  export type UpdateUserPayload = Partial<
+    Omit<User, "id" | "phone" | "phone_confirmed_at" | "telegram_id">
+  > & {
+    password?: string;
+  };
 }

@@ -6,7 +6,6 @@ import { colors } from "@/src/styles/colors";
 type ApiStatus = "pending" | "confirmed";
 
 interface SlotCardProps {
-  // variant: "free" | "booked";
   variant: string;
   time: string;
 
@@ -60,7 +59,7 @@ const SlotCard = ({
       activeOpacity={0.7}
       className={`rounded-base flex-row 
       justify-between
-       ${isFree ? "border border-neutral-200 px-4 py-[26px]" : "p-4 bg-background-surface border border-transparent"}`}
+       ${isFree ? "border border-neutral-200 px-4 py-4" : "p-4 bg-background-surface border border-transparent"}`}
     >
       <View className="justify-center">
         <Typography className="text-body">{time}</Typography>

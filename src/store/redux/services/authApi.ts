@@ -83,6 +83,7 @@ export const {
   useTelegramRegisterMutation,
   useTelegramRegisterStatusQuery,
   useTelegramLoginMutation,
+  useLoginMutation,
   useConfirmTelegramLoginMutation,
   useGetMeQuery,
   useLazyGetMeQuery,

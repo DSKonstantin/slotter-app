@@ -1,7 +1,7 @@
-import { string } from "yup";
+import * as Yup from "yup";
 import { unMask } from "react-native-mask-text";
 
-export const phoneField = string()
+export const phoneField = Yup.string()
   .required("Введите номер телефона")
   .test("phone", "Введите корректный номер телефона", (value) => {
     if (!value) return false;

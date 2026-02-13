@@ -1,4 +1,9 @@
-import { TouchableOpacityProps, Text, TouchableOpacity } from "react-native";
+import {
+  TouchableOpacityProps,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { twMerge } from "tailwind-merge";
 
 export interface CustomBtn {
@@ -11,6 +16,7 @@ export interface CustomBtn {
 
   fullWidth?: boolean;
   disabled?: boolean | undefined;
+  loading?: boolean;
 
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -28,6 +34,7 @@ export const Button: React.FC<CustomBtn> = ({
   textVariant = "default",
   direction = "horizontal",
   disabled = false,
+  loading = false,
   leftIcon,
   rightIcon,
   buttonProps,
@@ -49,21 +56,37 @@ export const Button: React.FC<CustomBtn> = ({
         buttonClassName,
       )}
     >
-      {leftIcon && leftIcon}
-      <Text
-        className={twMerge(
-          styles.textBase,
-          styles.textVariants[variant],
-          textVariant === "accent" && styles.textAccent,
-          disabled && styles.textDisabled,
-          textClassName,
-        )}
-      >
-        {title}
-      </Text>
-      {rightIcon && rightIcon}
+      {loading ? (
+        <ActivityIndicator size="small" color={getLoaderColor(variant)} />
+      ) : (
+        <>
+          {leftIcon && leftIcon}
+          <Text
+            className={twMerge(
+              styles.textBase,
+              styles.textVariants[variant],
+              textVariant === "accent" && styles.textAccent,
+              disabled && styles.textDisabled,
+              textClassName,
+            )}
+          >
+            {title}
+          </Text>
+          {rightIcon && rightIcon}
+        </>
+      )}
     </TouchableOpacity>
   );
+};
+
+const getLoaderColor = (variant: CustomBtn["variant"]) => {
+  switch (variant) {
+    case "secondary":
+    case "clear":
+      return "#000";
+    default:
+      return "#fff";
+  }
 };
 
 const styles = {

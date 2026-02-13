@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import { Redirect } from "expo-router";
 import { RootState } from "@/src/store/redux/store";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
+import { Routers } from "@/src/constants/routers";
 
 export default function Index() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -11,11 +12,10 @@ export default function Index() {
     return null;
   }
 
-  console.log(user, "user");
-
   if (status === "authenticated" && user) {
     return <Redirect href={getRedirectPath(user)} />;
   }
 
-  return <Redirect href="/(auth)" />;
+  // return <Redirect href={Routers.auth.root} />;
+  return <Redirect href={Routers.tabs.calendar} />;
 }

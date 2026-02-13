@@ -29,7 +29,7 @@ const HomeCard = ({
       onPress={onPress}
       activeOpacity={0.7}
       style={{
-        opacity: disabled ? 0.4 : 1,
+        ...(disabled && { opacity: 0.4 }),
       }}
       className={twMerge(
         "flex-1 p-4 rounded-medium bg-background-surface",

@@ -16,31 +16,76 @@ import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { CameraType } from "expo-image-picker";
+import { useUpdateUserMutation } from "@/src/store/redux/services/userApi";
+import { RootState } from "@/src/store/redux/store";
+import { useSelector } from "react-redux";
+import { nameField } from "@/src/validation/fields/name";
+import { surnameField } from "@/src/validation/fields/surname";
+import { professionField } from "@/src/validation/fields/profession";
 
-type PersonalInformationFormValues = object;
+type PersonalInformationFormValues = {
+  name: string;
+  surname: string;
+  profession: string;
+  address?: Yup.Maybe<string | undefined>;
+  atHome: boolean;
+  online: boolean;
+  onRoad: boolean;
+  hideAddress: boolean;
+};
+
+const VerifySchema = Yup.object({
+  name: nameField,
+  surname: surnameField,
+  profession: professionField,
+  address: Yup.string().notRequired(),
+  atHome: Yup.boolean().required(),
+  online: Yup.boolean().required(),
+  onRoad: Yup.boolean().required(),
+  hideAddress: Yup.boolean().required(),
+});
 
 const PersonalInformation = () => {
-  const VerifySchema = Yup.object().shape({});
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [updateUser, { isLoading }] = useUpdateUserMutation();
 
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
-      name: "",
-      surname: "",
-      profession: "",
-      address: "",
-      atHome: false,
-      online: false,
-      onRoad: false,
+      name: user?.first_name ?? "",
+      surname: user?.last_name ?? "",
+      profession: user?.profession ?? "",
+      address: user?.address ?? "",
+      hideAddress: false,
+      atHome: user?.is_home_work ?? false,
+      online: user?.is_online_work ?? false,
+      onRoad: user?.is_out_call ?? false,
     },
   });
 
-  const onSubmit = (data: PersonalInformationFormValues) => {
-    console.log("SUBMIT", data);
-    router.push(Routers.auth.service);
-  };
+  const onSubmit = async (data: PersonalInformationFormValues) => {
+    if (!user?.id) return;
 
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+    try {
+      await updateUser({
+        id: user.id,
+        data: {
+          first_name: data.name,
+          last_name: data.surname,
+          profession: data.profession,
+          address: data.address,
+          is_home_work: data.atHome,
+          is_online_work: data.online,
+          is_out_call: data.onRoad,
+        },
+      }).unwrap();
+
+      router.push(Routers.auth.service);
+    } catch (error) {
+      console.log("UPDATE USER ERROR:", error);
+    }
+  };
 
   return (
     <FormProvider {...methods}>
@@ -51,6 +96,8 @@ const PersonalInformation = () => {
           <AuthFooter
             primary={{
               title: "Далее",
+              disabled: isLoading,
+              loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
           />
@@ -101,16 +148,30 @@ const PersonalInformation = () => {
           <Item title="Онлайн" right={<RHFSwitch name="online" />} />
           <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
         </View>
-        <RHFAutocomplete
-          label="Адрес"
-          placeholder="Москва, ул. Пушкина, 5"
-          name="address"
-          dataSet={[
-            { id: "1", title: "Alpha" },
-            { id: "2", title: "Beta" },
-            { id: "3", title: "Gamma" },
-          ]}
-        />
+        <View className="gap-2 mb-8">
+          <RHFAutocomplete
+            label="Адрес"
+            placeholder="Москва, ул. Пушкина, 5"
+            name="address"
+            hideErrorText
+            dataSet={[
+              { id: "Alpha", title: "Alpha" },
+              { id: "Beta", title: "Beta" },
+              { id: "Gamma", title: "Gamma" },
+            ]}
+          />
+          <Item
+            title="Скрыть адрес"
+            left={
+              <StSvg
+                name="View_hide_fill"
+                size={24}
+                color={colors.neutral[900]}
+              />
+            }
+            right={<RHFSwitch name="hideAddress" />}
+          />
+        </View>
       </AuthScreenLayout>
     </FormProvider>
   );

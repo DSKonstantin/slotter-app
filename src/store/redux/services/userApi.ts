@@ -15,7 +15,6 @@ const authApi = api.injectEndpoints({
       }),
     }),
 
-    // 🔹 Update Customer
     updateCustomer: builder.mutation<
       API.User,
       { id: number; data: Partial<API.UpdateUserPayload> }

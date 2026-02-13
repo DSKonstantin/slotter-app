@@ -1,6 +1,6 @@
-import { string } from "yup";
+import * as Yup from "yup";
 
-export const passwordField = string()
+export const passwordField = Yup.string()
   .min(8, "Пароль должен содержать минимум 8 символов")
   .matches(
     /^[A-Za-z0-9!@#$%^&*()_+=\-{}[\]:;"'<>,.?/\\|~`]+$/,

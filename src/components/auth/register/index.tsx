@@ -73,6 +73,7 @@ const Register = () => {
             primary={{
               title: "Создать профиль",
               disabled: isLoading,
+              loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
           />
