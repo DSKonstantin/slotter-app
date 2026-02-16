@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { TouchableOpacity, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import MonthCalendarView from "@/src/components/tabs/calendar/month";
+import MonthCalendarView from "@/src/components/tabs/calendar/home/month";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/src/store/redux/store";
 import {
@@ -22,9 +22,9 @@ import {
   setSelectedDate,
   toggleFilter,
 } from "@/src/store/redux/slices/calendarSlice";
-import DayCalendarView from "@/src/components/tabs/calendar/day";
+import DayCalendarView from "@/src/components/tabs/calendar/home/day";
 
-const TabCalendar = () => {
+const CalendarHome = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { mode, date } = useLocalSearchParams<{
@@ -33,7 +33,7 @@ const TabCalendar = () => {
   }>();
 
   const dispatch = useDispatch();
-  const { top } = useSafeAreaInsets();
+  const { top, left, right } = useSafeAreaInsets();
 
   const calendarMode = useSelector((state: RootState) => state.calendar.mode);
   const filters = useSelector((state: RootState) => state.calendar.filters);
@@ -153,4 +153,4 @@ const TabCalendar = () => {
   );
 };
 
-export default TabCalendar;
+export default CalendarHome;

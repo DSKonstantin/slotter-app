@@ -21,6 +21,7 @@ const CalendarActionButton = ({ mode, onPress }: Props) => {
     <View
       className="absolute"
       style={{
+        zIndex: 100,
         bottom: TAB_BAR_HEIGHT + bottom + 16,
         right: 0,
         paddingRight: right + 20,

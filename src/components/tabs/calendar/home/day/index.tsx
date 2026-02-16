@@ -1,11 +1,12 @@
 import React, { useCallback } from "react";
-import DateSelector from "@/src/components/tabs/calendar/day/DateSelector";
-import TimeSlotList from "@/src/components/tabs/calendar/day/TimeSlotList";
+import DateSelector from "@/src/components/tabs/calendar/home/day/DateSelector";
+import TimeSlotList from "@/src/components/tabs/calendar/home/day/TimeSlotList";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/src/store/redux/store";
 import { setSelectedDate } from "@/src/store/redux/slices/calendarSlice";
-import { useRouter } from "expo-router";
-import CalendarActionButton from "@/src/components/tabs/calendar/сalendarActionButton";
+import { router, useRouter } from "expo-router";
+import CalendarActionButton from "@/src/components/tabs/calendar/home/сalendarActionButton";
+import { Routers } from "@/src/constants/routers";
 
 const DayCalendarView = () => {
   const router = useRouter();
@@ -27,7 +28,9 @@ const DayCalendarView = () => {
     });
   };
 
-  const handlePress = useCallback(() => {}, []);
+  const handlePress = useCallback(() => {
+    router.push(Routers.tabs.calendar.daySchedule);
+  }, [router]);
 
   return (
     <>

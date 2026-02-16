@@ -22,7 +22,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
-import { AuthProvider } from "@/src/providers/ auth/AuthProvider";
+import "@/src/utils/date/date";
+import { AuthProvider } from "@/src/providers/auth/AuthProvider";
 
 SplashScreen.preventAutoHideAsync();
 

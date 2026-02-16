@@ -7,6 +7,7 @@ type RHFTextFieldProps = {
   name: string;
   label?: string;
   hideErrorText?: boolean;
+  disabled?: boolean;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   maskFn?: (value: string) => string;

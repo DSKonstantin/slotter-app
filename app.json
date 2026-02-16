@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "sloter",
-    "slug": "sloter",
+    "name": "slotter",
+    "slug": "slotter",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "sloter",
+    "scheme": "slotter",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,7 +16,7 @@
           "en"
         ]
       },
-      "bundleIdentifier": "com.anonymous.sloter"
+      "bundleIdentifier": "com.anonymous.slotter"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,7 +28,7 @@
       "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.sloter"
+      "package": "com.anonymous.slotter"
     },
     "web": {
       "bundler": "metro",

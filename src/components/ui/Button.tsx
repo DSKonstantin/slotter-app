@@ -3,6 +3,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  TextProps,
 } from "react-native";
 import { twMerge } from "tailwind-merge";
 
@@ -22,6 +23,7 @@ export interface CustomBtn {
   rightIcon?: React.ReactNode;
 
   buttonProps?: TouchableOpacityProps;
+  textProps?: TextProps;
   buttonClassName?: string;
   textClassName?: string;
 }
@@ -37,6 +39,7 @@ export const Button: React.FC<CustomBtn> = ({
   loading = false,
   leftIcon,
   rightIcon,
+  textProps,
   buttonProps,
   buttonClassName,
   textClassName,
@@ -69,6 +72,7 @@ export const Button: React.FC<CustomBtn> = ({
               disabled && styles.textDisabled,
               textClassName,
             )}
+            {...textProps}
           >
             {title}
           </Text>

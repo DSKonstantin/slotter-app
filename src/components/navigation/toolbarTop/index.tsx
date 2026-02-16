@@ -30,6 +30,7 @@ const ToolbarTop = ({
         top: 0,
         left: 0,
         right: 0,
+        zIndex: 100,
         paddingTop: insets.top,
         height: TOOLBAR_HEIGHT + insets.top,
         paddingLeft: insets.left,

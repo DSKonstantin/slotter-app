@@ -18,7 +18,11 @@ export const Routers = {
   },
   tabs: {
     home: "/(tabs)/home",
-    calendar: "/(tabs)/calendar",
+    calendar: {
+      root: "/(tabs)/calendar",
+      schedule: "/(tabs)/calendar/schedule",
+      daySchedule: "/(tabs)/calendar/day-schedule",
+    },
     chat: "/(tabs)/chat",
     clients: "/(tabs)/clients",
   },

@@ -6,7 +6,6 @@ import { View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { router, useLocalSearchParams } from "expo-router";
-import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
 import { useDispatch } from "react-redux";
 import {
@@ -16,6 +15,8 @@ import {
 import { UserType } from "@/src/store/redux/services/api-types";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { setUser } from "@/src/store/redux/slices/authSlice";
+import { toast } from "@backpackapp-io/react-native-toast";
+import getRedirectPath from "@/src/utils/getOnboardingStep";
 
 const EnterCode = () => {
   const dispatch = useDispatch();
@@ -40,8 +41,10 @@ const EnterCode = () => {
 
       await accessTokenStorage.set(result.token);
       dispatch(setUser(result.resource));
-      router.replace(Routers.auth.register);
-    } catch (e) {}
+      router.replace(getRedirectPath(result.resource));
+    } catch (e: any) {
+      toast.error(e?.data?.error);
+    }
   };
 
   return (

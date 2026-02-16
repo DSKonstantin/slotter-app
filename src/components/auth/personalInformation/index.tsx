@@ -22,6 +22,7 @@ import { useSelector } from "react-redux";
 import { nameField } from "@/src/validation/fields/name";
 import { surnameField } from "@/src/validation/fields/surname";
 import { professionField } from "@/src/validation/fields/profession";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 type PersonalInformationFormValues = {
   name: string;
@@ -32,6 +33,12 @@ type PersonalInformationFormValues = {
   online: boolean;
   onRoad: boolean;
   hideAddress: boolean;
+};
+
+type UploadFile = {
+  uri: string;
+  name: string;
+  type: string;
 };
 
 const VerifySchema = Yup.object({
@@ -46,7 +53,7 @@ const VerifySchema = Yup.object({
 });
 
 const PersonalInformation = () => {
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<UploadFile | null>(null);
   const user = useSelector((state: RootState) => state.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
@@ -68,22 +75,34 @@ const PersonalInformation = () => {
     if (!user?.id) return;
 
     try {
+      const formData = new FormData();
+
+      formData.append("user[first_name]", data.name);
+      formData.append("user[last_name]", data.surname);
+      formData.append("user[profession]", data.profession);
+
+      if (data.address) {
+        formData.append("user[address]", data.address);
+      }
+
+      formData.append("user[is_home_work]", String(data.atHome));
+      formData.append("user[is_online_work]", String(data.online));
+      formData.append("user[is_out_call]", String(data.onRoad));
+
+      if (avatar) {
+        formData.append("user[avatar]", avatar);
+      }
+
       await updateUser({
         id: user.id,
-        data: {
-          first_name: data.name,
-          last_name: data.surname,
-          profession: data.profession,
-          address: data.address,
-          is_home_work: data.atHome,
-          is_online_work: data.online,
-          is_out_call: data.onRoad,
-        },
+        data: formData,
+        isFormData: true,
       }).unwrap();
 
       router.push(Routers.auth.service);
-    } catch (error) {
+    } catch (error: any) {
       console.log("UPDATE USER ERROR:", error);
+      toast.error(error?.data?.error);
     }
   };
 
@@ -118,11 +137,22 @@ const PersonalInformation = () => {
             <ImagePickerTrigger
               title="Загрузить аватар"
               options={{ aspect: [1, 1], cameraType: CameraType.front }}
-              onPick={(assets) => setAvatarUri(assets[0]?.uri)}
+              onPick={(assets) => {
+                if (!assets?.[0]) return;
+
+                const asset = assets[0];
+
+                setAvatar({
+                  uri: asset.uri,
+                  name:
+                    asset.fileName || asset.name || `file_${Date.now()}.jpg`,
+                  type: asset.mimeType || asset.type || "image/jpeg",
+                });
+              }}
             >
               <Avatar
                 size="xl"
-                uri={avatarUri ?? undefined}
+                uri={avatar?.uri ?? undefined}
                 fallbackIcon={
                   <StSvg name="Camera" size={40} color={colors.neutral[500]} />
                 }

@@ -1,16 +1,23 @@
 import React, { useCallback, useState } from "react";
-import { View } from "react-native";
-import MonthCalendar from "@/src/components/tabs/calendar/month/MonthCalendar";
-import CalendarActionButton from "@/src/components/tabs/calendar/сalendarActionButton";
+import { ScrollView, View } from "react-native";
+import MonthCalendar from "@/src/components/tabs/calendar/home/month/MonthCalendar";
+import CalendarActionButton from "@/src/components/tabs/calendar/home/сalendarActionButton";
 import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
 import CreateActionCard from "@/src/components/shared/cards/createActionCard";
 import { colors } from "@/src/styles/colors";
+import { Routers } from "@/src/constants/routers";
+import { router } from "expo-router";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Schedule = [
   {
     title: "Настроить вручную",
     subtitle: "Выбрать дни и часы работы",
     leftIcon: <StSvg name="Edit" size={24} color={colors.neutral[900]} />,
+    onPress: () => {
+      router.push(Routers.tabs.calendar.schedule);
+    },
   },
   {
     title: "Дублировать прошлый месяц",
@@ -25,6 +32,7 @@ const Schedule = [
 ];
 
 const MonthCalendarView = () => {
+  const { bottom } = useSafeAreaInsets();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpen = useCallback(() => {
@@ -37,9 +45,15 @@ const MonthCalendarView = () => {
 
   return (
     <>
-      <View className="px-screen">
+      <ScrollView
+        className="px-screen"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: TAB_BAR_HEIGHT + bottom + 74,
+        }}
+      >
         <MonthCalendar selectedDate={new Date()} onSelectDate={() => {}} />
-      </View>
+      </ScrollView>
       <CalendarActionButton mode="month" onPress={handleOpen} />
 
       <StModal visible={isOpen} onClose={handleClose}>
@@ -55,6 +69,10 @@ const MonthCalendarView = () => {
                 title={item.title}
                 subtitle={item.subtitle}
                 leftIcon={item.leftIcon}
+                onPress={() => {
+                  handleClose();
+                  item.onPress?.();
+                }}
               />
             ))}
           </View>

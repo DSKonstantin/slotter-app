@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { TouchableOpacity } from "react-native";
 import { twMerge } from "tailwind-merge";
 
-type IconButtonSize = "sm" | "md" | "lg";
+type IconButtonSize = "xs" | "sm" | "md" | "lg";
 
 type IconButtonProps = {
   icon: ReactNode;
@@ -42,5 +42,6 @@ const styles = {
     lg: "h-[62px] w-[62px]",
     md: "h-[48px] w-[48px]",
     sm: "h-[36px] w-[36px]",
+    xs: "h-[24px] w-[24px]",
   },
 };

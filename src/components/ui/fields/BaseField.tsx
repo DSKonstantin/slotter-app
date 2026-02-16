@@ -69,7 +69,7 @@ const styles = {
 
   error: "border-accent-red-500",
 
-  disabled: "bg-neutral-300",
+  disabled: "",
 
   adornmentStart: "mx-2",
 

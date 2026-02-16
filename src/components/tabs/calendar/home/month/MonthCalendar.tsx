@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { CircularProgressDay } from "@/src/components/tabs/calendar/month/CircularProgressDay";
+import { CircularProgressDay } from "@/src/components/tabs/calendar/home/month/CircularProgressDay";
 
 interface Props {
   selectedDate: Date;
