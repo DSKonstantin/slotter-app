@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
@@ -27,7 +27,7 @@ const EnterCode = () => {
   const [confirmTelegramLogin, { isLoading }] =
     useConfirmTelegramLoginMutation();
 
-  const onSubmit = async () => {
+  const onSubmit = useCallback(async () => {
     if (!code || code.length < 6) return;
     try {
       const result = await confirmTelegramLogin({
@@ -40,7 +40,11 @@ const EnterCode = () => {
     } catch (e: any) {
       toast.error(e?.data?.error);
     }
-  };
+  }, [confirmTelegramLogin, phone, code]);
+
+  const handleComplete = useCallback(() => {
+    // This can be used to trigger submission automatically on complete
+  }, []);
 
   return (
     <AuthScreenLayout
@@ -59,7 +63,7 @@ const EnterCode = () => {
               />
             ),
             disabled: code.length < 6 || isLoading,
-            onPress: () => onSubmit(),
+            onPress: onSubmit,
           }}
         />
       }
@@ -80,7 +84,7 @@ const EnterCode = () => {
 
         <OtpConfirm
           onChange={setCode}
-          onComplete={() => {}}
+          onComplete={handleComplete}
           telegramLogin={telegramLogin}
           phone={phone}
           userType={UserType.USER}

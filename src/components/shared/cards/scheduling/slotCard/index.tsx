@@ -2,24 +2,15 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Badge, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-
-type ApiStatus = "pending" | "confirmed";
+import type { Schedule } from "@/src/store/redux/slices/calendarSlice";
 
 interface SlotCardProps {
-  variant: string;
-  time: string;
-
-  // booked
-  client?: string;
-  service?: string;
-  price?: string;
-  status?: string;
-
+  slot: Schedule;
   onPress?: () => void;
 }
 
 const STATUS_CONFIG: Record<
-  ApiStatus,
+  "pending" | "confirmed" | "cancelled",
   {
     label: string;
     variant: "success" | "warning" | "info";
@@ -41,28 +32,46 @@ const STATUS_CONFIG: Record<
     label: "Подтверждено",
     variant: "success",
   },
+  cancelled: {
+    label: "Отменено",
+    variant: "info",
+    icon: (
+      <StSvg name="Close_round_fill" size={16} color={colors.neutral[500]} />
+    ),
+  },
 };
 
-const SlotCard = ({
-  variant,
-  time,
-  client,
-  service,
-  price,
-  status,
-  onPress,
-}: SlotCardProps) => {
-  const isFree = variant === "free";
+const formatTime = (isoTime: string) => {
+  const date = new Date(isoTime);
+  const hours = date.getUTCHours().toString().padStart(2, "0");
+  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+const SlotCard = ({ slot, onPress }: SlotCardProps) => {
+  const isFree = slot.status === "available";
+  const timeString = `${formatTime(slot.timeStart)} - ${formatTime(
+    slot.timeEnd,
+  )}`;
+  const statusConfig =
+    slot.status === "available" || !slot.status
+      ? null
+      : STATUS_CONFIG[slot.status];
 
   return (
     <TouchableOpacity
       activeOpacity={0.7}
+      onPress={onPress}
       className={`rounded-base flex-row 
       justify-between
-       ${isFree ? "border border-neutral-200 px-4 py-4" : "p-4 bg-background-surface border border-transparent"}`}
+       ${
+         isFree
+           ? "border border-neutral-200 px-4 py-4"
+           : "p-4 bg-background-surface border border-transparent"
+       }`}
     >
-      <View className="justify-center">
-        <Typography className="text-body">{time}</Typography>
+      <View className="justify-center flex-1">
+        <Typography className="text-body">{timeString}</Typography>
 
         {isFree ? (
           <Typography className="text-neutral-500 text-caption">
@@ -74,13 +83,14 @@ const SlotCard = ({
               weight="medium"
               className="mt-1 text-neutral-500 text-caption"
             >
-              {client} {price && `· ${price}`}
+              {slot.clientName}{" "}
+              {slot.price && `· ${slot.price.toLocaleString("ru-RU")} ₽`}
             </Typography>
             <Typography
               weight="regular"
               className="text-neutral-400 text-caption"
             >
-              {service}
+              {slot.services?.join(", ")}
             </Typography>
           </>
         )}
@@ -91,12 +101,12 @@ const SlotCard = ({
           <StSvg name="Add_ring_fill" size={24} color={colors.neutral[900]} />
         </View>
       ) : (
-        status && (
+        statusConfig && (
           <Badge
             size="sm"
-            title={STATUS_CONFIG[status].label}
-            variant={STATUS_CONFIG[status].variant}
-            icon={STATUS_CONFIG[status].icon}
+            title={statusConfig.label}
+            variant={statusConfig.variant}
+            icon={statusConfig.icon}
           />
         )
       )}

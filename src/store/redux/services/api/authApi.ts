@@ -79,7 +79,7 @@ export const authApi = api.injectEndpoints({
 
     updateUser: builder.mutation<
       API.User,
-      { id: number; data: Partial<API.UpdateUserPayload> }
+      { id: number; data: Partial<API.UpdateUserPayload> | FormData }
     >({
       query: ({ id, data }) => ({
         url: `/users/${id}`,
@@ -90,7 +90,7 @@ export const authApi = api.injectEndpoints({
 
     updateCustomer: builder.mutation<
       API.User,
-      { id: number; data: Partial<API.UpdateUserPayload> }
+      { id: number; data: Partial<API.UpdateUserPayload> | FormData }
     >({
       query: ({ id, data }) => ({
         url: `/customers/${id}`,
@@ -108,6 +108,7 @@ export const {
   useLoginMutation,
   useConfirmTelegramLoginMutation,
   useLazyGetMeQuery,
+
   useUpdateUserMutation,
   useUpdateCustomerMutation,
 } = authApi;

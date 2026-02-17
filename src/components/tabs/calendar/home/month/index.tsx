@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 import MonthCalendar from "@/src/components/tabs/calendar/home/month/MonthCalendar";
 import CalendarActionButton from "@/src/components/tabs/calendar/home/сalendarActionButton";
@@ -9,27 +9,6 @@ import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const Schedule = [
-  {
-    title: "Настроить вручную",
-    subtitle: "Выбрать дни и часы работы",
-    leftIcon: <StSvg name="Edit" size={24} color={colors.neutral[900]} />,
-    onPress: () => {
-      router.push(Routers.tabs.calendar.schedule);
-    },
-  },
-  {
-    title: "Дублировать прошлый месяц",
-    subtitle: "Скопировать график с Января",
-    leftIcon: <StSvg name="Folder" size={24} color={colors.neutral[900]} />,
-  },
-  {
-    title: "Применить шаблон",
-    subtitle: "Настроенный вами график пн-вс",
-    leftIcon: <StSvg name="Order" size={24} color={colors.neutral[900]} />,
-  },
-];
 
 const MonthCalendarView = () => {
   const { bottom } = useSafeAreaInsets();
@@ -42,6 +21,38 @@ const MonthCalendarView = () => {
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  const scheduleActions = useMemo(
+    () => [
+      {
+        title: "Настроить вручную",
+        subtitle: "Выбрать дни и часы работы",
+        leftIcon: <StSvg name="Edit" size={24} color={colors.neutral[900]} />,
+        action: () => {
+          router.push(Routers.tabs.calendar.schedule);
+        },
+      },
+      {
+        title: "Дублировать прошлый месяц",
+        subtitle: "Скопировать график с Января",
+        leftIcon: <StSvg name="Folder" size={24} color={colors.neutral[900]} />,
+      },
+      {
+        title: "Применить шаблон",
+        subtitle: "Настроенный вами график пн-вс",
+        leftIcon: <StSvg name="Order" size={24} color={colors.neutral[900]} />,
+      },
+    ],
+    [],
+  );
+
+  const handleCardPress = useCallback(
+    (action?: () => void) => {
+      handleClose();
+      action?.();
+    },
+    [handleClose],
+  );
 
   return (
     <>
@@ -63,16 +74,13 @@ const MonthCalendarView = () => {
           </Typography>
 
           <View className="gap-4 mb-4">
-            {Schedule.map((item, key) => (
+            {scheduleActions.map((item) => (
               <CreateActionCard
-                key={key}
+                key={item.title}
                 title={item.title}
                 subtitle={item.subtitle}
                 leftIcon={item.leftIcon}
-                onPress={() => {
-                  handleClose();
-                  item.onPress?.();
-                }}
+                onPress={() => handleCardPress(item.action)}
               />
             ))}
           </View>

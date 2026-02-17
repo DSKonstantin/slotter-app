@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { Button, Typography } from "@/src/components/ui";
 import { Image } from "expo-image";
@@ -9,6 +9,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AuthHeader from "@/src/components/auth/layout/header";
 
 const AuthHome = () => {
+  const handleRegister = useCallback(() => {
+    router.push(Routers.auth.verify);
+  }, []);
+
+  const handleLogin = useCallback(() => {
+    router.push(Routers.auth.login);
+  }, []);
+
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       <View className="px-screen">
@@ -20,7 +28,7 @@ const AuthHome = () => {
             Управляй своим{" "}
             <Typography
               weight="semibold"
-              className="text-display text-primary-blue-500 text-center"
+              className="text-display text-primary-blue-500"
             >
               бизнесом
             </Typography>
@@ -35,12 +43,9 @@ const AuthHome = () => {
             <Button
               title="Я тут впервые"
               variant="clear"
-              onPress={() => router.push(Routers.auth.verify)}
+              onPress={handleRegister}
             />
-            <Button
-              title="Войти в аккаунт"
-              onPress={() => router.push(Routers.auth.login)}
-            />
+            <Button title="Войти в аккаунт" onPress={handleLogin} />
           </View>
 
           <View className="items-center">

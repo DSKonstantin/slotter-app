@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { Linking, View } from "react-native";
@@ -70,102 +70,92 @@ const Verify = () => {
     },
   );
 
-  const handleOpenTelegram = async () => {
+  const handleCloseModal = useCallback(() => {
+    setTelegramState((prev) => ({ ...prev, isModalVisible: false }));
+  }, []);
+
+  const handleOpenTelegram = useCallback(async () => {
     if (!telegramState.telegramLink) return;
-
-    setTelegramState((prev) => ({
-      ...prev,
-      isModalVisible: false,
-    }));
-
+    handleCloseModal();
     await Linking.openURL(telegramState.telegramLink);
-  };
+  }, [telegramState.telegramLink, handleCloseModal]);
 
-  const onSubmit = async (data: VerifyFormValues) => {
-    const phone = `+${unMask(data.phone)}`;
+  const onSubmit = useCallback(
+    async (data: VerifyFormValues) => {
+      const phone = `+${unMask(data.phone)}`;
 
-    if (telegramState.telegramLink) {
-      setTelegramState((prev) => ({
-        ...prev,
-        isModalVisible: true,
-      }));
-      return;
-    }
-
-    try {
-      const result = await telegramRegister({
-        phone,
-        type: UserType.USER,
-      }).unwrap();
-
-      setTelegramState({
-        uuid: result.uuid,
-        telegramLink: result.telegram_link,
-        expiresIn: result.expires_in,
-        isModalVisible: true,
-      });
-    } catch (error: any) {
-      if (error?.status === 422) {
-        try {
-          await telegramLogin({
-            phone,
-            type: UserType.USER,
-          }).unwrap();
-        } catch (loginError) {
-          console.log("LOGIN ERROR:", loginError);
-        }
-
-        router.push({
-          pathname: Routers.auth.enterCode,
-          params: { phone },
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    const errorStatus = (error as any)?.status;
-
-    const clearState = () => {
-      pause();
-      setTelegramState({
-        uuid: null,
-        telegramLink: null,
-        isModalVisible: false,
-        expiresIn: null,
-      });
-    };
-
-    const handleConfirmed = async () => {
-      if (!data || data.status !== "confirmed") return;
-
-      if (!data.token) {
-        clearState();
-        console.warn("Confirmed without token");
+      if (telegramState.telegramLink) {
+        setTelegramState((prev) => ({ ...prev, isModalVisible: true }));
         return;
       }
 
       try {
-        await accessTokenStorage.set(data.token);
+        const result = await telegramRegister({
+          phone,
+          type: UserType.USER,
+        }).unwrap();
 
+        setTelegramState({
+          uuid: result.uuid,
+          telegramLink: result.telegram_link,
+          expiresIn: result.expires_in,
+          isModalVisible: true,
+        });
+      } catch (error: any) {
+        if (error?.status === 422) {
+          try {
+            await telegramLogin({
+              phone,
+              type: UserType.USER,
+            }).unwrap();
+          } catch (loginError) {
+            console.log("LOGIN ERROR:", loginError);
+          }
+
+          router.push({
+            pathname: Routers.auth.enterCode,
+            params: { phone },
+          });
+        }
+      }
+    },
+    [telegramState.telegramLink, telegramRegister, telegramLogin],
+  );
+
+  const clearState = useCallback(() => {
+    pause();
+    setTelegramState({
+      uuid: null,
+      telegramLink: null,
+      isModalVisible: false,
+      expiresIn: null,
+    });
+  }, [pause]);
+
+  const handleConfirmed = useCallback(
+    async (token: string) => {
+      try {
+        await accessTokenStorage.set(token);
         clearState();
-
         router.replace(Routers.auth.register);
       } catch (e) {
         console.error("Token save failed:", e);
       }
-    };
+    },
+    [clearState],
+  );
 
-    if (data?.status === "confirmed") {
-      handleConfirmed();
+  useEffect(() => {
+    if (data?.status === "confirmed" && data.token) {
+      handleConfirmed(data.token);
       return;
     }
 
-    if (errorStatus === 404) {
+    if ((error as any)?.status === 404) {
       clearState();
       return;
     }
-  }, [data, error, telegramState.uuid, pause]);
+  }, [data, error, clearState, handleConfirmed]);
 
   useEffect(() => {
     if (telegramState.expiresIn) {
@@ -173,6 +163,10 @@ const Verify = () => {
       start();
     }
   }, [reset, start, telegramState.expiresIn]);
+
+  const handleRestoreLogin = useCallback(() => {
+    router.push(Routers.auth.restoreLogin);
+  }, []);
 
   return (
     <>
@@ -216,9 +210,7 @@ const Verify = () => {
               <Button
                 title="Восстановить вход"
                 variant="clear"
-                onPress={() => {
-                  router.push(Routers.auth.restoreLogin);
-                }}
+                onPress={handleRestoreLogin}
               />
             </View>
           </View>
@@ -227,9 +219,7 @@ const Verify = () => {
 
       <StModal
         visible={telegramState.isModalVisible}
-        onClose={() =>
-          setTelegramState((prev) => ({ ...prev, isModalVisible: false }))
-        }
+        onClose={handleCloseModal}
       >
         <Typography weight="semibold" className="text-body text-center mb-2">
           Подтвердите номер
@@ -245,13 +235,7 @@ const Verify = () => {
 
         <Button title="Перейти в Telegram" onPress={handleOpenTelegram} />
 
-        <Button
-          title="Отмена"
-          variant="clear"
-          onPress={() =>
-            setTelegramState((prev) => ({ ...prev, isModalVisible: false }))
-          }
-        />
+        <Button title="Отмена" variant="clear" onPress={handleCloseModal} />
       </StModal>
     </>
   );

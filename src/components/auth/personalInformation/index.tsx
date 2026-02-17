@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -15,7 +15,7 @@ import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
-import { CameraType } from "expo-image-picker";
+import { CameraType, ImagePickerAsset } from "expo-image-picker";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { RootState } from "@/src/store/redux/store";
 import { useSelector } from "react-redux";
@@ -23,6 +23,7 @@ import { nameField } from "@/src/validation/fields/name";
 import { surnameField } from "@/src/validation/fields/surname";
 import { professionField } from "@/src/validation/fields/profession";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { DocumentPickerAsset } from "expo-document-picker";
 
 type PersonalInformationFormValues = {
   name: string;
@@ -41,7 +42,7 @@ type UploadFile = {
   type: string;
 };
 
-const VerifySchema = Yup.object({
+const PersonalInformationSchema = Yup.object({
   name: nameField,
   surname: surnameField,
   profession: professionField,
@@ -58,7 +59,7 @@ const PersonalInformation = () => {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
   const methods = useForm({
-    resolver: yupResolver(VerifySchema),
+    resolver: yupResolver(PersonalInformationSchema),
     defaultValues: {
       name: user?.first_name ?? "",
       surname: user?.last_name ?? "",
@@ -71,44 +72,67 @@ const PersonalInformation = () => {
     },
   });
 
-  const onSubmit = async (data: PersonalInformationFormValues) => {
-    if (!user?.id) return;
+  const onSubmit = useCallback(
+    async (data: PersonalInformationFormValues) => {
+      if (!user?.id) return;
 
-    try {
-      const formData = new FormData();
+      try {
+        const formData = new FormData();
 
-      formData.append("user[first_name]", data.name);
-      formData.append("user[last_name]", data.surname);
-      formData.append("user[profession]", data.profession);
+        formData.append("user[first_name]", data.name);
+        formData.append("user[last_name]", data.surname);
+        formData.append("user[profession]", data.profession);
 
-      if (data.address) {
-        formData.append("user[address]", data.address);
+        if (data.address) {
+          formData.append("user[address]", data.address);
+        }
+
+        formData.append("user[is_home_work]", String(data.atHome));
+        formData.append("user[is_online_work]", String(data.online));
+        formData.append("user[is_out_call]", String(data.onRoad));
+
+        if (avatar?.uri) {
+          formData.append("user[avatar]", {
+            uri: avatar.uri,
+            name: avatar.name || `avatar_${Date.now()}.jpg`,
+            type: avatar.type || "image/jpeg",
+          } as any);
+        }
+
+        await updateUser({
+          id: user.id,
+          data: formData,
+        }).unwrap();
+
+        router.push(Routers.auth.service);
+      } catch (error: any) {
+        console.log("UPDATE USER ERROR:", error);
+        toast.error(
+          error?.data?.error || "Произошла ошибка при обновлении профиля.",
+        );
+      }
+    },
+    [user, avatar, updateUser],
+  );
+
+  const handlePickAvatar = useCallback(
+    (assets: (ImagePickerAsset | DocumentPickerAsset)[] | null) => {
+      if (!assets?.[0]) return;
+      const asset = assets[0];
+
+      if (!("width" in asset)) {
+        toast.error("Пожалуйста, выберите изображение.");
+        return;
       }
 
-      formData.append("user[is_home_work]", String(data.atHome));
-      formData.append("user[is_online_work]", String(data.online));
-      formData.append("user[is_out_call]", String(data.onRoad));
-
-      if (avatar?.uri) {
-        formData.append("user[avatar]", {
-          uri: avatar.uri,
-          name: avatar.name || `avatar_${Date.now()}.jpg`,
-          type: avatar.type || "image/jpeg",
-        } as any);
-      }
-
-      await updateUser({
-        id: user.id,
-        data: formData,
-        isFormData: true,
-      }).unwrap();
-
-      router.push(Routers.auth.service);
-    } catch (error: any) {
-      console.log("UPDATE USER ERROR:", error);
-      toast.error(error?.data?.error);
-    }
-  };
+      setAvatar({
+        uri: asset.uri,
+        name: asset.fileName || `file_${Date.now()}.jpg`,
+        type: asset.mimeType || "image/jpeg",
+      });
+    },
+    [],
+  );
 
   return (
     <FormProvider {...methods}>
@@ -141,18 +165,7 @@ const PersonalInformation = () => {
             <ImagePickerTrigger
               title="Загрузить аватар"
               options={{ aspect: [1, 1], cameraType: CameraType.front }}
-              onPick={(assets) => {
-                if (!assets?.[0]) return;
-
-                const asset = assets[0];
-
-                setAvatar({
-                  uri: asset.uri,
-                  name:
-                    asset.fileName || asset.name || `file_${Date.now()}.jpg`,
-                  type: asset.mimeType || asset.type || "image/jpeg",
-                });
-              }}
+              onPick={handlePickAvatar}
             >
               <Avatar
                 size="xl"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -14,13 +14,14 @@ import { passwordField } from "@/src/validation/fields/password";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/store/redux/store";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 type RegisterFormValues = {
   email: string;
   password: string;
 };
 
-const VerifySchema = Yup.object().shape({
+const RegisterSchema = Yup.object().shape({
   password: passwordField,
   email: Yup.string()
     .email("Введите корректный email")
@@ -33,30 +34,34 @@ const Register = () => {
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
   const methods = useForm({
-    resolver: yupResolver(VerifySchema),
+    resolver: yupResolver(RegisterSchema),
     defaultValues: {
       password: "",
       email: user?.email ?? "",
     },
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
-    if (!user) return;
+  const onSubmit = useCallback(
+    async (data: RegisterFormValues) => {
+      if (!user) return;
 
-    try {
-      await updateUser({
-        id: user.id,
-        data: {
-          email: data.email,
-          password: data.password,
-        },
-      });
+      try {
+        await updateUser({
+          id: user.id,
+          data: {
+            email: data.email,
+            password: data.password,
+          },
+        }).unwrap();
 
-      router.push(Routers.auth.experience);
-    } catch (error) {
-      console.log("UPDATE USER ERROR:", error);
-    }
-  };
+        router.push(Routers.auth.experience);
+      } catch (error: any) {
+        console.log("UPDATE USER ERROR:", error);
+        toast.error(error?.data?.error || "Произошла ошибка при обновлении.");
+      }
+    },
+    [user, updateUser],
+  );
 
   return (
     <FormProvider {...methods}>

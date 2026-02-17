@@ -1,6 +1,5 @@
 import type { RequestStatus } from "@/src/store/redux/types/request-status";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { mockSlots } from "@/src/store/redux/slices/mock";
 
 export type CalendarMode = "day" | "month";
 export type CalendarStatus = RequestStatus;
@@ -43,7 +42,7 @@ const initialState: CalendarState = {
     showPending: true,
     showCancelled: true,
   },
-  schedule: mockSlots,
+  schedule: [],
   status: "idle",
 };
 

@@ -1,63 +1,125 @@
 import React, { useCallback, useEffect, useState } from "react";
-import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import {
-  IconButton,
-  SegmentedControl,
-  StSvg,
-  Button,
-  StModal,
-  Typography,
-  Checkbox,
-} from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { TouchableOpacity, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import ToolbarTop from "@/src/components/navigation/toolbarTop";
+import {
+  Button,
+  Checkbox,
+  IconButton,
+  SegmentedControl,
+  StModal,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
+import DayCalendarView from "@/src/components/tabs/calendar/home/day";
 import MonthCalendarView from "@/src/components/tabs/calendar/home/month";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/src/store/redux/store";
+
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   setMode,
   setSelectedDate,
   toggleFilter,
 } from "@/src/store/redux/slices/calendarSlice";
-import DayCalendarView from "@/src/components/tabs/calendar/home/day";
+import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { CALENDAR_VIEW_OPTIONS } from "@/src/constants/calendar";
+import { colors } from "@/src/styles/colors";
+
+type FilterOptionProps = {
+  label: string;
+  value: boolean;
+  onPress: () => void;
+};
+
+const FilterOption: React.FC<FilterOptionProps> = ({
+  label,
+  value,
+  onPress,
+}) => (
+  <TouchableOpacity
+    activeOpacity={0.7}
+    onPress={onPress}
+    className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
+  >
+    <Checkbox pressable={false} value={value} />
+    <Typography weight="regular" className="text-body">
+      {label}
+    </Typography>
+  </TouchableOpacity>
+);
+
+type CalendarFilterModalProps = {
+  visible: boolean;
+  onClose: () => void;
+};
+
+const filterOptions = [
+  { label: "Подтвержденные записи", key: "showConfirmed" as const },
+  { label: "Ожидающие подтверждения", key: "showPending" as const },
+  { label: "Отмененные", key: "showCancelled" as const },
+];
+
+const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
+  visible,
+  onClose,
+}) => {
+  const dispatch = useAppDispatch();
+  const filters = useAppSelector((state) => state.calendar.filters);
+
+  return (
+    <StModal visible={visible} onClose={onClose}>
+      <View className="gap-6">
+        <Typography weight="semibold" className="text-display text-center">
+          Фильтры
+        </Typography>
+
+        <View className="gap-2">
+          <Typography className="text-caption text-neutral-500">
+            Показывать:
+          </Typography>
+          {filterOptions.map(({ label, key }) => (
+            <FilterOption
+              key={key}
+              label={label}
+              value={filters[key]}
+              onPress={() => dispatch(toggleFilter(key))}
+            />
+          ))}
+        </View>
+
+        <Button title="Применить" onPress={onClose} />
+      </View>
+    </StModal>
+  );
+};
 
 const CalendarHome = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isFilterOpen, setFilterOpen] = useState(false);
   const router = useRouter();
-  const { mode, date } = useLocalSearchParams<{
-    mode?: string;
+  // URL - источник истины. Устанавливаем значение по умолчанию, если оно отсутствует.
+  const { mode = "day", date } = useLocalSearchParams<{
+    mode?: "day" | "month";
     date?: string;
   }>();
+  const dispatch = useAppDispatch();
+  const { top } = useSafeAreaInsets();
 
-  const dispatch = useDispatch();
-  const { top, left, right } = useSafeAreaInsets();
+  const handleOpenFilters = useCallback(() => setFilterOpen(true), []);
+  const handleCloseFilters = useCallback(() => setFilterOpen(false), []);
 
-  const calendarMode = useSelector((state: RootState) => state.calendar.mode);
-  const filters = useSelector((state: RootState) => state.calendar.filters);
-  const reduxDate = useSelector(
-    (state: RootState) => state.calendar.selectedDate,
-  );
-
-  const handleOpen = useCallback(() => {
-    setIsOpen(true);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
+  // Синхронизируем состояние Redux с состоянием URL
   useEffect(() => {
-    if (mode) {
-      dispatch(setMode(mode === "month" ? "month" : "day"));
-    }
-
+    dispatch(setMode(mode));
     if (date) {
       dispatch(setSelectedDate(date));
     }
   }, [mode, date, dispatch]);
+
+  // Действия пользователя обновляют только URL. useEffect выше обработает обновление Redux.
+  const handleModeChange = (value: string) => {
+    router.setParams({ mode: value });
+  };
 
   return (
     <>
@@ -72,7 +134,7 @@ const CalendarHome = () => {
                 color={colors.neutral[900]}
               />
             }
-            onPress={handleOpen}
+            onPress={handleOpenFilters}
           />
         }
       />
@@ -85,70 +147,19 @@ const CalendarHome = () => {
         <View className="flex-1 mt-4 gap-4">
           <SegmentedControl
             className="mx-screen"
-            value={calendarMode}
-            onChange={(value) => {
-              dispatch(setMode(value as "day" | "month"));
-              router.setParams({
-                mode: value,
-                date: reduxDate,
-              });
-            }}
-            options={[
-              { label: "День", value: "day" },
-              { label: "Месяц", value: "month" },
-            ]}
+            value={mode} // Читаем значение напрямую из параметров URL
+            onChange={handleModeChange}
+            options={CALENDAR_VIEW_OPTIONS}
           />
+          {/* Отображаем компонент в зависимости от параметра URL */}
           {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
         </View>
       </View>
 
-      <StModal visible={isOpen} onClose={handleClose}>
-        <View className="gap-6">
-          <Typography weight="semibold" className="text-display text-center">
-            Фильтры
-          </Typography>
-
-          <View className="gap-2">
-            <Typography className="text-caption text-neutral-500">
-              Показывать:
-            </Typography>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => dispatch(toggleFilter("showConfirmed"))}
-              className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
-            >
-              <Checkbox pressable={false} value={filters.showConfirmed} />
-              <Typography weight="regular" className="text-body">
-                Подтвержденные записи
-              </Typography>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => dispatch(toggleFilter("showPending"))}
-              className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
-            >
-              <Checkbox pressable={false} value={filters.showPending} />
-              <Typography weight="regular" className="text-body">
-                Ожидающие подтверждения
-              </Typography>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => dispatch(toggleFilter("showCancelled"))}
-              className="py-4 px-5 flex-row items-center bg-background-surface rounded-2xl gap-2.5"
-            >
-              <Checkbox pressable={false} value={filters.showCancelled} />
-              <Typography weight="regular" className="text-body">
-                Отмененные
-              </Typography>
-            </TouchableOpacity>
-          </View>
-
-          <Button title="Применить" onPress={handleClose} />
-        </View>
-      </StModal>
+      <CalendarFilterModal
+        visible={isFilterOpen}
+        onClose={handleCloseFilters}
+      />
     </>
   );
 };
