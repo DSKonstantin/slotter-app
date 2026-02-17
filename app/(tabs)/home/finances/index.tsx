@@ -1,6 +1,6 @@
 import React from "react";
 
-const Chat = () => {
+const Finances = () => {
   return (
     <>
 
@@ -8,4 +8,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default Finances;

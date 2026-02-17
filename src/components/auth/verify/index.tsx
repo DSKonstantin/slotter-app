@@ -18,11 +18,9 @@ import {
   useTelegramLoginMutation,
   useTelegramRegisterMutation,
   useTelegramRegisterStatusQuery,
-} from "@/src/store/redux/services/authApi";
+} from "@/src/store/redux/services/api/authApi";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { useCountDown } from "@/src/hooks/useCountdown";
-import { useDispatch } from "react-redux";
-import { setUser } from "@/src/store/redux/slices/authSlice";
 
 type VerifyFormValues = {
   phone: string;
@@ -33,7 +31,6 @@ const VerifySchema = Yup.object().shape({
 });
 
 const Verify = () => {
-  const dispatch = useDispatch();
   const [telegramRegister, { isLoading }] = useTelegramRegisterMutation();
   const [telegramLogin] = useTelegramLoginMutation();
   const [telegramState, setTelegramState] = useState<{
@@ -151,8 +148,6 @@ const Verify = () => {
       try {
         await accessTokenStorage.set(data.token);
 
-        dispatch(setUser(data.resource));
-
         clearState();
 
         router.replace(Routers.auth.register);
@@ -170,7 +165,7 @@ const Verify = () => {
       clearState();
       return;
     }
-  }, [data, error, telegramState.uuid, dispatch, pause]);
+  }, [data, error, telegramState.uuid, pause]);
 
   useEffect(() => {
     if (telegramState.expiresIn) {

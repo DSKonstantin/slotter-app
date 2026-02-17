@@ -9,7 +9,7 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { passwordField } from "@/src/validation/fields/password";
-import { useLoginMutation } from "@/src/store/redux/services/authApi";
+import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { useDispatch } from "react-redux";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";

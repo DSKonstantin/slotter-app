@@ -1,8 +1,8 @@
-import { api } from "./api";
+import { api } from "../api";
 import { API, UserType } from "@/src/store/redux/services/api-types";
 
 // NOTE: these are the _SAME_ API reference!
-const authApi = api.injectEndpoints({
+export const authApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
     // 🔹 Telegram Register
@@ -76,6 +76,28 @@ const authApi = api.injectEndpoints({
         data: body,
       }),
     }),
+
+    updateUser: builder.mutation<
+      API.User,
+      { id: number; data: Partial<API.UpdateUserPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/users/${id}`,
+        method: "PATCH",
+        data,
+      }),
+    }),
+
+    updateCustomer: builder.mutation<
+      API.User,
+      { id: number; data: Partial<API.UpdateUserPayload> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/customers/${id}`,
+        method: "PATCH",
+        data,
+      }),
+    }),
   }),
 });
 
@@ -85,6 +107,7 @@ export const {
   useTelegramLoginMutation,
   useLoginMutation,
   useConfirmTelegramLoginMutation,
-  useGetMeQuery,
   useLazyGetMeQuery,
+  useUpdateUserMutation,
+  useUpdateCustomerMutation,
 } = authApi;

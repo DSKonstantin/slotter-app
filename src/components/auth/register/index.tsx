@@ -11,10 +11,9 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { passwordField } from "@/src/validation/fields/password";
-import { useUpdateUserMutation } from "@/src/store/redux/services/userApi";
-import { useDispatch, useSelector } from "react-redux";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useSelector } from "react-redux";
 import { RootState } from "@/src/store/redux/store";
-import { setUser } from "@/src/store/redux/slices/authSlice";
 
 type RegisterFormValues = {
   email: string;
@@ -29,7 +28,6 @@ const VerifySchema = Yup.object().shape({
 });
 
 const Register = () => {
-  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [updateUser, { isLoading }] = useUpdateUserMutation();
@@ -45,17 +43,14 @@ const Register = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     if (!user) return;
 
-    console.log("SUBMIT", data);
     try {
-      const updatedUser = await updateUser({
+      await updateUser({
         id: user.id,
         data: {
           email: data.email,
           password: data.password,
         },
-      }).unwrap();
-
-      dispatch(setUser(updatedUser));
+      });
 
       router.push(Routers.auth.experience);
     } catch (error) {

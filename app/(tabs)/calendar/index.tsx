@@ -1,8 +1,8 @@
 import React from "react";
 import CalendarHome from "@/src/components/tabs/calendar/home";
 
-const Index = () => {
+const Calendar = () => {
   return <CalendarHome />;
 };
 
-export default Index;
+export default Calendar;

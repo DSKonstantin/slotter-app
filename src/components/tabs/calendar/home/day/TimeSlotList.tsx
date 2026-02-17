@@ -50,7 +50,7 @@ const TimeSlotList: React.FC = ({ schedule }: TimeSlotListProps) => {
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      className="flex-1 mt-4 px-screen"
+      className="flex-1 pt-4 px-screen"
       contentContainerStyle={{
         paddingBottom: TAB_BAR_HEIGHT + bottom + 74,
       }}

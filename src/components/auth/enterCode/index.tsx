@@ -7,20 +7,17 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { router, useLocalSearchParams } from "expo-router";
 import { colors } from "@/src/styles/colors";
-import { useDispatch } from "react-redux";
 import {
   useTelegramLoginMutation,
   useConfirmTelegramLoginMutation,
-} from "@/src/store/redux/services/authApi";
+} from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
-import { setUser } from "@/src/store/redux/slices/authSlice";
+
 import { toast } from "@backpackapp-io/react-native-toast";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
 
 const EnterCode = () => {
-  const dispatch = useDispatch();
-
   const { phone } = useLocalSearchParams<{
     phone: string;
   }>();
@@ -32,7 +29,6 @@ const EnterCode = () => {
 
   const onSubmit = async () => {
     if (!code || code.length < 6) return;
-    console.log("SUBMIT CODE:", code);
     try {
       const result = await confirmTelegramLogin({
         phone,
@@ -40,7 +36,6 @@ const EnterCode = () => {
       }).unwrap();
 
       await accessTokenStorage.set(result.token);
-      dispatch(setUser(result.resource));
       router.replace(getRedirectPath(result.resource));
     } catch (e: any) {
       toast.error(e?.data?.error);

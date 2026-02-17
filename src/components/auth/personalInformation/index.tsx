@@ -16,7 +16,7 @@ import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { CameraType } from "expo-image-picker";
-import { useUpdateUserMutation } from "@/src/store/redux/services/userApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { RootState } from "@/src/store/redux/store";
 import { useSelector } from "react-redux";
 import { nameField } from "@/src/validation/fields/name";
@@ -89,8 +89,12 @@ const PersonalInformation = () => {
       formData.append("user[is_online_work]", String(data.online));
       formData.append("user[is_out_call]", String(data.onRoad));
 
-      if (avatar) {
-        formData.append("user[avatar]", avatar);
+      if (avatar?.uri) {
+        formData.append("user[avatar]", {
+          uri: avatar.uri,
+          name: avatar.name || `avatar_${Date.now()}.jpg`,
+          type: avatar.type || "image/jpeg",
+        } as any);
       }
 
       await updateUser({

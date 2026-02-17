@@ -10,7 +10,7 @@ import {
 import { Typography } from "@/src/components/ui";
 import { ResendCodeButton } from "@/src/components/auth/enterCode/ResendCodeButton";
 import { UserType } from "@/src/store/redux/services/api-types";
-import { useTelegramLoginMutation } from "@/src/store/redux/services/authApi";
+import { useTelegramLoginMutation } from "@/src/store/redux/services/api/authApi";
 
 type OtpConfirmProps = {
   length?: number;

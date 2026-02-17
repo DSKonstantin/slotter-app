@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "../api";
 import { API } from "@/src/store/redux/services/api-types";
 
 const servicesApi = api.injectEndpoints({

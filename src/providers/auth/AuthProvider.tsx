@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
-import { useLazyGetMeQuery } from "@/src/store/redux/services/authApi";
-import {
-  setUser,
-  logout,
-  setLoading,
-} from "@/src/store/redux/slices/authSlice";
+import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 
 type Props = {
   children: React.ReactNode;
@@ -15,25 +9,17 @@ type Props = {
 };
 
 export const AuthProvider = ({ children, onReady }: Props) => {
-  const dispatch = useDispatch();
   const [triggerGetMe] = useLazyGetMeQuery();
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        dispatch(setLoading());
         const token = await accessTokenStorage.get();
 
-        if (!token) {
-          dispatch(logout());
-        } else {
-          const result = await triggerGetMe().unwrap();
-          dispatch(setUser(result.resource));
+        if (token) {
+          await triggerGetMe();
         }
-      } catch {
-        await accessTokenStorage.remove();
-        dispatch(logout());
       } finally {
         setInitialized(true);
         onReady();

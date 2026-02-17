@@ -17,10 +17,30 @@ import {
   ServiceImagesPicker,
   ServicePhotosValue,
 } from "@/src/components/auth/service/ServiceImagesPicker";
+import { useSelector } from "react-redux";
+import { RootState } from "@/src/store/redux/store";
+import {
+  useCreateServiceCategoryMutation,
+  useGetServiceCategoriesQuery
+} from "@/src/store/redux/services/api/servicesApi";
 
 type ServiceFormValues = object;
 
 const Service = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const { data: categories } = useGetServiceCategoriesQuery(
+    { userId: user?.id ?? 0 },
+    {
+      skip: !user,
+    },
+  );
+
+  const [createCategory, { isLoading: creatingCategory }] =
+    useCreateServiceCategoryMutation();
+
+  console.log(categories, "categories");
+
   const [photos, setPhotos] = useState<ServicePhotosValue>({
     titlePhoto: { assets: [], max: 1 },
     otherPhoto: { assets: [], max: 4 },

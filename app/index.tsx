@@ -8,12 +8,6 @@ export default function Index() {
   const user = useSelector((state: RootState) => state.auth.user);
   const status = useSelector((state: RootState) => state.auth.status);
 
-  console.log(user, "authApi");
-
-  if (status === "idle" || status === "loading") {
-    return null;
-  }
-
   if (status === "authenticated" && user) {
     return <Redirect href={getRedirectPath(user)} />;
   }

@@ -12,6 +12,8 @@ import HomeNotificationsBlock from "@/src/components/tabs/home/homeNotifications
 import SpecialistHomeAssistantEmpty from "@/src/components/tabs/home/specialistHomeAssistantEmpty";
 import SpecialistHomeAssistant from "@/src/components/tabs/home/specialistHomeAssistant";
 import DateHeader from "@/src/components/tabs/home/dateHeader";
+import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 
 const Home = () => {
   const { bottom, top, left, right } = useSafeAreaInsets();
@@ -39,8 +41,8 @@ const Home = () => {
         >
           <View className="flex-1 justify-center gap-8 mt-4">
             <DateHeader />
-            {/*<SpecialistHomeAssistant />*/}
-            <SpecialistHomeAssistantEmpty />
+            <SpecialistHomeAssistant />
+            {/*<SpecialistHomeAssistantEmpty />*/}
           </View>
 
           <View className="gap-2">
