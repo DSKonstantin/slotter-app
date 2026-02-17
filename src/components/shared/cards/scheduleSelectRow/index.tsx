@@ -24,7 +24,7 @@ const ScheduleSelectRow = () => {
       const resolvedDate = resolvePresetToDate(presetValue);
 
       router.push({
-        pathname: Routers.tabs.calendar.root,
+        pathname: Routers.app.calendar.root,
         params: {
           date: format(resolvedDate, "yyyy-MM-dd"),
         },
