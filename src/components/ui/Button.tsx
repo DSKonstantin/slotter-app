@@ -1,4 +1,10 @@
-import { TouchableOpacityProps, Text, TouchableOpacity } from "react-native";
+import {
+  TouchableOpacityProps,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextProps,
+} from "react-native";
 import { twMerge } from "tailwind-merge";
 
 export interface CustomBtn {
@@ -11,11 +17,13 @@ export interface CustomBtn {
 
   fullWidth?: boolean;
   disabled?: boolean | undefined;
+  loading?: boolean;
 
-  iconLeft?: React.ReactNode;
-  iconRight?: React.ReactNode;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 
   buttonProps?: TouchableOpacityProps;
+  textProps?: TextProps;
   buttonClassName?: string;
   textClassName?: string;
 }
@@ -28,8 +36,10 @@ export const Button: React.FC<CustomBtn> = ({
   textVariant = "default",
   direction = "horizontal",
   disabled = false,
-  iconLeft,
-  iconRight,
+  loading = false,
+  leftIcon,
+  rightIcon,
+  textProps,
   buttonProps,
   buttonClassName,
   textClassName,
@@ -49,21 +59,38 @@ export const Button: React.FC<CustomBtn> = ({
         buttonClassName,
       )}
     >
-      {iconLeft && iconLeft}
-      <Text
-        className={twMerge(
-          styles.textBase,
-          styles.textVariants[variant],
-          textVariant === "accent" && styles.textAccent,
-          disabled && styles.textDisabled,
-          textClassName,
-        )}
-      >
-        {title}
-      </Text>
-      {iconRight && iconRight}
+      {loading ? (
+        <ActivityIndicator size="small" color={getLoaderColor(variant)} />
+      ) : (
+        <>
+          {leftIcon && leftIcon}
+          <Text
+            className={twMerge(
+              styles.textBase,
+              styles.textVariants[variant],
+              textVariant === "accent" && styles.textAccent,
+              disabled && styles.textDisabled,
+              textClassName,
+            )}
+            {...textProps}
+          >
+            {title}
+          </Text>
+          {rightIcon && rightIcon}
+        </>
+      )}
     </TouchableOpacity>
   );
+};
+
+const getLoaderColor = (variant: CustomBtn["variant"]) => {
+  switch (variant) {
+    case "secondary":
+    case "clear":
+      return "#000";
+    default:
+      return "#fff";
+  }
 };
 
 const styles = {
@@ -73,9 +100,9 @@ const styles = {
     vertical: "flex-col",
   },
   sizes: {
-    sm: "h-[40px] px-2",
-    md: "h-[50px] px-2",
-    lg: "h-[80px] px-2",
+    sm: "h-[40px] px-4",
+    md: "h-[50px] px-4",
+    lg: "h-[80px] px-4",
   },
 
   bgColors: {

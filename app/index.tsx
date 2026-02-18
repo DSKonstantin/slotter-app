@@ -1,46 +1,8 @@
-import { View } from "react-native";
-import { Button } from "@/src/components/ui";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { Redirect } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 
 export default function Index() {
-  return (
-    <SafeAreaView className="mt-8 gap-2">
-      <Button
-        title="Войти / Зарегистрироваться"
-        onPress={() => router.replace("/(auth)")}
-      />
-      <Button
-        title="Персонал"
-        onPress={() => router.replace("/(auth)/personal-information")}
-      />
-      <Button title="Tab" onPress={() => router.replace("/(tabs)/home")} />
-      <Button
-        title="Success"
-        variant="secondary"
-        onPress={() => {
-          toast.success("Success!", {
-            isSwipeable: true,
-            onHide: (_, reason) => console.log("toast closed:", reason),
-          });
-        }}
-      />
-      <Button
-        title="Error"
-        variant="secondary"
-        onPress={() => {
-          toast.error("Wow. That Sucked!");
-        }}
-      />
-      <Button
-        title="Loading"
-        variant="secondary"
-        onPress={() => {
-          toast.loading("I am loading. Dismiss me whenever...");
-        }}
-      />
-      <View className="bg-primary-blue-100"></View>
-    </SafeAreaView>
-  );
+  // This initial route will be redirected by the group layouts
+  // depending on the user's authentication status.
+  return <Redirect href={Routers.app.home.services.root} />;
 }

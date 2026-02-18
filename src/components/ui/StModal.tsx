@@ -39,7 +39,7 @@ export const StModal = ({
       <View
         className="py-3 relative rounded-t-large bg-white/90 overflow-hidden"
         style={{
-          paddingBottom: bottom,
+          paddingBottom: bottom + 8,
           paddingLeft: 20 + left,
           paddingRight: 20 + right,
         }}

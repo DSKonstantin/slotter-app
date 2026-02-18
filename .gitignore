@@ -3,7 +3,9 @@
 .idea
 .env
 .env*.local
+
 .github/copilot-review.md
+GEMINI.md
 
 # dependencies
 node_modules/

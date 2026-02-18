@@ -63,13 +63,13 @@ export function BaseField({
 const styles = {
   label: "mb-2 font-inter-medium text-neutral-500 text-caption",
 
-  base: "flex-row items-center h-[48px] rounded-small bg-background-surface border border-transparent",
+  base: "flex-row items-center min-h-[48px] rounded-small bg-background-surface border border-transparent",
 
   focus: "border-primary-blue-500",
 
   error: "border-accent-red-500",
 
-  disabled: "bg-neutral-300",
+  disabled: "",
 
   adornmentStart: "mx-2",
 

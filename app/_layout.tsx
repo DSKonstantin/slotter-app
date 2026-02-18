@@ -21,10 +21,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "@/src/store/redux/store";
+import "@/src/utils/calendarLocale";
+import "@/src/utils/date/date";
+import { useAuth } from "@/src/hooks/useAuth";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -34,43 +37,49 @@ export default function RootLayout() {
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hide();
-    }
-  }, [fontsLoaded]);
+  const { isLoading: isAuthLoading } = useAuth();
 
-  if (!fontsLoaded) {
+  useEffect(() => {
+    if (fontsLoaded && !isAuthLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isAuthLoading, fontsLoaded]);
+
+  if (!fontsLoaded || isAuthLoading) {
     return null;
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
+        >
+          <KeyboardProvider>
+            <AutocompleteDropdownContextProvider>
+              <Stack>
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(onboarding)"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+              <Toasts overrideDarkMode={true} />
+              <StatusBar style="auto" />
+            </AutocompleteDropdownContextProvider>
+          </KeyboardProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <Provider store={store}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
-          >
-            <KeyboardProvider>
-              <AutocompleteDropdownContextProvider>
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-                <Toasts overrideDarkMode={true} />
-                <StatusBar style="auto" />
-              </AutocompleteDropdownContextProvider>
-            </KeyboardProvider>
-          </ThemeProvider>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <RootLayoutNav />
     </Provider>
   );
 }

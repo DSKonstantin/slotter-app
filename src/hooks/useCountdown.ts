@@ -1,35 +1,67 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
-export const useCountdown = (initialSeconds: number) => {
-  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
-  const [isRunning, setIsRunning] = useState(true);
+interface UseCountDownProps {
+  seconds: number;
+  autoStart?: boolean;
+}
+
+export const useCountDown = ({
+  seconds: initialSeconds,
+  autoStart = false,
+}: UseCountDownProps) => {
+  const [seconds, setSeconds] = useState(initialSeconds);
+  const [isActive, setIsActive] = useState(autoStart);
+
+  const endTimeRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const start = useCallback(() => {
+    endTimeRef.current = Date.now() + initialSeconds * 1000;
+    setIsActive(true);
+  }, [initialSeconds]);
+
+  const pause = useCallback(() => {
+    setIsActive(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setSeconds(initialSeconds);
+  }, [pause, initialSeconds]);
 
   useEffect(() => {
-    if (!isRunning) return;
-    if (secondsLeft <= 0) return;
+    if (!isActive) return;
 
-    const id = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(prev - 1, 0));
+    intervalRef.current = setInterval(() => {
+      if (!endTimeRef.current) return;
+
+      const remaining = Math.max(
+        Math.floor((endTimeRef.current - Date.now()) / 1000),
+        0,
+      );
+
+      setSeconds(remaining);
+
+      if (remaining === 0) {
+        pause();
+      }
     }, 1000);
 
-    return () => clearInterval(id);
-  }, [isRunning, secondsLeft]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isActive, pause]);
 
-  const restart = (newSeconds?: number) => {
-    setSecondsLeft(newSeconds ?? initialSeconds);
-    setIsRunning(true);
-  };
+  useEffect(() => {
+    if (autoStart) {
+      start();
+    }
+  }, [autoStart, start]);
 
-  const formatted = useMemo(() => {
-    const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-    const ss = String(secondsLeft % 60).padStart(2, "0");
-    return `${mm}:${ss}`;
-  }, [secondsLeft]);
-
-  return {
-    secondsLeft,
-    formatted,
-    restart,
-    isFinished: secondsLeft === 0,
-  };
+  return { seconds, start, pause, reset, isActive };
 };

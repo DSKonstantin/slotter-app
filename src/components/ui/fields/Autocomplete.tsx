@@ -14,24 +14,27 @@ export type AutocompleteItem = {
 };
 
 type AutocompleteProps = {
+  value: string;
   label?: string;
   error?: FieldError;
   disabled?: boolean;
+  hideErrorText?: boolean;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
 
   dataSet?: AutocompleteItem[];
-  value?: string;
   onSelectItem?: (a: any) => void;
   placeholder?: string;
 };
 
 export function Autocomplete({
+  value,
   label,
   error,
   disabled,
   dataSet,
+  hideErrorText,
   onSelectItem,
   placeholder = "Введите",
 }: AutocompleteProps) {
@@ -41,9 +44,11 @@ export function Autocomplete({
     <BaseField
       label={label}
       error={error}
+      hideErrorText={hideErrorText}
       disabled={disabled}
       renderControl={({ setFocused }) => (
         <AutocompleteDropdown
+          initialValue={value ? { id: value } : undefined}
           controller={(controller) => {
             dropdownController.current = controller;
           }}

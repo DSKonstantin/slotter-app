@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -22,6 +22,24 @@ export default function AuthHeader({
   const router = useRouter();
   const [supportVisible, setSupportVisible] = useState(false);
 
+  // вычисляется один раз за render
+  const shouldShowBack = useMemo(
+    () => showBack && router.canGoBack(),
+    [showBack, router],
+  );
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  const openSupport = useCallback(() => {
+    setSupportVisible(true);
+  }, []);
+
+  const closeSupport = useCallback(() => {
+    setSupportVisible(false);
+  }, []);
+
   return (
     <>
       <View className="flex-row items-center justify-between">
@@ -30,7 +48,7 @@ export default function AuthHeader({
             icon={
               <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />
             }
-            onPress={() => router.back()}
+            onPress={handleBack}
           />
         ) : (
           <View className="w-10" />
@@ -45,14 +63,11 @@ export default function AuthHeader({
                 color={colors.neutral[900]}
               />
             }
-            onPress={() => setSupportVisible(true)}
+            onPress={openSupport}
           />
         )}
       </View>
-      <StModal
-        visible={supportVisible}
-        onClose={() => setSupportVisible(false)}
-      >
+      <StModal visible={supportVisible} onClose={closeSupport}>
         <Typography weight="semibold" className="text-body text-center mb-2">
           Нужна помощь?
         </Typography>
@@ -75,12 +90,7 @@ export default function AuthHeader({
           />
         </View>
 
-        <Button
-          title="Закрыть"
-          onPress={() => {
-            setSupportVisible(false);
-          }}
-        />
+        <Button title="Закрыть" onPress={closeSupport} />
       </StModal>
     </>
   );

@@ -1,23 +1,50 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
-import { router } from "expo-router";
-import { Routers } from "@/src/constants/routers";
+import { router, useLocalSearchParams } from "expo-router";
 import { colors } from "@/src/styles/colors";
+import {
+  useTelegramLoginMutation,
+  useConfirmTelegramLoginMutation,
+} from "@/src/store/redux/services/api/authApi";
+import { UserType } from "@/src/store/redux/services/api-types";
+import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+
+import { toast } from "@backpackapp-io/react-native-toast";
+import getRedirectPath from "@/src/utils/getOnboardingStep";
 
 const EnterCode = () => {
+  const { phone } = useLocalSearchParams<{
+    phone: string;
+  }>();
+
   const [code, setCode] = useState("");
+  const [telegramLogin] = useTelegramLoginMutation();
+  const [confirmTelegramLogin, { isLoading }] =
+    useConfirmTelegramLoginMutation();
 
-  const onSubmit = () => {
+  const onSubmit = useCallback(async () => {
     if (!code || code.length < 6) return;
-    console.log("SUBMIT CODE:", code);
+    try {
+      const result = await confirmTelegramLogin({
+        phone,
+        code,
+      }).unwrap();
 
-    router.replace(Routers.auth.register);
-  };
+      await accessTokenStorage.set(result.token);
+      router.replace(getRedirectPath(result.resource));
+    } catch (e: any) {
+      toast.error(e?.data?.error);
+    }
+  }, [confirmTelegramLogin, phone, code]);
+
+  const handleComplete = useCallback(() => {
+    // This can be used to trigger submission automatically on complete
+  }, []);
 
   return (
     <AuthScreenLayout
@@ -28,15 +55,15 @@ const EnterCode = () => {
           primary={{
             title: "Войти",
             variant: "accent",
-            iconRight: (
+            rightIcon: (
               <StSvg
                 name="Sign_in_squre_fill"
                 size={24}
                 color={colors.neutral[0]}
               />
             ),
-            disabled: code.length < 6,
-            onPress: () => onSubmit(),
+            disabled: code.length < 6 || isLoading,
+            onPress: onSubmit,
           }}
         />
       }
@@ -55,7 +82,13 @@ const EnterCode = () => {
           </View>
         </View>
 
-        <OtpConfirm onChange={setCode} onComplete={() => {}} />
+        <OtpConfirm
+          onChange={setCode}
+          onComplete={handleComplete}
+          telegramLogin={telegramLogin}
+          phone={phone}
+          userType={UserType.USER}
+        />
       </View>
     </AuthScreenLayout>
   );

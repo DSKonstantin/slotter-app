@@ -6,6 +6,8 @@ import { PresetDateDropdown } from "@/src/components/shared/dropdowns/presetDate
 import { ItemType } from "react-native-dropdown-picker";
 import { useRouter } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { resolvePresetToDate } from "@/src/utils/date/resolvePresetToDate";
+import { format } from "date-fns";
 
 const PRESET_DATE_ITEMS = [
   { label: "Сегодня", value: "today" },
@@ -15,30 +17,35 @@ const PRESET_DATE_ITEMS = [
 
 const ScheduleSelectRow = () => {
   const router = useRouter();
-  const [date, setDate] = useState<string>("tomorrow");
+  const [preset, setPreset] = useState<string>("tomorrow");
 
-  const handleChange = useCallback(
-    (value: string | null) => {
-      if (!value) return;
-
-      setDate(value);
+  const navigateWithDate = useCallback(
+    (presetValue: string) => {
+      const resolvedDate = resolvePresetToDate(presetValue);
 
       router.push({
-        pathname: Routers.tabs.calendar,
+        pathname: Routers.app.calendar.root,
         params: {
-          date: value,
+          date: format(resolvedDate, "yyyy-MM-dd"),
         },
       });
     },
     [router],
   );
 
+  const handleChange = useCallback(
+    (value: string | null) => {
+      if (!value) return;
+
+      setPreset(value);
+      navigateWithDate(value);
+    },
+    [navigateWithDate],
+  );
+
   const handleNavigate = useCallback(() => {
-    router.push({
-      pathname: Routers.tabs.calendar,
-      params: { date },
-    });
-  }, [date, router]);
+    navigateWithDate(preset);
+  }, [preset, navigateWithDate]);
 
   return (
     <View className="flex-row justify-between items-center bg-background-card rounded-base">
@@ -49,7 +56,7 @@ const ScheduleSelectRow = () => {
       </Pressable>
 
       <PresetDateDropdown
-        value={date}
+        value={preset}
         items={PRESET_DATE_ITEMS}
         onChange={handleChange}
       />

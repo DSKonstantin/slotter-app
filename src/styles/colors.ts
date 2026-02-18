@@ -40,9 +40,9 @@ export const colors = {
     500: "#8E8E93",
     600: "#838383",
     700: "#5C5C5C",
+    800: "#3C3C43",
     900: "#000000",
   },
-
   background: {
     DEFAULT: "#F2F2F6",
     surface: "#FFFFFF",
@@ -52,7 +52,7 @@ export const colors = {
   },
 
   accent: {
-    azure: { 500: "#CCFC0B" },
+    azure: { 500: "#6EF6FF" },
     yellow: { 500: "#F6F360", 700: "#928F00" },
     red: { 500: "#FF383C" },
     indigo: { 500: "#6155F5" },

@@ -45,7 +45,7 @@ const styles = {
   base: "flex-row items-center justify-center rounded-full self-start",
 
   sizes: {
-    sm: "h-[26px] px-2",
+    sm: "h-[26px] px-[10px]",
     md: "h-9 px-3",
   },
 

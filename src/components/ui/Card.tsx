@@ -30,12 +30,14 @@ export const Card = ({
   active,
   onPress,
 }: CardProps) => {
+  const Component = onPress ? Pressable : View;
+
   return (
-    <Pressable
-      onPress={onPress}
+    <Component
+      {...(onPress ? { onPress } : {})}
       className={twMerge(
-        "flex-row rounded-2xl bg-background-surface p-4 border border-transparent",
-        active && "border border-primary-blue-500",
+        "flex-row items-center rounded-base bg-background-surface p-4 border border-transparent",
+        active && "border-neutral-200",
       )}
     >
       {leftIcon && <View className="mr-3">{leftIcon}</View>}
@@ -44,12 +46,18 @@ export const Card = ({
 
       <View className="flex-1">
         <View className="flex-row items-center gap-2">
-          <Text className="font-inter-medium text-body">{title}</Text>
+          <Text
+            className={`font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
+          >
+            {title}
+          </Text>
           {tag}
         </View>
 
         {subtitle && (
-          <Text className="font-inter-medium text-caption text-neutral-500 mt-1">
+          <Text
+            className={"font-inter-medium text-caption text-neutral-500 mt-1"}
+          >
             {subtitle}
           </Text>
         )}
@@ -61,9 +69,12 @@ export const Card = ({
         )}
       </View>
 
-      {rightIcon && (
-        <View className="ml-3 flex-row items-center gap-2">{rightIcon}</View>
+      {(badge || rightIcon) && (
+        <View className="ml-3 flex-row items-center gap-2">
+          {badge}
+          {rightIcon}
+        </View>
       )}
-    </Pressable>
+    </Component>
   );
 };
