@@ -16,7 +16,6 @@ const DayCalendarView = () => {
     (state) => state.calendar.selectedDate,
   );
 
-  // 1. Мемоизация создания объекта Date, чтобы избежать его пересоздания на каждый рендер.
   const selectedDate = useMemo(
     () => new Date(selectedDateISO),
     [selectedDateISO],
@@ -32,10 +31,8 @@ const DayCalendarView = () => {
       scheduleByDate[dateKey].push(slot);
     });
     return scheduleByDate;
-  }, [schedule]);
+  }, []);
 
-  // 2. Упрощенный обработчик: обновляет только URL. Redux обновится в родительском компоненте.
-  // 3. Обернут в useCallback для стабильности.
   const handleSelectDate = useCallback(
     (date: Date) => {
       const iso = date.toISOString();

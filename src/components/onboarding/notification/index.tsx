@@ -26,7 +26,7 @@ const Notification = () => {
               const next = await refresh();
 
               if (next.status === "granted") {
-                router.push(Routers.auth.link);
+                router.push(Routers.onboarding.link);
               }
             },
           }}
@@ -34,7 +34,7 @@ const Notification = () => {
             title: "Настрою потом",
             variant: "clear",
             onPress: () => {
-              router.push(Routers.auth.link);
+              router.push(Routers.onboarding.link);
             },
           }}
         />

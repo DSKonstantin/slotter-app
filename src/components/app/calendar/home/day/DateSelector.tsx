@@ -82,11 +82,9 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const listRef = useRef<FlatList<Date>>(null);
 
-  // 2. Memoized set of dates that have appointments for quick lookups
   const datesWithSchedule = useMemo(() => {
     const dateSet = new Set<string>();
     Object.keys(schedule).forEach((isoDate) => {
-      // Store only the date part (YYYY-MM-DD) for easy comparison
       dateSet.add(isoDate.split("T")[0]);
     });
     return dateSet;
@@ -94,7 +92,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
   const dates = useMemo(() => {
     const today = startOfDay(new Date());
-    // Generate dates for a longer range for better user experience
     const lastDay = addDays(today, 60);
 
     const result: Date[] = [];
@@ -135,12 +132,11 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   useEffect(() => {
     const index = dates.findIndex((d) => isSameDay(d, selectedDate));
     if (index !== -1 && listRef.current) {
-      // Use a timeout to ensure scrolling happens after layout is complete
       const timer = setTimeout(() => {
         listRef.current?.scrollToIndex({
           index,
           animated: true,
-          viewPosition: 0.5, // Center the item
+          viewPosition: 0.5,
         });
       }, 100);
       return () => clearTimeout(timer);
@@ -150,7 +146,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   const renderItem = useCallback(
     ({ item }: { item: Date }) => {
       const isSelected = isSameDay(item, selectedDate);
-      // 3. Replaced Math.random with a real data check
       const dateString = format(item, "yyyy-MM-dd");
       const isEmpty = !datesWithSchedule.has(dateString);
 

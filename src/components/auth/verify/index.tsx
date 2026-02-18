@@ -137,7 +137,7 @@ const Verify = () => {
       try {
         await accessTokenStorage.set(token);
         clearState();
-        router.replace(Routers.auth.register);
+        router.replace(Routers.onboarding.register);
       } catch (e) {
         console.error("Token save failed:", e);
       }

@@ -54,7 +54,7 @@ const Register = () => {
           },
         }).unwrap();
 
-        router.push(Routers.app.home);
+        router.push(Routers.app.home.root);
       } catch (error: any) {
         console.log("UPDATE USER ERROR:", error);
         toast.error(error?.data?.error || "Произошла ошибка при обновлении.");
@@ -88,15 +88,15 @@ const Register = () => {
           </Typography>
           <View className="gap-2 mt-9">
             <RhfTextField
+              name="email"
+              label="Электронная почта"
+              placeholder="master@example.com"
+            />
+            <RhfTextField
               name="password"
               label="Пароль"
               placeholder="••••••••"
               secureTextEntry
-            />
-            <RhfTextField
-              name="email"
-              label="Электронная почта"
-              placeholder="master@example.com"
             />
           </View>
         </View>

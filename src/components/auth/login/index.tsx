@@ -51,7 +51,7 @@ const Login = () => {
 
         await accessTokenStorage.set(result.token);
 
-        router.replace(Routers.app.home);
+        router.replace(Routers.app.home.root);
       } catch (error: any) {
         toast.error(error?.data?.error);
       }

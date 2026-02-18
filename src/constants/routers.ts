@@ -20,12 +20,20 @@ export const Routers = {
     link: "/(onboarding)/link",
   },
   app: {
-    home: "/(app)/home",
+    home: {
+      root: "/(app)/home",
+      services: {
+        root: "/(app)/home/services",
+        create: "/(app)/home/services/create",
+        categories: "/(app)/home/services/categories",
+      },
+    },
     calendar: {
       root: "/(app)/calendar",
       schedule: "/(app)/calendar/schedule",
       daySchedule: "/(app)/calendar/day-schedule",
     },
+
     chat: "/(app)/chat",
     clients: "/(app)/clients",
   },

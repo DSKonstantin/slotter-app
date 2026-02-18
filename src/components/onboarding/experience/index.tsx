@@ -10,19 +10,19 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 
 const Experience = () => {
   const handleProfExperience = useCallback(() => {
-    router.push(Routers.auth.database);
+    router.push(Routers.onboarding.database);
   }, []);
 
   const handleManualExperience = useCallback(() => {
-    router.push(Routers.auth.database);
+    router.push(Routers.onboarding.database);
   }, []);
 
   const handleNewbieExperience = useCallback(() => {
-    router.push(Routers.auth.personalInformation);
+    router.push(Routers.onboarding.personalInformation);
   }, []);
 
   const handleSkip = useCallback(() => {
-    router.push(Routers.auth.personalInformation);
+    router.push(Routers.onboarding.personalInformation);
   }, []);
 
   const experienceOptions = useMemo(

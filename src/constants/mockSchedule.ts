@@ -3,6 +3,14 @@ import { Schedule } from "@/src/store/redux/slices/calendarSlice";
 const today = new Date();
 const todayStr = today.toISOString().split("T")[0];
 
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
+const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+const dayAfterTomorrow = new Date(today);
+dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+const dayAfterTomorrowStr = dayAfterTomorrow.toISOString().split("T")[0];
+
 export const mockSchedule: Schedule[] = [
   {
     id: "1",
@@ -52,5 +60,32 @@ export const mockSchedule: Schedule[] = [
     timeStart: `${todayStr}T16:30:00.000Z`,
     timeEnd: `${todayStr}T17:00:00.000Z`,
     status: "available",
+  },
+  {
+    id: "7",
+    clientName: "Завтрашний Клиент",
+    timeStart: `${tomorrowStr}T10:00:00.000Z`,
+    timeEnd: `${tomorrowStr}T11:00:00.000Z`,
+    price: 2000,
+    status: "confirmed",
+    services: ["Массаж"],
+  },
+  {
+    id: "8",
+    clientName: "Послезавтрашний Клиент",
+    timeStart: `${dayAfterTomorrowStr}T14:00:00.000Z`,
+    timeEnd: `${dayAfterTomorrowStr}T15:00:00.000Z`,
+    price: 3000,
+    status: "pending",
+    services: ["Укладка"],
+  },
+  {
+    id: "9",
+    clientName: "Клиент через неделю",
+    timeStart: `${new Date(today.setDate(today.getDate() + 7)).toISOString().split('T')[0]}T09:30:00.000Z`,
+    timeEnd: `${new Date(today.setDate(today.getDate() + 7)).toISOString().split('T')[0]}T10:30:00.000Z`,
+    price: 1500,
+    status: "available",
+    services: ["Консультация"],
   },
 ];

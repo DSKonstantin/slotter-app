@@ -147,11 +147,10 @@ const CalendarHome = () => {
         <View className="flex-1 mt-4 gap-4">
           <SegmentedControl
             className="mx-screen"
-            value={mode} // Читаем значение напрямую из параметров URL
+            value={mode}
             onChange={handleModeChange}
             options={CALENDAR_VIEW_OPTIONS}
           />
-          {/* Отображаем компонент в зависимости от параметра URL */}
           {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
         </View>
       </View>

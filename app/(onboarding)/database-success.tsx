@@ -1,8 +1,8 @@
 import React from "react";
 import DatabaseSuccess from "@/src/components/onboarding/databaseSuccess";
 
-function AuthDatabaseSuccess() {
+function OnboardingDatabaseSuccess() {
   return <DatabaseSuccess />;
 }
 
-export default AuthDatabaseSuccess;
+export default OnboardingDatabaseSuccess;

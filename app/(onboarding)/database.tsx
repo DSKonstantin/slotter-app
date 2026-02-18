@@ -1,8 +1,8 @@
 import React from "react";
 import Database from "@/src/components/onboarding/database";
 
-function AuthDatabase() {
+function OnboardingDatabase() {
   return <Database />;
 }
 
-export default AuthDatabase;
+export default OnboardingDatabase;

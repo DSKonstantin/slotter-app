@@ -18,7 +18,7 @@ const Database = () => {
             title: "Пропустить",
             variant: "clear",
             onPress: () => {
-              router.push(Routers.auth.databaseSuccess);
+              router.push(Routers.onboarding.databaseSuccess);
             },
           }}
         />
@@ -47,7 +47,7 @@ const Database = () => {
                 />
               }
               onPress={() => {
-                router.push(Routers.auth.databaseSuccess);
+                router.push(Routers.onboarding.databaseSuccess);
               }}
             />
           </View>
@@ -60,7 +60,7 @@ const Database = () => {
                 <StSvg name="Blank_fill" size={24} color={colors.neutral[0]} />
               }
               onPress={() => {
-                router.push(Routers.auth.personalInformation);
+                router.push(Routers.onboarding.personalInformation);
               }}
             />
           </View>

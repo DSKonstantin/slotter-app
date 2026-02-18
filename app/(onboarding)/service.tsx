@@ -1,8 +1,8 @@
 import React from "react";
 import Service from "@/src/components/onboarding/service";
 
-function AuthService() {
+function OnboardingService() {
   return <Service />;
 }
 
-export default AuthService;
+export default OnboardingService;

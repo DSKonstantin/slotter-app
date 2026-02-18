@@ -105,7 +105,7 @@ const PersonalInformation = () => {
           data: formData,
         }).unwrap();
 
-        router.push(Routers.auth.service);
+        router.push(Routers.onboarding.service);
       } catch (error: any) {
         console.log("UPDATE USER ERROR:", error);
         toast.error(

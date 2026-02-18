@@ -6,12 +6,10 @@ export default function AuthLayout() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return null; // Handled by root layout's splash screen
+    return null;
   }
 
   if (user) {
-    // If the user is authenticated, redirect to the main app.
-    // getRedirectPath handles incomplete onboarding.
     return <Redirect href={getRedirectPath(user)} />;
   }
 

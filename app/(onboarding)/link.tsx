@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "@/src/components/onboarding/link";
 
-function AuthLink() {
+function OnboardingLink() {
   return <Link />;
 }
 
-export default AuthLink;
+export default OnboardingLink;

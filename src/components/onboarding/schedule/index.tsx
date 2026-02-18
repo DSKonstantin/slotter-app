@@ -65,7 +65,7 @@ const Schedule = () => {
 
   const onSubmit = (data: ScheduleFormValues) => {
     console.log("SUBMIT", data);
-    router.push(Routers.auth.notification);
+    router.push(Routers.onboarding.notification);
   };
 
   return (
@@ -84,7 +84,7 @@ const Schedule = () => {
               title: "Пропустить",
               variant: "clear",
               onPress: () => {
-                router.push(Routers.auth.notification);
+                router.push(Routers.onboarding.notification);
               },
             }}
           />

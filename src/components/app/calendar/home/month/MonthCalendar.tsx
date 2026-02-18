@@ -85,8 +85,7 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
       return (
         <TouchableOpacity
           onPress={() => handleDayPress(date)}
-          className="relative items-center justify-center"
-          style={{ width: 44, height: 44 }}
+          className="relative items-center justify-center w-[44px] h-[44px]"
           disabled={!date}
         >
           {!isDisabled && date && (

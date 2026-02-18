@@ -8,10 +8,10 @@ import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
 import HomeCard from "@/src/components/shared/cards/homeCard";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
-import HomeNotificationsBlock from "@/src/components/app/home/homeNotificationsBlock";
-import SpecialistHomeAssistantEmpty from "@/src/components/app/home/specialistHomeAssistantEmpty";
-import SpecialistHomeAssistant from "@/src/components/app/home/specialistHomeAssistant";
-import DateHeader from "@/src/components/app/home/dateHeader";
+import HomeNotificationsBlock from "@/src/components/app/home/root/homeNotificationsBlock";
+import SpecialistHomeAssistantEmpty from "@/src/components/app/home/root/specialistHomeAssistantEmpty";
+import SpecialistHomeAssistant from "@/src/components/app/home/root/specialistHomeAssistant";
+import DateHeader from "@/src/components/app/home/root/dateHeader";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 

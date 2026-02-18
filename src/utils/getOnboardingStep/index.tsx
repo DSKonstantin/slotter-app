@@ -3,10 +3,9 @@ import { Routers } from "@/src/constants/routers";
 
 const getRedirectPath = (user: API.User) => {
   if (!user.email) return Routers.onboarding.register;
-  if (!user.experience) return Routers.onboarding.experience;
   if (!user.profession) return Routers.onboarding.personalInformation;
 
-  return Routers.app.home;
+  return Routers.app.home.root;
 };
 
 export default getRedirectPath;

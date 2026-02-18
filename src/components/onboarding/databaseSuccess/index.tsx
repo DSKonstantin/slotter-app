@@ -16,7 +16,7 @@ const DatabaseSuccess = () => {
         <AuthFooter
           primary={{
             title: "Хорошо",
-            onPress: () => router.push(Routers.auth.personalInformation),
+            onPress: () => router.push(Routers.onboarding.personalInformation),
           }}
         />
       }

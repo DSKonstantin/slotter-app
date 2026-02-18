@@ -1,8 +1,8 @@
 import React from "react";
 import Notification from "@/src/components/onboarding/notification";
 
-function AuthNotification() {
+function OnboardingNotification() {
   return <Notification />;
 }
 
-export default AuthNotification;
+export default OnboardingNotification;

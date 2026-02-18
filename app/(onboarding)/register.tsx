@@ -1,8 +1,8 @@
 import React from "react";
 import Register from "@/src/components/onboarding/register";
 
-function AuthRegister() {
+function OnboardingRegister() {
   return <Register />;
 }
 
-export default AuthRegister;
+export default OnboardingRegister;

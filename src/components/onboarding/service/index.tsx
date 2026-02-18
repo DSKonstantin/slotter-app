@@ -13,16 +13,16 @@ import { Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { HOURS_OPTIONS } from "@/src/constants/hoursOptions";
-import {
-  ServiceImagesPicker,
-  ServicePhotosValue,
-} from "@/src/components/onboarding/service/ServiceImagesPicker";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/store/redux/store";
 import {
   useCreateServiceCategoryMutation,
   useGetServiceCategoriesQuery,
 } from "@/src/store/redux/services/api/servicesApi";
+import {
+  ServiceImagesPicker,
+  ServicePhotosValue,
+} from "@/src/components/shared/imagePicker/serviceImagesPicker";
 
 type ServiceFormValues = object;
 
@@ -57,7 +57,7 @@ const Service = () => {
 
   const onSubmit = (data: ServiceFormValues) => {
     console.log("SUBMIT", data);
-    router.push(Routers.auth.schedule);
+    router.push(Routers.onboarding.schedule);
   };
 
   return (
@@ -75,7 +75,7 @@ const Service = () => {
               title: "Пропустить",
               variant: "clear",
               onPress: () => {
-                router.push(Routers.auth.schedule);
+                router.push(Routers.onboarding.schedule);
               },
             }}
           />
