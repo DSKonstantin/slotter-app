@@ -1,5 +1,14 @@
 import { api } from "../api";
-import { API, UserType } from "@/src/store/redux/services/api-types";
+import type {
+  AuthResponse,
+  MeResponse,
+  TelegramLoginResponse,
+  TelegramRegisterResponse,
+  TelegramRegisterStatusResponse,
+  UpdateUserPayload,
+  User,
+  UserType,
+} from "@/src/store/redux/services/api-types";
 
 // NOTE: these are the _SAME_ API reference!
 export const authApi = api.injectEndpoints({
@@ -7,7 +16,7 @@ export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // 🔹 Telegram Register
     telegramRegister: builder.mutation<
-      API.TelegramRegisterResponse,
+      TelegramRegisterResponse,
       { phone: string; type: UserType }
     >({
       query: ({ phone, type }) => ({
@@ -17,7 +26,7 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    getMe: builder.query<API.MeResponse, void>({
+    getMe: builder.query<MeResponse, void>({
       query: () => ({
         url: "/auth/show",
         method: "GET",
@@ -26,7 +35,7 @@ export const authApi = api.injectEndpoints({
 
     // 🔹 Telegram Register Status
     telegramRegisterStatus: builder.query<
-      API.TelegramRegisterStatusResponse,
+      TelegramRegisterStatusResponse,
       { uuid: string }
     >({
       query: ({ uuid }) => ({
@@ -38,7 +47,7 @@ export const authApi = api.injectEndpoints({
 
     // 🔹 Telegram Login (отправка кода)
     telegramLogin: builder.mutation<
-      API.TelegramLoginResponse,
+      TelegramLoginResponse,
       { phone: string; type: UserType }
     >({
       query: ({ phone, type }) => ({
@@ -50,7 +59,7 @@ export const authApi = api.injectEndpoints({
 
     // 🔹 Подтверждение Telegram Login
     confirmTelegramLogin: builder.mutation<
-      API.AuthResponse,
+      AuthResponse,
       { phone: string; code: string }
     >({
       query: ({ phone, code }) => ({
@@ -62,7 +71,7 @@ export const authApi = api.injectEndpoints({
 
     // 🔹 Классический login
     login: builder.mutation<
-      API.AuthResponse,
+      AuthResponse,
       {
         email: string | null;
         phone: string;
@@ -78,8 +87,8 @@ export const authApi = api.injectEndpoints({
     }),
 
     updateUser: builder.mutation<
-      API.User,
-      { id: number; data: Partial<API.UpdateUserPayload> | FormData }
+      User,
+      { id: number; data: Partial<UpdateUserPayload> | FormData }
     >({
       query: ({ id, data }) => ({
         url: `/users/${id}`,
@@ -89,8 +98,8 @@ export const authApi = api.injectEndpoints({
     }),
 
     updateCustomer: builder.mutation<
-      API.User,
-      { id: number; data: Partial<API.UpdateUserPayload> | FormData }
+      User,
+      { id: number; data: Partial<UpdateUserPayload> | FormData }
     >({
       query: ({ id, data }) => ({
         url: `/customers/${id}`,

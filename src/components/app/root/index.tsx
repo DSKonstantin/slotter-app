@@ -8,10 +8,10 @@ import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
 import HomeCard from "@/src/components/shared/cards/homeCard";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
-import HomeNotificationsBlock from "@/src/components/app/home/root/homeNotificationsBlock";
-import SpecialistHomeAssistantEmpty from "@/src/components/app/home/root/specialistHomeAssistantEmpty";
-import SpecialistHomeAssistant from "@/src/components/app/home/root/specialistHomeAssistant";
-import DateHeader from "@/src/components/app/home/root/dateHeader";
+import HomeNotificationsBlock from "@/src/components/app/root/homeNotificationsBlock";
+import SpecialistHomeAssistantEmpty from "@/src/components/app/root/specialistHomeAssistantEmpty";
+import SpecialistHomeAssistant from "@/src/components/app/root/specialistHomeAssistant";
+import DateHeader from "@/src/components/app/root/dateHeader";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 
@@ -77,6 +77,7 @@ const Home = () => {
                   color={colors.accent.red[500]}
                 />
               }
+              onPress={() => router.push(Routers.app.menu.schedule)}
             />
             <HomeCard
               title="Клиенты"
@@ -101,6 +102,7 @@ const Home = () => {
                 />
               }
               endAdornment={<Tag title="+6%" variant="info" size="sm" />}
+              onPress={() => router.push(Routers.app.menu.finances)}
             />
             <HomeCard
               title="Услуги"
@@ -111,6 +113,7 @@ const Home = () => {
                   color={colors.neutral[900]}
                 />
               }
+              onPress={() => router.push(Routers.app.menu.services.root)}
               endAdornment={<Tag title="12" variant="info" size="sm" />}
             />
           </View>
@@ -131,6 +134,7 @@ const Home = () => {
                   color={colors.accent.red[500]}
                 />
               }
+              onPress={() => router.push(Routers.app.menu.account)}
             />
             <HomeCard
               disabled

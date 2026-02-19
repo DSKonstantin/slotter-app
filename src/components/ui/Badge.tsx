@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { View, Text } from "react-native";
+import { twMerge } from "tailwind-merge";
 
 type BadgeVariant =
   | "primary"
@@ -15,6 +16,7 @@ type BadgeProps = {
   variant?: BadgeVariant;
   size?: BadgeSize;
   icon?: ReactNode;
+  className?: string;
 };
 
 export function Badge({
@@ -22,10 +24,16 @@ export function Badge({
   variant = "primary",
   size = "md",
   icon,
+  className,
 }: BadgeProps) {
   return (
     <View
-      className={`${styles.base} ${styles.sizes[size]} ${styles.variants[variant]}`}
+      className={twMerge(
+        styles.base,
+        styles.sizes[size],
+        styles.variants[variant],
+        className,
+      )}
     >
       <Text
         className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}

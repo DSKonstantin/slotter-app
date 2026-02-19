@@ -48,6 +48,12 @@ const formatTime = (isoTime: string) => {
   return `${hours}:${minutes}`;
 };
 
+const parseTime = (isoTime: string) => {
+  const date = new Date(isoTime);
+  if (Number.isNaN(date.getTime())) return 0;
+  return date.getUTCHours() * 60 + date.getUTCMinutes();
+};
+
 const SlotCard = ({ slot, onPress }: SlotCardProps) => {
   const isFree = slot.status === "available";
   const timeString = `${formatTime(slot.timeStart)} - ${formatTime(
@@ -58,57 +64,89 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
       ? null
       : STATUS_CONFIG[slot.status];
 
+  const duration = parseTime(slot.timeEnd) - parseTime(slot.timeStart);
+  const isShort = duration <= 29;
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      className={`rounded-base flex-row 
-      justify-between
-       ${
-         isFree
-           ? "border border-neutral-200 px-4 py-4"
-           : "p-4 bg-background-surface border border-transparent"
-       }`}
+      className={`rounded-base flex-row flex-1
+            justify-between ${
+              isFree
+                ? "border bg-background border-neutral-200 px-4 py-4"
+                : `${isShort ? "py-2" : "py-4"} px-4 bg-background-surface border border-transparent`
+            }`}
     >
       <View className="justify-center flex-1">
-        <Typography className="text-body">{timeString}</Typography>
+        <View className="flex-row items-center justify-between">
+          <Typography className="text-body">
+            {isShort ? (
+              <>
+                {timeString} ·{" "}
+                <Typography className="text-body text-neutral-500">
+                  {slot.clientName}
+                </Typography>
+              </>
+            ) : (
+              timeString
+            )}
+          </Typography>
+          {statusConfig &&
+            (isShort ? (
+              <View className="gap-2 flex-row">
+                <Badge
+                  size="sm"
+                  title={""}
+                  variant={statusConfig.variant}
+                  icon={statusConfig.icon}
+                  className="p-0 w-[26px]"
+                />
+                <StSvg
+                  name="Expand_down"
+                  size={24}
+                  color={colors.neutral[900]}
+                />
+              </View>
+            ) : (
+              <Badge
+                size="sm"
+                title={statusConfig.label}
+                variant={statusConfig.variant}
+                icon={statusConfig.icon}
+              />
+            ))}
+        </View>
 
         {isFree ? (
           <Typography className="text-neutral-500 text-caption">
             Свободное время
           </Typography>
         ) : (
-          <>
-            <Typography
-              weight="medium"
-              className="mt-1 text-neutral-500 text-caption"
-            >
-              {slot.clientName}{" "}
-              {slot.price && `· ${slot.price.toLocaleString("ru-RU")} ₽`}
-            </Typography>
-            <Typography
-              weight="regular"
-              className="text-neutral-400 text-caption"
-            >
-              {slot.services?.join(", ")}
-            </Typography>
-          </>
+          !isShort && (
+            <>
+              <Typography
+                weight="medium"
+                className="mt-1 text-neutral-500 text-caption"
+              >
+                {slot.clientName}{" "}
+                {slot.price && `| ${slot.price.toLocaleString("ru-RU")} ₽`}
+              </Typography>
+              <Typography
+                weight="regular"
+                className="text-neutral-400 text-caption"
+              >
+                {slot.services?.join(", ")}
+              </Typography>
+            </>
+          )
         )}
       </View>
 
-      {isFree ? (
+      {isFree && (
         <View className="items-center justify-center">
           <StSvg name="Add_ring_fill" size={24} color={colors.neutral[900]} />
         </View>
-      ) : (
-        statusConfig && (
-          <Badge
-            size="sm"
-            title={statusConfig.label}
-            variant={statusConfig.variant}
-            icon={statusConfig.icon}
-          />
-        )
       )}
     </TouchableOpacity>
   );

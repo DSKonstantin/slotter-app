@@ -10,6 +10,7 @@ import { useCreateServiceCategoryMutation } from "@/src/store/redux/services/api
 import { colors } from "@/src/styles/colors";
 import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
+import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 
 // ========================
 // TYPES
@@ -90,7 +91,15 @@ const CreateCategoryModal = ({
           <RhfTextField
             name="name"
             label="Название категории"
+            hideErrorText
             placeholder="Например: Стрижки"
+          />
+
+          <RHFSelect
+            name="services"
+            label="Входящие услуги"
+            placeholder="Выберите из списка..."
+            items={[{ label: "test", value: "test" }]}
           />
 
           <View>

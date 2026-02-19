@@ -9,62 +9,62 @@ import {
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-
-const categories = [
-  {
-    id: "1",
-    name: "Стрижки",
-    active: 4,
-    total: 5,
-    services: [
-      {
-        id: "1",
-        title: "Стрижка женская",
-        duration: 60,
-        price: 3500,
-        hidden: true,
-      },
-      {
-        id: "2",
-        title: "Стрижка мужская",
-        duration: 45,
-        price: 2500,
-        hidden: false,
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Окрашивание",
-    active: 2,
-    total: 3,
-    services: [
-      {
-        id: "3",
-        title: "Окрашивание корней",
-        duration: 90,
-        price: 4500,
-        hidden: false,
-      },
-    ],
-  },
-];
+import { useGetServiceCategoriesQuery } from "@/src/store/redux/services/api/servicesApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/src/store/redux/store";
+import map from "lodash/map";
 
 const AppServices = () => {
   const { top } = useSafeAreaInsets();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const {
+    data: categories,
+    isLoading,
+    isError,
+  } = useGetServiceCategoriesQuery(
+    { userId: user?.id ?? 0, params: { view: "with_services" } },
+    { skip: !user?.id },
+  );
 
   const createService = useCallback(() => {
-    router.push(Routers.app.home.services.create);
+    router.push(Routers.app.menu.services.create);
   }, []);
 
   const createCategories = useCallback(() => {
-    router.push(Routers.app.home.services.categories);
+    router.push(Routers.app.menu.services.categories);
   }, []);
+
+  if (isLoading) {
+    return (
+      <View
+        className="flex-1 items-center justify-center"
+        style={{
+          marginTop: TOOLBAR_HEIGHT + top,
+        }}
+      >
+        <Text className="text-neutral-500">Загрузка категорий...</Text>
+      </View>
+    );
+  }
+
+  if (isError || !categories) {
+    return (
+      <View
+        className="flex-1 items-center justify-center"
+        style={{
+          marginTop: TOOLBAR_HEIGHT + top,
+        }}
+      >
+        <Text className="text-error">Ошибка загрузки категорий.</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -109,7 +109,7 @@ const AppServices = () => {
           />
         </View>
 
-        {categories.map((category) => (
+        {map(categories.service_categories, (category) => (
           <View key={category.id} className="mt-5 gap-2">
             <View className="flex-row justify-between">
               <Typography className="text-caption text-neutral-500">
@@ -120,18 +120,21 @@ const AppServices = () => {
                 weight="regular"
                 className="text-caption text-neutral-500"
               >
-                {category.active}/{category.total} активно
+                {category.services?.filter((s) => s.is_active).length ?? 0}/
+                {category.services?.length ?? 0} активно
               </Typography>
             </View>
 
             <View className="gap-2">
-              {category.services.map((service) => (
+              {map(category.services, (service) => (
                 <Card
                   key={service.id}
-                  title={service.title}
-                  subtitle={`${service.duration} мин | ${service.price.toLocaleString()} ₽`}
+                  title={service.name}
+                  subtitle={`${service.duration} мин | ${(
+                    service.price_cents / 100
+                  ).toLocaleString("ru-RU")} ₽`}
                   tag={
-                    service.hidden ? (
+                    !service.is_active ? (
                       <Tag title="скрыто" size="sm" />
                     ) : undefined
                   }
@@ -141,6 +144,9 @@ const AppServices = () => {
                       size={24}
                       color={colors.neutral[500]}
                     />
+                  }
+                  onPress={() =>
+                    router.push(Routers.app.menu.services.edit(service.id))
                   }
                 />
               ))}

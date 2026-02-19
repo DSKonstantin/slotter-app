@@ -10,7 +10,7 @@ export default function TabsLayout() {
       }}
       tabBar={(props) => <StTabBar {...props} />}
     >
-      <Tabs.Screen name="home" />
+      <Tabs.Screen name="index" />
       <Tabs.Screen name="calendar" />
       <Tabs.Screen name="chat" />
       <Tabs.Screen name="clients" />

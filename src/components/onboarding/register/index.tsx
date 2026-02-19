@@ -54,7 +54,7 @@ const Register = () => {
           },
         }).unwrap();
 
-        router.push(Routers.app.home.root);
+        router.push(Routers.app.root);
       } catch (error: any) {
         console.log("UPDATE USER ERROR:", error);
         toast.error(error?.data?.error || "Произошла ошибка при обновлении.");

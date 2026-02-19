@@ -1,11 +1,7 @@
 import React from "react";
 
 const Finances = () => {
-  return (
-    <>
-
-    </>
-  );
+  return <></>;
 };
 
 export default Finances;

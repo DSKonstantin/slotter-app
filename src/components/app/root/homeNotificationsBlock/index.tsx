@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder, View } from "react-native";
 
 import { colors } from "@/src/styles/colors";
-import SpecialistHomeNotifications from "@/src/components/app/home/root/specialistHomeNotifications";
+import SpecialistHomeNotifications from "@/src/components/app/root/specialistHomeNotifications";
 import { PaginationDots } from "@/src/components/ui";
-import SpecialistHomeNotificationsEmpty from "@/src/components/app/home/root/specialistHomeAssistantEmpty";
+import SpecialistHomeNotificationsEmpty from "@/src/components/app/root/specialistHomeAssistantEmpty";
 
 const SWIPE_THRESHOLD = 40;
 

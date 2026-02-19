@@ -19,7 +19,9 @@ import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { useGetServiceCategoriesQuery } from "@/src/store/redux/services/api/servicesApi";
 
 import { RootState } from "@/src/store/redux/store";
-import CreateCategoryModal from "@/src/components/app/home/services/createCategoryModal";
+import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
+import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 
 // ========================
 // TYPES
@@ -132,7 +134,7 @@ const AppServicesCategories = () => {
           </Typography>
 
           <View className="gap-2">
-            {fields.map((category, index) => (
+            {fields.map((category) => (
               <Card
                 key={category.id}
                 title={category.name}
@@ -143,6 +145,11 @@ const AppServicesCategories = () => {
                     size={24}
                     color={colors.neutral[500]}
                   />
+                }
+                onPress={() =>
+                  router.push(
+                    Routers.app.menu.services.categoryEdit(category.id),
+                  )
                 }
               />
             ))}

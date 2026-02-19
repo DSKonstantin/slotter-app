@@ -1,11 +1,7 @@
 import React from "react";
 
 const Account = () => {
-  return (
-    <>
-
-    </>
-  );
+  return <></>;
 };
 
 export default Account;

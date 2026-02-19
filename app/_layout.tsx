@@ -23,11 +23,12 @@ import { Provider } from "react-redux";
 import { store } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
 import "@/src/utils/date/date";
-import { useAuth } from "@/src/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
-function RootLayoutNav() {
+function InitialLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -37,15 +38,13 @@ function RootLayoutNav() {
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 
-  const { isLoading: isAuthLoading } = useAuth();
-
   useEffect(() => {
-    if (fontsLoaded && !isAuthLoading) {
+    if (fontsLoaded && !isLoading) {
       SplashScreen.hideAsync();
     }
-  }, [isAuthLoading, fontsLoaded]);
+  }, [isLoading, fontsLoaded]);
 
-  if (!fontsLoaded || isAuthLoading) {
+  if (!fontsLoaded || isLoading) {
     return null;
   }
 
@@ -58,13 +57,19 @@ function RootLayoutNav() {
           <KeyboardProvider>
             <AutocompleteDropdownContextProvider>
               <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{ headerShown: false }}
-                />
+                <Stack.Protected guard={isAuthenticated}>
+                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(onboarding)"
+                    options={{ headerShown: false }}
+                  />
+                </Stack.Protected>
+                <Stack.Protected guard={!isAuthenticated}>
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                </Stack.Protected>
               </Stack>
               <Toasts overrideDarkMode={true} />
               <StatusBar style="auto" />
@@ -79,7 +84,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <RootLayoutNav />
+      <AuthProvider>
+        <InitialLayout />
+      </AuthProvider>
     </Provider>
   );
 }

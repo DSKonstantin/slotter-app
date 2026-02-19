@@ -1,5 +1,16 @@
 import { api } from "../api";
-import { API } from "@/src/store/redux/services/api-types";
+import type {
+  AdditionalService,
+  CreateAdditionalServicePayload,
+  CreateServiceCategoryPayload,
+  CreateServicePayload,
+  PaginatedResponse,
+  Service,
+  ServiceCategory,
+  UpdateAdditionalServicePayload,
+  UpdateServiceCategoryPayload,
+  UpdateServicePayload,
+} from "@/src/store/redux/services/api-types";
 
 const servicesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
@@ -10,18 +21,19 @@ const servicesApi = api.injectEndpoints({
     // =========================
 
     getServiceCategories: builder.query<
-      API.ServiceCategory[],
-      { userId: number }
+      PaginatedResponse<ServiceCategory>,
+      { userId: number; params?: Record<string, string | number> }
     >({
-      query: ({ userId }) => ({
+      query: ({ userId, params }) => ({
         url: `/users/${userId}/service_categories`,
         method: "GET",
+        params,
       }),
     }),
 
     createServiceCategory: builder.mutation<
-      API.ServiceCategory,
-      { userId: number; data: API.CreateServiceCategoryPayload }
+      ServiceCategory,
+      { userId: number; data: CreateServiceCategoryPayload }
     >({
       query: ({ userId, data }) => ({
         url: `/users/${userId}/service_categories`,
@@ -33,11 +45,11 @@ const servicesApi = api.injectEndpoints({
     }),
 
     updateServiceCategory: builder.mutation<
-      API.ServiceCategory,
+      ServiceCategory,
       {
         userId: number;
         id: number;
-        data: Partial<API.UpdateServiceCategoryPayload>;
+        data: Partial<UpdateServiceCategoryPayload>;
       }
     >({
       query: ({ userId, id, data }) => ({
@@ -63,7 +75,7 @@ const servicesApi = api.injectEndpoints({
     // SERVICES
     // =========================
 
-    getServices: builder.query<API.Service[], { categoryId: number }>({
+    getServices: builder.query<Service[], { categoryId: number }>({
       query: ({ categoryId }) => ({
         url: `/service_categories/${categoryId}/services`,
         method: "GET",
@@ -71,10 +83,10 @@ const servicesApi = api.injectEndpoints({
     }),
 
     createService: builder.mutation<
-      API.Service,
+      Service,
       {
         categoryId: number;
-        data: API.CreateServicePayload;
+        data: CreateServicePayload;
       }
     >({
       query: ({ categoryId, data }) => ({
@@ -87,11 +99,11 @@ const servicesApi = api.injectEndpoints({
     }),
 
     updateService: builder.mutation<
-      API.Service,
+      Service,
       {
         categoryId: number;
         id: number;
-        data: Partial<API.UpdateServicePayload>;
+        data: Partial<UpdateServicePayload>;
       }
     >({
       query: ({ categoryId, id, data }) => ({
@@ -108,7 +120,7 @@ const servicesApi = api.injectEndpoints({
     // =========================
 
     getAdditionalServices: builder.query<
-      API.AdditionalService[],
+      AdditionalService[],
       { serviceId: number }
     >({
       query: ({ serviceId }) => ({
@@ -118,10 +130,10 @@ const servicesApi = api.injectEndpoints({
     }),
 
     createAdditionalService: builder.mutation<
-      API.AdditionalService,
+      AdditionalService,
       {
         serviceId: number;
-        data: API.CreateAdditionalServicePayload;
+        data: CreateAdditionalServicePayload;
       }
     >({
       query: ({ serviceId, data }) => ({
