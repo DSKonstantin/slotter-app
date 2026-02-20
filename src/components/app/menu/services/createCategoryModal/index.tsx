@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -10,7 +10,7 @@ import { useCreateServiceCategoryMutation } from "@/src/store/redux/services/api
 import { colors } from "@/src/styles/colors";
 import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
-import { RHFSelect } from "@/src/components/hookForm/rhf-select";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 // ========================
 // TYPES
@@ -64,6 +64,7 @@ const CreateCategoryModal = ({
         userId,
         data: {
           name: values.name,
+          color: values.color,
         },
       }).unwrap();
 
@@ -75,8 +76,8 @@ const CreateCategoryModal = ({
 
       methods.reset();
       onClose();
-    } catch {
-      Alert.alert("Ошибка", "Не удалось создать категорию");
+    } catch (e: any) {
+      toast.error(e?.data?.error || "Не удалось создать категорию");
     }
   });
 
@@ -93,13 +94,6 @@ const CreateCategoryModal = ({
             label="Название категории"
             hideErrorText
             placeholder="Например: Стрижки"
-          />
-
-          <RHFSelect
-            name="services"
-            label="Входящие услуги"
-            placeholder="Выберите из списка..."
-            items={[{ label: "test", value: "test" }]}
           />
 
           <View>

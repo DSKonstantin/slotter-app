@@ -1,4 +1,4 @@
-// src/store/redux/services/api-types/index.ts
+// src/store/redux/services/api-types/index.tsx
 export type { BaseResponse, Pagination, PaginatedResponse } from "./common";
 export { UserType } from "./user";
 export type {

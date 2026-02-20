@@ -34,11 +34,22 @@ export const Routers = {
       finances: "/(app)/(menu)/finances",
       services: {
         root: "/(app)/(menu)/services",
-        create: "/(app)/(menu)/services/create",
+        create: (categoryId?: string | number) =>
+          categoryId !== undefined
+            ? {
+                pathname: "/(app)/(menu)/services/create",
+                params: { categoryId: String(categoryId) },
+              }
+            : "/(app)/(menu)/services/create",
         categories: "/(app)/(menu)/services/categories",
-        edit: (serviceId: string | number) => ({
+        edit: (serviceId: string | number, categoryId?: string | number) => ({
           pathname: "/(app)/(menu)/services/[serviceId]",
-          params: { serviceId: String(serviceId) },
+          params: {
+            serviceId: String(serviceId),
+            ...(categoryId !== undefined
+              ? { categoryId: String(categoryId) }
+              : {}),
+          },
         }),
         categoryEdit: (categoryId: string | number) => ({
           pathname: "/(app)/(menu)/services/categories/[categoryId]",

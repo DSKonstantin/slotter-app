@@ -31,15 +31,13 @@ const Experience = () => {
         title: "Я профи",
         subtitle: "Работал в Yclients / Dikidi / CRM",
         onPress: handleProfExperience,
-        leftIcon: (
-          <StSvg name="Star_fill" size={24} color={colors.neutral[900]} />
-        ),
+        left: <StSvg name="Star_fill" size={24} color={colors.neutral[900]} />,
       },
       {
         title: "Вёл запись вручную",
         subtitle: "Блокнот / Excel",
         onPress: handleManualExperience,
-        leftIcon: (
+        left: (
           <StSvg name="File_dock_fill" size={24} color={colors.neutral[900]} />
         ),
       },
@@ -47,9 +45,7 @@ const Experience = () => {
         title: "Только начинаю",
         subtitle: "Нет базы клиентов",
         onPress: handleNewbieExperience,
-        leftIcon: (
-          <StSvg name="Blank_fill" size={24} color={colors.neutral[900]} />
-        ),
+        left: <StSvg name="Blank_fill" size={24} color={colors.neutral[900]} />,
       },
     ],
     [handleProfExperience, handleManualExperience, handleNewbieExperience],
@@ -82,14 +78,14 @@ const Experience = () => {
               title={item.title}
               subtitle={item.subtitle}
               onPress={item.onPress}
-              rightIcon={
+              right={
                 <StSvg
                   name="Expand_right_light"
                   size={24}
                   color={colors.neutral[500]}
                 />
               }
-              leftIcon={item.leftIcon}
+              left={item.left}
             />
           ))}
         </View>

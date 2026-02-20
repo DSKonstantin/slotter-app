@@ -1,22 +1,14 @@
-import * as Yup from "yup";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  FormProvider,
-  useFieldArray,
-  useForm,
-  useFormContext,
-} from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 import {
-  Badge,
   Button,
   Card,
   Divider,
   IconButton,
   Item,
+  StModal,
   StSvg,
   Typography,
 } from "@/src/components/ui";
@@ -28,9 +20,9 @@ import {
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import ServiceCategorySelect from "@/src/components/app/menu/services/service/serviceForm/serviceCategorySelect";
 
-type AdditionalServiceForm = {
+export type AdditionalServiceForm = {
   id: string;
   title: string;
   duration: number;
@@ -47,25 +39,7 @@ export type ServiceFormValues = {
   additionalServices: AdditionalServiceForm[];
 };
 
-type ServiceFormScreenProps = {
-  title: string;
-  initialValues?: Partial<ServiceFormValues>;
-};
-
-const schema = Yup.object({
-  name: Yup.string().required("Введите название"),
-  price: Yup.string().required("Введите цену"),
-  duration: Yup.string().required("Введите длительность"),
-  categoryId: Yup.number().required("Выберите категорию"),
-});
-
-const categoriesMock = [
-  { id: 1, name: "Стрижки" },
-  { id: 2, name: "Окрашивание" },
-  { id: 3, name: "Лечение" },
-];
-
-const defaultAdditionalServices: AdditionalServiceForm[] = [
+export const defaultAdditionalServices: AdditionalServiceForm[] = [
   {
     id: "1",
     title: "Укладка пастой",
@@ -85,103 +59,64 @@ const defaultPhotos: ServicePhotosValue = {
   otherPhoto: { assets: [], max: 4 },
 };
 
-const ServiceFormScreen = ({
-  title,
-  initialValues,
-}: ServiceFormScreenProps) => {
-  const { bottom } = useSafeAreaInsets();
-
-  const defaultValues = useMemo<ServiceFormValues>(
-    () => ({
-      name: initialValues?.name ?? "",
-      price: initialValues?.price ?? "",
-      duration: initialValues?.duration ?? "",
-      categoryId: initialValues?.categoryId ?? null,
-      description: initialValues?.description ?? "",
-      online: initialValues?.online ?? false,
-      additionalServices:
-        initialValues?.additionalServices ?? defaultAdditionalServices,
-    }),
-    [initialValues],
-  );
-
-  const methods = useForm<ServiceFormValues>({
-    resolver: yupResolver(schema),
-    defaultValues,
-  });
-
-  return (
-    <FormProvider {...methods}>
-      <ScreenWithToolbar title={title}>
-        {({ topInset }) => (
-          <ServiceFormContent bottom={bottom} topInset={topInset} />
-        )}
-      </ScreenWithToolbar>
-    </FormProvider>
-  );
+type ServiceFormBodyProps = {
+  topInset: number;
+  bottomInset: number;
 };
 
-const ServiceFormContent = ({
-  bottom,
-  topInset,
-}: {
-  bottom: number;
-  topInset: number;
-}) => {
+const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
   const [photos, setPhotos] = useState<ServicePhotosValue>(defaultPhotos);
-  const { setValue, watch, control } = useFormContext<ServiceFormValues>();
-  const { fields: additionalServices, remove } = useFieldArray({
+  const [isAdditionalServiceModalVisible, setAdditionalServiceModalVisible] =
+    useState(false);
+  const [additionalServiceTitle, setAdditionalServiceTitle] = useState("");
+  const [additionalServiceDuration, setAdditionalServiceDuration] =
+    useState("");
+  const [additionalServicePrice, setAdditionalServicePrice] = useState("");
+  const { control } = useFormContext<ServiceFormValues>();
+  const {
+    fields: additionalServices,
+    remove,
+    append,
+  } = useFieldArray({
     control,
     name: "additionalServices",
   });
-  const selectedCategoryId = watch("categoryId");
+
+  const handleAddAdditionalService = () => {
+    const normalizedTitle = additionalServiceTitle.trim();
+    const parsedDuration = Number(additionalServiceDuration);
+    const parsedPrice = Number(additionalServicePrice);
+
+    if (
+      !normalizedTitle ||
+      Number.isNaN(parsedDuration) ||
+      Number.isNaN(parsedPrice)
+    ) {
+      return;
+    }
+
+    append({
+      id: String(Date.now()),
+      title: normalizedTitle,
+      duration: parsedDuration,
+      price: parsedPrice,
+    });
+
+    setAdditionalServiceTitle("");
+    setAdditionalServiceDuration("");
+    setAdditionalServicePrice("");
+    setAdditionalServiceModalVisible(false);
+  };
 
   return (
     <ScrollView
       className="px-screen"
       contentContainerStyle={{
         paddingTop: topInset,
-        paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
+        paddingBottom: TAB_BAR_HEIGHT + bottomInset + 16,
       }}
     >
-      <Typography className="text-caption text-neutral-500 mb-2">
-        Категория
-      </Typography>
-
-      <View className="flex-row flex-wrap gap-2 mb-2">
-        {categoriesMock.map((category) => {
-          const isSelected = selectedCategoryId === category.id;
-
-          return (
-            <Pressable
-              key={category.id}
-              onPress={() =>
-                setValue("categoryId", category.id, {
-                  shouldValidate: true,
-                })
-              }
-            >
-              <Badge
-                title={category.name}
-                variant={isSelected ? "accent" : "secondary"}
-              />
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <Button
-        title="Создать новую категорию"
-        variant="clear"
-        onPress={() => {}}
-        rightIcon={
-          <StSvg
-            name="Add_ring_fill_light"
-            size={18}
-            color={colors.neutral[900]}
-          />
-        }
-      />
+      <ServiceCategorySelect />
 
       <View className="mt-5 gap-2">
         <RhfTextField
@@ -236,7 +171,7 @@ const ServiceFormContent = ({
               <Card
                 title={service.title}
                 subtitle={`${service.duration} мин | ${service.price} ₽`}
-                rightIcon={
+                right={
                   <StSvg
                     name="Edit_light"
                     size={24}
@@ -264,13 +199,60 @@ const ServiceFormContent = ({
       <Button
         title="Создать доп. услугу"
         variant="clear"
-        onPress={() => {}}
+        onPress={() => setAdditionalServiceModalVisible(true)}
         rightIcon={
           <StSvg name="Add_round_fill" size={24} color={colors.neutral[900]} />
         }
       />
 
       <ServiceImagesPicker value={photos} onChange={setPhotos} />
+
+      <StModal
+        visible={isAdditionalServiceModalVisible}
+        onClose={() => setAdditionalServiceModalVisible(false)}
+      >
+        <Typography weight="semibold" className="text-display text-center">
+          Новая доп. услуга
+        </Typography>
+
+        <View className="my-6 gap-3">
+          <TextInput
+            value={additionalServiceTitle}
+            onChangeText={setAdditionalServiceTitle}
+            placeholder="Название"
+            className="h-12 rounded-base border border-neutral-200 px-4 bg-background"
+          />
+          <TextInput
+            value={additionalServiceDuration}
+            onChangeText={setAdditionalServiceDuration}
+            placeholder="Длительность (мин)"
+            keyboardType="numeric"
+            className="h-12 rounded-base border border-neutral-200 px-4 bg-background"
+          />
+          <TextInput
+            value={additionalServicePrice}
+            onChangeText={setAdditionalServicePrice}
+            placeholder="Цена"
+            keyboardType="numeric"
+            className="h-12 rounded-base border border-neutral-200 px-4 bg-background"
+          />
+        </View>
+
+        <View className="flex-row gap-2">
+          <Button
+            title="Отмена"
+            variant="secondary"
+            textVariant="accent"
+            buttonClassName="flex-1"
+            onPress={() => setAdditionalServiceModalVisible(false)}
+          />
+          <Button
+            title="Создать"
+            buttonClassName="flex-1"
+            onPress={handleAddAdditionalService}
+          />
+        </View>
+      </StModal>
     </ScrollView>
   );
 };
@@ -281,4 +263,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ServiceFormScreen;
+export default ServiceFormBody;

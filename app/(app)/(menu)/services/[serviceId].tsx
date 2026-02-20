@@ -1,18 +1,14 @@
 import React from "react";
 import { useLocalSearchParams } from "expo-router";
-import ServiceFormScreen from "@/src/components/app/menu/services/serviceForm";
+import EditService from "@/src/components/app/menu/services/service/edit";
 
 const ServiceEditPage = () => {
-  const { serviceId } = useLocalSearchParams<{ serviceId: string }>();
+  const { serviceId, categoryId } = useLocalSearchParams<{
+    serviceId: string;
+    categoryId?: string;
+  }>();
 
-  return (
-    <ServiceFormScreen
-      title={`Редактировать услугу #${serviceId}`}
-      initialValues={{
-        name: `Услуга #${serviceId}`,
-      }}
-    />
-  );
+  return <EditService serviceId={serviceId} categoryId={categoryId} />;
 };
 
 export default ServiceEditPage;

@@ -7,7 +7,6 @@ import type {
   PaginatedResponse,
   Service,
   ServiceCategory,
-  UpdateAdditionalServicePayload,
   UpdateServiceCategoryPayload,
   UpdateServicePayload,
 } from "@/src/store/redux/services/api-types";
@@ -29,6 +28,16 @@ const servicesApi = api.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.service_categories.map((category) => ({
+                type: "ServiceCategories" as const,
+                id: category.id,
+              })),
+              { type: "ServiceCategories" as const, id: "LIST" },
+            ]
+          : [{ type: "ServiceCategories" as const, id: "LIST" }],
     }),
 
     createServiceCategory: builder.mutation<
@@ -42,6 +51,7 @@ const servicesApi = api.injectEndpoints({
           service_category: data,
         },
       }),
+      invalidatesTags: [{ type: "ServiceCategories", id: "LIST" }],
     }),
 
     updateServiceCategory: builder.mutation<
@@ -59,6 +69,10 @@ const servicesApi = api.injectEndpoints({
           service_category: data,
         },
       }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "ServiceCategories", id: arg.id },
+        { type: "ServiceCategories", id: "LIST" },
+      ],
     }),
 
     deleteServiceCategory: builder.mutation<
@@ -69,6 +83,10 @@ const servicesApi = api.injectEndpoints({
         url: `/users/${userId}/service_categories/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "ServiceCategories", id: arg.id },
+        { type: "ServiceCategories", id: "LIST" },
+      ],
     }),
 
     // =========================
@@ -80,6 +98,16 @@ const servicesApi = api.injectEndpoints({
         url: `/service_categories/${categoryId}/services`,
         method: "GET",
       }),
+      providesTags: (result, _error, arg) =>
+        result
+          ? [
+              ...result.map((service) => ({
+                type: "Services" as const,
+                id: service.id,
+              })),
+              { type: "Services" as const, id: `LIST-${arg.categoryId}` },
+            ]
+          : [{ type: "Services" as const, id: `LIST-${arg.categoryId}` }],
     }),
 
     createService: builder.mutation<
@@ -96,6 +124,10 @@ const servicesApi = api.injectEndpoints({
           service: data,
         },
       }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Services", id: `LIST-${arg.categoryId}` },
+        { type: "ServiceCategories", id: "LIST" },
+      ],
     }),
 
     updateService: builder.mutation<
@@ -113,36 +145,45 @@ const servicesApi = api.injectEndpoints({
           service: data,
         },
       }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Services", id: arg.id },
+        { type: "Services", id: `LIST-${arg.categoryId}` },
+        { type: "ServiceCategories", id: "LIST" },
+      ],
     }),
 
-    // =========================
-    // ADDITIONAL SERVICES
-    // =========================
-
-    getAdditionalServices: builder.query<
-      AdditionalService[],
-      { serviceId: number }
-    >({
-      query: ({ serviceId }) => ({
-        url: `/services/${serviceId}/additional_services`,
-        method: "GET",
-      }),
-    }),
-
-    createAdditionalService: builder.mutation<
-      AdditionalService,
+    getService: builder.query<
+      Service,
       {
-        serviceId: number;
-        data: CreateAdditionalServicePayload;
+        categoryId: number;
+        id: number;
       }
     >({
-      query: ({ serviceId, data }) => ({
-        url: `/services/${serviceId}/additional_services`,
-        method: "POST",
-        data: {
-          additional_service: data,
-        },
+      query: ({ categoryId, id }) => ({
+        url: `/service_categories/${categoryId}/services/${id}`,
+        method: "GET",
       }),
+      providesTags: (_result, _error, arg) => [
+        { type: "Services", id: arg.id },
+      ],
+    }),
+
+    deleteService: builder.mutation<
+      void,
+      {
+        categoryId: number;
+        id: number;
+      }
+    >({
+      query: ({ categoryId, id }) => ({
+        url: `/service_categories/${categoryId}/services/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Services", id: arg.id },
+        { type: "Services", id: `LIST-${arg.categoryId}` },
+        { type: "ServiceCategories", id: "LIST" },
+      ],
     }),
   }),
 });
@@ -156,10 +197,8 @@ export const {
 
   // services
   useGetServicesQuery,
+  useGetServiceQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
-
-  // additional services
-  useGetAdditionalServicesQuery,
-  useCreateAdditionalServiceMutation,
+  useDeleteServiceMutation,
 } = servicesApi;

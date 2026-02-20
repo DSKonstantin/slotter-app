@@ -23,6 +23,7 @@ export type UpdateServiceCategoryPayload = Partial<{
   name: string;
   color: string;
   position: number;
+  is_active: boolean;
 }>;
 
 // =========================

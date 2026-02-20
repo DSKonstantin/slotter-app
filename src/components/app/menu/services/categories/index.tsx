@@ -1,104 +1,136 @@
-import React, { useEffect, useCallback, useState } from "react";
-import { View, Alert, ActivityIndicator } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FormProvider, useForm, useFieldArray } from "react-hook-form";
+import React, { useEffect, useState } from "react";
+import { View, ActivityIndicator, Pressable } from "react-native";
 import { useSelector } from "react-redux";
+import DraggableFlatList, {
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
 
-import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import {
   Button,
   Card,
   IconButton,
   StSvg,
   Typography,
+  Switch,
 } from "@/src/components/ui";
 
 import { colors } from "@/src/styles/colors";
-import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 
-import { useGetServiceCategoriesQuery } from "@/src/store/redux/services/api/servicesApi";
+import {
+  useGetServiceCategoriesQuery,
+  useUpdateServiceCategoryMutation,
+} from "@/src/store/redux/services/api/servicesApi";
+import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 
 import { RootState } from "@/src/store/redux/store";
 import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
-import { router } from "expo-router";
-import { Routers } from "@/src/constants/routers";
+import EditCategoryModal from "@/src/components/app/menu/services/editCategoryModal";
+import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 
-// ========================
-// TYPES
-// ========================
-
-type CategoryForm = {
-  id: string;
+type SelectedCategory = {
+  id: number;
   name: string;
-  servicesCount: number;
+  color?: string | null;
 };
-
-type FormValues = {
-  categories: CategoryForm[];
-};
-
-// ========================
-// COMPONENT
-// ========================
 
 const AppServicesCategories = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
-  const { top } = useSafeAreaInsets();
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState<SelectedCategory | null>(null);
+  const [localCategories, setLocalCategories] = useState<ServiceCategory[]>([]);
+  const [updatingCategoryIds, setUpdatingCategoryIds] = useState<number[]>([]);
+  const [updateServiceCategory] = useUpdateServiceCategoryMutation();
 
   const user = useSelector((state: RootState) => state.auth.user);
 
   const userId = user?.id;
-
-  // ========================
-  // API
-  // ========================
-
-  const { data, isLoading, isFetching, refetch } = useGetServiceCategoriesQuery(
-    { userId: userId! },
+  const { data, isLoading, refetch } = useGetServiceCategoriesQuery(
+    { userId: userId!, params: { view: "with_services" } },
     {
       skip: !userId,
     },
   );
-  // ========================
-  // FORM
-  // ========================
 
-  const methods = useForm<FormValues>({
-    defaultValues: {
-      categories: [],
-    },
-  });
+  const handleToggleCategoryActive = (
+    categoryId: number,
+    currentValue: boolean,
+    nextValue: boolean,
+  ) => {
+    if (!userId) return;
 
-  const { control } = methods;
-
-  const { fields, replace, remove } = useFieldArray({
-    control,
-    name: "categories",
-  });
-
-  // ========================
-  // SYNC API → FORM
-  // ========================
-
-  useEffect(() => {
-    if (!data?.service_categories) return;
-
-    const formatted = data.service_categories.map(
-      (category): CategoryForm => ({
-        id: String(category.id),
-        name: category.name,
-        servicesCount: category.services_count ?? 0,
-      }),
+    setLocalCategories((prev) =>
+      prev.map((category) =>
+        category.id === categoryId
+          ? { ...category, is_active: nextValue }
+          : category,
+      ),
     );
 
-    replace(formatted);
-  }, [data, replace]);
+    setUpdatingCategoryIds((prev) => [...prev, categoryId]);
 
-  // ========================
-  // LOADING
-  // ========================
+    void updateServiceCategory({
+      userId,
+      id: categoryId,
+      data: { is_active: nextValue },
+    })
+      .unwrap()
+      .catch(() => {
+        setLocalCategories((prev) =>
+          prev.map((category) =>
+            category.id === categoryId
+              ? { ...category, is_active: currentValue }
+              : category,
+          ),
+        );
+      })
+      .finally(() => {
+        setUpdatingCategoryIds((prev) =>
+          prev.filter((id) => id !== categoryId),
+        );
+      });
+  };
 
-  if (isLoading || isFetching) {
+  const handleDragEnd = ({ data: nextData }: { data: ServiceCategory[] }) => {
+    const changedCategories = nextData
+      .map((item, index) => ({
+        ...item,
+        position: index,
+        hasPositionChanged: item.position !== index,
+      }))
+      .filter((item) => item.hasPositionChanged);
+
+    const nextDataWithPosition = nextData.map((item, index) => ({
+      ...item,
+      position: index,
+    }));
+
+    setLocalCategories(nextDataWithPosition);
+
+    if (!userId) return;
+    if (!changedCategories.length) return;
+
+    void Promise.allSettled(
+      changedCategories.map((category) =>
+        updateServiceCategory({
+          userId,
+          id: category.id,
+          data: { position: category.position },
+        }).unwrap(),
+      ),
+    ).then(() => {
+      // refetch();
+    });
+  };
+
+  useEffect(() => {
+    const categories = data?.service_categories ?? [];
+    setLocalCategories(
+      [...categories].sort((first, second) => first.position - second.position),
+    );
+  }, [data?.service_categories]);
+
+  if (isLoading && !data) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator />
@@ -106,13 +138,9 @@ const AppServicesCategories = () => {
     );
   }
 
-  // ========================
-  // UI
-  // ========================
-
   return (
     <>
-      <ToolbarTop
+      <ScreenWithToolbar
         title="Категории услуг"
         rightButton={
           <IconButton
@@ -120,60 +148,111 @@ const AppServicesCategories = () => {
             onPress={() => {}}
           />
         }
-      />
-
-      <FormProvider {...methods}>
-        <View
-          className="flex-1 px-screen"
-          style={{
-            marginTop: TOOLBAR_HEIGHT + top,
-          }}
-        >
-          <Typography className="text-caption text-neutral-500 mb-2">
-            Существующие категории
-          </Typography>
-
-          <View className="gap-2">
-            {fields.map((category) => (
-              <Card
-                key={category.id}
-                title={category.name}
-                subtitle={`${category.servicesCount} услуг`}
-                rightIcon={
-                  <StSvg
-                    name="Edit_light"
-                    size={24}
-                    color={colors.neutral[500]}
-                  />
-                }
-                onPress={() =>
-                  router.push(
-                    Routers.app.menu.services.categoryEdit(category.id),
-                  )
-                }
-              />
-            ))}
+      >
+        {({ topInset }) => (
+          <View className="flex-1 px-screen">
+            <DraggableFlatList
+              data={localCategories}
+              containerStyle={{
+                paddingTop: topInset,
+                flex: 1,
+              }}
+              ListHeaderComponent={
+                <Typography className="text-caption text-neutral-500 mb-2">
+                  Существующие категории
+                </Typography>
+              }
+              keyExtractor={(item) => String(item.id)}
+              contentContainerStyle={{ gap: 8 }}
+              activationDistance={10}
+              autoscrollThreshold={48}
+              autoscrollSpeed={220}
+              onDragEnd={handleDragEnd}
+              renderItem={({
+                item,
+                drag,
+                isActive,
+              }: RenderItemParams<ServiceCategory>) => (
+                <Card
+                  title={item.name}
+                  pressArea="content"
+                  active={isActive}
+                  className={item.is_active ? "" : "opacity-40"}
+                  subtitle={`${item.activeServicesCount ?? item.services?.length ?? 0} услуг`}
+                  left={
+                    <Pressable
+                      onLongPress={drag}
+                      delayLongPress={100}
+                      hitSlop={8}
+                    >
+                      <View className="flex-row items-center gap-2">
+                        <StSvg
+                          name="Drag"
+                          size={24}
+                          color={colors.neutral[900]}
+                        />
+                        {item.color && (
+                          <View
+                            className={"w-5 h-5 rounded-full"}
+                            style={{ backgroundColor: item.color }}
+                          />
+                        )}
+                      </View>
+                    </Pressable>
+                  }
+                  right={
+                    <Switch
+                      value={item.is_active}
+                      disabled={updatingCategoryIds.includes(item.id)}
+                      onChange={(nextValue) =>
+                        handleToggleCategoryActive(
+                          item.id,
+                          item.is_active,
+                          nextValue,
+                        )
+                      }
+                    />
+                  }
+                  onPress={() => {
+                    setSelectedCategory(item);
+                    setEditModalVisible(true);
+                  }}
+                />
+              )}
+              ListFooterComponent={
+                <Button
+                  title="Создать новую категорию"
+                  variant="clear"
+                  onPress={() => setCreateModalVisible(true)}
+                  rightIcon={
+                    <StSvg
+                      name="Add_ring_fill_light"
+                      size={18}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                />
+              }
+            />
           </View>
+        )}
+      </ScreenWithToolbar>
 
-          <Button
-            title="Создать новую категорию"
-            variant="clear"
-            onPress={() => setCreateModalVisible(true)}
-            rightIcon={
-              <StSvg
-                name="Add_ring_fill_light"
-                size={18}
-                color={colors.neutral[900]}
-              />
-            }
-          />
-        </View>
-      </FormProvider>
       <CreateCategoryModal
         visible={createModalVisible}
         userId={userId!}
         onClose={() => setCreateModalVisible(false)}
-        onCreated={() => refetch()}
+        onCreated={() => {}}
+      />
+      <EditCategoryModal
+        visible={editModalVisible}
+        userId={userId!}
+        category={selectedCategory}
+        onClose={() => {
+          setEditModalVisible(false);
+          setSelectedCategory(null);
+        }}
+        onUpdated={() => {}}
       />
     </>
   );

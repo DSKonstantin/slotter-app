@@ -6,5 +6,6 @@ export const api = createApi({
   baseQuery: axiosBaseQuery({
     transformResponse: (response) => response,
   }),
+  tagTypes: ["ServiceCategories", "Services"],
   endpoints: () => ({}),
 });
