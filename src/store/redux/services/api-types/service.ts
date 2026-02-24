@@ -50,9 +50,11 @@ export interface Service {
 
 export type CreateServicePayload = {
   name: string;
+  description?: string;
   price: number;
   duration: number;
   is_active?: boolean;
+  is_available_online?: boolean;
   position?: number;
   main_photo?: any;
   additional_photos?: any[];
@@ -60,9 +62,11 @@ export type CreateServicePayload = {
 
 export type UpdateServicePayload = Partial<{
   name: string;
+  description: string;
   price: number;
   duration: number;
   is_active: boolean;
+  is_available_online: boolean;
   position: number;
   main_photo?: any;
   additional_photos?: any[];

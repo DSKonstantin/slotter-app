@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSelector } from "react-redux";
-import { useFormContext } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
 
 import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -14,8 +14,13 @@ const ServiceCategorySelect = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?.id;
   const [createModalVisible, setCreateModalVisible] = useState(false);
-  const { setValue, watch } = useFormContext<ServiceFormValues>();
-  const selectedCategoryId = watch("categoryId");
+  const { control } = useFormContext<ServiceFormValues>();
+  const {
+    field: { value: selectedCategoryId, onChange: onCategoryChange },
+  } = useController({
+    control,
+    name: "categoryId",
+  });
 
   const { data, isLoading, isFetching, refetch } = useGetServiceCategoriesQuery(
     { userId: userId!, params: { view: "with_services" } },
@@ -25,7 +30,7 @@ const ServiceCategorySelect = () => {
   const categories = useMemo(
     () =>
       (data?.service_categories ?? []).map((category) => ({
-        id: category.id,
+        id: Number(category.id),
         name: category.name,
       })),
     [data],
@@ -44,16 +49,14 @@ const ServiceCategorySelect = () => {
       ) : (
         <View className="flex-row flex-wrap gap-2 mb-2">
           {categories.map((category) => {
-            const isSelected = selectedCategoryId === category.id;
+            const normalizedSelectedCategoryId =
+              selectedCategoryId === null ? null : Number(selectedCategoryId);
+            const isSelected = normalizedSelectedCategoryId === category.id;
 
             return (
               <Pressable
                 key={category.id}
-                onPress={() =>
-                  setValue("categoryId", category.id, {
-                    shouldValidate: true,
-                  })
-                }
+                onPress={() => onCategoryChange(category.id)}
               >
                 <Badge
                   title={category.name}
@@ -72,9 +75,7 @@ const ServiceCategorySelect = () => {
         onCreated={(category) => {
           const createdCategoryId = Number(category.id);
           if (!Number.isNaN(createdCategoryId)) {
-            setValue("categoryId", createdCategoryId, {
-              shouldValidate: true,
-            });
+            onCategoryChange(createdCategoryId);
           }
           refetch();
         }}

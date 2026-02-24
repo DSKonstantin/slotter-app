@@ -5,6 +5,7 @@
 .env*.local
 
 .github/copilot-review.md
+.skills
 GEMINI.md
 
 # dependencies

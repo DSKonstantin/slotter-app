@@ -12,7 +12,7 @@ import {
   useConfirmTelegramLoginMutation,
 } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { useAuth } from "@/src/contexts/AuthContext";
 
 import { toast } from "@backpackapp-io/react-native-toast";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
@@ -26,6 +26,7 @@ const EnterCode = () => {
   const [telegramLogin] = useTelegramLoginMutation();
   const [confirmTelegramLogin, { isLoading }] =
     useConfirmTelegramLoginMutation();
+  const { login } = useAuth();
 
   const onSubmit = useCallback(async () => {
     if (!code || code.length < 6) return;
@@ -35,12 +36,12 @@ const EnterCode = () => {
         code,
       }).unwrap();
 
-      await accessTokenStorage.set(result.token);
+      await login(result.token);
       router.replace(getRedirectPath(result.resource));
     } catch (e: any) {
       toast.error(e?.data?.error);
     }
-  }, [confirmTelegramLogin, phone, code]);
+  }, [confirmTelegramLogin, phone, code, login]);
 
   const handleComplete = useCallback(() => {
     // This can be used to trigger submission automatically on complete

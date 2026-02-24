@@ -9,8 +9,6 @@ import ServiceFormBody, {
   defaultAdditionalServices,
   ServiceFormValues,
 } from "@/src/components/app/menu/services/service/serviceForm";
-import { IconButton, StSvg } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
 import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 
 const schema = Yup.object({
@@ -27,7 +25,7 @@ type AppCreateServiceProps = {
 const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
   const { bottom } = useSafeAreaInsets();
   const router = useRouter();
-  const [createService, { isLoading }] = useCreateServiceMutation();
+  const [createService] = useCreateServiceMutation();
   const parsedCategoryIdFromParams = Number(categoryId);
 
   const methods = useForm<ServiceFormValues>({
@@ -40,7 +38,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
         ? null
         : parsedCategoryIdFromParams,
       description: "",
-      online: false,
+      isAvailableOnline: false,
       additionalServices: defaultAdditionalServices,
     },
   });
@@ -65,6 +63,8 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
           name: values.name,
           price: parsedPrice,
           duration: parsedDuration,
+          description: values.description.trim(),
+          is_available_online: values.isAvailableOnline,
         },
       }).unwrap();
       router.back();
@@ -77,7 +77,11 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Создать услугу">
         {({ topInset }) => (
-          <ServiceFormBody topInset={topInset} bottomInset={bottom} />
+          <ServiceFormBody
+            topInset={topInset}
+            bottomInset={bottom}
+            onSubmit={onSubmit}
+          />
         )}
       </ScreenWithToolbar>
     </FormProvider>

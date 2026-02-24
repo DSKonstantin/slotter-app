@@ -1,7 +1,5 @@
 import { api } from "../api";
 import type {
-  AdditionalService,
-  CreateAdditionalServicePayload,
   CreateServiceCategoryPayload,
   CreateServicePayload,
   PaginatedResponse,
@@ -135,18 +133,19 @@ const servicesApi = api.injectEndpoints({
       {
         categoryId: number;
         id: number;
-        data: Partial<UpdateServicePayload>;
+        data: Partial<UpdateServicePayload> | FormData;
       }
     >({
-      query: ({ categoryId, id, data }) => ({
-        url: `/service_categories/${categoryId}/services/${id}`,
-        method: "PATCH",
-        data: {
-          service: data,
-        },
-      }),
+      query: ({ categoryId, id, data }) => {
+        const payload = data instanceof FormData ? data : { service: data };
+
+        return {
+          url: `/service_categories/${categoryId}/services/${id}`,
+          method: "PATCH",
+          data: payload,
+        };
+      },
       invalidatesTags: (_result, _error, arg) => [
-        { type: "Services", id: arg.id },
         { type: "Services", id: `LIST-${arg.categoryId}` },
         { type: "ServiceCategories", id: "LIST" },
       ],
@@ -163,6 +162,14 @@ const servicesApi = api.injectEndpoints({
         url: `/service_categories/${categoryId}/services/${id}`,
         method: "GET",
       }),
+      transformResponse: (response: unknown) => {
+        if (response && typeof response === "object" && "service" in response) {
+          return (response as { service: Service }).service;
+        }
+
+        return response as Service;
+      },
+      keepUnusedDataFor: 0,
       providesTags: (_result, _error, arg) => [
         { type: "Services", id: arg.id },
       ],

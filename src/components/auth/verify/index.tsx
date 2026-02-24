@@ -19,7 +19,8 @@ import {
   useTelegramRegisterMutation,
   useTelegramRegisterStatusQuery,
 } from "@/src/store/redux/services/api/authApi";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { useAppDispatch } from "@/src/store/redux/store";
+import { setJwtTokenThunk } from "@/src/store/redux/services/api";
 import { useCountDown } from "@/src/hooks/useCountdown";
 
 type VerifyFormValues = {
@@ -31,6 +32,7 @@ const VerifySchema = Yup.object().shape({
 });
 
 const Verify = () => {
+  const dispatch = useAppDispatch();
   const [telegramRegister, { isLoading }] = useTelegramRegisterMutation();
   const [telegramLogin] = useTelegramLoginMutation();
   const [telegramState, setTelegramState] = useState<{
@@ -135,14 +137,14 @@ const Verify = () => {
   const handleConfirmed = useCallback(
     async (token: string) => {
       try {
-        await accessTokenStorage.set(token);
+        await dispatch(setJwtTokenThunk(token)).unwrap();
         clearState();
         router.replace(Routers.onboarding.register);
       } catch (e) {
         console.error("Token save failed:", e);
       }
     },
-    [clearState],
+    [clearState, dispatch],
   );
 
   useEffect(() => {

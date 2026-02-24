@@ -1,32 +1,53 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "../services/api/authApi";
-import { API } from "@/src/store/redux/services/api-types";
+import { User } from "@/src/store/redux/services/api-types";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
 interface AuthState {
-  user: API.User | null;
+  token: string | null;
+  user: User | null;
   status: AuthStatus;
 }
 
 const initialState: AuthState = {
+  token: null,
   user: null,
   status: "idle",
 };
 
-/**
- * Универсальный extractor user из разных response форматов
- */
-function extractUser(payload: any): API.User | null {
-  if (!payload) return null;
+type UserPayload =
+  | User
+  | {
+      resource?: User | null;
+      user?: User | null;
+    }
+  | null
+  | undefined;
 
-  if (payload.resource) return payload.resource;
-  if (payload.user) return payload.user;
+function extractUser(payload: UserPayload): User | null {
+  if (!payload || typeof payload !== "object") return null;
 
-  // если payload уже User
-  if (payload.id) return payload;
+  if ("resource" in payload && payload.resource) return payload.resource;
+  if ("user" in payload && payload.user) return payload.user;
+  if ("id" in payload) return payload as User;
 
   return null;
+}
+
+function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
+  const user = extractUser(payload);
+  if (!user) return;
+
+  state.user = user;
+  state.status = "authenticated";
+}
+
+function setUserOnly(state: AuthState, payload: UserPayload) {
+  const user = extractUser(payload);
+  if (!user) return;
+
+  state.user = user;
 }
 
 const authSlice = createSlice({
@@ -34,7 +55,11 @@ const authSlice = createSlice({
   initialState,
 
   reducers: {
+    setToken(state, action: PayloadAction<string | null>) {
+      state.token = action.payload;
+    },
     logout(state) {
+      state.token = null;
       state.user = null;
       state.status = "unauthenticated";
     },
@@ -51,8 +76,8 @@ const authSlice = createSlice({
       // getMe fulfilled
       .addMatcher(
         authApi.endpoints.getMe.matchFulfilled,
-        (state, action: PayloadAction<any>) => {
-          const user = extractUser(action.payload);
+        (state, { payload }) => {
+          const user = extractUser(payload);
           state.user = user;
           state.status = user ? "authenticated" : "unauthenticated";
         },
@@ -67,62 +92,44 @@ const authSlice = createSlice({
       // login
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,
-        (state, action: PayloadAction<any>) => {
-          const user = extractUser(action.payload);
-          if (user) {
-            state.user = user;
-            state.status = "authenticated";
-          }
+        (state, { payload }) => {
+          setAuthenticatedUser(state, payload);
         },
       )
 
       // confirmTelegramLogin
       .addMatcher(
         authApi.endpoints.confirmTelegramLogin.matchFulfilled,
-        (state, action: PayloadAction<any>) => {
-          const user = extractUser(action.payload);
-          if (user) {
-            state.user = user;
-            state.status = "authenticated";
-          }
+        (state, { payload }) => {
+          setAuthenticatedUser(state, payload);
         },
       )
 
       // telegramRegisterStatus
       .addMatcher(
         authApi.endpoints.telegramRegisterStatus.matchFulfilled,
-        (state, action: PayloadAction<any>) => {
-          const user = extractUser(action.payload);
-          if (user) {
-            state.user = user;
-            state.status = "authenticated";
-          }
+        (state, { payload }) => {
+          setAuthenticatedUser(state, payload);
         },
       )
 
       // updateUser
       .addMatcher(
         authApi.endpoints.updateUser.matchFulfilled,
-        (state, action: PayloadAction<any>) => {
-          const user = extractUser(action.payload);
-          if (user) {
-            state.user = user;
-          }
+        (state, { payload }) => {
+          setUserOnly(state, payload);
         },
       )
 
       // updateCustomer
       .addMatcher(
         authApi.endpoints.updateCustomer.matchFulfilled,
-        (state, action: PayloadAction<any>) => {
-          const user = extractUser(action.payload);
-          if (user) {
-            state.user = user;
-          }
+        (state, { payload }) => {
+          setUserOnly(state, payload);
         },
       );
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setToken } = authSlice.actions;
 export default authSlice.reducer;

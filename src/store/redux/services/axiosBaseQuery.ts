@@ -1,20 +1,51 @@
 import type { BaseQueryApi, BaseQueryFn } from "@reduxjs/toolkit/query";
-import type { AxiosHeaders, AxiosRequestConfig } from "axios";
+import type { AxiosRequestConfig } from "axios";
+import { AxiosHeaders, isAxiosError } from "axios";
 import axios from "./axios";
-import Axios from "axios";
-import { API } from "./api-types";
+import type { BaseResponse } from "./api-types";
 
-export interface AxiosBaseQueryArgs<Meta, Response = API.BaseResponse> {
+export interface AxiosBaseQueryError {
+  status: number | "FETCH_ERROR" | "CUSTOM_ERROR";
+  data: unknown;
+}
+
+export interface AxiosBaseQueryArgs<
+  Meta,
+  Response = BaseResponse,
+  Result = Response,
+  DefinitionExtraOptions extends ServiceExtraOptions = ServiceExtraOptions,
+> {
   meta?: Meta;
-  prepareHeaders?: (headers: AxiosHeaders, api: BaseQueryApi) => AxiosHeaders;
-  transformResponse?: (response: Response) => unknown;
+  prepareHeaders?: (
+    headers: AxiosHeaders,
+    api: BaseQueryApi,
+    extraOptions: DefinitionExtraOptions,
+  ) => AxiosHeaders;
+  transformResponse?: (response: Response, api: BaseQueryApi) => Result;
 }
 
 export interface ServiceExtraOptions {
   authRequired?: boolean;
 }
 
-const getRequestConfig = (args: string | AxiosRequestConfig) => {
+const DEFAULT_ERROR_MESSAGE = { error: "Что-то пошло не так" };
+const METHOD_HEADER_KEYS = new Set([
+  "common",
+  "delete",
+  "get",
+  "head",
+  "options",
+  "post",
+  "put",
+  "patch",
+  "purge",
+  "link",
+  "unlink",
+]);
+
+const getRequestConfig = (
+  args: string | AxiosRequestConfig,
+): AxiosRequestConfig => {
   if (typeof args === "string") {
     return { url: args };
   }
@@ -22,53 +53,110 @@ const getRequestConfig = (args: string | AxiosRequestConfig) => {
   return args;
 };
 
+const getErrorPayload = (error: unknown): AxiosBaseQueryError => {
+  if (!isAxiosError(error)) {
+    return {
+      status: "CUSTOM_ERROR",
+      data:
+        error instanceof Error
+          ? error.message
+          : (error ?? DEFAULT_ERROR_MESSAGE),
+    };
+  }
+
+  if (!error.response) {
+    return {
+      status: "FETCH_ERROR",
+      data: error.message || DEFAULT_ERROR_MESSAGE,
+    };
+  }
+
+  return {
+    status: error.response.status,
+    data: error.response.data || error.message || DEFAULT_ERROR_MESSAGE,
+  };
+};
+
+const normalizeRequestHeaders = (
+  requestHeaders: AxiosRequestConfig["headers"],
+): AxiosHeaders => {
+  if (!requestHeaders) {
+    return new AxiosHeaders();
+  }
+
+  if (requestHeaders instanceof AxiosHeaders) {
+    return AxiosHeaders.from(requestHeaders);
+  }
+
+  const headers = new AxiosHeaders();
+
+  for (const [key, value] of Object.entries(requestHeaders)) {
+    if (value === undefined) {
+      continue;
+    }
+
+    if (METHOD_HEADER_KEYS.has(key)) {
+      if (value instanceof AxiosHeaders) {
+        headers.set(value);
+      }
+      continue;
+    }
+
+    headers.set(key, value);
+  }
+
+  return headers;
+};
+
 const axiosBaseQuery = <
   Args extends AxiosRequestConfig | string = AxiosRequestConfig,
-  Result = unknown,
-  DefinitionExtraOptions extends ServiceExtraOptions = Record<string, unknown>,
+  Response = BaseResponse,
+  Result = Response,
+  DefinitionExtraOptions extends ServiceExtraOptions = ServiceExtraOptions,
   Meta = Record<string, unknown>,
 >({
   prepareHeaders,
   meta,
   transformResponse,
-}: AxiosBaseQueryArgs<Meta> = {}): BaseQueryFn<
+}: AxiosBaseQueryArgs<
+  Meta,
+  Response,
+  Result,
+  DefinitionExtraOptions
+> = {}): BaseQueryFn<
   Args,
   Result,
-  unknown,
+  AxiosBaseQueryError,
   DefinitionExtraOptions,
   Meta
 > => {
   return async (args, api, extraOptions) => {
+    const resolvedExtraOptions = (extraOptions ?? {}) as DefinitionExtraOptions;
+    const { authRequired: _authRequired, ...axiosOverrides } =
+      resolvedExtraOptions as DefinitionExtraOptions & AxiosRequestConfig;
+
     try {
       const requestConfig = getRequestConfig(args);
+      const headers = normalizeRequestHeaders(requestConfig.headers);
+      const preparedHeaders =
+        prepareHeaders?.(headers, api, resolvedExtraOptions) ?? headers;
+
       const result = await axios({
         ...requestConfig,
-        headers:
-          prepareHeaders?.(
-            (requestConfig.headers || {}) as AxiosHeaders,
-            api,
-          ) || requestConfig.headers,
+        ...(axiosOverrides as AxiosRequestConfig),
+        headers: preparedHeaders,
         signal: api.signal,
-        ...extraOptions,
       });
 
       return {
-        data: transformResponse ? transformResponse(result.data) : result.data,
+        data: transformResponse
+          ? transformResponse(result.data as Response, api)
+          : (result.data as Result),
+        meta,
       };
-    } catch (err) {
-      if (!Axios.isAxiosError(err)) {
-        return {
-          error: err,
-          meta,
-        };
-      }
-
+    } catch (error) {
       return {
-        error: {
-          status: err.response?.status,
-          data: err.response?.data ||
-            err.message || { error: "Что-то пошло не так" },
-        },
+        error: getErrorPayload(error),
         meta,
       };
     }

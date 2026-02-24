@@ -43,7 +43,7 @@ export default function AuthHeader({
   return (
     <>
       <View className="flex-row items-center justify-between">
-        {showBack ? (
+        {showBack && shouldShowBack ? (
           <IconButton
             icon={
               <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />

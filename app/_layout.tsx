@@ -28,7 +28,7 @@ import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isOnboardingComplete, isLoading } = useAuth();
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -57,8 +57,14 @@ function InitialLayout() {
           <KeyboardProvider>
             <AutocompleteDropdownContextProvider>
               <Stack>
-                <Stack.Protected guard={isAuthenticated}>
+                <Stack.Protected
+                  guard={isAuthenticated && isOnboardingComplete}
+                >
                   <Stack.Screen name="(app)" options={{ headerShown: false }} />
+                </Stack.Protected>
+                <Stack.Protected
+                  guard={isAuthenticated && !isOnboardingComplete}
+                >
                   <Stack.Screen
                     name="(onboarding)"
                     options={{ headerShown: false }}

@@ -35,7 +35,7 @@ export type ServiceFormValues = {
   duration: string;
   categoryId: number | null;
   description: string;
-  online: boolean;
+  isAvailableOnline: boolean;
   additionalServices: AdditionalServiceForm[];
 };
 
@@ -54,18 +54,28 @@ export const defaultAdditionalServices: AdditionalServiceForm[] = [
   },
 ];
 
-const defaultPhotos: ServicePhotosValue = {
+export const defaultServicePhotos: ServicePhotosValue = {
   titlePhoto: { assets: [], max: 1 },
   otherPhoto: { assets: [], max: 4 },
 };
 
 type ServiceFormBodyProps = {
+  onSubmit: () => void;
   topInset: number;
   bottomInset: number;
+  photos?: ServicePhotosValue;
+  onPhotosChange?: (next: ServicePhotosValue) => void;
 };
 
-const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
-  const [photos, setPhotos] = useState<ServicePhotosValue>(defaultPhotos);
+const ServiceFormBody = ({
+  onSubmit,
+  topInset,
+  bottomInset,
+  photos,
+  onPhotosChange,
+}: ServiceFormBodyProps) => {
+  const [internalPhotos, setInternalPhotos] =
+    useState<ServicePhotosValue>(defaultServicePhotos);
   const [isAdditionalServiceModalVisible, setAdditionalServiceModalVisible] =
     useState(false);
   const [additionalServiceTitle, setAdditionalServiceTitle] = useState("");
@@ -81,6 +91,8 @@ const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
     control,
     name: "additionalServices",
   });
+  const resolvedPhotos = photos ?? internalPhotos;
+  const handlePhotosChange = onPhotosChange ?? setInternalPhotos;
 
   const handleAddAdditionalService = () => {
     const normalizedTitle = additionalServiceTitle.trim();
@@ -118,7 +130,7 @@ const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
     >
       <ServiceCategorySelect />
 
-      <View className="mt-5 gap-2">
+      <View className="mt-5 gap-1">
         <RhfTextField
           name="name"
           label="Название услуги"
@@ -153,7 +165,7 @@ const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
 
       <Item
         title="Доступно для онлайн-записи"
-        right={<RHFSwitch name="online" />}
+        right={<RHFSwitch name="isAvailableOnline" />}
       />
 
       <Typography className="text-caption text-neutral-500 mt-5 mb-2">
@@ -205,7 +217,19 @@ const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
         }
       />
 
-      <ServiceImagesPicker value={photos} onChange={setPhotos} />
+      <Button
+        title="Сохранить услугу"
+        buttonClassName="my-4"
+        onPress={onSubmit}
+        rightIcon={
+          <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+        }
+      />
+
+      <ServiceImagesPicker
+        value={resolvedPhotos}
+        onChange={handlePhotosChange}
+      />
 
       <StModal
         visible={isAdditionalServiceModalVisible}
@@ -259,6 +283,7 @@ const ServiceFormBody = ({ topInset, bottomInset }: ServiceFormBodyProps) => {
 
 const styles = StyleSheet.create({
   textarea: {
+    paddingTop: 10,
     minHeight: 110,
   },
 });

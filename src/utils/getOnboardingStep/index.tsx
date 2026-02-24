@@ -1,7 +1,8 @@
-import { API } from "@/src/store/redux/services/api-types";
+import type { User } from "@/src/store/redux/services/api-types";
 import { Routers } from "@/src/constants/routers";
 
-const getRedirectPath = (user: API.User) => {
+const getRedirectPath = (user: User) => {
+  console.log(user, "11");
   if (!user.email) return Routers.onboarding.register;
   if (!user.profession) return Routers.onboarding.personalInformation;
 
