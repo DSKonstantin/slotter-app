@@ -22,6 +22,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toast } from "@backpackapp-io/react-native-toast";
 import map from "lodash/map";
+import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 
 type EditableCategory = {
   id: number;
@@ -33,14 +35,9 @@ type EditableCategory = {
 type Props = {
   visible: boolean;
   userId: number;
-  category: EditableCategory | null;
+  category: EditableCategory;
   onClose: () => void;
   onUpdated: () => void;
-};
-
-type FormValues = {
-  name: string;
-  color?: string;
 };
 
 const schema = Yup.object().shape({
@@ -65,7 +62,7 @@ const EditCategoryModal = ({
     paddingRight: 20 + right,
   };
 
-  const methods = useForm<FormValues>({
+  const methods = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       name: category?.name ?? "",
@@ -109,6 +106,12 @@ const EditCategoryModal = ({
     }
   });
 
+  const handleCreateServicePress = () => {
+    if (!category?.id) return;
+    onClose();
+    router.push(Routers.app.menu.services.create(category.id));
+  };
+
   useEffect(() => {
     methods.reset({
       name: category?.name ?? "",
@@ -147,6 +150,7 @@ const EditCategoryModal = ({
               </Typography>
               <IconButton
                 size="xs"
+                onPress={handleCreateServicePress}
                 icon={
                   <StSvg
                     name="Add_round"

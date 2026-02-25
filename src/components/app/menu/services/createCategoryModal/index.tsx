@@ -12,9 +12,6 @@ import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
 import { toast } from "@backpackapp-io/react-native-toast";
 
-// ========================
-// TYPES
-// ========================
 type Props = {
   visible: boolean;
   userId: number;
@@ -26,33 +23,22 @@ type Props = {
   }) => void;
 };
 
-type FormValues = {
-  name: string;
-  color?: string;
-};
-
-// ========================
-// VALIDATION SCHEMA
-// ========================
 const schema = Yup.object().shape({
   name: Yup.string().required("Введите название категории"),
-  color: Yup.string().optional(),
+  color: Yup.string().nullable().optional(),
 });
 
-// ========================
-// COMPONENT
-// ========================
 const CreateCategoryModal = ({
   visible,
   userId,
   onClose,
   onCreated,
 }: Props) => {
-  const methods = useForm<FormValues>({
+  const methods = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       name: "",
-      color: undefined,
+      color: null,
     },
   });
 

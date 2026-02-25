@@ -16,7 +16,7 @@ export interface ServiceCategory {
 
 export type CreateServiceCategoryPayload = {
   name: string;
-  color: string;
+  color?: string | null;
 };
 
 export type UpdateServiceCategoryPayload = Partial<{

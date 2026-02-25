@@ -1,4 +1,3 @@
-import * as Yup from "yup";
 import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -7,16 +6,12 @@ import { useRouter } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import ServiceFormBody, {
   defaultAdditionalServices,
-  ServiceFormValues,
+  defaultServicePhotos,
 } from "@/src/components/app/menu/services/service/serviceForm";
 import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
-
-const schema = Yup.object({
-  name: Yup.string().required("Введите название"),
-  price: Yup.string().required("Введите цену"),
-  duration: Yup.string().required("Введите длительность"),
-  categoryId: Yup.number().required("Выберите категорию"),
-});
+import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 
 type AppCreateServiceProps = {
   categoryId?: string;
@@ -25,50 +20,47 @@ type AppCreateServiceProps = {
 const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
   const { bottom } = useSafeAreaInsets();
   const router = useRouter();
-  const [createService] = useCreateServiceMutation();
+  const [createService, { isLoading }] = useCreateServiceMutation();
   const parsedCategoryIdFromParams = Number(categoryId);
 
-  const methods = useForm<ServiceFormValues>({
-    resolver: yupResolver(schema),
+  const methods = useForm({
+    resolver: yupResolver(serviceFormSchema),
     defaultValues: {
       name: "",
       price: "",
       duration: "",
-      categoryId: Number.isNaN(parsedCategoryIdFromParams)
-        ? null
-        : parsedCategoryIdFromParams,
+      categoryId: parsedCategoryIdFromParams,
       description: "",
       isAvailableOnline: false,
+      isActive: true,
       additionalServices: defaultAdditionalServices,
+      photos: defaultServicePhotos,
     },
   });
 
   const onSubmit = methods.handleSubmit(async (values) => {
-    const parsedCategoryId = Number(values.categoryId);
-    const parsedPrice = Number(values.price);
-    const parsedDuration = Number(values.duration);
-
-    if (
-      Number.isNaN(parsedCategoryId) ||
-      Number.isNaN(parsedPrice) ||
-      Number.isNaN(parsedDuration)
-    ) {
-      return;
-    }
-
     try {
+      const formData = new FormData();
+
+      formData.append("service[name]", values.name.trim());
+      formData.append("service[price]", values.price);
+      formData.append("service[duration]", values.duration);
+      formData.append("service[description]", values.description.trim());
+      formData.append(
+        "service[is_available_online]",
+        String(values.isAvailableOnline),
+      );
+      formData.append("service[is_active]", String(values.isActive));
+      appendPhotosToFormData(formData, values.photos);
+
       await createService({
-        categoryId: parsedCategoryId,
-        data: {
-          name: values.name,
-          price: parsedPrice,
-          duration: parsedDuration,
-          description: values.description.trim(),
-          is_available_online: values.isAvailableOnline,
-        },
+        categoryId: Number(values.categoryId),
+        data: formData,
       }).unwrap();
+
       router.back();
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error?.data?.error || "Не удалось создать услугу");
       console.log("CREATE SERVICE ERROR:", error);
     }
   });
@@ -80,6 +72,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
           <ServiceFormBody
             topInset={topInset}
             bottomInset={bottom}
+            loading={isLoading}
             onSubmit={onSubmit}
           />
         )}

@@ -26,6 +26,8 @@ import { RootState } from "@/src/store/redux/store";
 import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
 import EditCategoryModal from "@/src/components/app/menu/services/editCategoryModal";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SelectedCategory = {
   id: number;
@@ -34,18 +36,18 @@ type SelectedCategory = {
 };
 
 const AppServicesCategories = () => {
+  const { bottom } = useSafeAreaInsets();
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<SelectedCategory | null>(null);
-  const [localCategories, setLocalCategories] = useState<ServiceCategory[]>([]);
-  const [updatingCategoryIds, setUpdatingCategoryIds] = useState<number[]>([]);
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [updateServiceCategory] = useUpdateServiceCategoryMutation();
 
   const user = useSelector((state: RootState) => state.auth.user);
 
   const userId = user?.id;
-  const { data, isLoading, refetch } = useGetServiceCategoriesQuery(
+  const { data, isLoading } = useGetServiceCategoriesQuery(
     { userId: userId!, params: { view: "with_services" } },
     {
       skip: !userId,
@@ -59,76 +61,63 @@ const AppServicesCategories = () => {
   ) => {
     if (!userId) return;
 
-    setLocalCategories((prev) =>
-      prev.map((category) =>
-        category.id === categoryId
-          ? { ...category, is_active: nextValue }
-          : category,
-      ),
-    );
-
-    setUpdatingCategoryIds((prev) => [...prev, categoryId]);
-
-    void updateServiceCategory({
+    updateServiceCategory({
       userId,
       id: categoryId,
       data: { is_active: nextValue },
-    })
-      .unwrap()
-      .catch(() => {
-        setLocalCategories((prev) =>
-          prev.map((category) =>
-            category.id === categoryId
-              ? { ...category, is_active: currentValue }
-              : category,
-          ),
-        );
-      })
-      .finally(() => {
-        setUpdatingCategoryIds((prev) =>
-          prev.filter((id) => id !== categoryId),
-        );
-      });
+    }).unwrap();
   };
 
-  const handleDragEnd = ({ data: nextData }: { data: ServiceCategory[] }) => {
-    const changedCategories = nextData
-      .map((item, index) => ({
-        ...item,
-        position: index,
-        hasPositionChanged: item.position !== index,
-      }))
-      .filter((item) => item.hasPositionChanged);
-
-    const nextDataWithPosition = nextData.map((item, index) => ({
-      ...item,
-      position: index,
-    }));
-
-    setLocalCategories(nextDataWithPosition);
-
+  const updateCategoriesOrder = async (
+    movedItem: ServiceCategory,
+    newPosition: number,
+  ) => {
     if (!userId) return;
-    if (!changedCategories.length) return;
 
-    void Promise.allSettled(
-      changedCategories.map((category) =>
-        updateServiceCategory({
-          userId,
-          id: category.id,
-          data: { position: category.position },
-        }).unwrap(),
-      ),
-    ).then(() => {
-      // refetch();
-    });
+    await updateServiceCategory({
+      userId,
+      id: movedItem.id,
+      data: {
+        position: newPosition,
+      },
+    }).unwrap();
+  };
+
+  const handleDragEnd = async ({
+    data: nextData,
+    from,
+    to,
+  }: {
+    data: ServiceCategory[];
+    from: number;
+    to: number;
+  }) => {
+    if (from === to) return;
+    setCategories(nextData);
+    const prevData = categories;
+
+    const movedItem = nextData[to];
+
+    try {
+      await updateCategoriesOrder(movedItem, to);
+    } catch (e) {
+      // rollback
+      setCategories(prevData);
+    }
+
+    // если нужно отправить порядок на сервер:
+    // updateCategoriesOrder(nextData)
   };
 
   useEffect(() => {
-    const categories = data?.service_categories ?? [];
-    setLocalCategories(
-      [...categories].sort((first, second) => first.position - second.position),
-    );
-  }, [data?.service_categories]);
+    if (data?.service_categories) {
+      const sorted = [...data.service_categories].sort(
+        (a, b) => a.position - b.position,
+      );
+
+      setCategories(sorted);
+    }
+  }, [data]);
 
   if (isLoading && !data) {
     return (
@@ -150,12 +139,15 @@ const AppServicesCategories = () => {
         }
       >
         {({ topInset }) => (
-          <View className="flex-1 px-screen">
+          <View className="flex-1">
             <DraggableFlatList
-              data={localCategories}
-              containerStyle={{
+              data={categories}
+              contentContainerStyle={{
                 paddingTop: topInset,
-                flex: 1,
+                paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
+                paddingHorizontal: 20,
+                flexGrow: 1,
+                gap: 8,
               }}
               ListHeaderComponent={
                 <Typography className="text-caption text-neutral-500 mb-2">
@@ -163,7 +155,6 @@ const AppServicesCategories = () => {
                 </Typography>
               }
               keyExtractor={(item) => String(item.id)}
-              contentContainerStyle={{ gap: 8 }}
               activationDistance={10}
               autoscrollThreshold={48}
               autoscrollSpeed={220}
@@ -203,7 +194,7 @@ const AppServicesCategories = () => {
                   right={
                     <Switch
                       value={item.is_active}
-                      disabled={updatingCategoryIds.includes(item.id)}
+                      // disabled={updatingCategoryIds.includes(item.id)}
                       onChange={(nextValue) =>
                         handleToggleCategoryActive(
                           item.id,

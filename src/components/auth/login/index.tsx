@@ -12,7 +12,6 @@ import { passwordField } from "@/src/validation/fields/password";
 import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { useAppDispatch } from "@/src/store/redux/store";
-import { setJwtTokenThunk } from "@/src/store/redux/services/api";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -51,14 +50,12 @@ const Login = () => {
           type: UserType.USER,
         }).unwrap();
 
-        await dispatch(setJwtTokenThunk(result.token)).unwrap();
-
         router.replace(Routers.app.root);
       } catch (error: any) {
         toast.error(error?.data?.error);
       }
     },
-    [dispatch, login],
+    [login],
   );
 
   return (

@@ -36,25 +36,27 @@ export const Routers = {
         root: "/(app)/(menu)/services",
         create: (categoryId?: string | number) =>
           categoryId !== undefined
-            ? {
+            ? ({
                 pathname: "/(app)/(menu)/services/create",
                 params: { categoryId: String(categoryId) },
-              }
+              } as const)
             : "/(app)/(menu)/services/create",
-        categories: "/(app)/(menu)/services/categories",
-        edit: (serviceId: string | number, categoryId?: string | number) => ({
-          pathname: "/(app)/(menu)/services/[serviceId]",
-          params: {
-            serviceId: String(serviceId),
-            ...(categoryId !== undefined
-              ? { categoryId: String(categoryId) }
-              : {}),
-          },
-        }),
-        categoryEdit: (categoryId: string | number) => ({
-          pathname: "/(app)/(menu)/services/categories/[categoryId]",
-          params: { categoryId: String(categoryId) },
-        }),
+        categories: "/(app)/(menu)/services/categories" as const,
+        edit: (serviceId: string | number, categoryId?: string | number) =>
+          ({
+            pathname: "/(app)/(menu)/services/[serviceId]",
+            params: {
+              serviceId: String(serviceId),
+              ...(categoryId !== undefined
+                ? { categoryId: String(categoryId) }
+                : {}),
+            },
+          }) as const,
+        categoryEdit: (categoryId: string | number) =>
+          ({
+            pathname: "/(app)/(menu)/services/categories/[categoryId]",
+            params: { categoryId: String(categoryId) },
+          }) as const,
       },
       account: "/(app)/(menu)/account",
     },

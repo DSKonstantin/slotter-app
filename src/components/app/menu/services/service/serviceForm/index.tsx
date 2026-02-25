@@ -1,17 +1,8 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, TextInput, View } from "react-native";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import React from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useController, useFormContext } from "react-hook-form";
 
-import {
-  Button,
-  Card,
-  Divider,
-  IconButton,
-  Item,
-  StModal,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Button, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import {
@@ -21,22 +12,13 @@ import {
 import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import ServiceCategorySelect from "@/src/components/app/menu/services/service/serviceForm/serviceCategorySelect";
+import CreateAdditionalService from "@/src/components/app/menu/services/service/createAdditionalService";
 
 export type AdditionalServiceForm = {
   id: string;
   title: string;
   duration: number;
   price: number;
-};
-
-export type ServiceFormValues = {
-  name: string;
-  price: string;
-  duration: string;
-  categoryId: number | null;
-  description: string;
-  isAvailableOnline: boolean;
-  additionalServices: AdditionalServiceForm[];
 };
 
 export const defaultAdditionalServices: AdditionalServiceForm[] = [
@@ -61,64 +43,36 @@ export const defaultServicePhotos: ServicePhotosValue = {
 
 type ServiceFormBodyProps = {
   onSubmit: () => void;
+  onDelete?: () => void;
+  loading: boolean;
   topInset: number;
   bottomInset: number;
-  photos?: ServicePhotosValue;
-  onPhotosChange?: (next: ServicePhotosValue) => void;
+  isEdit?: boolean;
 };
 
 const ServiceFormBody = ({
+  isEdit,
   onSubmit,
+  onDelete,
+  loading,
   topInset,
   bottomInset,
-  photos,
-  onPhotosChange,
 }: ServiceFormBodyProps) => {
-  const [internalPhotos, setInternalPhotos] =
-    useState<ServicePhotosValue>(defaultServicePhotos);
-  const [isAdditionalServiceModalVisible, setAdditionalServiceModalVisible] =
-    useState(false);
-  const [additionalServiceTitle, setAdditionalServiceTitle] = useState("");
-  const [additionalServiceDuration, setAdditionalServiceDuration] =
-    useState("");
-  const [additionalServicePrice, setAdditionalServicePrice] = useState("");
-  const { control } = useFormContext<ServiceFormValues>();
+  const { control } = useFormContext();
+
   const {
-    fields: additionalServices,
-    remove,
-    append,
-  } = useFieldArray({
+    field: { value: photos, onChange: setPhotos },
+  } = useController({
+    name: "photos",
     control,
-    name: "additionalServices",
   });
-  const resolvedPhotos = photos ?? internalPhotos;
-  const handlePhotosChange = onPhotosChange ?? setInternalPhotos;
 
-  const handleAddAdditionalService = () => {
-    const normalizedTitle = additionalServiceTitle.trim();
-    const parsedDuration = Number(additionalServiceDuration);
-    const parsedPrice = Number(additionalServicePrice);
-
-    if (
-      !normalizedTitle ||
-      Number.isNaN(parsedDuration) ||
-      Number.isNaN(parsedPrice)
-    ) {
-      return;
-    }
-
-    append({
-      id: String(Date.now()),
-      title: normalizedTitle,
-      duration: parsedDuration,
-      price: parsedPrice,
-    });
-
-    setAdditionalServiceTitle("");
-    setAdditionalServiceDuration("");
-    setAdditionalServicePrice("");
-    setAdditionalServiceModalVisible(false);
-  };
+  const {
+    field: { value: isActive, onChange: setIsActive },
+  } = useController({
+    name: "isActive",
+    control,
+  });
 
   return (
     <ScrollView
@@ -172,111 +126,48 @@ const ServiceFormBody = ({
         Дополнительные услуги
       </Typography>
 
-      <ScrollView
-        className="mb-2"
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        <View className="flex-row gap-2 py-1">
-          {additionalServices.map((service, index) => (
-            <View key={service.id} className="relative">
-              <Card
-                title={service.title}
-                subtitle={`${service.duration} мин | ${service.price} ₽`}
-                right={
-                  <StSvg
-                    name="Edit_light"
-                    size={24}
-                    color={colors.neutral[500]}
-                  />
-                }
-              />
+      <CreateAdditionalService />
 
-              <IconButton
-                onPress={() => remove(index)}
-                size="xs"
-                buttonClassName="absolute -top-2 -right-2 bg-background rounded-full"
-                icon={
-                  <StSvg
-                    name="Close_round_fill_light"
-                    size={18}
-                    color={colors.neutral[900]}
-                  />
-                }
-              />
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-      <Button
-        title="Создать доп. услугу"
-        variant="clear"
-        onPress={() => setAdditionalServiceModalVisible(true)}
-        rightIcon={
-          <StSvg name="Add_round_fill" size={24} color={colors.neutral[900]} />
-        }
-      />
+      <ServiceImagesPicker value={photos} onChange={setPhotos} />
 
       <Button
         title="Сохранить услугу"
-        buttonClassName="my-4"
+        buttonClassName="mt-4"
+        disabled={loading}
+        loading={loading}
         onPress={onSubmit}
         rightIcon={
           <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
         }
       />
-
-      <ServiceImagesPicker
-        value={resolvedPhotos}
-        onChange={handlePhotosChange}
+      <Button
+        title={isActive ? "Скрыть услугу" : "Показать услугу"}
+        variant="clear"
+        buttonClassName="mt-4"
+        disabled={loading}
+        onPress={() => setIsActive(!isActive)}
+        rightIcon={
+          <StSvg
+            name={isActive ? "View_hide_fill" : "View_fill"}
+            size={24}
+            color={colors.neutral[900]}
+          />
+        }
       />
 
-      <StModal
-        visible={isAdditionalServiceModalVisible}
-        onClose={() => setAdditionalServiceModalVisible(false)}
-      >
-        <Typography weight="semibold" className="text-display text-center">
-          Новая доп. услуга
-        </Typography>
-
-        <View className="my-6 gap-3">
-          <TextInput
-            value={additionalServiceTitle}
-            onChangeText={setAdditionalServiceTitle}
-            placeholder="Название"
-            className="h-12 rounded-base border border-neutral-200 px-4 bg-background"
-          />
-          <TextInput
-            value={additionalServiceDuration}
-            onChangeText={setAdditionalServiceDuration}
-            placeholder="Длительность (мин)"
-            keyboardType="numeric"
-            className="h-12 rounded-base border border-neutral-200 px-4 bg-background"
-          />
-          <TextInput
-            value={additionalServicePrice}
-            onChangeText={setAdditionalServicePrice}
-            placeholder="Цена"
-            keyboardType="numeric"
-            className="h-12 rounded-base border border-neutral-200 px-4 bg-background"
-          />
-        </View>
-
-        <View className="flex-row gap-2">
-          <Button
-            title="Отмена"
-            variant="secondary"
-            textVariant="accent"
-            buttonClassName="flex-1"
-            onPress={() => setAdditionalServiceModalVisible(false)}
-          />
-          <Button
-            title="Создать"
-            buttonClassName="flex-1"
-            onPress={handleAddAdditionalService}
-          />
-        </View>
-      </StModal>
+      {isEdit && (
+        <Button
+          title="Удалить"
+          variant="clear"
+          buttonClassName="mt-16"
+          textClassName="text-accent-red-500"
+          disabled={loading}
+          onPress={onDelete ? onDelete : () => {}}
+          rightIcon={
+            <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
+          }
+        />
+      )}
     </ScrollView>
   );
 };

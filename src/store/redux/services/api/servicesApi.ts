@@ -112,16 +112,18 @@ const servicesApi = api.injectEndpoints({
       Service,
       {
         categoryId: number;
-        data: CreateServicePayload;
+        data: CreateServicePayload | FormData;
       }
     >({
-      query: ({ categoryId, data }) => ({
-        url: `/service_categories/${categoryId}/services`,
-        method: "POST",
-        data: {
-          service: data,
-        },
-      }),
+      query: ({ categoryId, data }) => {
+        const payload = data instanceof FormData ? data : { service: data };
+
+        return {
+          url: `/service_categories/${categoryId}/services`,
+          method: "POST",
+          data: payload,
+        };
+      },
       invalidatesTags: (_result, _error, arg) => [
         { type: "Services", id: `LIST-${arg.categoryId}` },
         { type: "ServiceCategories", id: "LIST" },
@@ -198,6 +200,7 @@ const servicesApi = api.injectEndpoints({
 export const {
   // categories
   useGetServiceCategoriesQuery,
+  useLazyGetServiceCategoriesQuery,
   useCreateServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
   useDeleteServiceCategoryMutation,

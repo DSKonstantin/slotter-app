@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       isAuthenticated: !!user,
-      isOnboardingComplete: Boolean(user?.email && user?.profession && false),
+      isOnboardingComplete: Boolean(user?.email && user?.profession),
       isLoading: isInitialLoading,
       login,
       logout,

@@ -21,3 +21,14 @@ export type {
   CreateAdditionalServicePayload,
   UpdateAdditionalServicePayload,
 } from "./service";
+export type {
+  WorkingDay,
+  WorkingDayBreak,
+  WorkingDayBreaksAttributesPayload,
+  CreateWorkingDayPayload,
+  UpdateWorkingDayPayload,
+  CreateWorkingDayBreakPayload,
+  UpdateWorkingDayBreakPayload,
+  WorkingDaysResponse,
+  WorkingDayBreaksResponse,
+} from "./workingDay";

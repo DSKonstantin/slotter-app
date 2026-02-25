@@ -39,8 +39,6 @@ const Service = () => {
   const [createCategory, { isLoading: creatingCategory }] =
     useCreateServiceCategoryMutation();
 
-  console.log(categories, "categories");
-
   const [photos, setPhotos] = useState<ServicePhotosValue>({
     titlePhoto: { assets: [], max: 1 },
     otherPhoto: { assets: [], max: 4 },
