@@ -16,6 +16,7 @@ export interface ServiceCategory {
 
 export type CreateServiceCategoryPayload = {
   name: string;
+  is_active: boolean;
   color?: string | null;
 };
 
@@ -25,6 +26,11 @@ export type UpdateServiceCategoryPayload = Partial<{
   position: number;
   is_active: boolean;
 }>;
+
+export type ServiceCategoryPositionPayload = {
+  id: number;
+  position: number;
+};
 
 // =========================
 // SERVICE
@@ -43,6 +49,10 @@ export interface Service {
 
   // These fields are kept as optional as they might appear in other views
   main_photo_url?: string | null;
+  additional_photo_first_url?: string | null;
+  additional_photo_second_url?: string | null;
+  additional_photo_third_url?: string | null;
+  additional_photo_fourth_url?: string | null;
   additional_photos_urls?: string[];
   created_at?: string;
   additional_services?: AdditionalService[];

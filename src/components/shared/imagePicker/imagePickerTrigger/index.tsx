@@ -5,6 +5,8 @@ import type { DocumentPickerAsset } from "expo-document-picker";
 import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 
+type PickedAssets = ImagePickerAsset[] | DocumentPickerAsset[];
+
 type ImagePickerTriggerProps = {
   children: React.ReactNode;
 
@@ -16,7 +18,7 @@ type ImagePickerTriggerProps = {
 
   disabled?: boolean;
 
-  onPick: (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => void;
+  onPick: (assets: PickedAssets) => void;
 };
 
 const ImagePickerTrigger = ({
@@ -38,6 +40,37 @@ const ImagePickerTrigger = ({
     setVisible(true);
   }, [disabled]);
 
+  const handlePick = useCallback(
+    async (
+      pick: (
+        opts?: ImagePickerOptions,
+      ) => Promise<ImagePickerAsset[] | DocumentPickerAsset[] | null>,
+    ) => {
+      try {
+        const assets = await pick(options);
+        if (assets?.length) {
+          onPick(assets);
+        }
+      } finally {
+        close();
+      }
+    },
+    [close, onPick, options],
+  );
+
+  const handleCamera = useCallback(
+    () => handlePick(pickFromCamera),
+    [handlePick, pickFromCamera],
+  );
+  const handleGallery = useCallback(
+    () => handlePick(pickFromGallery),
+    [handlePick, pickFromGallery],
+  );
+  const handleFiles = useCallback(
+    () => handlePick(pickFromFiles),
+    [handlePick, pickFromFiles],
+  );
+
   return (
     <>
       <Pressable disabled={disabled} onPress={open}>
@@ -50,21 +83,9 @@ const ImagePickerTrigger = ({
         message={message}
         showFiles={includeFiles}
         onClose={close}
-        onCamera={async () => {
-          const assets = await pickFromCamera(options);
-          if (assets) onPick(assets);
-          close();
-        }}
-        onGallery={async () => {
-          const assets = await pickFromGallery(options);
-          if (assets) onPick(assets);
-          close();
-        }}
-        onFiles={async () => {
-          const assets = await pickFromFiles(options);
-          if (assets) onPick(assets);
-          close();
-        }}
+        onCamera={handleCamera}
+        onGallery={handleGallery}
+        onFiles={handleFiles}
       />
     </>
   );

@@ -1,7 +1,6 @@
 import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import ServiceFormBody, {
@@ -18,7 +17,6 @@ type AppCreateServiceProps = {
 };
 
 const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
-  const { bottom } = useSafeAreaInsets();
   const router = useRouter();
   const [createService, { isLoading }] = useCreateServiceMutation();
   const parsedCategoryIdFromParams = Number(categoryId);
@@ -68,10 +66,9 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Создать услугу">
-        {({ topInset }) => (
+        {(insets) => (
           <ServiceFormBody
-            topInset={topInset}
-            bottomInset={bottom}
+            insets={insets}
             loading={isLoading}
             onSubmit={onSubmit}
           />

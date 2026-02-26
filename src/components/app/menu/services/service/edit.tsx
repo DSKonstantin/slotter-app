@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, Alert, View } from "react-native";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -14,8 +13,8 @@ import {
   useGetServiceQuery,
   useUpdateServiceMutation,
 } from "@/src/store/redux/services/api/servicesApi";
+import { createEmptyPhotoSlot } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
-import map from "lodash/map";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 
@@ -26,7 +25,6 @@ type EditServiceProps = {
 
 const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
   const router = useRouter();
-  const { bottom } = useSafeAreaInsets();
   const [updateService, { isLoading }] = useUpdateServiceMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
 
@@ -74,6 +72,8 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       formData.append("service[is_active]", String(values.isActive));
       appendPhotosToFormData(formData, values.photos);
 
+      console.log(formData, "values.photos");
+
       await updateService({
         categoryId: categoryId,
         id: serviceId,
@@ -113,6 +113,15 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
 
   useEffect(() => {
     if (!service) return;
+
+    const legacyAdditionalUrls = service.additional_photos_urls ?? [];
+    const additionalPhotoUrls = [
+      service.additional_photo_first_url ?? legacyAdditionalUrls[0] ?? null,
+      service.additional_photo_second_url ?? legacyAdditionalUrls[1] ?? null,
+      service.additional_photo_third_url ?? legacyAdditionalUrls[2] ?? null,
+      service.additional_photo_fourth_url ?? legacyAdditionalUrls[3] ?? null,
+    ] as const;
+
     methods.reset({
       name: service.name ?? "",
       price: Math.trunc(service.price_cents / 100).toString(),
@@ -130,33 +139,13 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
         }),
       ),
       photos: {
-        titlePhoto: {
-          assets: service.main_photo_url
-            ? [
-                {
-                  id: `main-${service.id}`,
-                  uri: service.main_photo_url,
-                  name: "main.jpg",
-                  mimeType: "image/jpeg",
-                  lastModified: Date.now(),
-                },
-              ]
-            : [],
-          max: 1,
-        },
-        otherPhoto: {
-          assets: map(
-            service.additional_photo_urls,
-            (uri: string, index: number) => ({
-              id: `additional-${service.id}-${index}`,
-              uri,
-              name: `additional-${index}.jpg`,
-              mimeType: "image/jpeg",
-              lastModified: Date.now(),
-            }),
-          ),
-          max: 4,
-        },
+        mainPhoto: createEmptyPhotoSlot(service.main_photo_url ?? null),
+        additionalPhotos: [
+          createEmptyPhotoSlot(additionalPhotoUrls[0]),
+          createEmptyPhotoSlot(additionalPhotoUrls[1]),
+          createEmptyPhotoSlot(additionalPhotoUrls[2]),
+          createEmptyPhotoSlot(additionalPhotoUrls[3]),
+        ],
       },
     });
   }, [categoryId, methods, service]);
@@ -198,11 +187,10 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Редактировать услугу">
-        {({ topInset }) => (
+        {(insets) => (
           <ServiceFormBody
-            topInset={topInset}
+            insets={insets}
             loading={isLoading || isDeleting}
-            bottomInset={bottom}
             onSubmit={onSubmit}
             onDelete={handleDelete}
             isEdit

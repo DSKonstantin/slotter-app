@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
-import { useSelector } from "react-redux";
 import DraggableFlatList, {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 import {
   Button,
@@ -17,17 +17,16 @@ import {
 import { colors } from "@/src/styles/colors";
 
 import {
-  useGetServiceCategoriesQuery,
+  useGetServiceCategoriesInfiniteQuery,
+  useReorderServiceCategoriesMutation,
   useUpdateServiceCategoryMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 
-import { RootState } from "@/src/store/redux/store";
 import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
 import EditCategoryModal from "@/src/components/app/menu/services/editCategoryModal";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 
 type SelectedCategory = {
   id: number;
@@ -36,50 +35,49 @@ type SelectedCategory = {
 };
 
 const AppServicesCategories = () => {
-  const { bottom } = useSafeAreaInsets();
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<SelectedCategory | null>(null);
-  const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [updateServiceCategory] = useUpdateServiceCategoryMutation();
+  const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
+  const auth = useRequiredAuth();
+  const userId = auth?.userId;
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetServiceCategoriesInfiniteQuery(
+      auth
+        ? { userId: auth.userId, params: { view: "with_services" } }
+        : skipToken,
+    );
+  const categories = useMemo(() => {
+    if (!data?.pages) return [];
 
-  const user = useSelector((state: RootState) => state.auth.user);
+    const unique = new Map<number, ServiceCategory>();
 
-  const userId = user?.id;
-  const { data, isLoading } = useGetServiceCategoriesQuery(
-    { userId: userId!, params: { view: "with_services" } },
-    {
-      skip: !userId,
-    },
-  );
+    data.pages.forEach((page) => {
+      page.service_categories.forEach((category) => {
+        unique.set(category.id, category);
+      });
+    });
+
+    return [...unique.values()].sort((a, b) => a.position - b.position);
+  }, [data?.pages]);
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleToggleCategoryActive = (
     categoryId: number,
-    currentValue: boolean,
     nextValue: boolean,
   ) => {
-    if (!userId) return;
+    if (userId == null) return;
 
     updateServiceCategory({
       userId,
       id: categoryId,
       data: { is_active: nextValue },
-    }).unwrap();
-  };
-
-  const updateCategoriesOrder = async (
-    movedItem: ServiceCategory,
-    newPosition: number,
-  ) => {
-    if (!userId) return;
-
-    await updateServiceCategory({
-      userId,
-      id: movedItem.id,
-      data: {
-        position: newPosition,
-      },
     }).unwrap();
   };
 
@@ -92,39 +90,29 @@ const AppServicesCategories = () => {
     from: number;
     to: number;
   }) => {
-    if (from === to) return;
-    setCategories(nextData);
-    const prevData = categories;
-
-    const movedItem = nextData[to];
+    if (from === to || userId == null) return;
 
     try {
-      await updateCategoriesOrder(movedItem, to);
-    } catch (e) {
-      // rollback
-      setCategories(prevData);
-    }
-
-    // если нужно отправить порядок на сервер:
-    // updateCategoriesOrder(nextData)
+      await reorderServiceCategories({
+        userId,
+        positions: nextData.map((category, index) => ({
+          id: category.id,
+          position: index,
+        })),
+      }).unwrap();
+    } catch {}
   };
 
-  useEffect(() => {
-    if (data?.service_categories) {
-      const sorted = [...data.service_categories].sort(
-        (a, b) => a.position - b.position,
-      );
-
-      setCategories(sorted);
-    }
-  }, [data]);
-
-  if (isLoading && !data) {
+  if (isLoading && categories.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator />
       </View>
     );
+  }
+
+  if (!auth) {
+    return null;
   }
 
   return (
@@ -138,15 +126,15 @@ const AppServicesCategories = () => {
           />
         }
       >
-        {({ topInset }) => (
+        {({ topInset, bottomInset }) => (
           <View className="flex-1">
             <DraggableFlatList
               data={categories}
               contentContainerStyle={{
                 paddingTop: topInset,
-                paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
+                paddingBottom: bottomInset + 16,
                 paddingHorizontal: 20,
-                flexGrow: 1,
+                // flexGrow: 1,
                 gap: 8,
               }}
               ListHeaderComponent={
@@ -196,11 +184,7 @@ const AppServicesCategories = () => {
                       value={item.is_active}
                       // disabled={updatingCategoryIds.includes(item.id)}
                       onChange={(nextValue) =>
-                        handleToggleCategoryActive(
-                          item.id,
-                          item.is_active,
-                          nextValue,
-                        )
+                        handleToggleCategoryActive(item.id, nextValue)
                       }
                     />
                   }
@@ -231,13 +215,13 @@ const AppServicesCategories = () => {
 
       <CreateCategoryModal
         visible={createModalVisible}
-        userId={userId!}
+        userId={userId}
         onClose={() => setCreateModalVisible(false)}
         onCreated={() => {}}
       />
       <EditCategoryModal
         visible={editModalVisible}
-        userId={userId!}
+        userId={userId}
         category={selectedCategory}
         onClose={() => {
           setEditModalVisible(false);

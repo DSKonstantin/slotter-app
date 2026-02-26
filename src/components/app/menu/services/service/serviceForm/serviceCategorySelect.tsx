@@ -1,40 +1,66 @@
-import React, { useMemo, useState } from "react";
-import { Pressable, View } from "react-native";
-import { useSelector } from "react-redux";
+import React, { useEffect, useMemo, useState } from "react";
+import { ScrollView } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { RootState } from "@/src/store/redux/store";
-import { useGetServiceCategoriesQuery } from "@/src/store/redux/services/api/servicesApi";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
 import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
-import type { ServiceFormValues } from "@/src/components/app/menu/services/service/serviceForm";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 
 const ServiceCategorySelect = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const userId = user?.id;
+  const auth = useRequiredAuth();
+  const userId = auth?.userId;
   const [createModalVisible, setCreateModalVisible] = useState(false);
-  const { control } = useFormContext<ServiceFormValues>();
+  const { control } = useFormContext();
   const {
     field: { value: selectedCategoryId, onChange: onCategoryChange },
+    fieldState: { error },
   } = useController({
     control,
     name: "categoryId",
   });
 
-  const { data, isLoading, isFetching, refetch } = useGetServiceCategoriesQuery(
-    { userId: userId!, params: { view: "with_services" } },
-    { skip: !userId },
+  const {
+    data,
+    isLoading,
+    isFetching,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetServiceCategoriesInfiniteQuery(
+    auth
+      ? { userId: auth.userId, params: { view: "with_services" } }
+      : skipToken,
   );
 
-  const categories = useMemo(
-    () =>
-      (data?.service_categories ?? []).map((category) => ({
-        id: Number(category.id),
-        name: category.name,
-      })),
-    [data],
-  );
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const categories = useMemo(() => {
+    const unique = new Map<
+      number,
+      { id: number; name: string; position: number }
+    >();
+
+    data?.pages.forEach((page) => {
+      page.service_categories.forEach((category) => {
+        unique.set(category.id, {
+          id: Number(category.id),
+          name: category.name,
+          position: category.position,
+        });
+      });
+    });
+
+    return [...unique.values()]
+      .sort((a, b) => a.position - b.position)
+      .map(({ id, name }) => ({ id, name }));
+  }, [data?.pages]);
 
   return (
     <>
@@ -47,25 +73,35 @@ const ServiceCategorySelect = () => {
           Загрузка категорий...
         </Typography>
       ) : (
-        <View className="flex-row flex-wrap gap-2 mb-2">
-          {categories.map((category) => {
-            const normalizedSelectedCategoryId =
-              selectedCategoryId === null ? null : Number(selectedCategoryId);
-            const isSelected = normalizedSelectedCategoryId === category.id;
+        <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-2"
+            contentContainerStyle={{ paddingRight: 8 }}
+          >
+            {categories.map((category) => {
+              const normalizedSelectedCategoryId =
+                selectedCategoryId === null ? null : Number(selectedCategoryId);
+              const isSelected = normalizedSelectedCategoryId === category.id;
 
-            return (
-              <Pressable
-                key={category.id}
-                onPress={() => onCategoryChange(category.id)}
-              >
+              return (
                 <Badge
+                  key={category.id}
                   title={category.name}
                   variant={isSelected ? "accent" : "secondary"}
+                  onPress={() => onCategoryChange(category.id)}
+                  className="mr-2"
                 />
-              </Pressable>
-            );
-          })}
-        </View>
+              );
+            })}
+          </ScrollView>
+          {error ? (
+            <Typography className="text-caption text-accent-red-500 mb-2">
+              {String(error.message || "Выберите категорию")}
+            </Typography>
+          ) : null}
+        </>
       )}
 
       <CreateCategoryModal
@@ -85,7 +121,7 @@ const ServiceCategorySelect = () => {
         title="Создать новую категорию"
         variant="clear"
         onPress={() => setCreateModalVisible(true)}
-        disabled={!userId}
+        disabled={userId == null}
         rightIcon={
           <StSvg
             name="Add_ring_fill_light"

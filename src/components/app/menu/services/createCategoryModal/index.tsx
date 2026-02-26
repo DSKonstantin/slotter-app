@@ -16,15 +16,12 @@ type Props = {
   visible: boolean;
   userId: number;
   onClose: () => void;
-  onCreated: (category: {
-    id: string;
-    name: string;
-    servicesCount: number;
-  }) => void;
+  onCreated: (category: { id: string; name: string }) => void;
 };
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Введите название категории"),
+  isActive: Yup.boolean().required(),
   color: Yup.string().nullable().optional(),
 });
 
@@ -50,6 +47,7 @@ const CreateCategoryModal = ({
         userId,
         data: {
           name: values.name,
+          is_active: true,
           color: values.color,
         },
       }).unwrap();
@@ -57,7 +55,6 @@ const CreateCategoryModal = ({
       onCreated({
         id: String(result.id),
         name: result.name,
-        servicesCount: 0,
       });
 
       methods.reset();

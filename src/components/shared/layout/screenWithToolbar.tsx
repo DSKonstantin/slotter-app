@@ -1,13 +1,15 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useMemo } from "react";
 import { StyleProp, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { TAB_BAR_HEIGHT, TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 
 type ScreenWithToolbarProps = {
   title: string;
   rightButton?: ReactNode;
-  children: ReactNode | ((ctx: { topInset: number }) => ReactNode);
+  children:
+    | ReactNode
+    | ((ctx: { topInset: number; bottomInset: number }) => ReactNode);
   className?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -19,14 +21,21 @@ const ScreenWithToolbar = ({
   className = "flex-1",
   style,
 }: ScreenWithToolbarProps) => {
-  const { top } = useSafeAreaInsets();
-  const topInset = TOOLBAR_HEIGHT + top;
+  const { top, bottom } = useSafeAreaInsets();
+
+  const insets = useMemo(
+    () => ({
+      topInset: TOOLBAR_HEIGHT + top,
+      bottomInset: TAB_BAR_HEIGHT + bottom,
+    }),
+    [top, bottom],
+  );
 
   return (
     <View className="relative flex-1">
       <ToolbarTop title={title} rightButton={rightButton} />
       <View className={className} style={style}>
-        {typeof children === "function" ? children({ topInset }) : children}
+        {typeof children === "function" ? children(insets) : children}
       </View>
     </View>
   );

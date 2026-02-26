@@ -53,7 +53,8 @@ const toFile = (
 
 type Options = {
   mainKey?: string;
-  additionalKey?: string;
+  additionalKeys?: [string, string, string, string];
+  clearValue?: "" | "null";
 };
 
 export const appendPhotosToFormData = (
@@ -63,24 +64,39 @@ export const appendPhotosToFormData = (
 ) => {
   const {
     mainKey = "service[main_photo]",
-    additionalKey = "service[additional_photos][]",
+    additionalKeys = [
+      "service[additional_photo_first]",
+      "service[additional_photo_second]",
+      "service[additional_photo_third]",
+      "service[additional_photo_fourth]",
+    ],
+    clearValue = "",
   } = options;
 
-  const main = photos.titlePhoto.assets[0];
-
-  if (main) {
-    const file = toFile(main, "main-photo.jpg");
-
+  if (photos.mainPhoto.action === "upload" && photos.mainPhoto.localAsset) {
+    const file = toFile(photos.mainPhoto.localAsset, "main-photo.jpg");
     if (file) {
       formData.append(mainKey, file as any);
     }
   }
 
-  photos.otherPhoto.assets.forEach((asset, index) => {
-    const file = toFile(asset, `additional-photo-${index + 1}.jpg`);
+  if (photos.mainPhoto.action === "clear") {
+    formData.append(mainKey, clearValue);
+  }
 
-    if (file) {
-      formData.append(additionalKey, file as any);
+  photos.additionalPhotos.forEach((slot, index) => {
+    const key = additionalKeys[index];
+    if (!key) return;
+
+    if (slot.action === "upload" && slot.localAsset) {
+      const file = toFile(slot.localAsset, `additional-photo-${index + 1}.jpg`);
+      if (file) {
+        formData.append(key, file as any);
+      }
+    }
+
+    if (slot.action === "clear") {
+      formData.append(key, clearValue);
     }
   });
 };

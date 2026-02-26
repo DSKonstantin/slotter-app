@@ -5,34 +5,49 @@ import type {
   PaginatedResponse,
   Service,
   ServiceCategory,
+  ServiceCategoryPositionPayload,
   UpdateServiceCategoryPayload,
   UpdateServicePayload,
 } from "@/src/store/redux/services/api-types";
+
+type GetServiceCategoriesQueryArg = {
+  userId: number;
+  params?: Record<string, string | number>;
+};
 
 const servicesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
 
   endpoints: (builder) => ({
-    // =========================
-    // SERVICE CATEGORIES
-    // =========================
-
-    getServiceCategories: builder.query<
+    getServiceCategories: builder.infiniteQuery<
       PaginatedResponse<ServiceCategory>,
-      { userId: number; params?: Record<string, string | number> }
+      GetServiceCategoriesQueryArg,
+      number
     >({
-      query: ({ userId, params }) => ({
-        url: `/users/${userId}/service_categories`,
+      query: ({ queryArg, pageParam }) => ({
+        url: `/users/${queryArg.userId}/service_categories`,
         method: "GET",
-        params,
+        params: {
+          ...queryArg.params,
+          page: pageParam,
+        },
       }),
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+          const { current_page, total_pages } = lastPage.pagination;
+          return current_page < total_pages ? current_page + 1 : undefined;
+        },
+      },
       providesTags: (result) =>
         result
           ? [
-              ...result.service_categories.map((category) => ({
-                type: "ServiceCategories" as const,
-                id: category.id,
-              })),
+              ...result.pages.flatMap((page) =>
+                page.service_categories.map((category) => ({
+                  type: "ServiceCategories" as const,
+                  id: category.id,
+                })),
+              ),
               { type: "ServiceCategories" as const, id: "LIST" },
             ]
           : [{ type: "ServiceCategories" as const, id: "LIST" }],
@@ -87,9 +102,77 @@ const servicesApi = api.injectEndpoints({
       ],
     }),
 
-    // =========================
-    // SERVICES
-    // =========================
+    reorderServiceCategories: builder.mutation<
+      PaginatedResponse<ServiceCategory>,
+      { userId: number; positions: ServiceCategoryPositionPayload[] }
+    >({
+      query: ({ userId, positions }) => ({
+        url: `/users/${userId}/service_categories/reorder`,
+        method: "PATCH",
+        data: { positions },
+      }),
+      async onQueryStarted(
+        { userId, positions },
+        { dispatch, getState, queryFulfilled },
+      ) {
+        const isGetCategoriesArg = (
+          value: unknown,
+        ): value is GetServiceCategoriesQueryArg => {
+          if (!value || typeof value !== "object") return false;
+          return (
+            "userId" in value &&
+            typeof (value as { userId?: unknown }).userId === "number"
+          );
+        };
+
+        const positionById = new Map(
+          positions.map(({ id, position }) => [id, position]),
+        );
+
+        const cachedQueries = servicesApi.util
+          .selectInvalidatedBy(getState(), [
+            { type: "ServiceCategories", id: "LIST" },
+          ])
+          .filter(
+            (entry) =>
+              entry.endpointName === "getServiceCategories" &&
+              isGetCategoriesArg(entry.originalArgs) &&
+              entry.originalArgs.userId === userId,
+          );
+
+        const patches = cachedQueries.map(({ originalArgs }) =>
+          dispatch(
+            servicesApi.util.updateQueryData(
+              "getServiceCategories",
+              originalArgs,
+              (draft) => {
+                draft.pages.forEach((page) => {
+                  page.service_categories.forEach((category) => {
+                    const nextPosition = positionById.get(category.id);
+                    if (nextPosition != null) {
+                      category.position = nextPosition;
+                    }
+                  });
+                });
+              },
+            ),
+          ),
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patches.forEach((patch) => patch.undo());
+        }
+      },
+      invalidatesTags: (_result, _error, arg) => [
+        ...arg.positions.map((position) => ({
+          type: "ServiceCategories" as const,
+          id: position.id,
+        })),
+        { type: "ServiceCategories" as const, id: "LIST" },
+      ],
+    }),
 
     getServices: builder.query<Service[], { categoryId: number }>({
       query: ({ categoryId }) => ({
@@ -171,7 +254,6 @@ const servicesApi = api.injectEndpoints({
 
         return response as Service;
       },
-      keepUnusedDataFor: 0,
       providesTags: (_result, _error, arg) => [
         { type: "Services", id: arg.id },
       ],
@@ -199,11 +281,11 @@ const servicesApi = api.injectEndpoints({
 
 export const {
   // categories
-  useGetServiceCategoriesQuery,
-  useLazyGetServiceCategoriesQuery,
+  useGetServiceCategoriesInfiniteQuery,
   useCreateServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
   useDeleteServiceCategoryMutation,
+  useReorderServiceCategoriesMutation,
 
   // services
   useGetServicesQuery,

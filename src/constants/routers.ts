@@ -52,11 +52,6 @@ export const Routers = {
                 : {}),
             },
           }) as const,
-        categoryEdit: (categoryId: string | number) =>
-          ({
-            pathname: "/(app)/(menu)/services/categories/[categoryId]",
-            params: { categoryId: String(categoryId) },
-          }) as const,
       },
       account: "/(app)/(menu)/account",
     },

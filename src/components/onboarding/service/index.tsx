@@ -13,13 +13,8 @@ import { Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { HOURS_OPTIONS } from "@/src/constants/hoursOptions";
-import { useSelector } from "react-redux";
-import { RootState } from "@/src/store/redux/store";
 import {
-  useCreateServiceCategoryMutation,
-  useGetServiceCategoriesQuery,
-} from "@/src/store/redux/services/api/servicesApi";
-import {
+  createDefaultServicePhotos,
   ServiceImagesPicker,
   ServicePhotosValue,
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
@@ -27,22 +22,9 @@ import {
 type ServiceFormValues = object;
 
 const Service = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
-
-  const { data: categories } = useGetServiceCategoriesQuery(
-    { userId: user?.id ?? 0 },
-    {
-      skip: !user,
-    },
+  const [photos, setPhotos] = useState<ServicePhotosValue>(
+    createDefaultServicePhotos(),
   );
-
-  const [createCategory, { isLoading: creatingCategory }] =
-    useCreateServiceCategoryMutation();
-
-  const [photos, setPhotos] = useState<ServicePhotosValue>({
-    titlePhoto: { assets: [], max: 1 },
-    otherPhoto: { assets: [], max: 4 },
-  });
 
   const VerifySchema = Yup.object().shape({});
 

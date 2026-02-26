@@ -6,11 +6,11 @@ import { Button, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import {
+  createDefaultServicePhotos,
   ServiceImagesPicker,
   ServicePhotosValue,
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import ServiceCategorySelect from "@/src/components/app/menu/services/service/serviceForm/serviceCategorySelect";
 import CreateAdditionalService from "@/src/components/app/menu/services/service/createAdditionalService";
 
@@ -37,16 +37,14 @@ export const defaultAdditionalServices: AdditionalServiceForm[] = [
 ];
 
 export const defaultServicePhotos: ServicePhotosValue = {
-  titlePhoto: { assets: [], max: 1 },
-  otherPhoto: { assets: [], max: 4 },
+  ...createDefaultServicePhotos(),
 };
 
 type ServiceFormBodyProps = {
   onSubmit: () => void;
   onDelete?: () => void;
   loading: boolean;
-  topInset: number;
-  bottomInset: number;
+  insets: { topInset: number; bottomInset: number };
   isEdit?: boolean;
 };
 
@@ -55,8 +53,7 @@ const ServiceFormBody = ({
   onSubmit,
   onDelete,
   loading,
-  topInset,
-  bottomInset,
+  insets,
 }: ServiceFormBodyProps) => {
   const { control } = useFormContext();
 
@@ -78,8 +75,8 @@ const ServiceFormBody = ({
     <ScrollView
       className="px-screen"
       contentContainerStyle={{
-        paddingTop: topInset,
-        paddingBottom: TAB_BAR_HEIGHT + bottomInset + 16,
+        paddingTop: insets.topInset,
+        paddingBottom: insets.bottomInset + 16,
       }}
     >
       <ServiceCategorySelect />

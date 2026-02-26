@@ -12,6 +12,7 @@ export type {
 } from "./user";
 export type {
   ServiceCategory,
+  ServiceCategoryPositionPayload,
   CreateServiceCategoryPayload,
   UpdateServiceCategoryPayload,
   Service,

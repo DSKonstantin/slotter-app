@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { View, Text } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
 import { twMerge } from "tailwind-merge";
 
 type BadgeVariant =
@@ -17,6 +17,9 @@ type BadgeProps = {
   size?: BadgeSize;
   icon?: ReactNode;
   className?: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  activeOpacity?: number;
 };
 
 export function Badge({
@@ -25,16 +28,20 @@ export function Badge({
   size = "md",
   icon,
   className,
+  onPress,
+  disabled = false,
+  activeOpacity = 0.7,
 }: BadgeProps) {
-  return (
-    <View
-      className={twMerge(
-        styles.base,
-        styles.sizes[size],
-        styles.variants[variant],
-        className,
-      )}
-    >
+  const badgeClassName = twMerge(
+    styles.base,
+    styles.sizes[size],
+    styles.variants[variant],
+    disabled ? "opacity-50" : undefined,
+    className,
+  );
+
+  const content = (
+    <>
       <Text
         className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}
       >
@@ -45,8 +52,23 @@ export function Badge({
           {icon}
         </View>
       )}
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={activeOpacity}
+        className={badgeClassName}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View className={badgeClassName}>{content}</View>;
 }
 
 const styles = {

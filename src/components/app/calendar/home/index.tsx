@@ -25,6 +25,7 @@ import {
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { CALENDAR_VIEW_OPTIONS } from "@/src/constants/calendar";
 import { colors } from "@/src/styles/colors";
+import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 
 type FilterOptionProps = {
   label: string;
@@ -116,44 +117,32 @@ const CalendarHome = () => {
     }
   }, [mode, date, dispatch]);
 
-  // Действия пользователя обновляют только URL. useEffect выше обработает обновление Redux.
   const handleModeChange = (value: string) => {
     router.setParams({ mode: value });
   };
 
   return (
     <>
-      <ToolbarTop
-        title="Календарь"
-        rightButton={
-          <IconButton
-            icon={
-              <StSvg
-                name="Filter_alt_fill"
-                size={28}
-                color={colors.neutral[900]}
+      <ScreenWithToolbar title="Создать услугу">
+        {(insets) => (
+          <View
+            className="flex-1"
+            style={{
+              marginTop: insets.topInset,
+            }}
+          >
+            <View className="flex-1 mt-4 gap-4">
+              <SegmentedControl
+                className="mx-screen"
+                value={mode}
+                onChange={handleModeChange}
+                options={CALENDAR_VIEW_OPTIONS}
               />
-            }
-            onPress={handleOpenFilters}
-          />
-        }
-      />
-      <View
-        className="flex-1"
-        style={{
-          marginTop: TOOLBAR_HEIGHT + top,
-        }}
-      >
-        <View className="flex-1 mt-4 gap-4">
-          <SegmentedControl
-            className="mx-screen"
-            value={mode}
-            onChange={handleModeChange}
-            options={CALENDAR_VIEW_OPTIONS}
-          />
-          {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
-        </View>
-      </View>
+              {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
+            </View>
+          </View>
+        )}
+      </ScreenWithToolbar>
 
       <CalendarFilterModal
         visible={isFilterOpen}

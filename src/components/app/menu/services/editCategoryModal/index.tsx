@@ -42,7 +42,7 @@ type Props = {
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Введите название категории"),
-  color: Yup.string().optional(),
+  color: Yup.string().nullable().optional(),
 });
 
 const EditCategoryModal = ({

@@ -1,4 +1,8 @@
 import React, { useCallback } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import { router } from "expo-router";
+import { skipToken } from "@reduxjs/toolkit/query";
+
 import {
   Button,
   Card,
@@ -8,29 +12,32 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { View, Text, ScrollView } from "react-native";
-import { TAB_BAR_HEIGHT, TOOLBAR_HEIGHT } from "@/src/constants/tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { useGetServiceCategoriesQuery } from "@/src/store/redux/services/api/servicesApi";
-import { useSelector } from "react-redux";
-import { RootState } from "@/src/store/redux/store";
-import map from "lodash/map";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { InfiniteFlashList } from "@/src/components/shared/list/infiniteFlashList";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
 
 const AppServices = () => {
-  const { top } = useSafeAreaInsets();
-  const user = useSelector((state: RootState) => state.auth.user);
+  const auth = useRequiredAuth();
 
   const {
-    data: categories,
+    data,
     isLoading,
     isError,
-  } = useGetServiceCategoriesQuery(
-    { userId: user?.id ?? 0, params: { view: "with_services" } },
-    { skip: !user?.id },
+    isFetching,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetServiceCategoriesInfiniteQuery(
+    auth
+      ? { userId: auth.userId, params: { view: "with_services" } }
+      : skipToken,
   );
+
+  const categories =
+    data?.pages.flatMap((page) => page.service_categories) ?? [];
 
   const createService = useCallback(() => {
     router.push(Routers.app.menu.services.create());
@@ -40,27 +47,26 @@ const AppServices = () => {
     router.push(Routers.app.menu.services.categories);
   }, []);
 
-  if (isLoading) {
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  if (!auth) {
+    return null;
+  }
+
+  if (isLoading && categories.length === 0) {
     return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={{
-          marginTop: TOOLBAR_HEIGHT + top,
-        }}
-      >
-        <Text className="text-neutral-500">Загрузка категорий...</Text>
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator />
       </View>
     );
   }
 
-  if (isError || !categories) {
+  if (isError && categories.length === 0) {
     return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={{
-          marginTop: TOOLBAR_HEIGHT + top,
-        }}
-      >
+      <View className="flex-1 items-center justify-center px-screen">
         <Text className="text-error">Ошибка загрузки категорий.</Text>
       </View>
     );
@@ -77,13 +83,11 @@ const AppServices = () => {
         />
       }
     >
-      {({ topInset }) => (
+      {({ topInset, bottomInset }) => (
         <>
           <View
             className="flex-row gap-2.5 px-screen pb-4"
-            style={{
-              marginTop: topInset,
-            }}
+            style={{ marginTop: topInset }}
           >
             <Button
               title="Создать услугу"
@@ -112,15 +116,29 @@ const AppServices = () => {
               }
             />
           </View>
-          <ScrollView
-            className="flex-1 px-screen"
+
+          <InfiniteFlashList
+            data={categories}
+            keyExtractor={(item) => String(item.id)}
+            showsVerticalScrollIndicator={false}
+            onRefresh={refetch}
+            isRefreshing={isFetching && !isFetchingNextPage && !isLoading}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.35}
+            hasNextPage={Boolean(hasNextPage)}
+            isFetchingNextPage={isFetchingNextPage}
             contentContainerStyle={{
-              gap: 24,
-              paddingBottom: TAB_BAR_HEIGHT + 60,
+              paddingHorizontal: 20,
+              paddingBottom: bottomInset + 60,
             }}
-          >
-            {map(categories.service_categories, (category) => (
-              <View key={category.id} className="gap-2">
+            ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+            ListEmptyComponent={
+              <View className="pt-6">
+                <Text className="text-neutral-500">Категорий пока нет.</Text>
+              </View>
+            }
+            renderItem={({ item: category }) => (
+              <View className="gap-2">
                 <View className="flex-row justify-between">
                   <Typography className="text-caption text-neutral-500">
                     {category.name}
@@ -137,7 +155,7 @@ const AppServices = () => {
 
                 <View className="gap-2">
                   {category.services?.length ? (
-                    map(category.services, (service) => (
+                    category.services.map((service) => (
                       <Card
                         key={service.id}
                         title={service.name}
@@ -190,8 +208,8 @@ const AppServices = () => {
                   )}
                 </View>
               </View>
-            ))}
-          </ScrollView>
+            )}
+          />
         </>
       )}
     </ScreenWithToolbar>
