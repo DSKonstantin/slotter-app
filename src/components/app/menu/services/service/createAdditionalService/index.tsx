@@ -1,13 +1,12 @@
 import React from "react";
-import { Card, IconButton, StSvg } from "@/src/components/ui";
+import { Card, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { ScrollView, View } from "react-native";
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { ServiceFormValues } from "@/src/components/app/menu/services/service/serviceForm";
 import CreateAdditionalServiceModal from "@/src/components/app/menu/services/service/createAdditionalService/createAdditionalServiceModal";
 
 const CreateAdditionalService = () => {
-  const { control } = useFormContext<ServiceFormValues>();
+  const { control } = useFormContext();
 
   const { fields: additionalServices, remove } = useFieldArray({
     control,
@@ -16,9 +15,16 @@ const CreateAdditionalService = () => {
 
   return (
     <>
+      <Typography className="text-caption text-neutral-500 mt-5 mb-2 px-screen">
+        Дополнительные услуги
+      </Typography>
+
       <ScrollView
         className="mb-2"
         horizontal
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+        }}
         showsHorizontalScrollIndicator={false}
       >
         <View className="flex-row gap-2 py-1">

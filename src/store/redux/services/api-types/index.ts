@@ -14,6 +14,7 @@ export type {
   ServiceCategory,
   ServiceCategoryPositionPayload,
   CreateServiceCategoryPayload,
+  CreateServiceCategoryResponse,
   UpdateServiceCategoryPayload,
   Service,
   CreateServicePayload,

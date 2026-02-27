@@ -1,8 +1,8 @@
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
-import { Button, Divider, Item, StSvg, Typography } from "@/src/components/ui";
+import { Button, Divider, Item, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import {
@@ -13,6 +13,7 @@ import {
 import { colors } from "@/src/styles/colors";
 import ServiceCategorySelect from "@/src/components/app/menu/services/service/serviceForm/serviceCategorySelect";
 import CreateAdditionalService from "@/src/components/app/menu/services/service/createAdditionalService";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 export type AdditionalServiceForm = {
   id: string;
@@ -72,8 +73,8 @@ const ServiceFormBody = ({
   });
 
   return (
-    <ScrollView
-      className="px-screen"
+    <KeyboardAwareScrollView
+      className="flex-1"
       contentContainerStyle={{
         paddingTop: insets.topInset,
         paddingBottom: insets.bottomInset + 16,
@@ -81,7 +82,7 @@ const ServiceFormBody = ({
     >
       <ServiceCategorySelect />
 
-      <View className="mt-5 gap-1">
+      <View className="mt-5 gap-1 px-screen">
         <RhfTextField
           name="name"
           label="Название услуги"
@@ -112,60 +113,60 @@ const ServiceFormBody = ({
         />
       </View>
 
-      <Divider className="my-8" />
+      <View className="px-screen">
+        <Divider className="my-8" />
 
-      <Item
-        title="Доступно для онлайн-записи"
-        right={<RHFSwitch name="isAvailableOnline" />}
-      />
-
-      <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-        Дополнительные услуги
-      </Typography>
+        <Item
+          title="Доступно для онлайн-записи"
+          right={<RHFSwitch name="isAvailableOnline" />}
+        />
+      </View>
 
       <CreateAdditionalService />
 
-      <ServiceImagesPicker value={photos} onChange={setPhotos} />
+      <View className="px-screen">
+        <ServiceImagesPicker value={photos} onChange={setPhotos} />
 
-      <Button
-        title="Сохранить услугу"
-        buttonClassName="mt-4"
-        disabled={loading}
-        loading={loading}
-        onPress={onSubmit}
-        rightIcon={
-          <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-        }
-      />
-      <Button
-        title={isActive ? "Скрыть услугу" : "Показать услугу"}
-        variant="clear"
-        buttonClassName="mt-4"
-        disabled={loading}
-        onPress={() => setIsActive(!isActive)}
-        rightIcon={
-          <StSvg
-            name={isActive ? "View_hide_fill" : "View_fill"}
-            size={24}
-            color={colors.neutral[900]}
-          />
-        }
-      />
-
-      {isEdit && (
         <Button
-          title="Удалить"
-          variant="clear"
-          buttonClassName="mt-16"
-          textClassName="text-accent-red-500"
+          title="Сохранить услугу"
+          buttonClassName="mt-4"
           disabled={loading}
-          onPress={onDelete ? onDelete : () => {}}
+          loading={loading}
+          onPress={onSubmit}
           rightIcon={
-            <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
+            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
           }
         />
-      )}
-    </ScrollView>
+        <Button
+          title={isActive ? "Скрыть услугу" : "Показать услугу"}
+          variant="clear"
+          buttonClassName="mt-4"
+          disabled={loading}
+          onPress={() => setIsActive(!isActive)}
+          rightIcon={
+            <StSvg
+              name={isActive ? "View_hide_fill" : "View_fill"}
+              size={24}
+              color={colors.neutral[900]}
+            />
+          }
+        />
+
+        {isEdit && (
+          <Button
+            title="Удалить"
+            variant="clear"
+            buttonClassName="mt-16"
+            textClassName="text-accent-red-500"
+            disabled={loading}
+            onPress={onDelete ? onDelete : () => {}}
+            rightIcon={
+              <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
+            }
+          />
+        )}
+      </View>
+    </KeyboardAwareScrollView>
   );
 };
 

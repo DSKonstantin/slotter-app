@@ -1,5 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
 
@@ -11,8 +17,10 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 
 const ServiceCategorySelect = () => {
   const auth = useRequiredAuth();
-  const userId = auth?.userId;
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [hasUserScrolled, setHasUserScrolled] = useState(false);
+  const categoriesListRef =
+    useRef<FlatList<{ id: number; name: string; position: number }>>(null);
   const { control } = useFormContext();
   const {
     field: { value: selectedCategoryId, onChange: onCategoryChange },
@@ -22,24 +30,12 @@ const ServiceCategorySelect = () => {
     name: "categoryId",
   });
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useGetServiceCategoriesInfiniteQuery(
-    auth
-      ? { userId: auth.userId, params: { view: "with_services" } }
-      : skipToken,
-  );
-
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
-    fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetServiceCategoriesInfiniteQuery(
+      auth
+        ? { userId: auth.userId, params: { view: "with_services" } }
+        : skipToken,
+    );
 
   const categories = useMemo(() => {
     const unique = new Map<
@@ -50,39 +46,98 @@ const ServiceCategorySelect = () => {
     data?.pages.forEach((page) => {
       page.service_categories.forEach((category) => {
         unique.set(category.id, {
-          id: Number(category.id),
+          id: category.id,
           name: category.name,
           position: category.position,
         });
       });
     });
 
-    return [...unique.values()]
-      .sort((a, b) => a.position - b.position)
-      .map(({ id, name }) => ({ id, name }));
+    return [...unique.values()];
   }, [data?.pages]);
+
+  const normalizedSelectedCategoryId = useMemo(() => {
+    const parsedCategoryId = Number(selectedCategoryId);
+    return Number.isFinite(parsedCategoryId) && parsedCategoryId > 0
+      ? parsedCategoryId
+      : null;
+  }, [selectedCategoryId]);
+
+  const handleEndReached = useCallback(() => {
+    if (!hasUserScrolled || !hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, hasUserScrolled, isFetchingNextPage]);
+
+  useEffect(() => {
+    if (normalizedSelectedCategoryId == null || categories.length === 0) return;
+
+    const selectedCategoryIndex = categories.findIndex(
+      (category) => category.id === normalizedSelectedCategoryId,
+    );
+
+    if (selectedCategoryIndex < 0) return;
+
+    const timeoutId = setTimeout(() => {
+      categoriesListRef.current?.scrollToIndex({
+        index: selectedCategoryIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [categories, normalizedSelectedCategoryId]);
+
+  if (!auth) {
+    return null;
+  }
 
   return (
     <>
-      <Typography className="text-caption text-neutral-500 mb-2">
+      <Typography className="text-caption text-neutral-500 mb-2 px-screen">
         Категория
       </Typography>
 
-      {isLoading || isFetching ? (
-        <Typography className="text-caption text-neutral-500 mb-2">
+      {isLoading && categories.length === 0 ? (
+        <Typography className="text-caption text-neutral-500 mb-2 px-screen">
           Загрузка категорий...
         </Typography>
       ) : (
         <>
-          <ScrollView
+          <FlatList
+            ref={categoriesListRef}
             horizontal
+            data={categories}
+            keyExtractor={(item) => String(item.id)}
             showsHorizontalScrollIndicator={false}
             className="mb-2"
-            contentContainerStyle={{ paddingRight: 8 }}
-          >
-            {categories.map((category) => {
-              const normalizedSelectedCategoryId =
-                selectedCategoryId === null ? null : Number(selectedCategoryId);
+            contentContainerStyle={{ paddingRight: 8, paddingHorizontal: 20 }}
+            onScrollBeginDrag={() => setHasUserScrolled(true)}
+            onMomentumScrollBegin={() => setHasUserScrolled(true)}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.35}
+            onScrollToIndexFailed={({ index, averageItemLength }) => {
+              categoriesListRef.current?.scrollToOffset({
+                offset: Math.max(0, index * averageItemLength),
+                animated: true,
+              });
+
+              setTimeout(() => {
+                categoriesListRef.current?.scrollToIndex({
+                  index,
+                  animated: true,
+                  viewPosition: 0.5,
+                });
+              }, 100);
+            }}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View className="justify-center pr-2">
+                  <ActivityIndicator />
+                </View>
+              ) : null
+            }
+            renderItem={({ item: category }) => {
               const isSelected = normalizedSelectedCategoryId === category.id;
 
               return (
@@ -94,11 +149,11 @@ const ServiceCategorySelect = () => {
                   className="mr-2"
                 />
               );
-            })}
-          </ScrollView>
+            }}
+          />
           {error ? (
-            <Typography className="text-caption text-accent-red-500 mb-2">
-              {String(error.message || "Выберите категорию")}
+            <Typography className="px-screen text-caption text-accent-red-500 mb-2">
+              Выберите категорию
             </Typography>
           ) : null}
         </>
@@ -106,14 +161,11 @@ const ServiceCategorySelect = () => {
 
       <CreateCategoryModal
         visible={createModalVisible}
-        userId={userId ?? 0}
+        userId={auth.userId}
         onClose={() => setCreateModalVisible(false)}
-        onCreated={(category) => {
-          const createdCategoryId = Number(category.id);
-          if (!Number.isNaN(createdCategoryId)) {
-            onCategoryChange(createdCategoryId);
-          }
-          refetch();
+        onCreated={(newCategory) => {
+          if (!newCategory) return;
+          onCategoryChange(newCategory.id);
         }}
       />
 
@@ -121,7 +173,7 @@ const ServiceCategorySelect = () => {
         title="Создать новую категорию"
         variant="clear"
         onPress={() => setCreateModalVisible(true)}
-        disabled={userId == null}
+        disabled={auth.userId == null}
         rightIcon={
           <StSvg
             name="Add_ring_fill_light"

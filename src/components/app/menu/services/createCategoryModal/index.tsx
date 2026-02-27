@@ -1,7 +1,6 @@
 import React from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
-import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 import { StModal, Button, Typography, StSvg } from "@/src/components/ui";
@@ -11,19 +10,16 @@ import { colors } from "@/src/styles/colors";
 import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
 import { toast } from "@backpackapp-io/react-native-toast";
+import categorySchema from "@/src/validation/schemas/category.schema";
+import type { ServiceCategory } from "@/src/store/redux/services/api-types";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 type Props = {
   visible: boolean;
   userId: number;
   onClose: () => void;
-  onCreated: (category: { id: string; name: string }) => void;
+  onCreated?: (category?: ServiceCategory) => void;
 };
-
-const schema = Yup.object().shape({
-  name: Yup.string().required("Введите название категории"),
-  isActive: Yup.boolean().required(),
-  color: Yup.string().nullable().optional(),
-});
 
 const CreateCategoryModal = ({
   visible,
@@ -32,7 +28,7 @@ const CreateCategoryModal = ({
   onCreated,
 }: Props) => {
   const methods = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(categorySchema),
     defaultValues: {
       name: "",
       color: null,
@@ -43,7 +39,7 @@ const CreateCategoryModal = ({
 
   const handleFormSubmit = methods.handleSubmit(async (values) => {
     try {
-      const result = await createCategory({
+      const createdCategory = await createCategory({
         userId,
         data: {
           name: values.name,
@@ -52,11 +48,7 @@ const CreateCategoryModal = ({
         },
       }).unwrap();
 
-      onCreated({
-        id: String(result.id),
-        name: result.name,
-      });
-
+      onCreated?.(createdCategory?.service_category);
       methods.reset();
       onClose();
     } catch (e: any) {
@@ -67,34 +59,36 @@ const CreateCategoryModal = ({
   return (
     <StModal visible={visible} onClose={onClose}>
       <FormProvider {...methods}>
-        <Typography weight="semibold" className="text-display text-center">
-          Новая категория услуг
-        </Typography>
+        <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
+          <Typography weight="semibold" className="text-display text-center">
+            Новая категория услуг
+          </Typography>
 
-        <View className="gap-4 my-6">
-          <RhfTextField
-            name="name"
-            label="Название категории"
-            hideErrorText
-            placeholder="Например: Стрижки"
-          />
+          <View className="gap-4 my-6">
+            <RhfTextField
+              name="name"
+              label="Название категории"
+              hideErrorText
+              placeholder="Например: Стрижки"
+            />
 
-          <View>
-            <Typography className="mb-2 font-inter-medium text-neutral-500 text-caption">
-              Цвет
-            </Typography>
-            <RhfColorPicker name="color" colors={CATEGORY_COLORS} />
+            <View>
+              <Typography className="mb-2 font-inter-medium text-neutral-500 text-caption">
+                Цвет
+              </Typography>
+              <RhfColorPicker name="color" colors={CATEGORY_COLORS} />
+            </View>
           </View>
-        </View>
 
-        <Button
-          title="Создать"
-          rightIcon={
-            <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
-          }
-          onPress={handleFormSubmit}
-          loading={isLoading}
-        />
+          <Button
+            title="Создать"
+            rightIcon={
+              <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
+            }
+            onPress={handleFormSubmit}
+            loading={isLoading}
+          />
+        </KeyboardAwareScrollView>
       </FormProvider>
     </StModal>
   );

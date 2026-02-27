@@ -123,7 +123,21 @@ const CalendarHome = () => {
 
   return (
     <>
-      <ScreenWithToolbar title="Создать услугу">
+      <ScreenWithToolbar
+        title="Календарь"
+        rightButton={
+          <IconButton
+            icon={
+              <StSvg
+                name="Filter_alt_fill"
+                size={28}
+                color={colors.neutral[900]}
+              />
+            }
+            onPress={handleOpenFilters}
+          />
+        }
+      >
         {(insets) => (
           <View
             className="flex-1"

@@ -3,6 +3,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, Alert, View } from "react-native";
+import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import ServiceFormBody, {
   defaultServicePhotos,
@@ -27,6 +28,11 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
   const router = useRouter();
   const [updateService, { isLoading }] = useUpdateServiceMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
+  const hasValidIds =
+    Number.isFinite(serviceId) &&
+    Number.isFinite(categoryId) &&
+    serviceId > 0 &&
+    categoryId > 0;
 
   const {
     data: service,
@@ -34,10 +40,12 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     isFetching: isServiceFetching,
     isError: isServiceError,
   } = useGetServiceQuery(
-    {
-      categoryId,
-      id: serviceId,
-    },
+    hasValidIds
+      ? {
+          categoryId,
+          id: serviceId,
+        }
+      : skipToken,
     {
       refetchOnMountOrArgChange: true,
     },
@@ -65,14 +73,20 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       formData.append("service[price]", values.price);
       formData.append("service[duration]", values.duration);
       formData.append("service[description]", values.description.trim());
+      const nextCategoryId = Number(values.categoryId);
+      if (
+        Number.isFinite(nextCategoryId) &&
+        nextCategoryId > 0 &&
+        nextCategoryId !== categoryId
+      ) {
+        formData.append("service[service_category_id]", String(nextCategoryId));
+      }
       formData.append(
         "service[is_available_online]",
         String(values.isAvailableOnline),
       );
       formData.append("service[is_active]", String(values.isActive));
       appendPhotosToFormData(formData, values.photos);
-
-      console.log(formData, "values.photos");
 
       await updateService({
         categoryId: categoryId,
@@ -104,7 +118,6 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
             router.back();
           } catch (error: any) {
             toast.error(error?.data?.error || "Не удалось удалить услугу");
-            console.log("DELETE ERROR:", JSON.stringify(error, null, 2));
           }
         },
       },
@@ -150,7 +163,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     });
   }, [categoryId, methods, service]);
 
-  if (!serviceId && !categoryId) {
+  if (!hasValidIds) {
     return (
       <ScreenWithToolbar title="Редактировать услугу">
         <View className="flex-1 items-center justify-center px-screen">

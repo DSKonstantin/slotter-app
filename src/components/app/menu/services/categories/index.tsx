@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
@@ -42,13 +42,20 @@ const AppServicesCategories = () => {
   const [updateServiceCategory] = useUpdateServiceCategoryMutation();
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const auth = useRequiredAuth();
-  const userId = auth?.userId;
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useGetServiceCategoriesInfiniteQuery(
-      auth
-        ? { userId: auth.userId, params: { view: "with_services" } }
-        : skipToken,
-    );
+  const {
+    data,
+    refetch,
+    isLoading,
+    isFetching,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetServiceCategoriesInfiniteQuery(
+    auth
+      ? { userId: auth.userId, params: { view: "with_services" } }
+      : skipToken,
+  );
   const categories = useMemo(() => {
     if (!data?.pages) return [];
 
@@ -60,22 +67,17 @@ const AppServicesCategories = () => {
       });
     });
 
-    return [...unique.values()].sort((a, b) => a.position - b.position);
+    return [...unique.values()];
   }, [data?.pages]);
-
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
-    fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleToggleCategoryActive = (
     categoryId: number,
     nextValue: boolean,
   ) => {
-    if (userId == null) return;
+    if (auth?.userId == null) return;
 
     updateServiceCategory({
-      userId,
+      userId: auth.userId,
       id: categoryId,
       data: { is_active: nextValue },
     }).unwrap();
@@ -90,11 +92,11 @@ const AppServicesCategories = () => {
     from: number;
     to: number;
   }) => {
-    if (from === to || userId == null) return;
+    if (from === to || auth?.userId == null) return;
 
     try {
       await reorderServiceCategories({
-        userId,
+        userId: auth.userId,
         positions: nextData.map((category, index) => ({
           id: category.id,
           position: index,
@@ -103,13 +105,15 @@ const AppServicesCategories = () => {
     } catch {}
   };
 
-  if (isLoading && categories.length === 0) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const handleRefresh = useCallback(() => {
+    if (isFetchingNextPage) return;
+    refetch({ refetchCachedPages: false });
+  }, [isFetchingNextPage, refetch]);
 
   if (!auth) {
     return null;
@@ -126,108 +130,146 @@ const AppServicesCategories = () => {
           />
         }
       >
-        {({ topInset, bottomInset }) => (
-          <View className="flex-1">
-            <DraggableFlatList
-              data={categories}
-              contentContainerStyle={{
-                paddingTop: topInset,
-                paddingBottom: bottomInset + 16,
-                paddingHorizontal: 20,
-                // flexGrow: 1,
-                gap: 8,
-              }}
-              ListHeaderComponent={
-                <Typography className="text-caption text-neutral-500 mb-2">
-                  Существующие категории
+        {({ topInset, bottomInset }) => {
+          if (isLoading && !data) {
+            return (
+              <View
+                className="flex-1 items-center justify-center"
+                style={{ marginTop: topInset, marginBottom: bottomInset }}
+              >
+                <ActivityIndicator />
+              </View>
+            );
+          }
+
+          if (isError && !data) {
+            return (
+              <View
+                className="flex-1 items-center justify-center px-screen gap-4"
+                style={{ marginTop: topInset, marginBottom: bottomInset }}
+              >
+                <Typography className="text-body text-accent-red-500">
+                  Ошибка загрузки категорий.
                 </Typography>
-              }
-              keyExtractor={(item) => String(item.id)}
-              activationDistance={10}
-              autoscrollThreshold={48}
-              autoscrollSpeed={220}
-              onDragEnd={handleDragEnd}
-              renderItem={({
-                item,
-                drag,
-                isActive,
-              }: RenderItemParams<ServiceCategory>) => (
-                <Card
-                  title={item.name}
-                  pressArea="content"
-                  active={isActive}
-                  className={item.is_active ? "" : "opacity-40"}
-                  subtitle={`${item.activeServicesCount ?? item.services?.length ?? 0} услуг`}
-                  left={
-                    <Pressable
-                      onLongPress={drag}
-                      delayLongPress={100}
-                      hitSlop={8}
-                    >
-                      <View className="flex-row items-center gap-2">
+                <Button
+                  title="Повторить"
+                  onPress={handleRefresh}
+                  loading={isFetching}
+                  disabled={isFetching}
+                  buttonClassName="w-full"
+                />
+              </View>
+            );
+          }
+          return (
+            <View className="flex-1">
+              <DraggableFlatList
+                data={categories}
+                contentContainerStyle={{
+                  paddingTop: topInset,
+                  paddingBottom: bottomInset + 16,
+                  paddingHorizontal: 20,
+                  flexGrow: 1,
+                  gap: 8,
+                }}
+                ListHeaderComponent={
+                  <Typography className="text-caption text-neutral-500 mb-2">
+                    Существующие категории
+                  </Typography>
+                }
+                keyExtractor={(item) => String(item.id)}
+                activationDistance={10}
+                autoscrollThreshold={48}
+                autoscrollSpeed={220}
+                onDragEnd={handleDragEnd}
+                onEndReached={handleEndReached}
+                onEndReachedThreshold={0.35}
+                renderItem={({
+                  item,
+                  drag,
+                  isActive,
+                }: RenderItemParams<ServiceCategory>) => (
+                  <Card
+                    title={item.name}
+                    pressArea="content"
+                    active={isActive}
+                    className={item.is_active ? "" : "opacity-40"}
+                    subtitle={`${item.activeServicesCount ?? item.services?.length ?? 0} услуг`}
+                    left={
+                      <Pressable
+                        onLongPress={drag}
+                        delayLongPress={100}
+                        hitSlop={8}
+                      >
+                        <View className="flex-row items-center gap-2">
+                          <StSvg
+                            name="Drag"
+                            size={24}
+                            color={colors.neutral[900]}
+                          />
+                          {item.color && (
+                            <View
+                              className={"w-5 h-5 rounded-full"}
+                              style={{ backgroundColor: item.color }}
+                            />
+                          )}
+                        </View>
+                      </Pressable>
+                    }
+                    right={
+                      <Switch
+                        value={item.is_active}
+                        onChange={(nextValue) =>
+                          handleToggleCategoryActive(item.id, nextValue)
+                        }
+                      />
+                    }
+                    onPress={() => {
+                      setSelectedCategory(item);
+                      setEditModalVisible(true);
+                    }}
+                  />
+                )}
+                ListFooterComponent={
+                  <View className="gap-2">
+                    {isFetchingNextPage ? (
+                      <View className="items-center py-2">
+                        <ActivityIndicator />
+                      </View>
+                    ) : null}
+                    <Button
+                      title="Создать новую категорию"
+                      variant="clear"
+                      onPress={() => setCreateModalVisible(true)}
+                      rightIcon={
                         <StSvg
-                          name="Drag"
-                          size={24}
+                          name="Add_ring_fill_light"
+                          size={18}
                           color={colors.neutral[900]}
                         />
-                        {item.color && (
-                          <View
-                            className={"w-5 h-5 rounded-full"}
-                            style={{ backgroundColor: item.color }}
-                          />
-                        )}
-                      </View>
-                    </Pressable>
-                  }
-                  right={
-                    <Switch
-                      value={item.is_active}
-                      // disabled={updatingCategoryIds.includes(item.id)}
-                      onChange={(nextValue) =>
-                        handleToggleCategoryActive(item.id, nextValue)
                       }
                     />
-                  }
-                  onPress={() => {
-                    setSelectedCategory(item);
-                    setEditModalVisible(true);
-                  }}
-                />
-              )}
-              ListFooterComponent={
-                <Button
-                  title="Создать новую категорию"
-                  variant="clear"
-                  onPress={() => setCreateModalVisible(true)}
-                  rightIcon={
-                    <StSvg
-                      name="Add_ring_fill_light"
-                      size={18}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                />
-              }
-            />
-          </View>
-        )}
+                  </View>
+                }
+              />
+            </View>
+          );
+        }}
       </ScreenWithToolbar>
 
       <CreateCategoryModal
         visible={createModalVisible}
-        userId={userId}
+        userId={auth.userId}
         onClose={() => setCreateModalVisible(false)}
-        onCreated={() => {}}
       />
       <EditCategoryModal
         visible={editModalVisible}
-        userId={userId}
+        userId={auth.userId}
         category={selectedCategory}
         onClose={() => {
           setEditModalVisible(false);
           setSelectedCategory(null);
         }}
-        onUpdated={() => {}}
       />
     </>
   );

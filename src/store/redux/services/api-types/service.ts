@@ -20,6 +20,10 @@ export type CreateServiceCategoryPayload = {
   color?: string | null;
 };
 
+export type CreateServiceCategoryResponse = {
+  service_category: ServiceCategory;
+};
+
 export type UpdateServiceCategoryPayload = Partial<{
   name: string;
   color: string;

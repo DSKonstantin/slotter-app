@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
-import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 import {
@@ -24,6 +23,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import categorySchema from "@/src/validation/schemas/category.schema";
 
 type EditableCategory = {
   id: number;
@@ -35,23 +35,11 @@ type EditableCategory = {
 type Props = {
   visible: boolean;
   userId: number;
-  category: EditableCategory;
+  category: EditableCategory | null;
   onClose: () => void;
-  onUpdated: () => void;
 };
 
-const schema = Yup.object().shape({
-  name: Yup.string().required("Введите название категории"),
-  color: Yup.string().nullable().optional(),
-});
-
-const EditCategoryModal = ({
-  visible,
-  userId,
-  category,
-  onClose,
-  onUpdated,
-}: Props) => {
+const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   const { left, right } = useSafeAreaInsets();
   const safeAreaSidePaddingStyle = {
     paddingLeft: left,
@@ -63,7 +51,7 @@ const EditCategoryModal = ({
   };
 
   const methods = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(categorySchema),
     defaultValues: {
       name: category?.name ?? "",
       color: category?.color ?? undefined,
@@ -95,11 +83,10 @@ const EditCategoryModal = ({
         id: category.id,
         data: {
           name: values.name,
-          color: values.color,
+          color: values.color ?? undefined,
         },
       }).unwrap();
 
-      onUpdated();
       onClose();
     } catch (error: any) {
       toast.error(error?.data?.error || "Не удалось обновить категорию");
