@@ -29,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
+  const token = useSelector((state: RootState) => state.auth.token);
   const [getMe] = useLazyGetMeQuery();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -64,8 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (e) {
         console.error("Auth check failed", e);
-        await accessTokenStorage.remove();
-        dispatch(setToken(null));
       } finally {
         setIsInitialLoading(false);
       }
@@ -78,13 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      isAuthenticated: !!user,
-      isOnboardingComplete: Boolean(user?.email && user?.profession),
+      isAuthenticated: Boolean(token && user),
+      isOnboardingComplete: user?.onboarding_step === "completed",
       isLoading: isInitialLoading,
       login,
       logout,
     }),
-    [user, isInitialLoading, login, logout],
+    [token, user, isInitialLoading, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

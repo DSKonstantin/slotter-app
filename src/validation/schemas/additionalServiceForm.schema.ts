@@ -1,6 +1,6 @@
 import * as Yup from "yup";
 
-export const serviceFormSchema = Yup.object({
+export const additionalServiceFormSchema = Yup.object({
   name: Yup.string().required("Введите название"),
 
   price: Yup.string().required("Введите цену"),
@@ -9,17 +9,5 @@ export const serviceFormSchema = Yup.object({
 
   description: Yup.string().ensure(),
 
-  categoryId: Yup.number().required("Выберите категорию"),
-
-  isAvailableOnline: Yup.boolean().required(),
-
   isActive: Yup.boolean().required(),
-
-  additionalServices: Yup.array()
-    .of(
-      Yup.object({
-        serviceId: Yup.number().required(),
-      }),
-    )
-    .default([]),
 });

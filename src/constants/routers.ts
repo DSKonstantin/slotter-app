@@ -42,6 +42,20 @@ export const Routers = {
               } as const)
             : "/(app)/(menu)/services/create",
         categories: "/(app)/(menu)/services/categories" as const,
+        additionalServices: {
+          root: "/(app)/(menu)/services/additional-services" as const,
+
+          create: "/(app)/(menu)/services/additional-services/create" as const,
+
+          edit: (additionalServiceId: string | number) =>
+            ({
+              pathname:
+                "/(app)/(menu)/services/additional-services/[additionalServiceId]",
+              params: {
+                additionalServiceId: String(additionalServiceId),
+              },
+            }) as const,
+        },
         edit: (serviceId: string | number, categoryId?: string | number) =>
           ({
             pathname: "/(app)/(menu)/services/[serviceId]",
@@ -53,6 +67,7 @@ export const Routers = {
             },
           }) as const,
       },
+
       account: "/(app)/(menu)/account",
     },
   },

@@ -50,7 +50,7 @@ const ToolbarTop = ({
         pointerEvents="none"
       />
       <View
-        className="mx-screen flex-row  items-center justify-between"
+        className="mx-screen flex-row  items-center justify-between gap-2"
         style={{
           paddingLeft: insets.left,
           paddingRight: insets.right,
@@ -67,10 +67,17 @@ const ToolbarTop = ({
           <View className="w-[48px]" />
         )}
 
-        <View className="rounded-full h-[48px] px-5 items-center justify-center bg-background-surface">
-          <Typography weight="semibold" className="text-[17px] leading-[22px]">
-            {title}
-          </Typography>
+        <View className="flex-1 items-center justify-center">
+          <View className="rounded-full h-[48px] px-5 items-center justify-center bg-background-surface max-w-[100%]">
+            <Typography
+              weight="semibold"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              className="text-[17px] leading-[22px]"
+            >
+              {title}
+            </Typography>
+          </View>
         </View>
 
         {rightButton ? rightButton : <View className="w-[48px]" />}

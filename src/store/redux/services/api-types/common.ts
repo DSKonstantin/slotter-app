@@ -15,3 +15,8 @@ export interface PaginatedResponse<T> {
   service_categories: T[];
   pagination: Pagination;
 }
+
+export interface PaginatedServiceCategoriesResponse<T> {
+  additional_services: T[];
+  pagination: Pagination;
+}

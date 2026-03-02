@@ -1,23 +1,21 @@
 import { ReactNode } from "react";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 import { twMerge } from "tailwind-merge";
 
 type IconButtonSize = "xs" | "sm" | "md" | "lg";
 
-type IconButtonProps = {
+type IconButtonProps = TouchableOpacityProps & {
   icon: ReactNode;
-  onPress?: () => void;
   size?: IconButtonSize;
-  disabled?: boolean;
   buttonClassName?: string;
 };
-
 export function IconButton({
   icon,
   onPress,
   size = "md",
   disabled,
   buttonClassName,
+  ...props
 }: IconButtonProps) {
   return (
     <TouchableOpacity
@@ -30,6 +28,7 @@ export function IconButton({
         disabled && "opacity-30",
         buttonClassName,
       )}
+      {...props}
     >
       {icon}
     </TouchableOpacity>

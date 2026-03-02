@@ -86,7 +86,20 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
         String(values.isAvailableOnline),
       );
       formData.append("service[is_active]", String(values.isActive));
+
+      if (!values.additionalServices?.length) {
+        formData.append("service[additional_service_ids][]", "");
+      } else {
+        values.additionalServices.forEach((item) => {
+          formData.append(
+            "service[additional_service_ids][]",
+            String(item.serviceId),
+          );
+        });
+      }
+
       appendPhotosToFormData(formData, values.photos);
+      console.log(formData, "formData");
 
       await updateService({
         categoryId: categoryId,
@@ -96,7 +109,6 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       router.back();
     } catch (error: any) {
       toast.error(error?.data?.error || "Не удалось обновить услугу");
-      console.log("UPDATE SERVICE ERROR:", error);
     }
   });
 
@@ -145,10 +157,9 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       isActive: service.is_active ?? true,
       additionalServices: (service.additional_services ?? []).map(
         (additionalService) => ({
-          id: String(additionalService.id),
-          title: additionalService.name,
-          duration: 0,
-          price: Number(additionalService.price),
+          serviceId: additionalService.id,
+          name: additionalService.name,
+          price: Math.trunc(additionalService.price_cents / 100),
         }),
       ),
       photos: {

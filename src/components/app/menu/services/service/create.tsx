@@ -31,7 +31,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
       description: "",
       isAvailableOnline: false,
       isActive: true,
-      additionalServices: defaultAdditionalServices,
+      additionalServices: [],
       photos: defaultServicePhotos,
     },
   });
@@ -49,6 +49,18 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
         String(values.isAvailableOnline),
       );
       formData.append("service[is_active]", String(values.isActive));
+
+      if (!values.additionalServices?.length) {
+        formData.append("service[additional_service_ids][]", "");
+      } else {
+        values.additionalServices.forEach((item) => {
+          formData.append(
+            "service[additional_service_ids][]",
+            String(item.serviceId),
+          );
+        });
+      }
+
       appendPhotosToFormData(formData, values.photos);
 
       await createService({

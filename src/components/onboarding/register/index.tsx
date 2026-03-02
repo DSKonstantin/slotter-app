@@ -63,6 +63,8 @@ const Register = () => {
     [user, updateUser],
   );
 
+  console.log(user, "user");
+
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout

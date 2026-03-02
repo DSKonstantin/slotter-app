@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type {
+import {
   CreateServiceCategoryResponse,
   CreateServiceCategoryPayload,
   CreateServicePayload,
@@ -9,7 +9,9 @@ import type {
   ServiceCategoryPositionPayload,
   UpdateServiceCategoryPayload,
   UpdateServicePayload,
+  AdditionalService,
 } from "@/src/store/redux/services/api-types";
+import { PaginatedServiceCategoriesResponse } from "@/src/store/redux/services/api-types/common";
 
 type GetServiceCategoriesQueryArg = {
   userId: number;
@@ -168,106 +170,6 @@ const servicesApi = api.injectEndpoints({
         { type: "ServiceCategories", id: arg.id },
         { type: "ServiceCategories", id: "LIST" },
       ],
-    }),
-
-    reorderServiceCategories: builder.mutation<
-      PaginatedResponse<ServiceCategory>,
-      { userId: number; positions: ServiceCategoryPositionPayload[] }
-    >({
-      query: ({ userId, positions }) => ({
-        url: `/users/${userId}/service_categories/reorder`,
-        method: "PATCH",
-        data: { positions },
-      }),
-      async onQueryStarted(
-        { userId, positions },
-        { dispatch, getState, queryFulfilled },
-      ) {
-        const positionById = new Map(
-          positions.map(({ id, position }) => [id, position]),
-        );
-        const patchAndRebuildPages = (
-          draft: { pages: { service_categories: ServiceCategory[] }[] },
-          patchCategory: (category: ServiceCategory) => void,
-        ) => {
-          const orderedCategories = draft.pages.flatMap(
-            (page) => page.service_categories,
-          );
-
-          orderedCategories.forEach((category) => {
-            patchCategory(category);
-          });
-
-          orderedCategories.sort((a, b) => a.position - b.position);
-
-          let startIndex = 0;
-          draft.pages.forEach((page) => {
-            const pageSize = page.service_categories.length;
-            page.service_categories = orderedCategories.slice(
-              startIndex,
-              startIndex + pageSize,
-            );
-            startIndex += pageSize;
-          });
-        };
-
-        const cachedQueries = servicesApi.util
-          .selectInvalidatedBy(getState(), [
-            { type: "ServiceCategories", id: "LIST" },
-          ])
-          .filter(
-            (entry) =>
-              entry.endpointName === "getServiceCategories" &&
-              isGetCategoriesArg(entry.originalArgs) &&
-              entry.originalArgs.userId === userId,
-          );
-
-        const patches = cachedQueries.map(({ originalArgs }) =>
-          dispatch(
-            servicesApi.util.updateQueryData(
-              "getServiceCategories",
-              originalArgs,
-              (draft) => {
-                patchAndRebuildPages(draft, (category) => {
-                  const nextPosition = positionById.get(category.id);
-                  if (nextPosition != null) {
-                    category.position = nextPosition;
-                  }
-                });
-              },
-            ),
-          ),
-        );
-
-        try {
-          const { data: serverResponse } = await queryFulfilled;
-          const categoriesById = new Map(
-            serverResponse.service_categories.map((category) => [
-              category.id,
-              category,
-            ]),
-          );
-
-          cachedQueries.forEach(({ originalArgs }) => {
-            dispatch(
-              servicesApi.util.updateQueryData(
-                "getServiceCategories",
-                originalArgs,
-                (draft) => {
-                  patchAndRebuildPages(draft, (category) => {
-                    const serverCategory = categoriesById.get(category.id);
-                    if (serverCategory) {
-                      Object.assign(category, serverCategory);
-                    }
-                  });
-                },
-              ),
-            );
-          });
-        } catch {
-          patches.forEach((patch) => patch.undo());
-        }
-      },
     }),
 
     getServices: builder.query<Service[], { categoryId: number }>({
@@ -447,6 +349,253 @@ const servicesApi = api.injectEndpoints({
         }
       },
     }),
+
+    getAdditionalServices: builder.infiniteQuery<
+      PaginatedServiceCategoriesResponse<AdditionalService>,
+      GetServiceCategoriesQueryArg,
+      number
+    >({
+      query: ({ queryArg, pageParam }) => ({
+        url: `/users/${queryArg.userId}/additional_services`,
+        method: "GET",
+        params: {
+          ...queryArg.params,
+          page: pageParam,
+        },
+      }),
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+          const { current_page, total_pages } = lastPage.pagination;
+          return current_page < total_pages ? current_page + 1 : undefined;
+        },
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.pages.flatMap((page) =>
+                page.additional_services.map((service) => ({
+                  type: "AdditionalServices" as const,
+                  id: service.id,
+                })),
+              ),
+              { type: "AdditionalServices" as const, id: "LIST" },
+            ]
+          : [{ type: "AdditionalServices" as const, id: "LIST" }],
+    }),
+
+    getAdditionalService: builder.query<
+      Service,
+      { userId: number | string; id: number | string }
+    >({
+      query: ({ userId, id }) => ({
+        url: `/users/${userId}/additional_services/${id}`,
+        method: "GET",
+      }),
+      transformResponse: (response: unknown) => {
+        if (
+          response &&
+          typeof response === "object" &&
+          "additional_service" in response
+        ) {
+          return (response as { additional_service: Service })
+            .additional_service;
+        }
+
+        return response as Service;
+      },
+      providesTags: (_result, _error, arg) => [
+        { type: "AdditionalServices", id: arg.id },
+      ],
+    }),
+
+    createAdditionalService: builder.mutation<
+      Service,
+      { userId: number; data: CreateServicePayload | FormData }
+    >({
+      query: ({ userId, data }) => {
+        const payload =
+          data instanceof FormData ? data : { additional_service: data };
+
+        return {
+          url: `/users/${userId}/additional_services`,
+          method: "POST",
+          data: payload,
+        };
+      },
+      invalidatesTags: [{ type: "AdditionalServices", id: "LIST" }],
+    }),
+
+    updateAdditionalService: builder.mutation<
+      Service,
+      {
+        userId: number;
+        id: number;
+        data: Partial<UpdateServicePayload> | FormData;
+      }
+    >({
+      query: ({ userId, id, data }) => {
+        const payload =
+          data instanceof FormData ? data : { additional_service: data };
+
+        return {
+          url: `/users/${userId}/additional_services/${id}`,
+          method: "PATCH",
+          data: payload,
+        };
+      },
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "AdditionalServices", id: arg.id },
+        { type: "AdditionalServices", id: "LIST" },
+      ],
+    }),
+
+    deleteAdditionalService: builder.mutation<
+      void,
+      { userId: number | string; id: number | string }
+    >({
+      query: ({ userId, id }) => ({
+        url: `/users/${userId}/additional_services/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "AdditionalServices", id: arg.id },
+        { type: "AdditionalServices", id: "LIST" },
+      ],
+    }),
+
+    reorderServiceCategories: builder.mutation<
+      PaginatedResponse<ServiceCategory>,
+      { userId: number; positions: ServiceCategoryPositionPayload[] }
+    >({
+      query: ({ userId, positions }) => ({
+        url: `/users/${userId}/service_categories/reorder`,
+        method: "PATCH",
+        data: { positions },
+      }),
+      async onQueryStarted(
+        { userId, positions },
+        { dispatch, getState, queryFulfilled },
+      ) {
+        const positionById = new Map(
+          positions.map(({ id, position }) => [id, position]),
+        );
+        const patchAndRebuildPages = (
+          draft: { pages: { service_categories: ServiceCategory[] }[] },
+          patchCategory: (category: ServiceCategory) => void,
+        ) => {
+          const orderedCategories = draft.pages.flatMap(
+            (page) => page.service_categories,
+          );
+
+          orderedCategories.forEach((category) => {
+            patchCategory(category);
+          });
+
+          orderedCategories.sort((a, b) => a.position - b.position);
+
+          let startIndex = 0;
+          draft.pages.forEach((page) => {
+            const pageSize = page.service_categories.length;
+            page.service_categories = orderedCategories.slice(
+              startIndex,
+              startIndex + pageSize,
+            );
+            startIndex += pageSize;
+          });
+        };
+
+        const cachedQueries = servicesApi.util
+          .selectInvalidatedBy(getState(), [
+            { type: "ServiceCategories", id: "LIST" },
+          ])
+          .filter(
+            (entry) =>
+              entry.endpointName === "getServiceCategories" &&
+              isGetCategoriesArg(entry.originalArgs) &&
+              entry.originalArgs.userId === userId,
+          );
+
+        const patches = cachedQueries.map(({ originalArgs }) =>
+          dispatch(
+            servicesApi.util.updateQueryData(
+              "getServiceCategories",
+              originalArgs,
+              (draft) => {
+                patchAndRebuildPages(draft, (category) => {
+                  const nextPosition = positionById.get(category.id);
+                  if (nextPosition != null) {
+                    category.position = nextPosition;
+                  }
+                });
+              },
+            ),
+          ),
+        );
+
+        try {
+          const { data: serverResponse } = await queryFulfilled;
+          const categoriesById = new Map(
+            serverResponse.service_categories.map((category) => [
+              category.id,
+              category,
+            ]),
+          );
+
+          cachedQueries.forEach(({ originalArgs }) => {
+            dispatch(
+              servicesApi.util.updateQueryData(
+                "getServiceCategories",
+                originalArgs,
+                (draft) => {
+                  patchAndRebuildPages(draft, (category) => {
+                    const serverCategory = categoriesById.get(category.id);
+                    if (serverCategory) {
+                      Object.assign(category, serverCategory);
+                    }
+                  });
+                },
+              ),
+            );
+          });
+        } catch {
+          patches.forEach((patch) => patch.undo());
+        }
+      },
+    }),
+
+    reorderServices: builder.mutation<
+      void,
+      {
+        categoryId: number;
+        positions: { id: number; position: number }[];
+      }
+    >({
+      query: ({ categoryId, positions }) => ({
+        url: `/service_categories/${categoryId}/services/reorder`,
+        method: "PATCH",
+        data: positions,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Services", id: `LIST-${arg.categoryId}` },
+        { type: "ServiceCategories", id: "LIST" },
+      ],
+    }),
+
+    reorderAdditionalServices: builder.mutation<
+      void,
+      {
+        userId: number;
+        positions: { id: number; position: number }[];
+      }
+    >({
+      query: ({ userId, positions }) => ({
+        url: `/users/${userId}/additional_services/reorder`,
+        method: "PATCH",
+        data: positions,
+      }),
+      invalidatesTags: [{ type: "AdditionalServices", id: "LIST" }],
+    }),
   }),
 });
 
@@ -455,11 +604,20 @@ export const {
   useCreateServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
   useDeleteServiceCategoryMutation,
-  useReorderServiceCategoriesMutation,
 
   useGetServicesQuery,
   useGetServiceQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
   useDeleteServiceMutation,
+
+  useGetAdditionalServicesInfiniteQuery,
+  useGetAdditionalServiceQuery,
+  useCreateAdditionalServiceMutation,
+  useUpdateAdditionalServiceMutation,
+  useDeleteAdditionalServiceMutation,
+
+  useReorderServiceCategoriesMutation,
+  useReorderServicesMutation,
+  useReorderAdditionalServicesMutation,
 } = servicesApi;

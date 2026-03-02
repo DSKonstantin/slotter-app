@@ -20,6 +20,7 @@ export interface User {
   is_out_call: boolean;
   phone_confirmed_at: string | null;
   telegram_id: number | null;
+  onboarding_step: string;
 }
 
 export interface AuthResponse {

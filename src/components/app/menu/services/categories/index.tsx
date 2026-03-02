@@ -23,8 +23,8 @@ import {
 } from "@/src/store/redux/services/api/servicesApi";
 import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 
-import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
-import EditCategoryModal from "@/src/components/app/menu/services/editCategoryModal";
+import CreateCategoryModal from "@/src/components/app/menu/services/categories/createCategoryModal";
+import EditCategoryModal from "@/src/components/app/menu/services/categories/editCategoryModal";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 

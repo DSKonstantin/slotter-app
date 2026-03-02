@@ -1,7 +1,3 @@
-// src/store/redux/services/api-types/service.ts
-// =========================
-// SERVICE CATEGORY
-// =========================
 export interface ServiceCategory {
   id: number;
   name: string;
@@ -9,9 +5,9 @@ export interface ServiceCategory {
   color: string | null;
   is_active: boolean;
   position: number;
-  created_at?: string; // Optional as it's not in the provided JSON
+  created_at?: string;
   services?: Service[];
-  activeServicesCount?: number; // From previous implementation, might be useful
+  activeServicesCount?: number;
 }
 
 export type CreateServiceCategoryPayload = {
@@ -36,9 +32,6 @@ export type ServiceCategoryPositionPayload = {
   position: number;
 };
 
-// =========================
-// SERVICE
-// =========================
 export interface Service {
   id: number;
   name: string;
@@ -51,7 +44,6 @@ export interface Service {
   is_available_online: boolean;
   position: number;
 
-  // These fields are kept as optional as they might appear in other views
   main_photo_url?: string | null;
   additional_photo_first_url?: string | null;
   additional_photo_second_url?: string | null;
@@ -86,13 +78,11 @@ export type UpdateServicePayload = Partial<{
   additional_photos?: any[];
 }>;
 
-// =========================
-// ADDITIONAL SERVICE
-// =========================
 export interface AdditionalService {
   id: number;
   name: string;
-  price: number;
+  price_cents: number;
+  duration: number;
   position?: number;
   created_at: string;
 }

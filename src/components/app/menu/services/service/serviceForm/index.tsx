@@ -15,28 +15,6 @@ import ServiceCategorySelect from "@/src/components/app/menu/services/service/se
 import CreateAdditionalService from "@/src/components/app/menu/services/service/createAdditionalService";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
-export type AdditionalServiceForm = {
-  id: string;
-  title: string;
-  duration: number;
-  price: number;
-};
-
-export const defaultAdditionalServices: AdditionalServiceForm[] = [
-  {
-    id: "1",
-    title: "Укладка пастой",
-    duration: 10,
-    price: 200,
-  },
-  {
-    id: "2",
-    title: "Массаж головы",
-    duration: 20,
-    price: 500,
-  },
-];
-
 export const defaultServicePhotos: ServicePhotosValue = {
   ...createDefaultServicePhotos(),
 };

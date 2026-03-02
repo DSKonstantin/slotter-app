@@ -19,6 +19,7 @@ export const api = createApi({
   tagTypes: [
     "ServiceCategories",
     "Services",
+    "AdditionalServices",
     "WorkingDays",
     "WorkingDayBreaks",
   ],

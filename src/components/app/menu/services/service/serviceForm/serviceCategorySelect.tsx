@@ -12,7 +12,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
-import CreateCategoryModal from "@/src/components/app/menu/services/createCategoryModal";
+import CreateCategoryModal from "@/src/components/app/menu/services/categories/createCategoryModal";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 
 const ServiceCategorySelect = () => {
