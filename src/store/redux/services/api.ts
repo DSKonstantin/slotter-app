@@ -5,7 +5,6 @@ import type { RootState } from "@/src/store/redux/store";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: axiosBaseQuery({
-    transformResponse: (response) => response,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
 

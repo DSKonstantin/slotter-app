@@ -2,9 +2,10 @@ import React from "react";
 import { View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { Button, Item, StSvg, Typography } from "@/src/components/ui";
+import { Button, Item, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
+import DurationField from "@/src/components/app/menu/services/shared/durationField";
 
 type AdditionalServiceFormBodyProps = {
   onSubmit: () => void;
@@ -48,21 +49,11 @@ const AdditionalServicesForm = ({
             label="Стоимость (₽)"
             placeholder="Введите цену услуги"
           />
-          <View className="gap-2">
-            <Typography className="text-neutral-500 text-caption">
-              Продолжительность (мин)
-            </Typography>
-
-            <View className="flex-row gap-2">
-              <Button title="20" size="sm" />
-              <Button title="30" size="sm" />
-              <Button title="60" size="sm" />
-              <Button title="90" size="sm" />
-              <Button title="90" size="sm" />
-            </View>
-
-            <RhfTextField name="duration" placeholder="60" />
-          </View>
+          <DurationField
+            name="duration"
+            placeholder="60"
+            presets={[20, 30, 60, 90]}
+          />
         </View>
       </KeyboardAwareScrollView>
       <View
@@ -74,18 +65,16 @@ const AdditionalServicesForm = ({
         <Button
           title="Создать"
           onPress={onSubmit}
-          // disabled={auth.userId == null}
           rightIcon={
             <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
           }
         />
-        {isEdit && (
+        {isEdit && onDelete && (
           <Button
             title="Удалить услугу"
             variant="clear"
             textClassName="text-accent-red-500"
-            onPress={() => onDelete()}
-            // disabled={auth.userId == null}
+            onPress={onDelete}
             rightIcon={
               <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
             }

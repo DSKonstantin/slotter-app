@@ -1,30 +1,28 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { View, ActivityIndicator, Pressable } from "react-native";
+import React, { useCallback, useMemo } from "react";
 import DraggableFlatList, {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import {
-  Button,
-  Card,
-  IconButton,
-  StSvg,
-  Typography,
-  Switch,
-} from "@/src/components/ui";
-
-import { colors } from "@/src/styles/colors";
-import {
   useGetAdditionalServicesInfiniteQuery,
   useReorderAdditionalServicesMutation,
   useUpdateAdditionalServiceMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 
-import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppSelector } from "@/src/store/redux/store";
+import AdditionalServiceItem, {
+  AdditionalListItem,
+} from "@/src/components/app/menu/services/list/additionalList/additionalServiceItem";
+import {
+  AdditionalListErrorState,
+  AdditionalListFooter,
+  AdditionalListLoadingState,
+} from "@/src/components/app/menu/services/list/additionalList/listStates";
 
 const AdditionalList = () => {
+  const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const auth = useRequiredAuth();
 
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
@@ -43,7 +41,7 @@ const AdditionalList = () => {
     auth ? { userId: auth.userId } : skipToken,
   );
 
-  const services = useMemo(() => {
+  const services = useMemo<AdditionalListItem[]>(() => {
     if (!data?.pages) return [];
 
     const unique = new Map<number, any>();
@@ -72,7 +70,7 @@ const AdditionalList = () => {
     from,
     to,
   }: {
-    data: any[];
+    data: AdditionalListItem[];
     from: number;
     to: number;
   }) => {
@@ -100,86 +98,52 @@ const AdditionalList = () => {
   }, [isFetchingNextPage, refetch]);
 
   if (isLoading && !data) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator />
-      </View>
-    );
+    return <AdditionalListLoadingState />;
   }
 
   if (isError && !data) {
     return (
-      <View className="flex-1 items-center justify-center px-screen gap-4">
-        <Typography className="text-body text-accent-red-500">
-          Ошибка загрузки.
-        </Typography>
-        <Button
-          title="Повторить"
-          onPress={handleRefresh}
-          loading={isFetching}
-          disabled={isFetching}
-          buttonClassName="w-full"
-        />
-      </View>
+      <AdditionalListErrorState
+        isFetching={isFetching}
+        onRetry={handleRefresh}
+      />
     );
   }
 
   if (!auth) return null;
 
   return (
-    <View>
-      <DraggableFlatList
-        data={services}
-        scrollEnabled={false}
-        keyExtractor={(item) => String(item.id)}
-        activationDistance={10}
-        autoscrollThreshold={48}
-        autoscrollSpeed={220}
-        onDragEnd={handleDragEnd}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.35}
-        contentContainerStyle={{
-          // paddingTop: topInset,
-          // paddingBottom: bottomInset + 16,
-          paddingHorizontal: 20,
-          gap: 8,
-        }}
-        renderItem={({ item, drag, isActive }: RenderItemParams<any>) => (
-          <Card
-            title={item.name}
-            subtitle={`${item.duration} мин | ${(
-              item.price_cents / 100
-            ).toLocaleString("ru-RU")} ₽`}
-            active={isActive}
-            className={item.is_active ? "" : "opacity-40"}
-            left={
-              <Pressable onLongPress={drag} delayLongPress={100} hitSlop={8}>
-                <StSvg name="Drag" size={24} color={colors.neutral[900]} />
-              </Pressable>
-            }
-            right={
-              <Switch
-                value={item.is_active}
-                onChange={(next) => handleToggleActive(item.id, next)}
-              />
-            }
-            onPress={() => {
-              // setSelectedService(item);
-              // setEditVisible(true);
-            }}
-          />
-        )}
-        ListFooterComponent={
-          <View className="gap-2">
-            {isFetchingNextPage && (
-              <View className="items-center py-2">
-                <ActivityIndicator />
-              </View>
-            )}
-          </View>
-        }
-      />
-    </View>
+    <DraggableFlatList
+      data={services}
+      scrollEnabled={false}
+      keyExtractor={(item) => String(item.id)}
+      activationDistance={10}
+      autoscrollThreshold={48}
+      autoscrollSpeed={220}
+      onDragEnd={handleDragEnd}
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.35}
+      contentContainerStyle={{
+        paddingHorizontal: 20,
+        gap: 8,
+      }}
+      renderItem={({
+        item,
+        drag,
+        isActive,
+      }: RenderItemParams<AdditionalListItem>) => (
+        <AdditionalServiceItem
+          item={item}
+          isEditMode={isEditMode}
+          isDragActive={isActive}
+          onDrag={drag}
+          onToggleActive={handleToggleActive}
+        />
+      )}
+      ListFooterComponent={
+        <AdditionalListFooter isFetchingNextPage={isFetchingNextPage} />
+      }
+    />
   );
 };
 

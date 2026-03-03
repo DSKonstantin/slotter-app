@@ -1,17 +1,29 @@
 import React, { useCallback, useMemo } from "react";
-import { InfiniteFlashList } from "@/src/components/shared/list/infiniteFlashList";
-import { ActivityIndicator, Text, View } from "react-native";
-import { Button, Card, StSvg, Tag, Typography } from "@/src/components/ui";
-import map from "lodash/map";
-import { colors } from "@/src/styles/colors";
+import { Text, View } from "react-native";
+import {
+  NestableDraggableFlatList,
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
+import { Button, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
+import {
+  useGetServiceCategoriesInfiniteQuery,
+  useReorderServiceCategoriesMutation,
+  useReorderServicesMutation,
+} from "@/src/store/redux/services/api/servicesApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppSelector } from "@/src/store/redux/store";
+import { Service, ServiceCategory } from "@/src/store/redux/services/api-types";
+import ServiceCategoryItem from "@/src/components/app/menu/services/list/serviceList/serviceCategoryItem";
+import { ServiceListSkeleton } from "@/src/components/app/menu/services/list/listSkeletons";
 
 const ServiceList = () => {
   const auth = useRequiredAuth();
+  const isEditMode = useAppSelector((s) => s.services.isEditMode);
+  const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
+  const [reorderServices] = useReorderServicesMutation();
 
   const {
     data,
@@ -32,6 +44,28 @@ const ServiceList = () => {
     return data?.pages.flatMap((page) => page.service_categories) ?? [];
   }, [data]);
 
+  const handleDragEnd = async ({
+    data: nextData,
+    from,
+    to,
+  }: {
+    data: typeof categories;
+    from: number;
+    to: number;
+  }) => {
+    if (from === to || !auth?.userId) return;
+
+    try {
+      await reorderServiceCategories({
+        userId: auth.userId,
+        positions: nextData.map((item, index) => ({
+          id: item.id,
+          position: index,
+        })),
+      }).unwrap();
+    } catch {}
+  };
+
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
@@ -43,12 +77,44 @@ const ServiceList = () => {
     refetch({ refetchCachedPages: false });
   }, [isFetchingNextPage, refetch]);
 
+  const handleServicePress = useCallback(
+    (serviceId: number, categoryId: number) => {
+      router.push(Routers.app.menu.services.edit(serviceId, categoryId));
+    },
+    [],
+  );
+
+  const handleCreateServicePress = useCallback((categoryId: number) => {
+    router.push(Routers.app.menu.services.create(categoryId));
+  }, []);
+
+  const handleContainerLayout = useCallback(() => {}, []);
+
+  const handleServicesReorder = useCallback(
+    async (
+      categoryId: number,
+      nextServices: Service[],
+      from: number,
+      to: number,
+    ) => {
+      if (from === to) return;
+      if (!auth?.userId) return;
+
+      try {
+        await reorderServices({
+          categoryId,
+          positions: nextServices.map((service, index) => ({
+            id: service.id,
+            position: index,
+          })),
+        }).unwrap();
+      } catch {}
+    },
+    [auth?.userId, reorderServices],
+  );
+
   if (isLoading && !data) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator />
-      </View>
-    );
+    return <ServiceListSkeleton />;
   }
 
   if (isError && !data) {
@@ -69,17 +135,16 @@ const ServiceList = () => {
   }
 
   return (
-    <InfiniteFlashList
+    <NestableDraggableFlatList
       data={categories}
       scrollEnabled={false}
       keyExtractor={(item) => String(item.id)}
       showsVerticalScrollIndicator={false}
+      onContainerLayout={handleContainerLayout}
       onRefresh={handleRefresh}
-      isRefreshing={isFetching && !isFetchingNextPage && !isLoading}
+      refreshing={isFetching && !isFetchingNextPage && !isLoading}
       onEndReached={handleEndReached}
-      onEndReachedThreshold={0.35}
-      hasNextPage={Boolean(hasNextPage)}
-      isFetchingNextPage={isFetchingNextPage}
+      onDragEnd={isEditMode ? handleDragEnd : undefined}
       contentContainerStyle={{
         paddingHorizontal: 20,
       }}
@@ -91,79 +156,19 @@ const ServiceList = () => {
           </Typography>
         </View>
       }
-      renderItem={({ item: category }) => {
-        const activeServicesCount =
-          category.services?.filter((s) => s.is_active).length ?? 0;
-
-        return (
-          <View className="gap-2">
-            <View className="flex-row justify-between">
-              <View className="flex-row items-center">
-                <Typography className="text-caption text-neutral-500">
-                  {category.name}
-                </Typography>
-              </View>
-
-              <Typography
-                weight="regular"
-                className="text-caption text-neutral-500"
-              >
-                {activeServicesCount}/{category.services?.length ?? 0} активно
-              </Typography>
-            </View>
-
-            <View className="gap-2">
-              {category.services?.length ? (
-                map(category.services, (service) => (
-                  <Card
-                    key={service.id}
-                    title={service.name}
-                    titleProps={{
-                      numberOfLines: 1,
-                      ellipsizeMode: "tail",
-                    }}
-                    subtitle={`${service.duration} мин | ${(
-                      service.price_cents / 100
-                    ).toLocaleString("ru-RU")} ₽`}
-                    titleAccessory={
-                      !service.is_active ? (
-                        <Tag title="скрыто" size="sm" />
-                      ) : undefined
-                    }
-                    right={
-                      <StSvg
-                        name="Expand_right_light"
-                        size={24}
-                        color={colors.neutral[500]}
-                      />
-                    }
-                    onPress={() =>
-                      router.push(
-                        Routers.app.menu.services.edit(service.id, category.id),
-                      )
-                    }
-                  />
-                ))
-              ) : (
-                <Button
-                  title="Создать услугу"
-                  onPress={() =>
-                    router.push(Routers.app.menu.services.create(category.id))
-                  }
-                  variant="secondary"
-                  rightIcon={
-                    <StSvg
-                      name="Add_ring_fill_light"
-                      size={18}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                />
-              )}
-            </View>
-          </View>
-        );
-      }}
+      renderItem={({
+        item: category,
+        drag,
+      }: RenderItemParams<ServiceCategory>) => (
+        <ServiceCategoryItem
+          category={category}
+          isEditMode={isEditMode}
+          onDrag={drag}
+          onServicePress={handleServicePress}
+          onCreateServicePress={handleCreateServicePress}
+          onServicesReorder={handleServicesReorder}
+        />
+      )}
     />
   );
 };

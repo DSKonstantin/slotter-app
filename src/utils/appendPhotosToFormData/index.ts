@@ -100,3 +100,11 @@ export const appendPhotosToFormData = (
     }
   });
 };
+
+export const hasServicePhotoChanges = (photos: ServicePhotosValue) => {
+  if (photos.mainPhoto.action !== "keep") {
+    return true;
+  }
+
+  return photos.additionalPhotos.some((slot) => slot.action !== "keep");
+};

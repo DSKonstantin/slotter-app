@@ -61,6 +61,7 @@ export type CreateServicePayload = {
   duration: number;
   is_active?: boolean;
   is_available_online?: boolean;
+  additional_service_ids?: number[];
   position?: number;
   main_photo?: any;
   additional_photos?: any[];
@@ -73,6 +74,8 @@ export type UpdateServicePayload = Partial<{
   duration: number;
   is_active: boolean;
   is_available_online: boolean;
+  service_category_id: number;
+  additional_service_ids: number[];
   position: number;
   main_photo?: any;
   additional_photos?: any[];

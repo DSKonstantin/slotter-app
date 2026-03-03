@@ -14,6 +14,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { centsToRubles } from "@/src/utils/price/formatPrice";
 
 const AdditionalServiceEdit = () => {
   const router = useRouter();
@@ -41,8 +42,7 @@ const AdditionalServiceEdit = () => {
   const [updateAdditionalService, { isLoading }] =
     useUpdateAdditionalServiceMutation();
 
-  const [deleteAdditionalService, { isLoading: isDeleting }] =
-    useDeleteAdditionalServiceMutation();
+  const [deleteAdditionalService] = useDeleteAdditionalServiceMutation();
 
   const handleDelete = () => {
     if (!auth?.userId) return;
@@ -74,6 +74,7 @@ const AdditionalServiceEdit = () => {
     try {
       await updateAdditionalService({
         userId: auth.userId,
+        id: Number(id),
         data: {
           name: values.name.trim(),
           duration: Number(values.duration),
@@ -82,7 +83,6 @@ const AdditionalServiceEdit = () => {
         },
       }).unwrap();
 
-      methods.reset();
       router.back();
     } catch (error: any) {
       toast.error(error?.data?.error || "Не удалось изменить доп. услугу");
@@ -94,7 +94,7 @@ const AdditionalServiceEdit = () => {
 
     methods.reset({
       name: service.name,
-      price: String(service.price_cents / 100),
+      price: String(centsToRubles(service.price_cents)),
       duration: String(service.duration),
       isActive: service.is_active,
     });

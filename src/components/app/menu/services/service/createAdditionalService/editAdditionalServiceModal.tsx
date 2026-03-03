@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
-import { Button, StModal, Typography } from "@/src/components/ui";
-import { Alert, View } from "react-native";
-import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { StModal } from "@/src/components/ui";
+import { Alert } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import AdditionalServicesForm from "@/src/components/app/menu/services/additionalServices/additionalServicesForm";
 import {
@@ -10,6 +9,7 @@ import {
 } from "@/src/store/redux/services/api/servicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { centsToRubles } from "@/src/utils/price/formatPrice";
 
 type AdditionalServiceFormValues = {
   name: string;
@@ -40,7 +40,7 @@ const EditAdditionalServiceModal = ({ visible, service, onClose }: Props) => {
   const [deleteAdditionalService, { isLoading: isDeleting }] =
     useDeleteAdditionalServiceMutation();
 
-  const methods = useForm({
+  const methods = useForm<AdditionalServiceFormValues>({
     defaultValues: {
       name: "",
       description: "",
@@ -113,7 +113,7 @@ const EditAdditionalServiceModal = ({ visible, service, onClose }: Props) => {
     reset({
       name: service.name ?? "",
       description: service.description ?? "",
-      price: String(service.price_cents / 100),
+      price: String(centsToRubles(service.price_cents)),
       duration: String(service.duration),
       isActive: service.is_active ?? true,
     });

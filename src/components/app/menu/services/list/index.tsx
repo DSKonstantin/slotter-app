@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router } from "expo-router";
-
+import { NestableScrollContainer } from "react-native-draggable-flatlist";
 import {
   Button,
   Divider,
@@ -13,8 +13,55 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import ServiceList from "@/src/components/app/menu/services/list/serviceList";
 import AdditionalList from "@/src/components/app/menu/services/list/additionalList";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import {
+  toggleEditMode,
+  toggleSearchMode,
+} from "@/src/store/redux/slices/servicesSlice";
+import ServiceList from "@/src/components/app/menu/services/list/serviceList";
+
+const ServicesToolbarActions = () => {
+  const isEditMode = useAppSelector((s) => s.services.isEditMode);
+  const dispatch = useAppDispatch();
+
+  const handleEditPress = useCallback(() => {
+    dispatch(toggleEditMode());
+  }, [dispatch]);
+
+  const handleSearchPress = useCallback(() => {
+    dispatch(toggleSearchMode());
+  }, [dispatch]);
+
+  return (
+    <View className="w-[104px] items-end">
+      <View
+        className={`flex-row bg-background-surface h-[48px] items-center gap-4 rounded-full ${!isEditMode && "px-2.5"}`}
+      >
+        <IconButton
+          size={isEditMode ? "md" : "sm"}
+          onPress={handleEditPress}
+          icon={
+            <StSvg
+              name={isEditMode ? "Close_round" : "Edit"}
+              size={24}
+              color={colors.neutral[900]}
+            />
+          }
+        />
+        {!isEditMode && (
+          <IconButton
+            size="sm"
+            disabled={isEditMode}
+            onPress={handleSearchPress}
+            buttonClassName={isEditMode ? "opacity-0" : undefined}
+            icon={<StSvg name="Search" size={24} color={colors.neutral[900]} />}
+          />
+        )}
+      </View>
+    </View>
+  );
+};
 
 const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -46,22 +93,7 @@ const AppServices = () => {
     <>
       <ScreenWithToolbar
         title="Услуги"
-        rightButton={
-          <View className="flex-row bg-background-surface h-[48px] items-center gap-4 rounded-full px-2.5">
-            <IconButton
-              size="sm"
-              onPress={() => {}}
-              icon={<StSvg name="Edit" size={24} color={colors.neutral[900]} />}
-            />
-            <IconButton
-              size="sm"
-              onPress={() => {}}
-              icon={
-                <StSvg name="Search" size={24} color={colors.neutral[900]} />
-              }
-            />
-          </View>
-        }
+        rightButton={<ServicesToolbarActions />}
       >
         {({ topInset, bottomInset }) => {
           return (
@@ -98,7 +130,7 @@ const AppServices = () => {
                 />
               </View>
 
-              <ScrollView
+              <NestableScrollContainer
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
                   gap: 24,
@@ -111,7 +143,7 @@ const AppServices = () => {
                   <Divider />
                 </View>
                 <AdditionalList />
-              </ScrollView>
+              </NestableScrollContainer>
             </>
           );
         }}

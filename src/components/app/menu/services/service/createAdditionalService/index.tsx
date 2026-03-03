@@ -16,6 +16,7 @@ import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import EditAdditionalServiceModal from "@/src/components/app/menu/services/service/createAdditionalService/editAdditionalServiceModal";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 
 type ServiceFormValues = {
   additionalServices: {
@@ -36,10 +37,9 @@ const CreateAdditionalService = () => {
     name: "additionalServices",
   });
 
-  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-    useGetAdditionalServicesInfiniteQuery(
-      auth ? { userId: auth.userId } : skipToken,
-    );
+  const { data } = useGetAdditionalServicesInfiniteQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
 
   const additionalServicesFromApi = useMemo(() => {
     return data?.pages.flatMap((page) => page.additional_services) ?? [];
@@ -94,7 +94,7 @@ const CreateAdditionalService = () => {
         }}
         showsHorizontalScrollIndicator={false}
       >
-        <View className="flex-row gap-2 py-1">
+        <View className="flex-row gap-2 py-2">
           {map(additionalServicesFromApi, (service) => {
             const selectedIndex = fields.findIndex(
               (item) => item.serviceId === service.id,
@@ -106,9 +106,7 @@ const CreateAdditionalService = () => {
               <View key={service.id} className="relative">
                 <Card
                   title={service.name}
-                  subtitle={`${service.duration} мин | ${
-                    service.price_cents / 100
-                  } ₽`}
+                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
                   onPress={() => handleToggle(service)}
                   pressArea="content"
                   active={isSelected}

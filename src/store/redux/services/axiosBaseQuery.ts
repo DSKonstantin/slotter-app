@@ -2,30 +2,14 @@ import type { BaseQueryApi, BaseQueryFn } from "@reduxjs/toolkit/query";
 import type { AxiosRequestConfig } from "axios";
 import { AxiosHeaders, isAxiosError } from "axios";
 import axios from "./axios";
-import type { BaseResponse } from "./api-types";
 
 export interface AxiosBaseQueryError {
   status: number | "FETCH_ERROR" | "CUSTOM_ERROR";
   data: unknown;
 }
 
-export interface AxiosBaseQueryArgs<
-  Meta,
-  Response = BaseResponse,
-  Result = Response,
-  DefinitionExtraOptions extends ServiceExtraOptions = ServiceExtraOptions,
-> {
-  meta?: Meta;
-  prepareHeaders?: (
-    headers: AxiosHeaders,
-    api: BaseQueryApi,
-    extraOptions: DefinitionExtraOptions,
-  ) => AxiosHeaders;
-  transformResponse?: (response: Response, api: BaseQueryApi) => Result;
-}
-
-export interface ServiceExtraOptions {
-  authRequired?: boolean;
+export interface AxiosBaseQueryArgs {
+  prepareHeaders?: (headers: AxiosHeaders, api: BaseQueryApi) => AxiosHeaders;
 }
 
 const DEFAULT_ERROR_MESSAGE = { error: "Что-то пошло не так" };
@@ -38,9 +22,6 @@ const METHOD_HEADER_KEYS = new Set([
   "post",
   "put",
   "patch",
-  "purge",
-  "link",
-  "unlink",
 ]);
 
 const getRequestConfig = (
@@ -90,74 +71,47 @@ const normalizeRequestHeaders = (
 
   const headers = new AxiosHeaders();
 
-  for (const [key, value] of Object.entries(requestHeaders)) {
-    if (value === undefined) {
-      continue;
-    }
+  for (const [key, value] of Object.entries(
+    requestHeaders as Record<string, unknown>,
+  )) {
+    if (value == null) continue;
 
     if (METHOD_HEADER_KEYS.has(key)) {
-      if (value instanceof AxiosHeaders) {
-        headers.set(value);
-      }
+      headers.set(value as any);
       continue;
     }
 
-    headers.set(key, value);
+    headers.set(key, value as any);
   }
 
   return headers;
 };
 
-const axiosBaseQuery = <
-  Args extends AxiosRequestConfig | string = AxiosRequestConfig,
-  Response = BaseResponse,
-  Result = Response,
-  DefinitionExtraOptions extends ServiceExtraOptions = ServiceExtraOptions,
-  Meta = Record<string, unknown>,
->({
+const axiosBaseQuery = ({
   prepareHeaders,
-  meta,
-  transformResponse,
-}: AxiosBaseQueryArgs<
-  Meta,
-  Response,
-  Result,
-  DefinitionExtraOptions
-> = {}): BaseQueryFn<
-  Args,
-  Result,
-  AxiosBaseQueryError,
-  DefinitionExtraOptions,
-  Meta
+}: AxiosBaseQueryArgs = {}): BaseQueryFn<
+  AxiosRequestConfig | string,
+  unknown,
+  AxiosBaseQueryError
 > => {
-  return async (args, api, extraOptions) => {
-    const resolvedExtraOptions = (extraOptions ?? {}) as DefinitionExtraOptions;
-    const { authRequired: _authRequired, ...axiosOverrides } =
-      resolvedExtraOptions as DefinitionExtraOptions & AxiosRequestConfig;
-
+  return async (args, api) => {
     try {
       const requestConfig = getRequestConfig(args);
       const headers = normalizeRequestHeaders(requestConfig.headers);
-      const preparedHeaders =
-        prepareHeaders?.(headers, api, resolvedExtraOptions) ?? headers;
+      const preparedHeaders = prepareHeaders?.(headers, api) ?? headers;
 
       const result = await axios({
         ...requestConfig,
-        ...(axiosOverrides as AxiosRequestConfig),
         headers: preparedHeaders,
         signal: api.signal,
       });
 
       return {
-        data: transformResponse
-          ? transformResponse(result.data as Response, api)
-          : (result.data as Result),
-        meta,
+        data: result.data,
       };
     } catch (error) {
       return {
         error: getErrorPayload(error),
-        meta,
       };
     }
   };

@@ -28,6 +28,64 @@ const isGetCategoriesArg = (
   );
 };
 
+const buildPositionMap = (positions: ServiceCategoryPositionPayload[]) =>
+  new Map(positions.map(({ id, position }) => [id, position]));
+
+const applyPositionOrder = <T extends { id: number; position?: number }>(
+  items: T[],
+  positionById: Map<number, number>,
+) => {
+  items.forEach((item) => {
+    const nextPosition = positionById.get(item.id);
+
+    if (nextPosition != null) {
+      item.position = nextPosition;
+    }
+  });
+
+  items.sort(
+    (a, b) =>
+      (a.position ?? Number.MAX_SAFE_INTEGER) -
+      (b.position ?? Number.MAX_SAFE_INTEGER),
+  );
+};
+
+const reorderPaginatedPages = <T extends { id: number; position?: number }>(
+  draft: { pages: Record<string, T[]>[] },
+  key: string,
+  positionById: Map<number, number>,
+) => {
+  const allItems = draft.pages.flatMap((page) => page[key]);
+  applyPositionOrder(allItems, positionById);
+
+  let startIndex = 0;
+  draft.pages.forEach((page) => {
+    const count = page[key].length;
+    page[key] = allItems.slice(startIndex, startIndex + count);
+    startIndex += count;
+  });
+};
+
+const unwrapResponse =
+  <T>(key: string) =>
+  (response: unknown): T => {
+    if (response && typeof response === "object" && key in response) {
+      return (response as Record<string, T>)[key];
+    }
+    return response as T;
+  };
+
+const applyWithRollback = async (
+  patches: { undo: () => void }[],
+  queryFulfilled: Promise<unknown>,
+) => {
+  try {
+    await queryFulfilled;
+  } catch {
+    patches.forEach((patch) => patch.undo());
+  }
+};
+
 const servicesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
 
@@ -245,13 +303,7 @@ const servicesApi = api.injectEndpoints({
         url: `/service_categories/${categoryId}/services/${id}`,
         method: "GET",
       }),
-      transformResponse: (response: unknown) => {
-        if (response && typeof response === "object" && "service" in response) {
-          return (response as { service: Service }).service;
-        }
-
-        return response as Service;
-      },
+      transformResponse: unwrapResponse<Service>("service"),
       providesTags: (_result, _error, arg) => [
         { type: "Services", id: arg.id },
       ],
@@ -290,7 +342,7 @@ const servicesApi = api.injectEndpoints({
           ),
         ];
 
-        const cachedCategoryQueries = servicesApi.util
+        servicesApi.util
           .selectInvalidatedBy(getState(), [
             { type: "ServiceCategories", id: "LIST" },
           ])
@@ -299,54 +351,49 @@ const servicesApi = api.injectEndpoints({
               entry.endpointName === "getServiceCategories" &&
               isGetCategoriesArg(entry.originalArgs) &&
               entry.originalArgs.params?.view === "with_services",
-          );
+          )
+          .forEach(({ originalArgs }) => {
+            patches.push(
+              dispatch(
+                servicesApi.util.updateQueryData(
+                  "getServiceCategories",
+                  originalArgs,
+                  (draft) => {
+                    draft.pages.forEach((page) => {
+                      const category = page.service_categories.find(
+                        (item) => item.id === categoryId,
+                      );
 
-        cachedCategoryQueries.forEach(({ originalArgs }) => {
-          const patch = dispatch(
-            servicesApi.util.updateQueryData(
-              "getServiceCategories",
-              originalArgs,
-              (draft) => {
-                draft.pages.forEach((page) => {
-                  const category = page.service_categories.find(
-                    (item) => item.id === categoryId,
-                  );
+                      if (!category?.services) return;
 
-                  if (!category?.services) return;
+                      const serviceIndex = category.services.findIndex(
+                        (service) => service.id === id,
+                      );
 
-                  const serviceIndex = category.services.findIndex(
-                    (service) => service.id === id,
-                  );
+                      if (serviceIndex === -1) return;
 
-                  if (serviceIndex === -1) return;
+                      const [removedService] = category.services.splice(
+                        serviceIndex,
+                        1,
+                      );
 
-                  const [removedService] = category.services.splice(
-                    serviceIndex,
-                    1,
-                  );
+                      if (
+                        removedService?.is_active &&
+                        typeof category.activeServicesCount === "number"
+                      ) {
+                        category.activeServicesCount = Math.max(
+                          0,
+                          category.activeServicesCount - 1,
+                        );
+                      }
+                    });
+                  },
+                ),
+              ),
+            );
+          });
 
-                  if (
-                    removedService?.is_active &&
-                    typeof category.activeServicesCount === "number"
-                  ) {
-                    category.activeServicesCount = Math.max(
-                      0,
-                      category.activeServicesCount - 1,
-                    );
-                  }
-                });
-              },
-            ),
-          );
-
-          patches.push(patch);
-        });
-
-        try {
-          await queryFulfilled;
-        } catch {
-          patches.forEach((patch) => patch.undo());
-        }
+        await applyWithRollback(patches, queryFulfilled);
       },
     }),
 
@@ -392,18 +439,7 @@ const servicesApi = api.injectEndpoints({
         url: `/users/${userId}/additional_services/${id}`,
         method: "GET",
       }),
-      transformResponse: (response: unknown) => {
-        if (
-          response &&
-          typeof response === "object" &&
-          "additional_service" in response
-        ) {
-          return (response as { additional_service: Service })
-            .additional_service;
-        }
-
-        return response as Service;
-      },
+      transformResponse: unwrapResponse<Service>("additional_service"),
       providesTags: (_result, _error, arg) => [
         { type: "AdditionalServices", id: arg.id },
       ],
@@ -465,7 +501,7 @@ const servicesApi = api.injectEndpoints({
     }),
 
     reorderServiceCategories: builder.mutation<
-      PaginatedResponse<ServiceCategory>,
+      void,
       { userId: number; positions: ServiceCategoryPositionPayload[] }
     >({
       query: ({ userId, positions }) => ({
@@ -477,35 +513,9 @@ const servicesApi = api.injectEndpoints({
         { userId, positions },
         { dispatch, getState, queryFulfilled },
       ) {
-        const positionById = new Map(
-          positions.map(({ id, position }) => [id, position]),
-        );
-        const patchAndRebuildPages = (
-          draft: { pages: { service_categories: ServiceCategory[] }[] },
-          patchCategory: (category: ServiceCategory) => void,
-        ) => {
-          const orderedCategories = draft.pages.flatMap(
-            (page) => page.service_categories,
-          );
+        const positionById = buildPositionMap(positions);
 
-          orderedCategories.forEach((category) => {
-            patchCategory(category);
-          });
-
-          orderedCategories.sort((a, b) => a.position - b.position);
-
-          let startIndex = 0;
-          draft.pages.forEach((page) => {
-            const pageSize = page.service_categories.length;
-            page.service_categories = orderedCategories.slice(
-              startIndex,
-              startIndex + pageSize,
-            );
-            startIndex += pageSize;
-          });
-        };
-
-        const cachedQueries = servicesApi.util
+        const patches = servicesApi.util
           .selectInvalidatedBy(getState(), [
             { type: "ServiceCategories", id: "LIST" },
           ])
@@ -514,53 +524,26 @@ const servicesApi = api.injectEndpoints({
               entry.endpointName === "getServiceCategories" &&
               isGetCategoriesArg(entry.originalArgs) &&
               entry.originalArgs.userId === userId,
-          );
-
-        const patches = cachedQueries.map(({ originalArgs }) =>
-          dispatch(
-            servicesApi.util.updateQueryData(
-              "getServiceCategories",
-              originalArgs,
-              (draft) => {
-                patchAndRebuildPages(draft, (category) => {
-                  const nextPosition = positionById.get(category.id);
-                  if (nextPosition != null) {
-                    category.position = nextPosition;
-                  }
-                });
-              },
-            ),
-          ),
-        );
-
-        try {
-          const { data: serverResponse } = await queryFulfilled;
-          const categoriesById = new Map(
-            serverResponse.service_categories.map((category) => [
-              category.id,
-              category,
-            ]),
-          );
-
-          cachedQueries.forEach(({ originalArgs }) => {
+          )
+          .map(({ originalArgs }) =>
             dispatch(
               servicesApi.util.updateQueryData(
                 "getServiceCategories",
                 originalArgs,
                 (draft) => {
-                  patchAndRebuildPages(draft, (category) => {
-                    const serverCategory = categoriesById.get(category.id);
-                    if (serverCategory) {
-                      Object.assign(category, serverCategory);
-                    }
-                  });
+                  reorderPaginatedPages(
+                    draft as unknown as {
+                      pages: Record<string, ServiceCategory[]>[];
+                    },
+                    "service_categories",
+                    positionById,
+                  );
                 },
               ),
-            );
-          });
-        } catch {
-          patches.forEach((patch) => patch.undo());
-        }
+            ),
+          );
+
+        await applyWithRollback(patches, queryFulfilled);
       },
     }),
 
@@ -568,33 +551,114 @@ const servicesApi = api.injectEndpoints({
       void,
       {
         categoryId: number;
-        positions: { id: number; position: number }[];
+        positions: ServiceCategoryPositionPayload[];
       }
     >({
       query: ({ categoryId, positions }) => ({
         url: `/service_categories/${categoryId}/services/reorder`,
         method: "PATCH",
-        data: positions,
+        data: { positions },
       }),
-      invalidatesTags: (_result, _error, arg) => [
-        { type: "Services", id: `LIST-${arg.categoryId}` },
-        { type: "ServiceCategories", id: "LIST" },
-      ],
+      async onQueryStarted(
+        { categoryId, positions },
+        { dispatch, getState, queryFulfilled },
+      ) {
+        const positionById = buildPositionMap(positions);
+        const patches = [
+          dispatch(
+            servicesApi.util.updateQueryData(
+              "getServices",
+              { categoryId },
+              (draft) => {
+                applyPositionOrder(draft, positionById);
+              },
+            ),
+          ),
+        ];
+
+        servicesApi.util
+          .selectInvalidatedBy(getState(), [
+            { type: "ServiceCategories", id: "LIST" },
+          ])
+          .filter(
+            (entry) =>
+              entry.endpointName === "getServiceCategories" &&
+              isGetCategoriesArg(entry.originalArgs) &&
+              entry.originalArgs.params?.view === "with_services",
+          )
+          .forEach(({ originalArgs }) => {
+            patches.push(
+              dispatch(
+                servicesApi.util.updateQueryData(
+                  "getServiceCategories",
+                  originalArgs,
+                  (draft) => {
+                    draft.pages.forEach((page) => {
+                      const category = page.service_categories.find(
+                        (item) => item.id === categoryId,
+                      );
+
+                      if (!category?.services?.length) return;
+                      applyPositionOrder(category.services, positionById);
+                    });
+                  },
+                ),
+              ),
+            );
+          });
+
+        await applyWithRollback(patches, queryFulfilled);
+      },
     }),
 
     reorderAdditionalServices: builder.mutation<
       void,
       {
         userId: number;
-        positions: { id: number; position: number }[];
+        positions: ServiceCategoryPositionPayload[];
       }
     >({
       query: ({ userId, positions }) => ({
         url: `/users/${userId}/additional_services/reorder`,
         method: "PATCH",
-        data: positions,
+        data: { positions },
       }),
-      invalidatesTags: [{ type: "AdditionalServices", id: "LIST" }],
+      async onQueryStarted(
+        { userId, positions },
+        { dispatch, getState, queryFulfilled },
+      ) {
+        const positionById = buildPositionMap(positions);
+
+        const patches = servicesApi.util
+          .selectInvalidatedBy(getState(), [
+            { type: "AdditionalServices", id: "LIST" },
+          ])
+          .filter(
+            (entry) =>
+              entry.endpointName === "getAdditionalServices" &&
+              isGetCategoriesArg(entry.originalArgs) &&
+              entry.originalArgs.userId === userId,
+          )
+          .map(({ originalArgs }) =>
+            dispatch(
+              servicesApi.util.updateQueryData(
+                "getAdditionalServices",
+                originalArgs,
+                (draft) => {
+                  reorderPaginatedPages(
+                    draft as unknown as {
+                      pages: Record<string, AdditionalService[]>[];
+                    },
+                    "additional_services",
+                    positionById,
+                  );
+                },
+              ),
+            ),
+          );
+
+        await applyWithRollback(patches, queryFulfilled);
+      },
     }),
   }),
 });

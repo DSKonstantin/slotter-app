@@ -18,6 +18,7 @@ import { createEmptyPhotoSlot } from "@/src/components/shared/imagePicker/servic
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
+import { centsToRubles } from "@/src/utils/price/formatPrice";
 
 type EditServiceProps = {
   serviceId: number;
@@ -67,13 +68,21 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
-      const formData = new FormData();
-
-      formData.append("service[name]", values.name.trim());
-      formData.append("service[price]", values.price);
-      formData.append("service[duration]", values.duration);
-      formData.append("service[description]", values.description.trim());
       const nextCategoryId = Number(values.categoryId);
+      const additionalServiceIds =
+        values.additionalServices?.map((s) => s.serviceId) ?? [];
+
+      const formData = new FormData();
+      formData.append("service[name]", values.name.trim());
+      formData.append("service[price]", String(Number(values.price)));
+      formData.append("service[duration]", String(Number(values.duration)));
+      formData.append("service[description]", values.description.trim());
+      formData.append(
+        "service[is_available_online]",
+        String(values.isAvailableOnline),
+      );
+      formData.append("service[is_active]", String(values.isActive));
+
       if (
         Number.isFinite(nextCategoryId) &&
         nextCategoryId > 0 &&
@@ -81,28 +90,19 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       ) {
         formData.append("service[service_category_id]", String(nextCategoryId));
       }
-      formData.append(
-        "service[is_available_online]",
-        String(values.isAvailableOnline),
-      );
-      formData.append("service[is_active]", String(values.isActive));
 
-      if (!values.additionalServices?.length) {
+      if (!additionalServiceIds.length) {
         formData.append("service[additional_service_ids][]", "");
       } else {
-        values.additionalServices.forEach((item) => {
-          formData.append(
-            "service[additional_service_ids][]",
-            String(item.serviceId),
-          );
+        additionalServiceIds.forEach((id) => {
+          formData.append("service[additional_service_ids][]", String(id));
         });
       }
 
       appendPhotosToFormData(formData, values.photos);
-      console.log(formData, "formData");
 
       await updateService({
-        categoryId: categoryId,
+        categoryId,
         id: serviceId,
         data: formData,
       }).unwrap();
@@ -149,7 +149,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
 
     methods.reset({
       name: service.name ?? "",
-      price: Math.trunc(service.price_cents / 100).toString(),
+      price: Math.trunc(centsToRubles(service.price_cents)).toString(),
       duration: service.duration?.toString() ?? "",
       categoryId: categoryId,
       description: service.description ?? "",
@@ -159,7 +159,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
         (additionalService) => ({
           serviceId: additionalService.id,
           name: additionalService.name,
-          price: Math.trunc(additionalService.price_cents / 100),
+          price: Math.trunc(centsToRubles(additionalService.price_cents)),
         }),
       ),
       photos: {

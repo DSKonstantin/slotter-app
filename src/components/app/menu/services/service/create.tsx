@@ -4,7 +4,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import ServiceFormBody, {
-  defaultAdditionalServices,
   defaultServicePhotos,
 } from "@/src/components/app/menu/services/service/serviceForm";
 import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
@@ -19,7 +18,6 @@ type AppCreateServiceProps = {
 const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
   const router = useRouter();
   const [createService, { isLoading }] = useCreateServiceMutation();
-  const parsedCategoryIdFromParams = Number(categoryId);
 
   const methods = useForm({
     resolver: yupResolver(serviceFormSchema),
@@ -27,7 +25,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
       name: "",
       price: "",
       duration: "",
-      categoryId: parsedCategoryIdFromParams,
+      categoryId: Number(categoryId),
       description: "",
       isAvailableOnline: false,
       isActive: true,
@@ -38,11 +36,14 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
-      const formData = new FormData();
+      const nextCategoryId = Number(values.categoryId);
+      const additionalServiceIds =
+        values.additionalServices?.map((s) => s.serviceId) ?? [];
 
+      const formData = new FormData();
       formData.append("service[name]", values.name.trim());
-      formData.append("service[price]", values.price);
-      formData.append("service[duration]", values.duration);
+      formData.append("service[price]", String(Number(values.price)));
+      formData.append("service[duration]", String(Number(values.duration)));
       formData.append("service[description]", values.description.trim());
       formData.append(
         "service[is_available_online]",
@@ -50,28 +51,23 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
       );
       formData.append("service[is_active]", String(values.isActive));
 
-      if (!values.additionalServices?.length) {
+      if (!additionalServiceIds.length) {
         formData.append("service[additional_service_ids][]", "");
       } else {
-        values.additionalServices.forEach((item) => {
-          formData.append(
-            "service[additional_service_ids][]",
-            String(item.serviceId),
-          );
+        additionalServiceIds.forEach((id) => {
+          formData.append("service[additional_service_ids][]", String(id));
         });
       }
 
       appendPhotosToFormData(formData, values.photos);
 
       await createService({
-        categoryId: Number(values.categoryId),
+        categoryId: nextCategoryId,
         data: formData,
       }).unwrap();
-
       router.back();
     } catch (error: any) {
       toast.error(error?.data?.error || "Не удалось создать услугу");
-      console.log("CREATE SERVICE ERROR:", error);
     }
   });
 

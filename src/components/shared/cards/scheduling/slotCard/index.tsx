@@ -3,6 +3,7 @@ import { TouchableOpacity, View } from "react-native";
 import { Badge, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import type { Schedule } from "@/src/store/redux/slices/calendarSlice";
+import { formatRublesWithSymbol } from "@/src/utils/price/formatPrice";
 
 interface SlotCardProps {
   slot: Schedule;
@@ -130,7 +131,7 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
                 className="mt-1 text-neutral-500 text-caption"
               >
                 {slot.clientName}{" "}
-                {slot.price && `| ${slot.price.toLocaleString("ru-RU")} ₽`}
+                {slot.price && `| ${formatRublesWithSymbol(slot.price)}`}
               </Typography>
               <Typography
                 weight="regular"
