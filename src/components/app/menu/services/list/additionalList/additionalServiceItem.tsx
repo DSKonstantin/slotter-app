@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { Pressable } from "react-native";
 
 import { Card, IconButton, StSvg, Switch } from "@/src/components/ui";
@@ -19,6 +19,7 @@ type AdditionalServiceItemProps = {
   isDragActive: boolean;
   onDrag: () => void;
   onToggleActive: (id: number, nextValue: boolean) => void;
+  onDelete?: (id: number, name: string) => void;
   onPress?: (id: number) => void;
 };
 
@@ -28,17 +29,41 @@ const AdditionalServiceItem = ({
   isDragActive,
   onDrag,
   onToggleActive,
+  onDelete,
   onPress,
 }: AdditionalServiceItemProps) => {
+  const formattedPrice = useMemo(
+    () => formatRublesFromCents(item.price_cents),
+    [item.price_cents],
+  );
+
+  const handleDeletePress = useCallback(() => {
+    onDelete?.(item.id, item.name);
+  }, [item.id, item.name, onDelete]);
+
+  const handleToggle = useCallback(
+    (nextValue: boolean) => {
+      onToggleActive(item.id, nextValue);
+    },
+    [item.id, onToggleActive],
+  );
+
   return (
     <Card
       title={item.name}
-      subtitle={`${item.duration} мин | ${formatRublesFromCents(item.price_cents)}`}
+      subtitle={`${item.duration} мин | ${formattedPrice}`}
       active={isDragActive}
       className={item.is_active ? "" : "opacity-40"}
+      pressArea="content"
       left={
         isEditMode && (
-          <Pressable onLongPress={onDrag} delayLongPress={100} hitSlop={8}>
+          <Pressable
+            onLongPress={onDrag}
+            delayLongPress={100}
+            hitSlop={8}
+            accessibilityLabel="Reorder service"
+            accessibilityRole="button"
+          >
             <StSvg name="Drag" size={24} color={colors.neutral[900]} />
           </Pressable>
         )
@@ -47,6 +72,8 @@ const AdditionalServiceItem = ({
         isEditMode ? (
           <IconButton
             size="xs"
+            onPress={handleDeletePress}
+            accessibilityLabel={`Delete ${item.name}`}
             icon={
               <StSvg
                 name="Trash_light"
@@ -56,10 +83,7 @@ const AdditionalServiceItem = ({
             }
           />
         ) : (
-          <Switch
-            value={item.is_active}
-            onChange={(nextValue) => onToggleActive(item.id, nextValue)}
-          />
+          <Switch value={item.is_active} onChange={handleToggle} />
         )
       }
       onPress={onPress ? () => onPress(item.id) : undefined}
@@ -67,4 +91,4 @@ const AdditionalServiceItem = ({
   );
 };
 
-export default AdditionalServiceItem;
+export default React.memo(AdditionalServiceItem);

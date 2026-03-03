@@ -18,7 +18,11 @@ export const AdditionalListErrorState = ({
   onRetry,
 }: AdditionalListErrorStateProps) => {
   return (
-    <View className="flex-1 items-center justify-center px-screen gap-4">
+    <View
+      className="flex-1 items-center justify-center px-screen gap-4"
+      accessible={true}
+      accessibilityRole="alert"
+    >
       <Typography className="text-body text-accent-red-500">
         Ошибка загрузки.
       </Typography>
@@ -44,7 +48,12 @@ export const AdditionalListFooter = ({
 
   return (
     <View className="gap-2">
-      <View className="items-center py-2">
+      <View
+        className="items-center py-2"
+        accessible={true}
+        accessibilityRole="progressbar"
+        accessibilityLabel="Loading more services"
+      >
         <ActivityIndicator />
       </View>
     </View>

@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
+import { toast } from "@backpackapp-io/react-native-toast";
 import {
   NestableDraggableFlatList,
   RenderItemParams,
@@ -14,6 +15,7 @@ import {
 } from "@/src/store/redux/services/api/servicesApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { useAppSelector } from "@/src/store/redux/store";
 import { Service, ServiceCategory } from "@/src/store/redux/services/api-types";
 import ServiceCategoryItem from "@/src/components/app/menu/services/list/serviceList/serviceCategoryItem";
@@ -24,6 +26,7 @@ const ServiceList = () => {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const [reorderServices] = useReorderServicesMutation();
+  const listConfig = useInfiniteListConfig();
 
   const {
     data,
@@ -44,27 +47,32 @@ const ServiceList = () => {
     return data?.pages.flatMap((page) => page.service_categories) ?? [];
   }, [data]);
 
-  const handleDragEnd = async ({
-    data: nextData,
-    from,
-    to,
-  }: {
-    data: typeof categories;
-    from: number;
-    to: number;
-  }) => {
-    if (from === to || !auth?.userId) return;
+  const handleDragEnd = useCallback(
+    async ({
+      data: nextData,
+      from,
+      to,
+    }: {
+      data: typeof categories;
+      from: number;
+      to: number;
+    }) => {
+      if (from === to || !auth?.userId) return;
 
-    try {
-      await reorderServiceCategories({
-        userId: auth.userId,
-        positions: nextData.map((item, index) => ({
-          id: item.id,
-          position: index,
-        })),
-      }).unwrap();
-    } catch {}
-  };
+      try {
+        await reorderServiceCategories({
+          userId: auth.userId,
+          positions: nextData.map((item, index) => ({
+            id: item.id,
+            position: index,
+          })),
+        }).unwrap();
+      } catch (error: any) {
+        toast.error(error?.data?.error || "Failed to reorder categories");
+      }
+    },
+    [auth?.userId, reorderServiceCategories],
+  );
 
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -88,8 +96,6 @@ const ServiceList = () => {
     router.push(Routers.app.menu.services.create(categoryId));
   }, []);
 
-  const handleContainerLayout = useCallback(() => {}, []);
-
   const handleServicesReorder = useCallback(
     async (
       categoryId: number,
@@ -108,7 +114,9 @@ const ServiceList = () => {
             position: index,
           })),
         }).unwrap();
-      } catch {}
+      } catch (error: any) {
+        toast.error(error?.data?.error || "Failed to reorder services");
+      }
     },
     [auth?.userId, reorderServices],
   );
@@ -140,14 +148,14 @@ const ServiceList = () => {
       scrollEnabled={false}
       keyExtractor={(item) => String(item.id)}
       showsVerticalScrollIndicator={false}
-      onContainerLayout={handleContainerLayout}
       onRefresh={handleRefresh}
       refreshing={isFetching && !isFetchingNextPage && !isLoading}
       onEndReached={handleEndReached}
       onDragEnd={isEditMode ? handleDragEnd : undefined}
       contentContainerStyle={{
-        paddingHorizontal: 20,
+        paddingHorizontal: listConfig.contentContainerStyle.paddingHorizontal,
       }}
+      accessibilityRole="list"
       ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
       ListEmptyComponent={
         <View className="pt-6">
@@ -173,4 +181,4 @@ const ServiceList = () => {
   );
 };
 
-export default ServiceList;
+export default React.memo(ServiceList);

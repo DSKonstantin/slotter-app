@@ -49,10 +49,9 @@ export const Routers = {
 
           edit: (additionalServiceId: string | number) =>
             ({
-              pathname:
-                "/(app)/(menu)/services/additional-services/[additionalServiceId]",
+              pathname: "/(app)/(menu)/services/additional-services/[id]",
               params: {
-                additionalServiceId: String(additionalServiceId),
+                id: String(additionalServiceId),
               },
             }) as const,
         },

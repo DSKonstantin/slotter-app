@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Alert, Pressable, View } from "react-native";
 import {
   default as DraggableFlatList,
@@ -18,6 +18,7 @@ import { Service, ServiceCategory } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { useDeleteServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
+import ServiceCategoryHeader from "@/src/components/app/menu/services/shared/serviceCategoryHeader";
 
 type ServiceCategoryItemProps = {
   category: ServiceCategory;
@@ -64,29 +65,22 @@ const ServiceCategoryItem = ({
     [category.id, deleteService, isDeleting],
   );
 
-  const activeServicesCount =
-    category.services?.filter((service) => service.is_active).length ?? 0;
-  const services = category.services ?? [];
+  const activeServicesCount = useMemo(
+    () => category.services?.filter((service) => service.is_active).length ?? 0,
+    [category.services],
+  );
+
+  const services = useMemo(() => category.services ?? [], [category.services]);
 
   return (
     <View className="gap-2">
-      <View className="flex-row justify-between">
-        <View className="flex-row items-center gap-1">
-          {isEditMode && (
-            <Pressable onLongPress={onDrag} hitSlop={8}>
-              <StSvg name="Drag" size={16} color={colors.neutral[900]} />
-            </Pressable>
-          )}
-
-          <Typography className="text-caption text-neutral-500">
-            {category.name}
-          </Typography>
-        </View>
-
-        <Typography weight="regular" className="text-caption text-neutral-500">
-          {activeServicesCount}/{category.services?.length ?? 0} активно
-        </Typography>
-      </View>
+      <ServiceCategoryHeader
+        name={category.name}
+        activeCount={activeServicesCount}
+        totalCount={category.services?.length ?? 0}
+        isEditMode={isEditMode}
+        onDrag={onDrag}
+      />
 
       <View className="gap-2">
         {services.length ? (
@@ -94,6 +88,7 @@ const ServiceCategoryItem = ({
             data={services}
             scrollEnabled={false}
             keyExtractor={(service) => String(service.id)}
+            accessibilityRole="list"
             onDragEnd={
               isEditMode
                 ? ({ data, from, to }) =>
@@ -125,6 +120,8 @@ const ServiceCategoryItem = ({
                       onLongPress={drag}
                       delayLongPress={100}
                       hitSlop={8}
+                      accessibilityLabel="Reorder service"
+                      accessibilityRole="button"
                     >
                       <StSvg
                         name="Drag"
@@ -140,6 +137,7 @@ const ServiceCategoryItem = ({
                       size="xs"
                       disabled={isDeleting}
                       onPress={getDeletePressHandler(service.id)}
+                      accessibilityLabel={`Delete ${service.name}`}
                       icon={
                         <StSvg
                           name="Trash_light"
@@ -180,4 +178,4 @@ const ServiceCategoryItem = ({
   );
 };
 
-export default ServiceCategoryItem;
+export default React.memo(ServiceCategoryItem);

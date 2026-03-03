@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { NestableScrollContainer } from "react-native-draggable-flatlist";
@@ -21,7 +21,7 @@ import {
 } from "@/src/store/redux/slices/servicesSlice";
 import ServiceList from "@/src/components/app/menu/services/list/serviceList";
 
-const ServicesToolbarActions = () => {
+const ServicesToolbarActions = memo(() => {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const dispatch = useAppDispatch();
 
@@ -41,6 +41,7 @@ const ServicesToolbarActions = () => {
         <IconButton
           size={isEditMode ? "md" : "sm"}
           onPress={handleEditPress}
+          accessibilityLabel={isEditMode ? "Exit edit mode" : "Enter edit mode"}
           icon={
             <StSvg
               name={isEditMode ? "Close_round" : "Edit"}
@@ -54,6 +55,7 @@ const ServicesToolbarActions = () => {
             size="sm"
             disabled={isEditMode}
             onPress={handleSearchPress}
+            accessibilityLabel="Search services"
             buttonClassName={isEditMode ? "opacity-0" : undefined}
             icon={<StSvg name="Search" size={24} color={colors.neutral[900]} />}
           />
@@ -61,7 +63,7 @@ const ServicesToolbarActions = () => {
       </View>
     </View>
   );
-};
+});
 
 const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -148,7 +150,10 @@ const AppServices = () => {
           );
         }}
       </ScreenWithToolbar>
-      <StModal visible={createModalVisible} onClose={() => {}}>
+      <StModal
+        visible={createModalVisible}
+        onClose={() => setCreateModalVisible(false)}
+      >
         <View className="gap-2.5">
           <Button
             title="Создать услугу"

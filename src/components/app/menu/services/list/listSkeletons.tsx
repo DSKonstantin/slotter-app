@@ -115,13 +115,17 @@ const SERVICE_CATEGORIES = [
   ],
 ];
 
-export const ServiceListSkeleton = () => {
+const ServiceListSkeletonComponent = () => {
   const { width } = useWindowDimensions();
   const contentWidth = width - H_PAD * 2;
   const innerWidth = contentWidth - CARD_PAD * 2;
 
   return (
-    <View style={{ paddingHorizontal: H_PAD, gap: 24 }}>
+    <View
+      style={{ paddingHorizontal: H_PAD, gap: 24 }}
+      accessibilityLabel="Loading services"
+      accessible={true}
+    >
       {SERVICE_CATEGORIES.map((cards, catIdx) => (
         <View key={catIdx} style={{ gap: 8 }}>
           <CategoryHeaderLoader contentWidth={contentWidth} />
@@ -140,6 +144,10 @@ export const ServiceListSkeleton = () => {
   );
 };
 
+export const ServiceListSkeleton = React.memo(
+  ServiceListSkeletonComponent,
+);
+
 const ADDITIONAL_CARDS = [
   { titleRatio: 0.62, subtitleRatio: 0.4 },
   { titleRatio: 0.46, subtitleRatio: 0.33 },
@@ -147,12 +155,16 @@ const ADDITIONAL_CARDS = [
   { titleRatio: 0.5, subtitleRatio: 0.36 },
 ];
 
-export const AdditionalListSkeleton = () => {
+const AdditionalListSkeletonComponent = () => {
   const { width } = useWindowDimensions();
   const innerWidth = width - H_PAD * 2 - CARD_PAD * 2;
 
   return (
-    <View style={{ paddingHorizontal: H_PAD, gap: 8 }}>
+    <View
+      style={{ paddingHorizontal: H_PAD, gap: 8 }}
+      accessibilityLabel="Loading additional services"
+      accessible={true}
+    >
       {ADDITIONAL_CARDS.map((card, i) => (
         <CardLoader
           key={i}
@@ -165,3 +177,7 @@ export const AdditionalListSkeleton = () => {
     </View>
   );
 };
+
+export const AdditionalListSkeleton = React.memo(
+  AdditionalListSkeletonComponent,
+);

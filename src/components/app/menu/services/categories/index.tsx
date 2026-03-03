@@ -1,18 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, ActivityIndicator, Pressable } from "react-native";
+import { View, ActivityIndicator } from "react-native";
+import { toast } from "@backpackapp-io/react-native-toast";
 import DraggableFlatList, {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
 
-import {
-  Button,
-  Card,
-  IconButton,
-  StSvg,
-  Typography,
-  Switch,
-} from "@/src/components/ui";
+import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
 
 import { colors } from "@/src/styles/colors";
 
@@ -25,8 +19,10 @@ import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 
 import CreateCategoryModal from "@/src/components/app/menu/services/categories/createCategoryModal";
 import EditCategoryModal from "@/src/components/app/menu/services/categories/editCategoryModal";
+import CategoryItemCard from "@/src/components/app/menu/services/categories/categoryItemCard";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 
 type SelectedCategory = {
   id: number;
@@ -42,6 +38,7 @@ const AppServicesCategories = () => {
   const [updateServiceCategory] = useUpdateServiceCategoryMutation();
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const auth = useRequiredAuth();
+  const listConfig = useInfiniteListConfig({ includeFlexGrow: true });
   const {
     data,
     refetch,
@@ -83,27 +80,32 @@ const AppServicesCategories = () => {
     }).unwrap();
   };
 
-  const handleDragEnd = async ({
-    data: nextData,
-    from,
-    to,
-  }: {
-    data: ServiceCategory[];
-    from: number;
-    to: number;
-  }) => {
-    if (from === to || auth?.userId == null) return;
+  const handleDragEnd = useCallback(
+    async ({
+      data: nextData,
+      from,
+      to,
+    }: {
+      data: ServiceCategory[];
+      from: number;
+      to: number;
+    }) => {
+      if (from === to || auth?.userId == null) return;
 
-    try {
-      await reorderServiceCategories({
-        userId: auth.userId,
-        positions: nextData.map((category, index) => ({
-          id: category.id,
-          position: index,
-        })),
-      }).unwrap();
-    } catch {}
-  };
+      try {
+        await reorderServiceCategories({
+          userId: auth.userId,
+          positions: nextData.map((category, index) => ({
+            id: category.id,
+            position: index,
+          })),
+        }).unwrap();
+      } catch (error: any) {
+        toast.error(error?.data?.error || "Failed to reorder categories");
+      }
+    },
+    [auth?.userId, reorderServiceCategories],
+  );
 
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -127,6 +129,7 @@ const AppServicesCategories = () => {
           <IconButton
             icon={<StSvg name="Search" size={28} color={colors.neutral[900]} />}
             onPress={() => {}}
+            accessibilityLabel="Search categories"
           />
         }
       >
@@ -166,11 +169,9 @@ const AppServicesCategories = () => {
               <DraggableFlatList
                 data={categories}
                 contentContainerStyle={{
+                  ...listConfig.contentContainerStyle,
                   paddingTop: topInset,
                   paddingBottom: bottomInset + 16,
-                  paddingHorizontal: 20,
-                  flexGrow: 1,
-                  gap: 8,
                 }}
                 ListHeaderComponent={
                   <Typography className="text-caption text-neutral-500 mb-2">
@@ -178,54 +179,24 @@ const AppServicesCategories = () => {
                   </Typography>
                 }
                 keyExtractor={(item) => String(item.id)}
-                activationDistance={10}
-                autoscrollThreshold={48}
-                autoscrollSpeed={220}
+                activationDistance={listConfig.activationDistance}
+                autoscrollThreshold={listConfig.autoscrollThreshold}
+                autoscrollSpeed={listConfig.autoscrollSpeed}
                 onDragEnd={handleDragEnd}
                 onEndReached={handleEndReached}
-                onEndReachedThreshold={0.35}
+                onEndReachedThreshold={listConfig.onEndReachedThreshold}
                 renderItem={({
                   item,
                   drag,
                   isActive,
                 }: RenderItemParams<ServiceCategory>) => (
-                  <Card
-                    title={item.name}
-                    pressArea="content"
-                    active={isActive}
-                    className={item.is_active ? "" : "opacity-40"}
-                    subtitle={`${item.activeServicesCount ?? item.services?.length ?? 0} услуг`}
-                    left={
-                      <Pressable
-                        onLongPress={drag}
-                        delayLongPress={100}
-                        hitSlop={8}
-                      >
-                        <View className="flex-row items-center gap-2">
-                          <StSvg
-                            name="Drag"
-                            size={24}
-                            color={colors.neutral[900]}
-                          />
-                          {item.color && (
-                            <View
-                              className={"w-5 h-5 rounded-full"}
-                              style={{ backgroundColor: item.color }}
-                            />
-                          )}
-                        </View>
-                      </Pressable>
-                    }
-                    right={
-                      <Switch
-                        value={item.is_active}
-                        onChange={(nextValue) =>
-                          handleToggleCategoryActive(item.id, nextValue)
-                        }
-                      />
-                    }
-                    onPress={() => {
-                      setSelectedCategory(item);
+                  <CategoryItemCard
+                    item={item}
+                    drag={drag}
+                    isActive={isActive}
+                    onToggleActive={handleToggleCategoryActive}
+                    onPress={(category) => {
+                      setSelectedCategory(category);
                       setEditModalVisible(true);
                     }}
                   />
@@ -275,4 +246,4 @@ const AppServicesCategories = () => {
   );
 };
 
-export default AppServicesCategories;
+export default React.memo(AppServicesCategories);

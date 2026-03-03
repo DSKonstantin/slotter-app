@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Alert } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
@@ -16,20 +16,22 @@ import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
 import {
   useDeleteServiceMutation,
+  useDeleteServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
 } from "@/src/store/redux/services/api/servicesApi";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaPadding } from "@/src/hooks/useSafeAreaPadding";
 import { toast } from "@backpackapp-io/react-native-toast";
 import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import categorySchema from "@/src/validation/schemas/category.schema";
+import type { Service } from "@/src/store/redux/services/api-types";
 
 type EditableCategory = {
   id: number;
   name: string;
   color?: string | null;
-  services?: any[];
+  services?: Service[];
 };
 
 type Props = {
@@ -40,15 +42,7 @@ type Props = {
 };
 
 const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
-  const { left, right } = useSafeAreaInsets();
-  const safeAreaSidePaddingStyle = {
-    paddingLeft: left,
-    paddingRight: right,
-  };
-  const horizontalSafeAreaPaddingStyle = {
-    paddingLeft: 20 + left,
-    paddingRight: 20 + right,
-  };
+  const { sidePadding, horizontalPadding } = useSafeAreaPadding();
 
   const methods = useForm({
     resolver: yupResolver(categorySchema),
@@ -60,18 +54,29 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   const [updateCategory, { isLoading }] = useUpdateServiceCategoryMutation();
   const [deleteService, { isLoading: isServiceDeleting }] =
     useDeleteServiceMutation();
+  const [deleteCategory, { isLoading: isDeletingCategory }] =
+    useDeleteServiceCategoryMutation();
 
-  const handleDeleteService = async (serviceId: number) => {
-    if (!category?.id) return;
+  const handleDeleteService = (serviceId: number, serviceName: string) => {
+    Alert.alert("Удалить услугу?", "Это действие нельзя отменить", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Удалить",
+        style: "destructive",
+        onPress: async () => {
+          if (!category?.id) return;
 
-    try {
-      await deleteService({
-        categoryId: category.id,
-        id: serviceId,
-      }).unwrap();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Не удалось удалить услугу");
-    }
+          try {
+            await deleteService({
+              categoryId: category.id,
+              id: serviceId,
+            }).unwrap();
+          } catch (error: any) {
+            toast.error(error?.data?.error || "Не удалось удалить услугу");
+          }
+        },
+      },
+    ]);
   };
 
   const handleFormSubmit = methods.handleSubmit(async (values) => {
@@ -99,6 +104,30 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
     router.push(Routers.app.menu.services.create(category.id));
   };
 
+  const handleDeleteCategory = () => {
+    if (!category?.id) return;
+
+    Alert.alert("Удалить категорию?", "Это действие нельзя отменить", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Удалить",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteCategory({
+              userId,
+              id: category.id,
+            }).unwrap();
+
+            onClose();
+          } catch (error: any) {
+            toast.error(error?.data?.error || "Не удалось удалить категорию");
+          }
+        },
+      },
+    ]);
+  };
+
   useEffect(() => {
     methods.reset({
       name: category?.name ?? "",
@@ -112,13 +141,13 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
         <Typography
           weight="semibold"
           className="text-display text-center px-screen"
-          style={safeAreaSidePaddingStyle}
+          style={sidePadding}
         >
           Детали категории
         </Typography>
 
         <View className="gap-4 my-6">
-          <View className="mx-screen" style={safeAreaSidePaddingStyle}>
+          <View className="mx-screen" style={sidePadding}>
             <RhfTextField
               name="name"
               label="Название категории"
@@ -130,7 +159,7 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
           <View>
             <View
               className="flex-row items-center justify-between mx-screen"
-              style={safeAreaSidePaddingStyle}
+              style={sidePadding}
             >
               <Typography className="mb-2 font-inter-medium text-neutral-500 text-caption">
                 Входящие услуги
@@ -138,6 +167,7 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
               <IconButton
                 size="xs"
                 onPress={handleCreateServicePress}
+                accessibilityLabel="Add service"
                 icon={
                   <StSvg
                     name="Add_round"
@@ -157,7 +187,7 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
                   gap: 8,
                   alignItems: "center",
                   paddingVertical: 8,
-                  ...horizontalSafeAreaPaddingStyle,
+                  ...horizontalPadding,
                 }}
               >
                 {map(category?.services, (service) => (
@@ -175,14 +205,16 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
                         color={colors.neutral[900]}
                       />
                     }
-                    onPress={() => handleDeleteService(service.id)}
+                    onPress={() =>
+                      handleDeleteService(service.id, service.name)
+                    }
                   />
                 ))}
               </ScrollView>
             )}
           </View>
 
-          <View className="mx-screen" style={safeAreaSidePaddingStyle}>
+          <View className="mx-screen" style={sidePadding}>
             <Typography className="mb-2 font-inter-medium text-neutral-500 text-caption">
               Цвет
             </Typography>
@@ -190,21 +222,39 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
           </View>
         </View>
 
-        <Button
-          buttonClassName="mx-screen"
-          buttonProps={{
-            style: safeAreaSidePaddingStyle,
-          }}
-          title="Сохранить"
-          rightIcon={
-            <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
-          }
-          onPress={handleFormSubmit}
-          loading={isLoading}
-        />
+        <View className="gap-2">
+          <Button
+            buttonClassName="mx-screen"
+            buttonProps={{
+              style: sidePadding,
+            }}
+            title="Сохранить"
+            rightIcon={
+              <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
+            }
+            onPress={handleFormSubmit}
+            loading={isLoading}
+          />
+
+          <Button
+            buttonClassName="mx-screen"
+            variant="clear"
+            textClassName="text-accent-red-500"
+            rightIcon={
+              <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
+            }
+            buttonProps={{
+              style: sidePadding,
+            }}
+            title="Удалить категорию"
+            disabled={isDeletingCategory}
+            loading={isDeletingCategory}
+            onPress={handleDeleteCategory}
+          />
+        </View>
       </FormProvider>
     </StModal>
   );
 };
 
-export default EditCategoryModal;
+export default React.memo(EditCategoryModal);

@@ -42,7 +42,7 @@ const CreateCategoryModal = ({
       const createdCategory = await createCategory({
         userId,
         data: {
-          name: values.name,
+          name: values.name.trim(),
           is_active: true,
           color: values.color,
         },
@@ -56,8 +56,13 @@ const CreateCategoryModal = ({
     }
   });
 
+  const handleClose = () => {
+    methods.reset();
+    onClose();
+  };
+
   return (
-    <StModal visible={visible} onClose={onClose}>
+    <StModal visible={visible} onClose={handleClose}>
       <FormProvider {...methods}>
         <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
           <Typography weight="semibold" className="text-display text-center">
@@ -94,4 +99,4 @@ const CreateCategoryModal = ({
   );
 };
 
-export default CreateCategoryModal;
+export default React.memo(CreateCategoryModal);

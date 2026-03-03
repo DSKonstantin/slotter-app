@@ -1,17 +1,24 @@
 import React, { useCallback, useMemo } from "react";
+import { Alert, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 
 import {
+  useDeleteAdditionalServiceMutation,
   useGetAdditionalServicesInfiniteQuery,
   useReorderAdditionalServicesMutation,
   useUpdateAdditionalServiceMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { useAppSelector } from "@/src/store/redux/store";
+import { Typography } from "@/src/components/ui";
 import AdditionalServiceItem, {
   AdditionalListItem,
 } from "@/src/components/app/menu/services/list/additionalList/additionalServiceItem";
@@ -20,12 +27,15 @@ import {
   AdditionalListFooter,
   AdditionalListLoadingState,
 } from "@/src/components/app/menu/services/list/additionalList/listStates";
+import AdditionalServicesHeader from "@/src/components/app/menu/services/shared/additionalServicesHeader";
 
 const AdditionalList = () => {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const auth = useRequiredAuth();
+  const listConfig = useInfiniteListConfig();
 
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
+  const [deleteAdditionalService] = useDeleteAdditionalServiceMutation();
   const [reorderAdditionalServices] = useReorderAdditionalServicesMutation();
 
   const {
@@ -44,7 +54,7 @@ const AdditionalList = () => {
   const services = useMemo<AdditionalListItem[]>(() => {
     if (!data?.pages) return [];
 
-    const unique = new Map<number, any>();
+    const unique = new Map<number, AdditionalListItem>();
 
     data.pages.forEach((page) => {
       page.additional_services.forEach((service) => {
@@ -55,37 +65,75 @@ const AdditionalList = () => {
     return [...unique.values()];
   }, [data?.pages]);
 
-  const handleToggleActive = (id: number, nextValue: boolean) => {
-    if (!auth?.userId) return;
+  const activeServicesCount = useMemo(
+    () => services.filter((service) => service.is_active).length,
+    [services],
+  );
 
-    updateAdditionalService({
-      userId: auth.userId,
-      id,
-      data: { is_active: nextValue },
-    });
-  };
+  const handleToggleActive = useCallback(
+    (id: number, nextValue: boolean) => {
+      if (!auth?.userId || isFetching) return;
 
-  const handleDragEnd = async ({
-    data: nextData,
-    from,
-    to,
-  }: {
-    data: AdditionalListItem[];
-    from: number;
-    to: number;
-  }) => {
-    if (from === to || !auth?.userId) return;
-
-    try {
-      await reorderAdditionalServices({
+      updateAdditionalService({
         userId: auth.userId,
-        positions: nextData.map((item, index) => ({
-          id: item.id,
-          position: index,
-        })),
-      }).unwrap();
-    } catch {}
-  };
+        id,
+        data: { is_active: nextValue },
+      });
+    },
+    [auth?.userId, isFetching, updateAdditionalService],
+  );
+
+  const handleDelete = useCallback(
+    (id: number, serviceName: string) => {
+      Alert.alert("Удалить услугу?", "Это действие нельзя отменить", [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            if (!auth?.userId) return;
+
+            try {
+              await deleteAdditionalService({
+                userId: auth.userId,
+                id,
+              }).unwrap();
+            } catch (error: any) {
+              toast.error(error?.data?.error || "Failed to delete service");
+            }
+          },
+        },
+      ]);
+    },
+    [auth?.userId, deleteAdditionalService],
+  );
+
+  const handleDragEnd = useCallback(
+    async ({
+      data: nextData,
+      from,
+      to,
+    }: {
+      data: AdditionalListItem[];
+      from: number;
+      to: number;
+    }) => {
+      if (from === to || !auth?.userId) return;
+
+      try {
+        await reorderAdditionalServices({
+          userId: auth.userId,
+          positions: nextData.map((item, index) => ({
+            id: item.id,
+            position: index,
+          })),
+        }).unwrap();
+      } catch (error: any) {
+        toast.error(error?.data?.error || "Failed to reorder services");
+      }
+    },
+    [auth?.userId, reorderAdditionalServices],
+  );
 
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -96,6 +144,10 @@ const AdditionalList = () => {
     if (isFetchingNextPage) return;
     refetch({ refetchCachedPages: false });
   }, [isFetchingNextPage, refetch]);
+
+  const handleServicePress = useCallback((serviceId: number) => {
+    router.push(Routers.app.menu.services.additionalServices.edit(serviceId));
+  }, []);
 
   if (isLoading && !data) {
     return <AdditionalListLoadingState />;
@@ -113,38 +165,56 @@ const AdditionalList = () => {
   if (!auth) return null;
 
   return (
-    <DraggableFlatList
-      data={services}
-      scrollEnabled={false}
-      keyExtractor={(item) => String(item.id)}
-      activationDistance={10}
-      autoscrollThreshold={48}
-      autoscrollSpeed={220}
-      onDragEnd={handleDragEnd}
-      onEndReached={handleEndReached}
-      onEndReachedThreshold={0.35}
-      contentContainerStyle={{
-        paddingHorizontal: 20,
-        gap: 8,
-      }}
-      renderItem={({
-        item,
-        drag,
-        isActive,
-      }: RenderItemParams<AdditionalListItem>) => (
-        <AdditionalServiceItem
-          item={item}
-          isEditMode={isEditMode}
-          isDragActive={isActive}
-          onDrag={drag}
-          onToggleActive={handleToggleActive}
+    <View className="px-screen">
+      <View className="px-0 mb-2">
+        <AdditionalServicesHeader
+          activeCount={activeServicesCount}
+          totalCount={services.length}
         />
-      )}
-      ListFooterComponent={
-        <AdditionalListFooter isFetchingNextPage={isFetchingNextPage} />
-      }
-    />
+      </View>
+
+      <DraggableFlatList
+        data={services}
+        scrollEnabled={false}
+        keyExtractor={(item) => String(item.id)}
+        activationDistance={listConfig.activationDistance}
+        autoscrollThreshold={listConfig.autoscrollThreshold}
+        autoscrollSpeed={listConfig.autoscrollSpeed}
+        onDragEnd={handleDragEnd}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={listConfig.onEndReachedThreshold}
+        contentContainerStyle={{
+          gap: listConfig.contentContainerStyle.gap,
+        }}
+        accessibilityRole="list"
+        renderItem={({
+          item,
+          drag,
+          isActive,
+        }: RenderItemParams<AdditionalListItem>) => (
+          <AdditionalServiceItem
+            item={item}
+            isEditMode={isEditMode}
+            isDragActive={isActive}
+            onDrag={drag}
+            onToggleActive={handleToggleActive}
+            onDelete={handleDelete}
+            onPress={handleServicePress}
+          />
+        )}
+        ListEmptyComponent={
+          <View className="py-6">
+            <Typography className="text-neutral-500 text-center">
+              No additional services yet
+            </Typography>
+          </View>
+        }
+        ListFooterComponent={
+          <AdditionalListFooter isFetchingNextPage={isFetchingNextPage} />
+        }
+      />
+    </View>
   );
 };
 
-export default AdditionalList;
+export default React.memo(AdditionalList);

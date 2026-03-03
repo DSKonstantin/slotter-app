@@ -86,6 +86,7 @@ export interface AdditionalService {
   name: string;
   price_cents: number;
   duration: number;
+  is_active: boolean;
   position?: number;
   created_at: string;
 }
@@ -100,4 +101,5 @@ export type UpdateAdditionalServicePayload = Partial<{
   name: string;
   price: number;
   position: number;
+  is_active: boolean;
 }>;
