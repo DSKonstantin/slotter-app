@@ -17,20 +17,21 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import EditAdditionalServiceModal from "@/src/components/app/menu/services/service/createAdditionalService/editAdditionalServiceModal";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import type { AdditionalService } from "@/src/store/redux/services/api-types";
 
-type ServiceFormValues = {
+type AdditionalServicesFieldValues = {
   additionalServices: {
     serviceId: number;
   }[];
 };
 
 const CreateAdditionalService = () => {
-  const [editingService, setEditingService] = useState<any>(null);
-  const { control } = useFormContext<ServiceFormValues>();
+  const [editingService, setEditingService] = useState<AdditionalService | null>(null);
+  const { control } = useFormContext<AdditionalServicesFieldValues>();
   const auth = useRequiredAuth();
 
   const { fields, append, remove } = useFieldArray<
-    ServiceFormValues,
+    AdditionalServicesFieldValues,
     "additionalServices"
   >({
     control,
@@ -45,7 +46,7 @@ const CreateAdditionalService = () => {
     return data?.pages.flatMap((page) => page.additional_services) ?? [];
   }, [data]);
 
-  const handleToggle = (service: any) => {
+  const handleToggle = (service: AdditionalService) => {
     const existingIndex = fields.findIndex(
       (item) => item.serviceId === service.id,
     );

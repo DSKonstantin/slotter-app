@@ -12,8 +12,8 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { passwordField } from "@/src/validation/fields/password";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
-import { useSelector } from "react-redux";
-import { RootState } from "@/src/store/redux/store";
+import { useAppSelector } from "@/src/store/redux/store";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 type RegisterFormValues = {
@@ -29,7 +29,8 @@ const RegisterSchema = Yup.object().shape({
 });
 
 const Register = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const auth = useRequiredAuth();
+  const user = useAppSelector((s) => s.auth.user);
 
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
@@ -43,14 +44,15 @@ const Register = () => {
 
   const onSubmit = useCallback(
     async (data: RegisterFormValues) => {
-      if (!user) return;
+      if (!auth) return;
 
       try {
         await updateUser({
-          id: user.id,
+          id: auth.userId,
           data: {
             email: data.email,
             password: data.password,
+            onboarding_step: "personalInformation",
           },
         }).unwrap();
 
@@ -60,10 +62,8 @@ const Register = () => {
         toast.error(error?.data?.error || "Произошла ошибка при обновлении.");
       }
     },
-    [user, updateUser],
+    [auth, updateUser],
   );
-
-  console.log(user, "user");
 
   return (
     <FormProvider {...methods}>

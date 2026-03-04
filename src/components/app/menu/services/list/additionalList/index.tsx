@@ -78,7 +78,11 @@ const AdditionalList = () => {
         userId: auth.userId,
         id,
         data: { is_active: nextValue },
-      });
+      })
+        .unwrap()
+        .catch((error: any) => {
+          toast.error(error?.data?.error || "Не удалось обновить услугу");
+        });
     },
     [auth?.userId, isFetching, updateAdditionalService],
   );
@@ -99,7 +103,7 @@ const AdditionalList = () => {
                 id,
               }).unwrap();
             } catch (error: any) {
-              toast.error(error?.data?.error || "Failed to delete service");
+              toast.error(error?.data?.error || "Не удалось удалить услугу");
             }
           },
         },
@@ -129,7 +133,7 @@ const AdditionalList = () => {
           })),
         }).unwrap();
       } catch (error: any) {
-        toast.error(error?.data?.error || "Failed to reorder services");
+        toast.error(error?.data?.error || "Не удалось изменить порядок услуг");
       }
     },
     [auth?.userId, reorderAdditionalServices],

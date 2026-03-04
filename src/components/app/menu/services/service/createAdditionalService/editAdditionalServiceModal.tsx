@@ -8,6 +8,8 @@ import {
   useUpdateAdditionalServiceMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
 
@@ -41,6 +43,7 @@ const EditAdditionalServiceModal = ({ visible, service, onClose }: Props) => {
     useDeleteAdditionalServiceMutation();
 
   const methods = useForm<AdditionalServiceFormValues>({
+    resolver: yupResolver(additionalServiceFormSchema),
     defaultValues: {
       name: "",
       description: "",

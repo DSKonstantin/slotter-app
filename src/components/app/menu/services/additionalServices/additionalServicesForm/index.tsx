@@ -63,7 +63,7 @@ const AdditionalServicesForm = ({
         }}
       >
         <Button
-          title="Создать"
+          title={isEdit ? "Сохранить" : "Создать"}
           onPress={onSubmit}
           rightIcon={
             <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />

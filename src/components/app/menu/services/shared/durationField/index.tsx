@@ -62,7 +62,7 @@ const DurationField = ({
           <Button
             key={`${preset}-${index}`}
             title={String(preset)}
-            buttonClassName="flex-1 border border-neutral-200 rounded-xl"
+            buttonClassName="flex-1 border border-neutral-200 rounded-xl px-0"
             size="sm"
             variant={
               !isCustomSelected && currentValue === String(preset)

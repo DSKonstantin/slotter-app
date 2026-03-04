@@ -9,8 +9,8 @@ import {
 } from "react";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/src/store/redux/store";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "@/src/store/redux/store";
 import {
   logout as logoutAction,
   setToken,
@@ -28,8 +28,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.auth.user);
-  const token = useSelector((state: RootState) => state.auth.token);
+  const user = useAppSelector((s) => s.auth.user);
+  const token = useAppSelector((s) => s.auth.token);
   const [getMe] = useLazyGetMeQuery();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 

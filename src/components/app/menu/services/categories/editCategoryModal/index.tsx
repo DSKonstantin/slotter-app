@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, View, Alert } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -43,6 +43,7 @@ type Props = {
 
 const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   const { sidePadding, horizontalPadding } = useSafeAreaPadding();
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<number[]>([]);
 
   const methods = useForm({
     resolver: yupResolver(categorySchema),
@@ -57,44 +58,56 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   const [deleteCategory, { isLoading: isDeletingCategory }] =
     useDeleteServiceCategoryMutation();
 
-  const handleDeleteService = (serviceId: number, serviceName: string) => {
-    Alert.alert("Удалить услугу?", "Это действие нельзя отменить", [
-      { text: "Отмена", style: "cancel" },
-      {
-        text: "Удалить",
-        style: "destructive",
-        onPress: async () => {
-          if (!category?.id) return;
-
-          try {
-            await deleteService({
-              categoryId: category.id,
-              id: serviceId,
-            }).unwrap();
-          } catch (error: any) {
-            toast.error(error?.data?.error || "Не удалось удалить услугу");
-          }
-        },
-      },
-    ]);
+  const handleDeleteService = (serviceId: number) => {
+    setPendingDeleteIds((prev) => [...prev, serviceId]);
   };
 
   const handleFormSubmit = methods.handleSubmit(async (values) => {
     if (!category) return;
 
-    try {
-      await updateCategory({
-        userId,
-        id: category.id,
-        data: {
-          name: values.name,
-          color: values.color ?? undefined,
-        },
-      }).unwrap();
+    const save = async () => {
+      try {
+        await updateCategory({
+          userId,
+          id: category.id,
+          data: {
+            name: values.name,
+            color: values.color ?? undefined,
+          },
+        }).unwrap();
 
-      onClose();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Не удалось обновить категорию");
+        if (pendingDeleteIds.length > 0) {
+          const results = await Promise.allSettled(
+            pendingDeleteIds.map((id) =>
+              deleteService({ categoryId: category.id, id }).unwrap(),
+            ),
+          );
+          const failed = results.filter((r) => r.status === "rejected");
+          if (failed.length > 0) {
+            const reason = (failed[0] as PromiseRejectedResult).reason;
+            toast.error(
+              reason?.data?.error || "Не удалось удалить некоторые услуги",
+            );
+          }
+        }
+
+        onClose();
+      } catch (error: any) {
+        toast.error(error?.data?.error || "Не удалось сохранить изменения");
+      }
+    };
+
+    if (pendingDeleteIds.length > 0) {
+      Alert.alert(
+        "Сохранить изменения?",
+        `Будет удалено ${pendingDeleteIds.length} ${pendingDeleteIds.length === 1 ? "услуга" : "услуги"}`,
+        [
+          { text: "Отмена", style: "cancel" },
+          { text: "Сохранить", onPress: save },
+        ],
+      );
+    } else {
+      await save();
     }
   });
 
@@ -133,6 +146,7 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
       name: category?.name ?? "",
       color: category?.color ?? undefined,
     });
+    setPendingDeleteIds([]);
   }, [category, methods]);
 
   return (
@@ -190,26 +204,29 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
                   ...horizontalPadding,
                 }}
               >
-                {map(category?.services, (service) => (
-                  <Button
-                    key={service.id}
-                    title={service.name}
-                    variant="secondary"
-                    size="sm"
-                    disabled={isServiceDeleting}
-                    buttonClassName="rounded-xl border border-neutral-200 px-2.5"
-                    rightIcon={
-                      <StSvg
-                        name="Close_round_light"
-                        size={20}
-                        color={colors.neutral[900]}
-                      />
-                    }
-                    onPress={() =>
-                      handleDeleteService(service.id, service.name)
-                    }
-                  />
-                ))}
+                {map(
+                  category?.services?.filter(
+                    (s) => !pendingDeleteIds.includes(s.id),
+                  ),
+                  (service) => (
+                    <Button
+                      key={service.id}
+                      title={service.name}
+                      variant="secondary"
+                      size="sm"
+                      disabled={isServiceDeleting}
+                      buttonClassName="rounded-xl border border-neutral-200 px-2.5"
+                      rightIcon={
+                        <StSvg
+                          name="Close_round_light"
+                          size={20}
+                          color={colors.neutral[900]}
+                        />
+                      }
+                      onPress={() => handleDeleteService(service.id)}
+                    />
+                  ),
+                )}
               </ScrollView>
             )}
           </View>

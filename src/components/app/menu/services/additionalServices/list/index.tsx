@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, memo, useMemo } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
@@ -57,39 +57,49 @@ const AdditionalServicesList = () => {
     return [...unique.values()];
   }, [data?.pages]);
 
-  const handleToggleServiceActive = (serviceId: number, nextValue: boolean) => {
-    if (auth?.userId == null) return;
+  const handleToggleServiceActive = useCallback(
+    (serviceId: number, nextValue: boolean) => {
+      if (auth?.userId == null) return;
 
-    updateAdditionalService({
-      userId: auth.userId,
-      id: serviceId,
-      data: { is_active: nextValue },
-    }).unwrap();
-  };
-
-  const handleDragEnd = async ({
-    data: nextData,
-    from,
-    to,
-  }: {
-    data: AdditionalService[];
-    from: number;
-    to: number;
-  }) => {
-    if (from === to || auth?.userId == null) return;
-
-    try {
-      await reorderAdditionalServices({
+      updateAdditionalService({
         userId: auth.userId,
-        positions: nextData.map((service, index) => ({
-          id: service.id,
-          position: index,
-        })),
-      }).unwrap();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Failed to reorder services");
-    }
-  };
+        id: serviceId,
+        data: { is_active: nextValue },
+      })
+        .unwrap()
+        .catch((error: any) => {
+          toast.error(error?.data?.error || "Не удалось обновить услугу");
+        });
+    },
+    [auth?.userId, updateAdditionalService],
+  );
+
+  const handleDragEnd = useCallback(
+    async ({
+      data: nextData,
+      from,
+      to,
+    }: {
+      data: AdditionalService[];
+      from: number;
+      to: number;
+    }) => {
+      if (from === to || auth?.userId == null) return;
+
+      try {
+        await reorderAdditionalServices({
+          userId: auth.userId,
+          positions: nextData.map((service, index) => ({
+            id: service.id,
+            position: index,
+          })),
+        }).unwrap();
+      } catch (error: any) {
+        toast.error(error?.data?.error || "Не удалось изменить порядок услуг");
+      }
+    },
+    [auth?.userId, reorderAdditionalServices],
+  );
 
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -236,4 +246,4 @@ const AdditionalServicesList = () => {
   );
 };
 
-export default AdditionalServicesList;
+export default memo(AdditionalServicesList);

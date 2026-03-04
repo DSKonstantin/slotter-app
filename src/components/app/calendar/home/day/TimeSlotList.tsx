@@ -1,22 +1,15 @@
 import type { Schedule } from "@/src/store/redux/slices/calendarSlice";
 import React, { useMemo } from "react";
 import { View, ScrollView } from "react-native";
-import { Divider, Typography } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 
 const HOUR_HEIGHT = 120;
 const MINUTE_HEIGHT = HOUR_HEIGHT / 60;
-const START_HOUR = 9;
-const END_HOUR = 17;
-const START_MINUTES = START_HOUR * 60;
-const END_MINUTES = END_HOUR * 60;
-const HOUR_MARKERS = Array.from(
-  { length: END_HOUR - START_HOUR + 1 },
-  (_, index) => (START_HOUR + index) * 60,
-);
-
+const DEFAULT_START_MINUTES = 9 * 60;
+const DEFAULT_END_MINUTES = 17 * 60;
 const SLOT_GAP_PX = 2;
 
 const parseTime = (isoTime: string) => {
@@ -46,31 +39,49 @@ type SlotLayout = {
 const TimeSlotList: React.FC<TimeSlotListProps> = ({ schedule }) => {
   const { bottom } = useSafeAreaInsets();
 
-  const { slotsLayout, timelineHeight } = useMemo(() => {
-    const layouts: SlotLayout[] = [];
-    let maxBottom = (END_MINUTES - START_MINUTES) * MINUTE_HEIGHT;
+  const { startMinutes, hourMarkers, slotsLayout, timelineHeight } =
+    useMemo(() => {
+      const starts = schedule
+        .map((s) => parseTime(s.timeStart))
+        .filter(Boolean);
+      const ends = schedule.map((s) => parseTime(s.timeEnd)).filter(Boolean);
 
-    schedule.forEach((slot) => {
-      const start = parseTime(slot.timeStart);
-      const end = parseTime(slot.timeEnd);
-      const duration = end - start;
-      if (duration <= 0) return;
+      const start = starts.length ? Math.min(...starts) : DEFAULT_START_MINUTES;
+      const end = ends.length ? Math.max(...ends) : DEFAULT_END_MINUTES;
 
-      const top = (start - START_MINUTES) * MINUTE_HEIGHT;
-      const effectiveHeight = Math.max(
-        SLOT_GAP_PX,
-        duration * MINUTE_HEIGHT - SLOT_GAP_PX,
+      const startHour = Math.floor(start / 60);
+      const endHour = Math.ceil(end / 60);
+      const markers = Array.from(
+        { length: endHour - startHour + 1 },
+        (_, i) => (startHour + i) * 60,
       );
 
-      layouts.push({ slot, top, height: effectiveHeight });
-      maxBottom = Math.max(maxBottom, top + effectiveHeight);
-    });
+      const layouts: SlotLayout[] = [];
+      let maxBottom = (end - start) * MINUTE_HEIGHT;
 
-    return {
-      slotsLayout: layouts,
-      timelineHeight: maxBottom,
-    };
-  }, [schedule]);
+      schedule.forEach((slot) => {
+        const slotStart = parseTime(slot.timeStart);
+        const slotEnd = parseTime(slot.timeEnd);
+        const duration = slotEnd - slotStart;
+        if (duration <= 0) return;
+
+        const top = (slotStart - start) * MINUTE_HEIGHT;
+        const effectiveHeight = Math.max(
+          SLOT_GAP_PX,
+          duration * MINUTE_HEIGHT - SLOT_GAP_PX,
+        );
+
+        layouts.push({ slot, top, height: effectiveHeight });
+        maxBottom = Math.max(maxBottom, top + effectiveHeight);
+      });
+
+      return {
+        startMinutes: start,
+        hourMarkers: markers,
+        slotsLayout: layouts,
+        timelineHeight: maxBottom,
+      };
+    }, [schedule]);
 
   return (
     <ScrollView
@@ -88,10 +99,10 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({ schedule }) => {
           className="w-16 border-r border-neutral-200 pr-2 relative"
           style={{ height: timelineHeight }}
         >
-          {HOUR_MARKERS.map((time) => (
+          {hourMarkers.map((time) => (
             <View
               key={time}
-              style={{ top: (time - START_MINUTES) * MINUTE_HEIGHT }}
+              style={{ top: (time - startMinutes) * MINUTE_HEIGHT }}
               className="absolute left-0 right-0"
             >
               <Typography className="text-sm text-gray-500 -top-2.5">

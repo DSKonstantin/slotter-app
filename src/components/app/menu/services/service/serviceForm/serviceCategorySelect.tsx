@@ -21,6 +21,7 @@ const ServiceCategorySelect = () => {
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const categoriesListRef =
     useRef<FlatList<{ id: number; name: string; position: number }>>(null);
+  const scrollFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { control } = useFormContext();
   const {
     field: { value: selectedCategoryId, onChange: onCategoryChange },
@@ -88,6 +89,14 @@ const ServiceCategorySelect = () => {
     return () => clearTimeout(timeoutId);
   }, [categories, normalizedSelectedCategoryId]);
 
+  useEffect(() => {
+    return () => {
+      if (scrollFallbackTimeoutRef.current) {
+        clearTimeout(scrollFallbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
   if (!auth) {
     return null;
   }
@@ -122,7 +131,7 @@ const ServiceCategorySelect = () => {
                 animated: true,
               });
 
-              setTimeout(() => {
+              scrollFallbackTimeoutRef.current = setTimeout(() => {
                 categoriesListRef.current?.scrollToIndex({
                   index,
                   animated: true,

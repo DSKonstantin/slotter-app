@@ -24,6 +24,12 @@ const METHOD_HEADER_KEYS = new Set([
   "patch",
 ]);
 
+// React Native's FormData polyfill stores parts in _parts array.
+// instanceof FormData is unreliable on Android because Axios may bundle its own
+// FormData reference that differs from RN's polyfill class.
+const isFormData = (data: unknown): data is FormData =>
+  data instanceof FormData || Array.isArray((data as any)?._parts);
+
 const getRequestConfig = (
   args: string | AxiosRequestConfig,
 ): AxiosRequestConfig => {
@@ -87,6 +93,58 @@ const normalizeRequestHeaders = (
   return headers;
 };
 
+// For FormData requests, Axios on Android is unreliable — it may JSON.stringify
+// the body or set the wrong Content-Type. React Native's native fetch() handles
+// FormData correctly on both iOS and Android, so we bypass Axios entirely.
+const fetchMultipart = async (
+  requestConfig: AxiosRequestConfig,
+  preparedHeaders: AxiosHeaders,
+): Promise<{ data: unknown } | { error: AxiosBaseQueryError }> => {
+  const baseURL = axios.defaults.baseURL ?? "";
+  const url =
+    requestConfig.url?.startsWith("http")
+      ? requestConfig.url
+      : `${baseURL}${requestConfig.url ?? ""}`;
+
+  // Copy prepared headers, excluding Content-Type so the native layer can set
+  // it with the correct multipart boundary.
+  const fetchHeaders: Record<string, string> = {};
+  preparedHeaders.forEach((value, key) => {
+    if (key.toLowerCase() !== "content-type") {
+      fetchHeaders[key] = value;
+    }
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: (requestConfig.method ?? "POST").toUpperCase(),
+      headers: fetchHeaders,
+      body: requestConfig.data as FormData,
+    });
+
+    const text = await response.text();
+    const json = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+      return {
+        error: {
+          status: response.status,
+          data: json ?? DEFAULT_ERROR_MESSAGE,
+        },
+      };
+    }
+
+    return { data: json };
+  } catch (error) {
+    return {
+      error: {
+        status: "FETCH_ERROR",
+        data: error instanceof Error ? error.message : DEFAULT_ERROR_MESSAGE,
+      },
+    };
+  }
+};
+
 const axiosBaseQuery = ({
   prepareHeaders,
 }: AxiosBaseQueryArgs = {}): BaseQueryFn<
@@ -95,11 +153,15 @@ const axiosBaseQuery = ({
   AxiosBaseQueryError
 > => {
   return async (args, api) => {
-    try {
-      const requestConfig = getRequestConfig(args);
-      const headers = normalizeRequestHeaders(requestConfig.headers);
-      const preparedHeaders = prepareHeaders?.(headers, api) ?? headers;
+    const requestConfig = getRequestConfig(args);
+    const headers = normalizeRequestHeaders(requestConfig.headers);
+    const preparedHeaders = prepareHeaders?.(headers, api) ?? headers;
 
+    if (isFormData(requestConfig.data)) {
+      return fetchMultipart(requestConfig, preparedHeaders);
+    }
+
+    try {
       const result = await axios({
         ...requestConfig,
         headers: preparedHeaders,

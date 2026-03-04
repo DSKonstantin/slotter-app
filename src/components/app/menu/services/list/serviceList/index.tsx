@@ -167,11 +167,13 @@ const ServiceList = () => {
       renderItem={({
         item: category,
         drag,
+        isActive,
       }: RenderItemParams<ServiceCategory>) => (
         <ServiceCategoryItem
           category={category}
           isEditMode={isEditMode}
           onDrag={drag}
+          isDragActive={isActive}
           onServicePress={handleServicePress}
           onCreateServicePress={handleCreateServicePress}
           onServicesReorder={handleServicesReorder}

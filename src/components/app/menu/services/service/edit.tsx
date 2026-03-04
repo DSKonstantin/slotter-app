@@ -113,7 +113,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
   });
 
   const handleDelete = () => {
-    Alert.alert("Удалить категорию?", "Это действие нельзя отменить", [
+    Alert.alert("Удалить услугу?", "Это действие нельзя отменить", [
       { text: "Отмена" },
 
       {

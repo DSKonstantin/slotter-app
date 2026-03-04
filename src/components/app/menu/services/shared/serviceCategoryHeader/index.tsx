@@ -8,7 +8,10 @@ type ServiceCategoryHeaderProps = {
   activeCount: number;
   totalCount: number;
   isEditMode: boolean;
+  isDragActive?: boolean;
+  isExpanded?: boolean;
   onDrag?: () => void;
+  onPress?: () => void;
 };
 
 const ServiceCategoryHeader = ({
@@ -16,7 +19,10 @@ const ServiceCategoryHeader = ({
   activeCount,
   totalCount,
   isEditMode,
+  isDragActive = false,
+  isExpanded = true,
   onDrag,
+  onPress,
 }: ServiceCategoryHeaderProps) => {
   return (
     <View className="flex-row justify-between">
@@ -24,20 +30,43 @@ const ServiceCategoryHeader = ({
         {isEditMode && (
           <Pressable
             onLongPress={onDrag}
+            delayLongPress={100}
             hitSlop={8}
             accessibilityLabel="Reorder category"
             accessibilityRole="button"
           >
-            <StSvg name="Drag" size={16} color={colors.neutral[900]} />
+            <StSvg
+              name="Drag"
+              size={16}
+              color={
+                isDragActive ? colors.primary.blue[500] : colors.neutral[900]
+              }
+            />
           </Pressable>
         )}
 
-        <Typography className="text-caption text-neutral-500">
-          {name}
-        </Typography>
+        <Pressable className="flex-row items-center gap-1" onPress={onPress}>
+          <Typography
+            weight="regular"
+            className={`text-caption ${isDragActive ? "text-primary-blue-500" : "text-neutral-500"}`}
+          >
+            {name}
+          </Typography>
+
+          <StSvg
+            name={isExpanded ? "Expand_up_light" : "Expand_down_light"}
+            size={16}
+            color={
+              isDragActive ? colors.primary.blue[500] : colors.neutral[500]
+            }
+          />
+        </Pressable>
       </View>
 
-      <Typography weight="regular" className="text-caption text-neutral-500">
+      <Typography
+        weight="regular"
+        className={`text-caption ${isDragActive ? "text-primary-blue-500" : "text-neutral-500"}`}
+      >
         {activeCount}/{totalCount} активно
       </Typography>
     </View>

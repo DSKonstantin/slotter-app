@@ -7,10 +7,17 @@ import CalendarActionButton from "@/src/components/app/calendar/home/сalendarAc
 
 import { useAppSelector } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
-import { mockSchedule as schedule } from "@/src/constants/mockSchedule";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import {
+  useGetWorkingDaysQuery,
+  useGetWorkingDayQuery,
+} from "@/src/store/redux/services/api/workingDaysApi";
+import type { Schedule } from "@/src/store/redux/slices/calendarSlice";
+import { combineDayTime } from "@/src/utils/date/formatTime";
 
 const DayCalendarView = () => {
   const router = useRouter();
+  const auth = useRequiredAuth();
 
   const selectedDateISO = useAppSelector(
     (state) => state.calendar.selectedDate,
@@ -21,17 +28,30 @@ const DayCalendarView = () => {
     [selectedDateISO],
   );
 
+  const { data: workingDaysData } = useGetWorkingDaysQuery(
+    { userId: auth?.userId ?? 0 },
+    { skip: !auth },
+  );
+
   const datesWithSchedule = useMemo(() => {
-    const scheduleByDate: { [key: string]: any[] } = {};
-    schedule.forEach((slot) => {
-      const dateKey = slot.timeStart.split("T")[0];
-      if (!scheduleByDate[dateKey]) {
-        scheduleByDate[dateKey] = [];
-      }
-      scheduleByDate[dateKey].push(slot);
+    const result: { [key: string]: any[] } = {};
+    (workingDaysData?.working_days ?? []).forEach((wd) => {
+      if (!result[wd.day]) result[wd.day] = [];
+      result[wd.day].push(wd);
     });
-    return scheduleByDate;
-  }, []);
+    return result;
+  }, [workingDaysData]);
+
+  const selectedDateKey = selectedDate.toISOString().split("T")[0];
+
+  const selectedWorkingDay =
+    workingDaysData?.working_days.find((wd) => wd.day === selectedDateKey) ??
+    null;
+
+  const { data: workingDay } = useGetWorkingDayQuery(
+    { userId: auth?.userId ?? 0, id: selectedWorkingDay?.id ?? 0 },
+    { skip: !auth || !selectedWorkingDay },
+  );
 
   const handleSelectDate = useCallback(
     (date: Date) => {
@@ -45,6 +65,10 @@ const DayCalendarView = () => {
     router.push(Routers.app.calendar.daySchedule);
   }, [router]);
 
+  if (!auth) return null;
+
+  console.log(workingDaysData, "workingDaysData");
+
   return (
     <>
       <DateSelector
@@ -52,7 +76,7 @@ const DayCalendarView = () => {
         onSelectDate={handleSelectDate}
         schedule={datesWithSchedule}
       />
-      <TimeSlotList schedule={schedule} />
+      <TimeSlotList schedule={[]} />
 
       <CalendarActionButton onPress={handlePress} />
     </>

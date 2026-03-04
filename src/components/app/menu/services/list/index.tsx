@@ -21,7 +21,7 @@ import {
 } from "@/src/store/redux/slices/servicesSlice";
 import ServiceList from "@/src/components/app/menu/services/list/serviceList";
 
-const ServicesToolbarActions = memo(() => {
+function ServicesToolbarActionsComponent() {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const dispatch = useAppDispatch();
 
@@ -34,9 +34,11 @@ const ServicesToolbarActions = memo(() => {
   }, [dispatch]);
 
   return (
-    <View className="w-[104px] items-end">
+    <View className="items-end w-[48px] h-[48px]">
       <View
-        className={`flex-row bg-background-surface h-[48px] items-center gap-4 rounded-full ${!isEditMode && "px-2.5"}`}
+        className={`absolute right-0 flex-row bg-background-surface h-[48px] items-center gap-4 rounded-full ${
+          !isEditMode && "px-2.5"
+        }`}
       >
         <IconButton
           size={isEditMode ? "md" : "sm"}
@@ -50,25 +52,25 @@ const ServicesToolbarActions = memo(() => {
             />
           }
         />
+
         {!isEditMode && (
           <IconButton
             size="sm"
-            disabled={isEditMode}
             onPress={handleSearchPress}
             accessibilityLabel="Search services"
-            buttonClassName={isEditMode ? "opacity-0" : undefined}
             icon={<StSvg name="Search" size={24} color={colors.neutral[900]} />}
           />
         )}
       </View>
     </View>
   );
-});
+}
+
+const ServicesToolbarActions = memo(ServicesToolbarActionsComponent);
 
 const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const auth = useRequiredAuth();
-
   const createServiceLink = useCallback(() => {
     setCreateModalVisible(false);
     router.push(Routers.app.menu.services.create());

@@ -25,6 +25,7 @@ const AdditionalServiceEdit = () => {
     resolver: yupResolver(additionalServiceFormSchema),
     defaultValues: {
       name: "",
+      description: "",
       price: "",
       duration: "",
       isActive: true,

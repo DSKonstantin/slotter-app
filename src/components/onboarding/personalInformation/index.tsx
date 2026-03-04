@@ -17,8 +17,8 @@ import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { CameraType, ImagePickerAsset } from "expo-image-picker";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
-import { RootState } from "@/src/store/redux/store";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "@/src/store/redux/store";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { nameField } from "@/src/validation/fields/name";
 import { surnameField } from "@/src/validation/fields/surname";
 import { professionField } from "@/src/validation/fields/profession";
@@ -55,7 +55,8 @@ const PersonalInformationSchema = Yup.object({
 
 const PersonalInformation = () => {
   const [avatar, setAvatar] = useState<UploadFile | null>(null);
-  const user = useSelector((state: RootState) => state.auth.user);
+  const auth = useRequiredAuth();
+  const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
   const methods = useForm({
@@ -75,7 +76,7 @@ const PersonalInformation = () => {
   const onSubmit = useCallback(
     async (data: PersonalInformationFormValues) => {
       // This is now just a failsafe. The layout protects this route.
-      if (!user?.id) return;
+      if (!auth) return;
 
       try {
         const formData = new FormData();
@@ -101,7 +102,7 @@ const PersonalInformation = () => {
         }
 
         await updateUser({
-          id: user.id,
+          id: auth.userId,
           data: formData,
         }).unwrap();
 
@@ -113,7 +114,7 @@ const PersonalInformation = () => {
         );
       }
     },
-    [user, avatar, updateUser],
+    [auth, avatar, updateUser],
   );
 
   const handlePickAvatar = useCallback(

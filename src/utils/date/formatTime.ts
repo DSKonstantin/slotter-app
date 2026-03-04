@@ -1,3 +1,6 @@
+// Combines a date string ("YYYY-MM-DD") with a time string ("HH:MM:SS") into an ISO datetime.
+export const combineDayTime = (day: string, time: string) => `${day}T${time}`;
+
 export const formatTime = (date: Date) => {
   if (!date) {
     return "";
