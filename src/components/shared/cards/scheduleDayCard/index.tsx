@@ -3,9 +3,19 @@ import { TouchableOpacity, View } from "react-native";
 import { Checkbox, Typography } from "@/src/components/ui";
 import { format, getDate } from "date-fns";
 
+const formatScheduleTime = (scheduleTime: string) => {
+  const [start, end] = scheduleTime.split(" - ");
+
+  return `${format(new Date(start), "HH:mm")} - ${format(
+    new Date(end),
+    "HH:mm",
+  )}`;
+};
+
 type Props = {
   date: Date;
   hasSchedule?: boolean;
+  scheduleTime?: string;
   isSelected?: boolean;
   showCheckbox?: boolean;
   onPress?: () => void;
@@ -14,6 +24,7 @@ type Props = {
 const ScheduleDayCard = ({
   date,
   hasSchedule,
+  scheduleTime,
   showCheckbox,
   isSelected,
   onPress,
@@ -42,13 +53,13 @@ const ScheduleDayCard = ({
       </View>
 
       <View className="flex-row justify-between items-center">
-        {hasSchedule && (
-          <View className="bg-primary-blue-100 rounded-lg py-1 px-2">
+        {hasSchedule && scheduleTime && (
+          <View className="bg-primary-blue-100 rounded-lg py-1 px-2 flex-1">
             <Typography
               weight="regular"
-              className="text-primary-blue-500 text-caption"
+              className="text-primary-blue-500 text-[12px] text-center"
             >
-              11:00 - 19:00
+              {formatScheduleTime(scheduleTime)}
             </Typography>
           </View>
         )}

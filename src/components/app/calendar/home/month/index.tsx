@@ -9,10 +9,22 @@ import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 const MonthCalendarView = () => {
   const { bottom } = useSafeAreaInsets();
+  const auth = useRequiredAuth();
+
+  const { data: workingDaysData } = useGetWorkingDaysQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
+
   const [isOpen, setIsOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const handleOpen = useCallback(() => {
     setIsOpen(true);
@@ -54,6 +66,8 @@ const MonthCalendarView = () => {
     [handleClose],
   );
 
+  if (!auth) return null;
+
   return (
     <>
       <ScrollView
@@ -63,14 +77,18 @@ const MonthCalendarView = () => {
           paddingBottom: TAB_BAR_HEIGHT + bottom + 74,
         }}
       >
-        <MonthCalendar selectedDate={new Date()} onSelectDate={() => {}} />
+        <MonthCalendar
+          selectedDate={new Date()}
+          onSelectDate={() => {}}
+          onMonthChange={setCurrentMonth}
+        />
       </ScrollView>
       <CalendarActionButton mode="month" onPress={handleOpen} />
 
       <StModal visible={isOpen} onClose={handleClose}>
         <View className="gap-3">
           <Typography weight="semibold" className="text-display text-center">
-            Расписание на Февраль
+            Расписание на {format(currentMonth, "LLLL", { locale: ru })}
           </Typography>
 
           <View className="gap-4 mb-4">

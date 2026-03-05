@@ -7,67 +7,57 @@ import React, {
   memo,
 } from "react";
 import { FlatList, TouchableOpacity, View } from "react-native";
-import { format, addDays, isSameDay, startOfDay } from "date-fns";
+import { format, addDays, isSameDay, startOfDay, endOfMonth } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-
-// Schedule's type is inferred from usage; consider defining a proper type
-// in your application's types directory.
-type ScheduleEntry = {
-  time: string;
-  client?: string;
-};
-
-type Schedule = {
-  [isoDate: string]: ScheduleEntry[];
-};
+import type { WorkingDay } from "@/src/store/redux/services/api-types";
+import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 
 interface DateItemProps {
   item: Date;
   isSelected: boolean;
   isEmpty: boolean;
-  onPress: (date: Date, isEmpty: boolean) => void;
+  workingDayId?: number;
+  onPress: (id: number | undefined, date: Date, isEmpty: boolean) => void;
 }
 
-// 1. Memoized child component for FlatList optimization
 const DateItem = memo<DateItemProps>(
-  ({ item, isSelected, isEmpty, onPress }) => {
-    return (
-      <TouchableOpacity
-        onPress={() => onPress(item, isEmpty)}
-        style={{ width: ITEM_WIDTH }}
-        className={`items-center justify-between p-[6px] rounded-full ${
-          isSelected ? "bg-neutral-900" : "bg-transparent"
-        } ${isEmpty ? "opacity-50" : ""}`}
+  ({ item, isSelected, isEmpty, workingDayId, onPress }) => (
+    <TouchableOpacity
+      onPress={() => onPress(workingDayId, item, isEmpty)}
+      style={{ width: ITEM_WIDTH }}
+      className={`items-center justify-between p-[6px] rounded-full ${
+        isSelected ? "bg-neutral-900" : "bg-transparent"
+      } ${isEmpty ? "opacity-50" : ""}`}
+    >
+      <Typography
+        weight="regular"
+        className={`text-caption my-1 ${
+          isSelected ? "text-neutral-0" : "text-neutral-500"
+        }`}
       >
-        <Typography
-          weight="regular"
-          className={`text-caption my-1 ${
-            isSelected ? "text-neutral-0" : "text-neutral-500"
-          }`}
-        >
-          {format(item, "EEEEEE", { locale: ru })}
-        </Typography>
+        {format(item, "EEEEEE", { locale: ru })}
+      </Typography>
 
-        <View
-          className={`w-[32px] h-[32px] 
-             justify-center items-center
-             rounded-full ${isSelected ? " bg-background-surface" : "bg-transparent"}`}
-        >
-          <Typography weight="semibold" className="text-body text-neutral-900">
-            {format(item, "d")}
-          </Typography>
-        </View>
-      </TouchableOpacity>
-    );
-  },
+      <View
+        className={`w-[32px] h-[32px] justify-center items-center rounded-full ${
+          isSelected ? "bg-background-surface" : "bg-transparent"
+        }`}
+      >
+        <Typography weight="semibold" className="text-body text-neutral-900">
+          {format(item, "d")}
+        </Typography>
+      </View>
+    </TouchableOpacity>
+  ),
 );
 
 interface DateSelectorProps {
-  onSelectDate: (date: Date) => void;
+  onSelectDate: (id: number, date: Date) => void;
   selectedDate: Date;
-  schedule: Schedule;
+  workingDays: WorkingDay[];
 }
 
 const ITEM_WIDTH = 44;
@@ -77,57 +67,52 @@ const ITEM_GAP = 12;
 const DateSelector: React.FC<DateSelectorProps> = ({
   onSelectDate,
   selectedDate,
-  schedule,
+  workingDays,
 }) => {
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const listRef = useRef<FlatList<Date>>(null);
 
-  const datesWithSchedule = useMemo(() => {
-    const dateSet = new Set<string>();
-    Object.keys(schedule).forEach((isoDate) => {
-      dateSet.add(isoDate.split("T")[0]);
-    });
-    return dateSet;
-  }, [schedule]);
-
   const dates = useMemo(() => {
     const today = startOfDay(new Date());
-    const lastDay = addDays(today, 60);
-
+    const monthEnd = endOfMonth(today);
     const result: Date[] = [];
     let current = today;
-
-    while (current <= lastDay) {
+    while (current <= monthEnd) {
       result.push(current);
       current = addDays(current, 1);
     }
-
     return result;
   }, []);
 
-  const handleOpenModal = useCallback((date: Date) => {
-    setModalDate(date);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setModalDate(null);
-  }, []);
-
   const handleDatePress = useCallback(
-    (date: Date, isEmpty: boolean) => {
+    (id: number | undefined, date: Date, isEmpty: boolean) => {
       if (isEmpty) {
-        handleOpenModal(date);
-      } else {
-        onSelectDate(date);
+        setModalDate(date);
+      } else if (id !== undefined) {
+        onSelectDate(id, date);
       }
     },
-    [handleOpenModal, onSelectDate],
+    [onSelectDate],
   );
 
-  const initialIndex = useMemo(() => {
-    const index = dates.findIndex((d) => isSameDay(d, selectedDate));
-    return index > 0 ? index : 0;
-  }, [dates, selectedDate]);
+  const renderItem = useCallback(
+    ({ item }: { item: Date }) => {
+      const dateString = format(item, "yyyy-MM-dd");
+      const workingDay = workingDays.find((wd) => wd.day === dateString);
+      const isEmpty = !workingDay;
+
+      return (
+        <DateItem
+          item={item}
+          isSelected={isSameDay(item, selectedDate)}
+          isEmpty={isEmpty && !isSameDay(item, selectedDate)}
+          workingDayId={workingDay?.id}
+          onPress={handleDatePress}
+        />
+      );
+    },
+    [selectedDate, handleDatePress, workingDays],
+  );
 
   useEffect(() => {
     const index = dates.findIndex((d) => isSameDay(d, selectedDate));
@@ -143,24 +128,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({
     }
   }, [selectedDate, dates]);
 
-  const renderItem = useCallback(
-    ({ item }: { item: Date }) => {
-      const isSelected = isSameDay(item, selectedDate);
-      const dateString = format(item, "yyyy-MM-dd");
-      const isEmpty = !datesWithSchedule.has(dateString);
-
-      return (
-        <DateItem
-          item={item}
-          isSelected={isSelected}
-          isEmpty={isEmpty && !isSelected}
-          onPress={handleDatePress}
-        />
-      );
-    },
-    [selectedDate, handleDatePress, datesWithSchedule],
-  );
-
   return (
     <>
       <FlatList
@@ -170,7 +137,9 @@ const DateSelector: React.FC<DateSelectorProps> = ({
         renderItem={renderItem}
         keyExtractor={(item) => item.toISOString()}
         showsHorizontalScrollIndicator={false}
-        initialScrollIndex={initialIndex}
+        initialScrollIndex={
+          dates.findIndex((d) => isSameDay(d, selectedDate)) || 0
+        }
         getItemLayout={(_, index) => ({
           length: ITEM_WIDTH,
           offset: index * (ITEM_WIDTH + ITEM_GAP),
@@ -180,19 +149,13 @@ const DateSelector: React.FC<DateSelectorProps> = ({
           gap: ITEM_GAP,
           paddingHorizontal: HORIZONTAL_PADDING,
         }}
-        style={{
-          flexGrow: 0,
-        }}
+        style={{ flexGrow: 0 }}
       />
 
-      <StModal visible={!!modalDate} onClose={handleCloseModal}>
+      <StModal visible={!!modalDate} onClose={() => setModalDate(null)}>
         <View className="gap-3">
-          {/* 4. Dynamic modal content */}
           <Typography weight="semibold" className="text-display text-center">
-            {modalDate &&
-              format(modalDate, "d MMMM yyyy", {
-                locale: ru,
-              })}
+            {modalDate && format(modalDate, "d MMMM yyyy", { locale: ru })}
           </Typography>
 
           <View className="my-4 items-center gap-2">
@@ -213,9 +176,12 @@ const DateSelector: React.FC<DateSelectorProps> = ({
                 color={colors.primary.blue[500]}
               />
             }
-            onPress={handleCloseModal}
+            onPress={() => {
+              setModalDate(null);
+              router.push(Routers.app.calendar.schedule);
+            }}
           />
-          <Button title="Готово" onPress={handleCloseModal} />
+          <Button title="Готово" onPress={() => setModalDate(null)} />
         </View>
       </StModal>
     </>

@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import {
   Button,
   Checkbox,
@@ -22,8 +19,7 @@ import {
   setSelectedDate,
   toggleFilter,
 } from "@/src/store/redux/slices/calendarSlice";
-import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
-import { CALENDAR_VIEW_OPTIONS } from "@/src/constants/calendar";
+import { CALENDAR_VIEW_OPTIONS, type CalendarParams } from "@/src/constants/calendar";
 import { colors } from "@/src/styles/colors";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 
@@ -98,28 +94,22 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
 const CalendarHome = () => {
   const [isFilterOpen, setFilterOpen] = useState(false);
   const router = useRouter();
-  // URL - источник истины. Устанавливаем значение по умолчанию, если оно отсутствует.
-  const { mode = "day", date } = useLocalSearchParams<{
-    mode?: "day" | "month";
-    date?: string;
-  }>();
+  const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
   const dispatch = useAppDispatch();
-  const { top } = useSafeAreaInsets();
 
   const handleOpenFilters = useCallback(() => setFilterOpen(true), []);
   const handleCloseFilters = useCallback(() => setFilterOpen(false), []);
 
-  // Синхронизируем состояние Redux с состоянием URL
+  const handleModeChange = (value: string) => {
+    router.setParams({ mode: value });
+  };
+
   useEffect(() => {
     dispatch(setMode(mode));
     if (date) {
       dispatch(setSelectedDate(date));
     }
   }, [mode, date, dispatch]);
-
-  const handleModeChange = (value: string) => {
-    router.setParams({ mode: value });
-  };
 
   return (
     <>

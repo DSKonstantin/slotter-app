@@ -32,7 +32,7 @@ export function RhfDatePicker({
       name={name}
       render={({ field: { onChange, value }, fieldState: { error } }) => (
         <DatePicker
-          value={value}
+          value={parseValue ? parseValue(value) : value}
           label={label}
           placeholder={placeholder}
           error={error}
@@ -40,7 +40,7 @@ export function RhfDatePicker({
           startAdornment={startAdornment}
           endAdornment={endAdornment}
           onChange={(d: Date) => {
-            onChange(d);
+            onChange(formatValue ? formatValue(d) : d);
           }}
           {...other}
         />

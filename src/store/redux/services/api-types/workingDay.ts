@@ -34,6 +34,18 @@ export type CreateWorkingDayPayload = {
   working_day_breaks_attributes?: WorkingDayBreaksAttributesPayload[];
 };
 
+export type BulkCreateWorkingDayItem = {
+  day: string;
+  start_at: string;
+  end_at: string;
+  working_day_breaks?: { start_at: string; end_at: string }[];
+};
+
+export type BulkCreateWorkingDaysPayload = {
+  userId: number;
+  working_days: BulkCreateWorkingDayItem[];
+};
+
 export type UpdateWorkingDayPayload = Partial<{
   day: string;
   start_at: string;

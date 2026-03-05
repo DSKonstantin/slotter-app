@@ -24,7 +24,11 @@ export const Routers = {
     calendar: {
       root: "/(app)/calendar",
       schedule: "/(app)/calendar/schedule",
-      daySchedule: "/(app)/calendar/day-schedule",
+      daySchedule: (id: string | number) =>
+        ({
+          pathname: "/(app)/calendar/day-schedule/[id]",
+          params: { id: String(id) },
+        }) as const,
     },
     chat: "/(app)/chat",
     clients: "/(app)/clients",

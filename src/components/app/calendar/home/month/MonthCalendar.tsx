@@ -11,9 +11,10 @@ import { mockProgressMap } from "@/src/constants/mockCalendarData";
 interface Props {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
+  onMonthChange?: (date: Date) => void;
 }
 
-const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
+const MonthCalendar = ({ selectedDate, onSelectDate, onMonthChange }: Props) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const appointmentCount = useMemo(
@@ -22,8 +23,10 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
   );
 
   const handleMonthChange = useCallback((month: any) => {
-    setCurrentMonth(new Date(month.year, month.month - 1, 1));
-  }, []);
+    const date = new Date(month.year, month.month - 1, 1);
+    setCurrentMonth(date);
+    onMonthChange?.(date);
+  }, [onMonthChange]);
 
   const renderHeader = useCallback(
     (date: any) => {

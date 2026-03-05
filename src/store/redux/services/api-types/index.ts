@@ -28,6 +28,8 @@ export type {
   WorkingDayBreak,
   WorkingDayBreaksAttributesPayload,
   CreateWorkingDayPayload,
+  BulkCreateWorkingDayItem,
+  BulkCreateWorkingDaysPayload,
   UpdateWorkingDayPayload,
   CreateWorkingDayBreakPayload,
   UpdateWorkingDayBreakPayload,

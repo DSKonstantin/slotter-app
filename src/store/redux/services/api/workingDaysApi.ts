@@ -1,5 +1,6 @@
 import { api } from "../api";
 import type {
+  BulkCreateWorkingDaysPayload,
   CreateWorkingDayBreakPayload,
   CreateWorkingDayPayload,
   UpdateWorkingDayBreakPayload,
@@ -99,6 +100,20 @@ const workingDaysApi = api.injectEndpoints({
         { type: "WorkingDays", id: arg.id },
         { type: "WorkingDays", id: `LIST-${arg.userId}` },
         { type: "WorkingDayBreaks", id: `LIST-${arg.id}` },
+      ],
+    }),
+
+    bulkCreateWorkingDays: builder.mutation<
+      WorkingDay[],
+      BulkCreateWorkingDaysPayload
+    >({
+      query: ({ userId, working_days }) => ({
+        url: `/users/${userId}/working_days/bulk_create`,
+        method: "POST",
+        data: { working_days },
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "WorkingDays", id: `LIST-${arg.userId}` },
       ],
     }),
 
@@ -214,6 +229,7 @@ export const {
   useGetWorkingDaysQuery,
   useGetWorkingDayQuery,
   useCreateWorkingDayMutation,
+  useBulkCreateWorkingDaysMutation,
   useUpdateWorkingDayMutation,
   useDeleteWorkingDayMutation,
   useGetWorkingDayBreaksQuery,

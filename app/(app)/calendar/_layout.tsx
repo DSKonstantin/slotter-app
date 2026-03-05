@@ -5,7 +5,7 @@ export default function StackLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="schedule" />
-      <Stack.Screen name="day-schedule" />
+      <Stack.Screen name="day-schedule/[id]" />
     </Stack>
   );
 }
