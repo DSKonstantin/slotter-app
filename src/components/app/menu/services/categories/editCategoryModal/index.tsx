@@ -26,6 +26,7 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import categorySchema from "@/src/validation/schemas/category.schema";
 import type { Service } from "@/src/store/redux/services/api-types";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type EditableCategory = {
   id: number;
@@ -92,8 +93,10 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
         }
 
         onClose();
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Не удалось сохранить изменения");
+      } catch (error) {
+        toast.error(
+          getApiErrorMessage(error, "Не удалось сохранить изменения"),
+        );
       }
     };
 
@@ -133,8 +136,10 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
             }).unwrap();
 
             onClose();
-          } catch (error: any) {
-            toast.error(error?.data?.error || "Не удалось удалить категорию");
+          } catch (error) {
+            toast.error(
+              getApiErrorMessage(error, "Не удалось удалить категорию"),
+            );
           }
         },
       },

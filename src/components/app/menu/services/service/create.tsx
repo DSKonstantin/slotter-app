@@ -10,6 +10,7 @@ import { useCreateServiceMutation } from "@/src/store/redux/services/api/service
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type AppCreateServiceProps = {
   categoryId?: string;
@@ -66,8 +67,8 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
         data: formData,
       }).unwrap();
       router.back();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Не удалось создать услугу");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось создать услугу"));
     }
   });
 

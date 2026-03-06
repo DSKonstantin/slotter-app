@@ -144,9 +144,7 @@ const ServiceListSkeletonComponent = () => {
   );
 };
 
-export const ServiceListSkeleton = React.memo(
-  ServiceListSkeletonComponent,
-);
+export const ServiceListSkeleton = React.memo(ServiceListSkeletonComponent);
 
 const ADDITIONAL_CARDS = [
   { titleRatio: 0.62, subtitleRatio: 0.4 },

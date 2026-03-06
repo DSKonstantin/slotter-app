@@ -67,8 +67,8 @@ const ServiceList = () => {
             position: index,
           })),
         }).unwrap();
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Failed to reorder categories");
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Failed to reorder categories"));
       }
     },
     [auth?.userId, reorderServiceCategories],
@@ -114,8 +114,8 @@ const ServiceList = () => {
             position: index,
           })),
         }).unwrap();
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Failed to reorder services");
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Failed to reorder services"));
       }
     },
     [auth?.userId, reorderServices],

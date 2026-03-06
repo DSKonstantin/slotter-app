@@ -5,7 +5,6 @@ import { colors } from "@/src/styles/colors";
 
 interface Props {
   progress?: number;
-  isSelected?: boolean;
 }
 
 const SIZE = 44;
@@ -13,10 +12,7 @@ const STROKE_WIDTH = 2;
 const RADIUS = (SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const CircularProgressDayComponent = ({
-  progress = 0.75,
-  isSelected,
-}: Props) => {
+const CircularProgressDayComponent = ({ progress = 0 }: Props) => {
   return (
     <View style={styles.container}>
       <Svg width={SIZE} height={SIZE}>

@@ -107,10 +107,10 @@ const PersonalInformation = () => {
         }).unwrap();
 
         router.push(Routers.onboarding.service);
-      } catch (error: any) {
+      } catch (error) {
         console.log("UPDATE USER ERROR:", error);
         toast.error(
-          error?.data?.error || "Произошла ошибка при обновлении профиля.",
+          getApiErrorMessage(error, "Произошла ошибка при обновлении профиля."),
         );
       }
     },

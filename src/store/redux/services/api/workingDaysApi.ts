@@ -37,20 +37,22 @@ const workingDaysApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getWorkingDays: builder.query<
       WorkingDaysResponse,
-      { userId: number; params?: Record<string, string | number> }
+      { userId: number; date_from?: string; date_to?: string }
     >({
-      query: ({ userId, params }) => ({
+      query: ({ userId, date_from, date_to }) => ({
         url: `/users/${userId}/working_days`,
         method: "GET",
-        params,
+        params: {
+          ...(date_from && { date_from }),
+          ...(date_to && { date_to }),
+        },
       }),
       providesTags: (result, _error, arg) =>
         result
           ? [
-              ...result.working_days.map((workingDay) => ({
-                type: "WorkingDays" as const,
-                id: workingDay.id,
-              })),
+              ...Object.values(result)
+                .filter((wd): wd is WorkingDay => wd !== null)
+                .map((wd) => ({ type: "WorkingDays" as const, id: wd.id })),
               { type: "WorkingDays" as const, id: `LIST-${arg.userId}` },
             ]
           : [{ type: "WorkingDays" as const, id: `LIST-${arg.userId}` }],

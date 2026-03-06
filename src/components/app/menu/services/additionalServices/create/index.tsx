@@ -3,13 +3,12 @@ import AdditionalServicesForm from "@/src/components/app/menu/services/additiona
 import { FormProvider, useForm } from "react-hook-form";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { IconButton, StSvg } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
 import { useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const AdditionalServiceCreate = () => {
   const router = useRouter();
@@ -45,8 +44,8 @@ const AdditionalServiceCreate = () => {
 
       methods.reset();
       router.back();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Не удалось создать доп. услугу");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось создать доп. услугу"));
     }
   });
 

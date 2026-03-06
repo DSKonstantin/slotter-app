@@ -15,6 +15,7 @@ import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type RegisterFormValues = {
   email: string;
@@ -57,9 +58,11 @@ const Register = () => {
         }).unwrap();
 
         router.push(Routers.onboarding.experience);
-      } catch (error: any) {
+      } catch (error) {
         console.log("UPDATE USER ERROR:", error);
-        toast.error(error?.data?.error || "Произошла ошибка при обновлении.");
+        toast.error(
+          getApiErrorMessage(error, "Произошла ошибка при обновлении."),
+        );
       }
     },
     [auth, updateUser],

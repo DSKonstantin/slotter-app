@@ -12,6 +12,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type AdditionalServiceFormValues = {
   name: string;
@@ -71,8 +72,8 @@ const EditAdditionalServiceModal = ({ visible, service, onClose }: Props) => {
       }).unwrap();
 
       onClose();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Не удалось обновить доп. услугу");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось обновить доп. услугу"));
     }
   });
 
@@ -93,8 +94,10 @@ const EditAdditionalServiceModal = ({ visible, service, onClose }: Props) => {
 
             toast.success("Доп. услуга удалена");
             onClose();
-          } catch (error: any) {
-            toast.error(error?.data?.error || "Не удалось удалить доп. услугу");
+          } catch (error) {
+            toast.error(
+              getApiErrorMessage(error, "Не удалось удалить доп. услугу"),
+            );
           }
         },
       },

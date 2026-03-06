@@ -2,7 +2,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { FormProvider, Resolver, useForm } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -12,9 +13,11 @@ import {
   useGetWorkingDayQuery,
   useUpdateWorkingDayMutation,
 } from "@/src/store/redux/services/api/workingDaysApi";
+import type { WorkingDay } from "@/src/store/redux/services/api-types";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-
+import { Typography } from "@/src/components/ui";
 import {
   DayScheduleForm,
   DayScheduleSchema,
@@ -30,48 +33,40 @@ const formatTimeFromISO = (iso: string) => {
   return "";
 };
 
-const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
-  const auth = useRequiredAuth();
+type DayScheduleEditProps = {
+  workingDay: WorkingDay;
+  userId: number;
+};
 
-  const { data: workingDay } = useGetWorkingDayQuery(
-    auth ? { userId: auth.userId, id: workingDayId } : skipToken,
-  );
-
+const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
-  const initialBreakIds = useRef<number[]>([]);
+
+  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
+    id: b.id,
+    start: formatTimeFromISO(b.start_at),
+    end: formatTimeFromISO(b.end_at),
+  }));
+
+  const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
 
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
       atHome: true,
-    },
-  });
-
-  const { handleSubmit, reset } = methods;
-
-  useEffect(() => {
-    if (!workingDay) return;
-    const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
-      id: b.id,
-      start: formatTimeFromISO(b.start_at),
-      end: formatTimeFromISO(b.end_at),
-    }));
-    initialBreakIds.current = breaks.map((b) => b.id);
-    reset({
-      atHome: true,
       date: format(new Date(workingDay.day), "d MMMM, EEEE", { locale: ru }),
       scheduleStart: formatTimeFromISO(workingDay.start_at),
       scheduleEnd: formatTimeFromISO(workingDay.end_at),
       breaks,
-    });
-  }, [workingDay, reset]);
+    },
+  });
+
+  const { handleSubmit } = methods;
 
   const onSubmit = async (data: DayScheduleFormValues) => {
-    if (!auth) return;
     try {
       await updateWorkingDay({
-        userId: auth.userId,
-        id: workingDayId,
+        userId,
+        id: workingDay.id,
         data: {
           start_at: data.scheduleStart,
           end_at: data.scheduleEnd,
@@ -88,8 +83,8 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
         },
       }).unwrap();
       router.back();
-    } catch (e: any) {
-      toast.error(e?.data?.error ?? "Ошибка сохранения");
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
     }
   };
 
@@ -107,6 +102,48 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
       </ScreenWithToolbar>
     </FormProvider>
   );
+};
+
+const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
+  const auth = useRequiredAuth();
+
+  const {
+    data: workingDay,
+    isLoading,
+    isError,
+  } = useGetWorkingDayQuery(
+    auth ? { userId: auth.userId, id: workingDayId } : skipToken,
+  );
+
+  if (!auth) return null;
+
+  if (isLoading) {
+    return (
+      <ScreenWithToolbar title="Настроить день">
+        {() => (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator />
+          </View>
+        )}
+      </ScreenWithToolbar>
+    );
+  }
+
+  if (isError || !workingDay) {
+    return (
+      <ScreenWithToolbar title="Настроить день">
+        {() => (
+          <View className="flex-1 items-center justify-center px-screen">
+            <Typography className="text-body text-neutral-400 text-center">
+              Не удалось загрузить данные дня
+            </Typography>
+          </View>
+        )}
+      </ScreenWithToolbar>
+    );
+  }
+
+  return <DayScheduleEdit workingDay={workingDay} userId={auth.userId} />;
 };
 
 export default CalendarDaySchedule;

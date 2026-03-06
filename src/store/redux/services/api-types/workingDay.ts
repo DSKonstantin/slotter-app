@@ -1,5 +1,3 @@
-import type { Pagination } from "./common";
-
 export interface WorkingDayBreak {
   id: number;
   working_day_id: number;
@@ -63,12 +61,8 @@ export type UpdateWorkingDayBreakPayload = Partial<{
   end_at: string;
 }>;
 
-export interface WorkingDaysResponse {
-  working_days: WorkingDay[];
-  pagination: Pagination;
-}
+export type WorkingDaysResponse = Record<string, WorkingDay | null>;
 
 export interface WorkingDayBreaksResponse {
   working_day_breaks: WorkingDayBreak[];
-  pagination: Pagination;
 }

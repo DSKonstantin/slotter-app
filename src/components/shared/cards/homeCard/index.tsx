@@ -1,7 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
-import { StSvg, Tag, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { Typography } from "@/src/components/ui";
 import { twMerge } from "tailwind-merge";
 
 type HomeCardProps = {

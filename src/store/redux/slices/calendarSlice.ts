@@ -1,22 +1,22 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { format } from "date-fns";
 
-export type CalendarMode = "day" | "month";
-
-export type ScheduleStatus =
-  | "confirmed"
-  | "pending"
-  | "cancelled"
-  | "available";
+export type SlotStatus = "available" | "confirmed" | "pending" | "cancelled";
 
 export interface Schedule {
   id: string;
-  clientName?: string;
   timeStart: string;
   timeEnd: string;
+  status: SlotStatus;
+  clientName?: string;
+  clientPhone?: string;
   price?: number;
-  status: ScheduleStatus;
   services?: string[];
+  comment?: string;
+  paymentMethod?: "cash" | "sbp" | "online";
 }
+
+export type CalendarMode = "day" | "month";
 
 export interface CalendarFilters {
   showConfirmed: boolean;
@@ -26,13 +26,13 @@ export interface CalendarFilters {
 
 interface CalendarState {
   mode: CalendarMode;
-  selectedDate: string;
+  selectedDay: string;
   filters: CalendarFilters;
 }
 
 const initialState: CalendarState = {
   mode: "day",
-  selectedDate: new Date().toISOString(),
+  selectedDay: format(new Date(), "yyyy-MM-dd"),
   filters: {
     showConfirmed: true,
     showPending: true,
@@ -48,8 +48,8 @@ const calendarSlice = createSlice({
       state.mode = action.payload;
     },
 
-    setSelectedDate(state, action: PayloadAction<string>) {
-      state.selectedDate = action.payload;
+    setSelectedDay(state, action: PayloadAction<string>) {
+      state.selectedDay = action.payload;
     },
 
     toggleFilter(state, action: PayloadAction<keyof CalendarFilters>) {
@@ -59,6 +59,6 @@ const calendarSlice = createSlice({
   },
 });
 
-export const { setMode, setSelectedDate, toggleFilter } = calendarSlice.actions;
+export const { setMode, setSelectedDay, toggleFilter } = calendarSlice.actions;
 
 export default calendarSlice.reducer;

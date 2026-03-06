@@ -173,7 +173,7 @@ export const ScheduleSettingsModal = ({
       style={[
         styles.sheet,
         {
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
+          marginBottom: TAB_BAR_HEIGHT + bottom + 16,
           marginLeft: left + 20,
           marginRight: right + 20,
         },
@@ -195,11 +195,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
+    borderWidth: 1,
+    borderColor: "#E6E6E6CC",
+    borderRadius: 36,
     paddingTop: 12,
-    paddingBottom: 20,
     paddingHorizontal: 20,
+    paddingBottom: 20,
     overflow: "hidden",
   },
   handle: {

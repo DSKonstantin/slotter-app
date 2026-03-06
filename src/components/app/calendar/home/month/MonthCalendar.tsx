@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { View, TouchableOpacity, Pressable } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { format } from "date-fns";
@@ -11,22 +11,28 @@ import { mockProgressMap } from "@/src/constants/mockCalendarData";
 interface Props {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
-  onMonthChange?: (date: Date) => void;
+  currentMonth: Date;
+  onMonthChange: (date: Date) => void;
 }
 
-const MonthCalendar = ({ selectedDate, onSelectDate, onMonthChange }: Props) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
+const MonthCalendar = ({
+  selectedDate,
+  onSelectDate,
+  currentMonth,
+  onMonthChange,
+}: Props) => {
   const appointmentCount = useMemo(
     () => Object.keys(mockProgressMap).length,
     [],
   );
 
-  const handleMonthChange = useCallback((month: any) => {
-    const date = new Date(month.year, month.month - 1, 1);
-    setCurrentMonth(date);
-    onMonthChange?.(date);
-  }, [onMonthChange]);
+  const handleMonthChange = useCallback(
+    (month: any) => {
+      const date = new Date(month.year, month.month - 1, 1);
+      onMonthChange(date);
+    },
+    [onMonthChange],
+  );
 
   const renderHeader = useCallback(
     (date: any) => {
@@ -93,7 +99,7 @@ const MonthCalendar = ({ selectedDate, onSelectDate, onMonthChange }: Props) => 
         >
           {!isDisabled && date && (
             <View className="absolute">
-              <CircularProgressDay progress={progress} isSelected={isToday} />
+              <CircularProgressDay progress={progress} />
             </View>
           )}
 

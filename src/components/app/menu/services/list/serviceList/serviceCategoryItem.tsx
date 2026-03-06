@@ -12,6 +12,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { useDeleteServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ServiceCategoryHeader from "@/src/components/app/menu/services/shared/serviceCategoryHeader";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type ServiceCategoryItemProps = {
   category: ServiceCategory;
@@ -57,7 +58,9 @@ const ServiceCategoryItem = ({
             void deleteService({ categoryId: category.id, id: serviceId })
               .unwrap()
               .catch((error) => {
-                toast.error(error?.data?.error || "Не удалось удалить услугу");
+                toast.error(
+                  getApiErrorMessage(error, "Не удалось удалить услугу"),
+                );
               });
           },
         },

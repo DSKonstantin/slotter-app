@@ -21,7 +21,9 @@ const ServiceCategorySelect = () => {
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const categoriesListRef =
     useRef<FlatList<{ id: number; name: string; position: number }>>(null);
-  const scrollFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const { control } = useFormContext();
   const {
     field: { value: selectedCategoryId, onChange: onCategoryChange },

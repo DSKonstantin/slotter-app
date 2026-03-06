@@ -49,8 +49,8 @@ const Login = () => {
         }).unwrap();
 
         router.replace(Routers.app.root);
-      } catch (error: any) {
-        toast.error(error?.data?.error);
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Произошла ошибка"));
       }
     },
     [login],

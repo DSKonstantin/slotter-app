@@ -14,7 +14,8 @@
         "CFBundleLocalizations": [
           "ru",
           "en"
-        ]
+        ],
+        "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании"
       },
       "bundleIdentifier": "com.anonymous.slotter"
     },

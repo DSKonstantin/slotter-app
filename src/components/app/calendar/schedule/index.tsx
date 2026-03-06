@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from "react";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import {
   format,
   startOfMonth,
@@ -13,13 +13,11 @@ import {
   getMonth,
   addMonths,
   subMonths,
+  parseISO,
 } from "date-fns";
 import { ru } from "date-fns/locale";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { router, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { FlashList } from "@shopify/flash-list";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -36,6 +34,8 @@ import {
   CalendarScheduleSchema,
   type CalendarScheduleFormValues,
 } from "@/src/validation/schemas/calendarSchedule.schema";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import { Routers } from "@/src/constants/routers";
 
 type DayItem = {
   date: Date;
@@ -71,9 +71,9 @@ const generateMonth = (
 };
 
 const CalendarSchedule = () => {
-  const [current, setCurrent] = useState(new Date());
+  const { date } = useLocalSearchParams<{ date?: string }>();
+  const [current, setCurrent] = useState(date ? parseISO(date) : new Date());
   const [modalHeight, setModalHeight] = useState(0);
-  const { bottom } = useSafeAreaInsets();
   const auth = useRequiredAuth();
   const [bulkCreateWorkingDays, { isLoading: isSaving }] =
     useBulkCreateWorkingDaysMutation();
@@ -103,8 +103,8 @@ const CalendarSchedule = () => {
 
   const workingDayKeys = useMemo(() => {
     const map: Record<string, WorkingDayMeta> = {};
-    for (const wd of workingDaysData?.working_days ?? []) {
-      map[wd.day] = { id: wd.id, startAt: wd.start_at, endAt: wd.end_at };
+    for (const wd of Object.values(workingDaysData ?? {})) {
+      if (wd) map[wd.day] = { id: wd.id, startAt: wd.start_at, endAt: wd.end_at };
     }
     return map;
   }, [workingDaysData]);
@@ -147,8 +147,10 @@ const CalendarSchedule = () => {
           working_days: workingDays,
         }).unwrap();
         setValue("selectedDays", []);
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Не удалось сохранить расписание");
+      } catch (error) {
+        toast.error(
+          getApiErrorMessage(error, "Не удалось сохранить расписание"),
+        );
       }
     },
     [auth, bulkCreateWorkingDays, setValue],
@@ -168,7 +170,27 @@ const CalendarSchedule = () => {
             showCheckbox={!item.hasSchedule}
             isSelected={isSelected}
             onPress={() => {
-              if (!item.hasSchedule) {
+              if (item.hasSchedule && item.workingDayId) {
+                if (modalVisible) {
+                  Alert.alert(
+                    "Несохранённые изменения",
+                    "У вас есть несохранённые дни. Если перейти к редактированию, выбор сбросится.",
+                    [
+                      { text: "Отмена", style: "cancel" },
+                      {
+                        text: "Перейти",
+                        style: "destructive",
+                        onPress: () => {
+                          setValue("selectedDays", []);
+                          router.push(Routers.app.calendar.daySchedule(item.workingDayId!));
+                        },
+                      },
+                    ],
+                  );
+                  return;
+                }
+                router.push(Routers.app.calendar.daySchedule(item.workingDayId));
+              } else {
                 toggleDay(dateKey);
               }
             }}
@@ -176,7 +198,7 @@ const CalendarSchedule = () => {
         </View>
       );
     },
-    [selectedDays, toggleDay],
+    [selectedDays, toggleDay, modalVisible, setValue],
   );
 
   return (
@@ -245,12 +267,13 @@ const CalendarSchedule = () => {
           </SafeAreaView>
         )}
       </ScreenWithToolbar>
+
       <ScheduleSettingsModal
         visible={modalVisible}
         onClose={() => setValue("selectedDays", [])}
         onSave={handleSubmit(handleSave)}
         isLoading={isSaving}
-        onHeightChange={(h) => setModalHeight(h - (TAB_BAR_HEIGHT + bottom))}
+        onHeightChange={(h) => setModalHeight(h + 8)}
       />
     </FormProvider>
   );

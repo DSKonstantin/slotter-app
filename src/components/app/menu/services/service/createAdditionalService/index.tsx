@@ -26,7 +26,8 @@ type AdditionalServicesFieldValues = {
 };
 
 const CreateAdditionalService = () => {
-  const [editingService, setEditingService] = useState<AdditionalService | null>(null);
+  const [editingService, setEditingService] =
+    useState<AdditionalService | null>(null);
   const { control } = useFormContext<AdditionalServicesFieldValues>();
   const auth = useRequiredAuth();
 

@@ -23,15 +23,49 @@ export const Routers = {
     root: "/(app)",
     calendar: {
       root: "/(app)/calendar",
-      schedule: "/(app)/calendar/schedule",
+      schedule: (date?: string) =>
+        date
+          ? ({
+              pathname: "/(app)/calendar/schedule",
+              params: { date },
+            }) as const
+          : ("/(app)/calendar/schedule" as const),
       daySchedule: (id: string | number) =>
         ({
           pathname: "/(app)/calendar/day-schedule/[id]",
           params: { id: String(id) },
         }) as const,
+      dayScheduleCreate: (date: string) =>
+        ({
+          pathname: "/(app)/calendar/day-schedule/create",
+          params: { date },
+        }) as const,
+      slot: (id: string | number) =>
+        ({
+          pathname: "/(app)/calendar/slot/[id]",
+          params: { id: String(id) },
+        }) as const,
+      slotSelectService: (params?: { date?: string; time?: string }) =>
+        ({
+          pathname: "/(app)/calendar/slot/select-service",
+          params: params ?? {},
+        }) as const,
+      slotCreate: (params?: {
+        date?: string;
+        time?: string;
+        serviceId?: string;
+        serviceName?: string;
+      }) =>
+        ({
+          pathname: "/(app)/calendar/slot/create",
+          params: params ?? {},
+        }) as const,
     },
     chat: "/(app)/chat",
-    clients: "/(app)/clients",
+    clients: {
+      root: "/(app)/clients",
+      create: "/(app)/clients/create" as const,
+    },
     menu: {
       schedule: "/(app)/(menu)/schedule",
       notifications: "/(app)/(menu)/notifications",

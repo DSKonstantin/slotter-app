@@ -1,63 +1,56 @@
 import React, { useCallback, useMemo } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
+import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 
 import DateSelector from "@/src/components/app/calendar/home/day/DateSelector";
-import TimeSlotList from "@/src/components/app/calendar/home/day/TimeSlotList";
+import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
 
 import { useAppSelector } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { mockSchedule } from "@/src/constants/mockSchedule";
-import { type CalendarParams } from "@/src/constants/calendar";
-import {
-  useGetWorkingDaysQuery,
-  useGetWorkingDayQuery,
-} from "@/src/store/redux/services/api/workingDaysApi";
+import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { mockSchedule } from "@/src/constants/mockSchedule";
 
 const DayCalendarView = () => {
   const router = useRouter();
   const auth = useRequiredAuth();
 
-  const { workingDayId } = useLocalSearchParams<CalendarParams>();
+  const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
 
-  const selectedDateISO = useAppSelector(
-    (state) => state.calendar.selectedDate,
-  );
-  const selectedDate = useMemo(
-    () => new Date(selectedDateISO),
-    [selectedDateISO],
-  );
+  const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
-  const { data: workingDaysData } = useGetWorkingDaysQuery(
-    auth ? { userId: auth.userId } : skipToken,
+  const dateRange = useMemo(
+    () => ({
+      date_from: format(startOfMonth(selectedDate), "yyyy-MM-dd"),
+      date_to: format(endOfMonth(selectedDate), "yyyy-MM-dd"),
+    }),
+    [selectedDate],
   );
 
-  const selectedDateKey = selectedDate.toISOString().split("T")[0];
+  const { data: workingDaysData, isLoading: isDayLoading } =
+    useGetWorkingDaysQuery(
+      auth ? { userId: auth.userId, ...dateRange } : skipToken,
+    );
 
-  const effectiveWorkingDayId =
-    workingDayId != null
-      ? Number(workingDayId)
-      : workingDaysData?.working_days?.find((wd) => wd.day === selectedDateKey)?.id;
-
-  const { data: selectedWorkingDay } = useGetWorkingDayQuery(
-    auth && effectiveWorkingDayId != null
-      ? { userId: auth.userId, id: effectiveWorkingDayId }
-      : skipToken,
-  );
+  const selectedWorkingDay = workingDaysData?.[selectedDay] ?? undefined;
 
   const handleSelectDate = useCallback(
-    (id: number, date: Date) => {
-      router.setParams({ date: date.toISOString(), workingDayId: String(id) });
+    (date: Date) => {
+      router.setParams({ date: format(date, "yyyy-MM-dd") });
     },
     [router],
   );
 
   const handlePress = useCallback(() => {
-    if (!selectedWorkingDay) return;
-    router.push(Routers.app.calendar.daySchedule(selectedWorkingDay.id));
-  }, [router, selectedWorkingDay]);
+    if (!selectedWorkingDay) {
+      if (!workingDaysData) return;
+      router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
+      return;
+    }
+    router.push(Routers.app.calendar.slotSelectService({ date: selectedDay }));
+  }, [router, selectedWorkingDay, workingDaysData, selectedDay]);
 
   if (!auth) return null;
 
@@ -66,15 +59,19 @@ const DayCalendarView = () => {
       <DateSelector
         selectedDate={selectedDate}
         onSelectDate={handleSelectDate}
-        workingDays={workingDaysData?.working_days ?? []}
       />
       <TimeSlotList
+        // schedule={[]}
         schedule={mockSchedule}
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
+        isLoading={isDayLoading}
       />
 
-      <CalendarActionButton onPress={handlePress} />
+      <CalendarActionButton
+        onPress={handlePress}
+        title={selectedWorkingDay ? "Создать запись" : "Настроить день"}
+      />
     </>
   );
 };

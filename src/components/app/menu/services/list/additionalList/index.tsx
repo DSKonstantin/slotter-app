@@ -28,6 +28,7 @@ import {
   AdditionalListLoadingState,
 } from "@/src/components/app/menu/services/list/additionalList/listStates";
 import AdditionalServicesHeader from "@/src/components/app/menu/services/shared/additionalServicesHeader";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const AdditionalList = () => {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
@@ -81,7 +82,7 @@ const AdditionalList = () => {
       })
         .unwrap()
         .catch((error: any) => {
-          toast.error(error?.data?.error || "Не удалось обновить услугу");
+          toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
         });
     },
     [auth?.userId, isFetching, updateAdditionalService],
@@ -102,8 +103,10 @@ const AdditionalList = () => {
                 userId: auth.userId,
                 id,
               }).unwrap();
-            } catch (error: any) {
-              toast.error(error?.data?.error || "Не удалось удалить услугу");
+            } catch (error) {
+              toast.error(
+                getApiErrorMessage(error, "Не удалось удалить услугу"),
+              );
             }
           },
         },
@@ -132,8 +135,10 @@ const AdditionalList = () => {
             position: index,
           })),
         }).unwrap();
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Не удалось изменить порядок услуг");
+      } catch (error) {
+        toast.error(
+          getApiErrorMessage(error, "Не удалось изменить порядок услуг"),
+        );
       }
     },
     [auth?.userId, reorderAdditionalServices],

@@ -5,12 +5,16 @@ import { Typography, StSvg, IconButton } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
 const StTabBar: React.FC<BottomTabBarProps> = ({
   state,
   navigation,
   insets,
 }) => {
+  const dispatch = useAppDispatch();
+  const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const activeRoute = state.routes[state.index]?.name;
 
   return (
@@ -76,12 +80,12 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
           size="lg"
           icon={
             <StSvg
-              name="Add_round"
+              name={isMenuOpen ? "Close" : "Add_round"}
               size={36}
               color={colors.primary.blue[500]}
             />
           }
-          onPress={() => {}}
+          onPress={() => dispatch(setTabMenuOpen(!isMenuOpen))}
         />
       </View>
     </View>

@@ -101,10 +101,9 @@ const fetchMultipart = async (
   preparedHeaders: AxiosHeaders,
 ): Promise<{ data: unknown } | { error: AxiosBaseQueryError }> => {
   const baseURL = axios.defaults.baseURL ?? "";
-  const url =
-    requestConfig.url?.startsWith("http")
-      ? requestConfig.url
-      : `${baseURL}${requestConfig.url ?? ""}`;
+  const url = requestConfig.url?.startsWith("http")
+    ? requestConfig.url
+    : `${baseURL}${requestConfig.url ?? ""}`;
 
   // Copy prepared headers, excluding Content-Type so the native layer can set
   // it with the correct multipart boundary.

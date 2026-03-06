@@ -7,13 +7,15 @@ import React, {
   memo,
 } from "react";
 import { FlatList, TouchableOpacity, View } from "react-native";
-import { format, addDays, isSameDay, startOfDay, endOfMonth } from "date-fns";
+import { format, addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import type { WorkingDay } from "@/src/store/redux/services/api-types";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 interface DateItemProps {
   item: Date;
@@ -55,9 +57,8 @@ const DateItem = memo<DateItemProps>(
 );
 
 interface DateSelectorProps {
-  onSelectDate: (id: number, date: Date) => void;
+  onSelectDate: (date: Date) => void;
   selectedDate: Date;
-  workingDays: WorkingDay[];
 }
 
 const ITEM_WIDTH = 44;
@@ -67,38 +68,58 @@ const ITEM_GAP = 12;
 const DateSelector: React.FC<DateSelectorProps> = ({
   onSelectDate,
   selectedDate,
-  workingDays,
 }) => {
+  const auth = useRequiredAuth();
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const listRef = useRef<FlatList<Date>>(null);
 
+  const dateRange = useMemo(
+    () => ({
+      date_from: format(startOfMonth(selectedDate), "yyyy-MM-dd"),
+      date_to: format(endOfMonth(selectedDate), "yyyy-MM-dd"),
+    }),
+    [selectedDate],
+  );
+
+  const { data: workingDaysData } = useGetWorkingDaysQuery(
+    auth ? { userId: auth.userId, ...dateRange } : skipToken,
+  );
+
   const dates = useMemo(() => {
-    const today = startOfDay(new Date());
-    const monthEnd = endOfMonth(today);
+    const start = startOfMonth(selectedDate);
+    const end = endOfMonth(selectedDate);
     const result: Date[] = [];
-    let current = today;
-    while (current <= monthEnd) {
+    let current = start;
+    while (current <= end) {
       result.push(current);
       current = addDays(current, 1);
     }
     return result;
-  }, []);
+  }, [selectedDate]);
 
   const handleDatePress = useCallback(
-    (id: number | undefined, date: Date, isEmpty: boolean) => {
-      if (isEmpty) {
+    (id: number | undefined, date: Date) => {
+      if (!id) {
         setModalDate(date);
-      } else if (id !== undefined) {
-        onSelectDate(id, date);
+      } else {
+        onSelectDate(date);
       }
     },
     [onSelectDate],
   );
 
+  const handleCreatePress = useCallback(() => {
+    if (!modalDate) return;
+
+    const date = format(modalDate, "yyyy-MM-dd");
+    setModalDate(null);
+    router.push(Routers.app.calendar.dayScheduleCreate(date));
+  }, [modalDate]);
+
   const renderItem = useCallback(
     ({ item }: { item: Date }) => {
       const dateString = format(item, "yyyy-MM-dd");
-      const workingDay = workingDays.find((wd) => wd.day === dateString);
+      const workingDay = workingDaysData?.[dateString];
       const isEmpty = !workingDay;
 
       return (
@@ -111,7 +132,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
         />
       );
     },
-    [selectedDate, handleDatePress, workingDays],
+    [workingDaysData, selectedDate, handleDatePress],
   );
 
   useEffect(() => {
@@ -130,6 +151,13 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
   return (
     <>
+      <Typography
+        weight="semibold"
+        className="text-display px-screen mb-3 capitalize"
+      >
+        {format(selectedDate, "LLLL yyyy", { locale: ru })}
+      </Typography>
+
       <FlatList
         ref={listRef}
         horizontal
@@ -154,7 +182,10 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
       <StModal visible={!!modalDate} onClose={() => setModalDate(null)}>
         <View className="gap-3">
-          <Typography weight="semibold" className="text-display text-center">
+          <Typography
+            weight="semibold"
+            className="mt-2.5 text-display text-center"
+          >
             {modalDate && format(modalDate, "d MMMM yyyy", { locale: ru })}
           </Typography>
 
@@ -176,10 +207,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
                 color={colors.primary.blue[500]}
               />
             }
-            onPress={() => {
-              setModalDate(null);
-              router.push(Routers.app.calendar.schedule);
-            }}
+            onPress={handleCreatePress}
           />
           <Button title="Готово" onPress={() => setModalDate(null)} />
         </View>

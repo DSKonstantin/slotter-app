@@ -15,6 +15,7 @@ import { additionalServiceFormSchema } from "@/src/validation/schemas/additional
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const AdditionalServiceEdit = () => {
   const router = useRouter();
@@ -61,8 +62,10 @@ const AdditionalServiceEdit = () => {
             }).unwrap();
 
             router.back();
-          } catch (error: any) {
-            toast.error(error?.data?.error || "Не удалось удалить доп. услугу");
+          } catch (error) {
+            toast.error(
+              getApiErrorMessage(error, "Не удалось удалить доп. услугу"),
+            );
           }
         },
       },
@@ -85,8 +88,8 @@ const AdditionalServiceEdit = () => {
       }).unwrap();
 
       router.back();
-    } catch (error: any) {
-      toast.error(error?.data?.error || "Не удалось изменить доп. услугу");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось изменить доп. услугу"));
     }
   });
 

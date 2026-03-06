@@ -16,10 +16,13 @@ import MonthCalendarView from "@/src/components/app/calendar/home/month";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   setMode,
-  setSelectedDate,
+  setSelectedDay,
   toggleFilter,
 } from "@/src/store/redux/slices/calendarSlice";
-import { CALENDAR_VIEW_OPTIONS, type CalendarParams } from "@/src/constants/calendar";
+import {
+  CALENDAR_VIEW_OPTIONS,
+  type CalendarParams,
+} from "@/src/constants/calendar";
 import { colors } from "@/src/styles/colors";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 
@@ -107,7 +110,7 @@ const CalendarHome = () => {
   useEffect(() => {
     dispatch(setMode(mode));
     if (date) {
-      dispatch(setSelectedDate(date));
+      dispatch(setSelectedDay(date));
     }
   }, [mode, date, dispatch]);
 

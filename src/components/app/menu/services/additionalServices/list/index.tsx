@@ -23,6 +23,7 @@ import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { Routers } from "@/src/constants/routers";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const AdditionalServicesList = () => {
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
@@ -68,7 +69,7 @@ const AdditionalServicesList = () => {
       })
         .unwrap()
         .catch((error: any) => {
-          toast.error(error?.data?.error || "Не удалось обновить услугу");
+          toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
         });
     },
     [auth?.userId, updateAdditionalService],
@@ -94,8 +95,10 @@ const AdditionalServicesList = () => {
             position: index,
           })),
         }).unwrap();
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Не удалось изменить порядок услуг");
+      } catch (error) {
+        toast.error(
+          getApiErrorMessage(error, "Не удалось изменить порядок услуг"),
+        );
       }
     },
     [auth?.userId, reorderAdditionalServices],

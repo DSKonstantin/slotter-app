@@ -6,25 +6,47 @@ import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
 import CreateActionCard from "@/src/components/shared/cards/createActionCard";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { format } from "date-fns";
+import {
+  endOfMonth,
+  format,
+  parseISO,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
 import { ru } from "date-fns/locale";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { setSelectedDay } from "@/src/store/redux/slices/calendarSlice";
 
 const MonthCalendarView = () => {
   const { bottom } = useSafeAreaInsets();
   const auth = useRequiredAuth();
-
-  const { data: workingDaysData } = useGetWorkingDaysQuery(
-    auth ? { userId: auth.userId } : skipToken,
-  );
+  const dispatch = useAppDispatch();
+  const routerInstance = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
+  const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
+  const currentMonth = useMemo(
+    () => startOfMonth(selectedDate),
+    [selectedDate],
+  );
+
+  const { data: workingDaysData } = useGetWorkingDaysQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          date_from: format(currentMonth, "yyyy-MM-dd"),
+          date_to: format(endOfMonth(currentMonth), "yyyy-MM-dd"),
+        }
+      : skipToken,
+  );
 
   const handleOpen = useCallback(() => {
     setIsOpen(true);
@@ -34,6 +56,28 @@ const MonthCalendarView = () => {
     setIsOpen(false);
   }, []);
 
+  const handleSelectDate = useCallback(
+    (date: Date) => {
+      routerInstance.setParams({
+        mode: "day",
+        date: format(date, "yyyy-MM-dd"),
+      });
+    },
+    [routerInstance],
+  );
+
+  const handleMonthChange = useCallback(
+    (date: Date) => {
+      dispatch(setSelectedDay(format(date, "yyyy-MM-dd")));
+    },
+    [dispatch],
+  );
+
+  const prevMonthName = useMemo(
+    () => format(subMonths(currentMonth, 1), "LLLL", { locale: ru }),
+    [currentMonth],
+  );
+
   const scheduleActions = useMemo(
     () => [
       {
@@ -41,12 +85,14 @@ const MonthCalendarView = () => {
         subtitle: "Выбрать дни и часы работы",
         leftIcon: <StSvg name="Edit" size={24} color={colors.neutral[900]} />,
         action: () => {
-          router.push(Routers.app.calendar.schedule);
+          router.push(
+            Routers.app.calendar.schedule(format(currentMonth, "yyyy-MM-dd")),
+          );
         },
       },
       {
         title: "Дублировать прошлый месяц",
-        subtitle: "Скопировать график с Января",
+        subtitle: `Скопировать график с ${prevMonthName}`,
         leftIcon: <StSvg name="Folder" size={24} color={colors.neutral[900]} />,
       },
       {
@@ -55,7 +101,7 @@ const MonthCalendarView = () => {
         leftIcon: <StSvg name="Order" size={24} color={colors.neutral[900]} />,
       },
     ],
-    [],
+    [currentMonth, prevMonthName],
   );
 
   const handleCardPress = useCallback(
@@ -78,9 +124,10 @@ const MonthCalendarView = () => {
         }}
       >
         <MonthCalendar
-          selectedDate={new Date()}
-          onSelectDate={() => {}}
-          onMonthChange={setCurrentMonth}
+          selectedDate={selectedDate}
+          onSelectDate={handleSelectDate}
+          currentMonth={currentMonth}
+          onMonthChange={handleMonthChange}
         />
       </ScrollView>
       <CalendarActionButton mode="month" onPress={handleOpen} />
@@ -91,7 +138,7 @@ const MonthCalendarView = () => {
             Расписание на {format(currentMonth, "LLLL", { locale: ru })}
           </Typography>
 
-          <View className="gap-4 mb-4">
+          <View className="gap-4 my-4">
             {scheduleActions.map((item) => (
               <CreateActionCard
                 key={item.title}

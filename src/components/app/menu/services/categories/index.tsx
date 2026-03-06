@@ -23,6 +23,7 @@ import CategoryItemCard from "@/src/components/app/menu/services/categories/cate
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type SelectedCategory = {
   id: number;
@@ -100,8 +101,8 @@ const AppServicesCategories = () => {
             position: index,
           })),
         }).unwrap();
-      } catch (error: any) {
-        toast.error(error?.data?.error || "Failed to reorder categories");
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Failed to reorder categories"));
       }
     },
     [auth?.userId, reorderServiceCategories],
