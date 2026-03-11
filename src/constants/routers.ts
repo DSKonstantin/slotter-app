@@ -55,6 +55,7 @@ export const Routers = {
         time?: string;
         serviceId?: string;
         serviceName?: string;
+        duration?: string;
       }) =>
         ({
           pathname: "/(app)/calendar/slot/create",

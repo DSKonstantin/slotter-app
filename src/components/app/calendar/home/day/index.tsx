@@ -10,8 +10,9 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
+import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { mockSchedule } from "@/src/constants/mockSchedule";
+import type { Appointment } from "@/src/store/redux/services/api-types";
 
 const DayCalendarView = () => {
   const router = useRouter();
@@ -34,7 +35,13 @@ const DayCalendarView = () => {
       auth ? { userId: auth.userId, ...dateRange } : skipToken,
     );
 
+  const { data: appointmentsData, isLoading: isAppointmentsLoading } =
+    useGetAppointmentsQuery(
+      auth ? { userId: auth.userId, params: { date: selectedDay } } : skipToken,
+    );
+
   const selectedWorkingDay = workingDaysData?.[selectedDay] ?? undefined;
+  const appointments = (appointmentsData as Appointment[] | undefined) ?? [];
 
   const handleSelectDate = useCallback(
     (date: Date) => {
@@ -44,13 +51,13 @@ const DayCalendarView = () => {
   );
 
   const handlePress = useCallback(() => {
-    if (!selectedWorkingDay) {
-      if (!workingDaysData) return;
+    if (isDayLoading) return;
+    if (selectedWorkingDay) {
+      router.push(Routers.app.calendar.daySchedule(selectedWorkingDay.id));
+    } else {
       router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
-      return;
     }
-    router.push(Routers.app.calendar.slotSelectService({ date: selectedDay }));
-  }, [router, selectedWorkingDay, workingDaysData, selectedDay]);
+  }, [router, isDayLoading, selectedWorkingDay, selectedDay]);
 
   if (!auth) return null;
 
@@ -61,16 +68,17 @@ const DayCalendarView = () => {
         onSelectDate={handleSelectDate}
       />
       <TimeSlotList
-        // schedule={[]}
-        schedule={mockSchedule}
+        appointment={appointments}
+        breaks={selectedWorkingDay?.working_day_breaks}
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
-        isLoading={isDayLoading}
+        date={selectedDay}
+        isLoading={isDayLoading || isAppointmentsLoading}
       />
 
       <CalendarActionButton
         onPress={handlePress}
-        title={selectedWorkingDay ? "Создать запись" : "Настроить день"}
+        title={selectedWorkingDay ? "Изменить день" : "Настроить день"}
       />
     </>
   );

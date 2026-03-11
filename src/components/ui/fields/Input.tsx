@@ -46,6 +46,7 @@ export function Input({
           }}
           className={styles.input}
           placeholderTextColor={colors.neutral[300]}
+          style={props.multiline ? styles.multilineStyle : undefined}
         />
       )}
     />
@@ -53,5 +54,6 @@ export function Input({
 }
 
 const styles = {
-  input: "flex-1 font-inter-regular text-primary text-[16px] px-4",
+  input: "flex-1 font-inter-regular text-primary text-[16px] px-4 py-2.5",
+  multilineStyle: { minHeight: 100 },
 };

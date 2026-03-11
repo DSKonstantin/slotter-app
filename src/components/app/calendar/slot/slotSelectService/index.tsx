@@ -1,23 +1,24 @@
-import React, { useCallback } from "react";
-import {
-  ActivityIndicator,
-  SectionList,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, SectionList, View } from "react-native";
 import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { SegmentedControl, StSvg, Typography } from "@/src/components/ui";
+import {
+  Card,
+  SegmentedControl,
+  StSvg,
+  Typography,
+  Button,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { Routers } from "@/src/constants/routers";
+
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppSelector } from "@/src/store/redux/store";
+import BookingLinkModal from "@/src/components/app/calendar/slot/bookingLinkModal";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { Service } from "@/src/store/redux/services/api-types";
-import { formatRublesWithSymbol } from "@/src/utils/price/formatPrice";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
@@ -30,22 +31,14 @@ type ServiceRowProps = {
 };
 
 const ServiceRow: React.FC<ServiceRowProps> = ({ service, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={0.7}
+  <Card
+    title={service.name}
+    subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
     onPress={() => onPress(service)}
-    className="flex-row items-center justify-between px-screen py-4 border-b border-neutral-100"
-  >
-    <View className="flex-1 mr-4">
-      <Typography weight="medium" className="text-body">
-        {service.name}
-      </Typography>
-      <Typography className="text-caption text-neutral-500 mt-0.5">
-        {service.duration} мин |{" "}
-        {formatRublesWithSymbol(service.price_cents / 100)}
-      </Typography>
-    </View>
-    <StSvg name="Expand_right" size={20} color={colors.neutral[400]} />
-  </TouchableOpacity>
+    right={
+      <StSvg name="Expand_right_light" size={24} color={colors.neutral[500]} />
+    }
+  />
 );
 
 interface Props {
@@ -54,8 +47,9 @@ interface Props {
 }
 
 const SlotSelectService: React.FC<Props> = ({ date, time }) => {
-  const { bottom } = useSafeAreaInsets();
   const auth = useRequiredAuth();
+  const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
+  const [bookingLinkVisible, setBookingLinkVisible] = useState(false);
 
   const { data, isLoading } = useGetServiceCategoriesInfiniteQuery(
     auth
@@ -74,6 +68,7 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
           time,
           serviceId: String(service.id),
           serviceName: service.name,
+          duration: String(service.duration),
         }),
       );
     },
@@ -83,52 +78,86 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
   if (!auth) return null;
 
   return (
-    <ScreenWithToolbar title="Создать слот">
-      {({ topInset }) => (
-        <View className="flex-1" style={{ marginTop: topInset }}>
-          <View className="px-screen mb-4">
-            <SegmentedControl
-              options={VIEW_OPTIONS}
-              value="individual"
-              onChange={() => {}}
-            />
-          </View>
-
-          {isLoading ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator color={colors.neutral[400]} />
+    <>
+      <ScreenWithToolbar title="Выберите услугу">
+        {({ topInset, bottomInset }) => (
+          <View
+            className="flex-1 px-screen"
+            style={{ marginTop: topInset, marginBottom: bottomInset + 16 }}
+          >
+            <View className="mb-4">
+              <SegmentedControl
+                options={VIEW_OPTIONS}
+                value="individual"
+                onChange={() => {}}
+              />
             </View>
-          ) : (
-            <SectionList
-              sections={categories
-                .map((cat) => ({
-                  title: cat.name,
-                  data: (cat.services ?? []).filter((s) => s.is_active),
-                }))
-                .filter((section) => section.data.length > 0)}
-              keyExtractor={(item) => String(item.id)}
-              renderSectionHeader={({ section: { title } }) => (
-                <View className="px-screen py-2 bg-background">
-                  <Typography
-                    weight="semibold"
-                    className="text-caption text-neutral-500 uppercase"
-                  >
-                    {title}
-                  </Typography>
+
+            {isLoading ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : (
+              <>
+                <SectionList
+                  sections={categories
+                    .map((cat) => ({
+                      title: cat.name,
+                      data: cat.services ?? [],
+                    }))
+                    .filter((section) => section.data.length > 0)}
+                  keyExtractor={(item) => String(item.id)}
+                  renderSectionHeader={({ section: { title } }) => (
+                    <View className="py-2 bg-background">
+                      <Typography
+                        weight="semibold"
+                        className="text-caption text-neutral-500 uppercase"
+                      >
+                        {title}
+                      </Typography>
+                    </View>
+                  )}
+                  renderItem={({ item }) => (
+                    <View className="mb-2">
+                      <ServiceRow
+                        service={item}
+                        onPress={handleSelectService}
+                      />
+                    </View>
+                  )}
+                  contentContainerStyle={{
+                    paddingBottom: 24,
+                  }}
+                  showsVerticalScrollIndicator={false}
+                />
+
+                <View className="gap-2">
+                  <Button
+                    title="Отправить ссылку на бронирование"
+                    variant="clear"
+                    rightIcon={
+                      <StSvg
+                        name="link_alt"
+                        size={24}
+                        color={colors.neutral[900]}
+                      />
+                    }
+                    onPress={() => setBookingLinkVisible(true)}
+                  />
+                  <Button title="Далее" onPress={() => {}} />
                 </View>
-              )}
-              renderItem={({ item }) => (
-                <ServiceRow service={item} onPress={handleSelectService} />
-              )}
-              contentContainerStyle={{
-                paddingBottom: TAB_BAR_HEIGHT + bottom + 24,
-              }}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
-        </View>
-      )}
-    </ScreenWithToolbar>
+              </>
+            )}
+          </View>
+        )}
+      </ScreenWithToolbar>
+
+      <BookingLinkModal
+        visible={bookingLinkVisible}
+        bookingUrl={personalLink ?? ""}
+        onClose={() => setBookingLinkVisible(false)}
+      />
+    </>
   );
 };
 

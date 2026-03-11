@@ -1,14 +1,15 @@
+import { format, parseISO, getHours, getMinutes } from "date-fns";
+
 // Combines a date string ("YYYY-MM-DD") with a time string ("HH:MM:SS") into an ISO datetime.
 export const combineDayTime = (day: string, time: string) => `${day}T${time}`;
 
-export const formatTime = (date: Date) => {
-  if (!date) {
-    return "";
-  }
+// Formats a time string ("HH:MM:SS" or ISO "...THH:MM:SS+03:00") to "HH:MM"
+export const formatTimeString = (time: string) =>
+  format(parseISO(time), "HH:mm");
 
-  const h = String(date.getHours()).padStart(2, "0");
-  const m = String(date.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+export const formatTime = (date: Date) => {
+  if (!date) return "";
+  return format(date, "HH:mm");
 };
 
 export const getTimeParts = (value: Date | null) => {
@@ -17,7 +18,7 @@ export const getTimeParts = (value: Date | null) => {
   }
 
   return {
-    hours: value.getHours(),
-    minutes: value.getMinutes(),
+    hours: getHours(value),
+    minutes: getMinutes(value),
   };
 };

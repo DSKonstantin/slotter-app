@@ -32,7 +32,7 @@ export const StModal = ({
         paddingRight: 20 + right,
       }),
     }),
-    [bottom, left, right, horizontalPadding],
+    [bottom, horizontalPadding, left, right],
   );
 
   return (

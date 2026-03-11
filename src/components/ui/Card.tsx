@@ -5,6 +5,7 @@ import { twMerge } from "tailwind-merge";
 type CardProps = {
   title: string;
   titleProps?: TextProps;
+  subtitleProps?: TextProps;
   subtitle?: string;
   caption?: string;
 
@@ -21,6 +22,7 @@ type CardProps = {
 export const Card = ({
   title,
   titleProps,
+  subtitleProps,
   subtitle,
   caption,
   left,
@@ -64,6 +66,7 @@ export const Card = ({
 
         {subtitle && (
           <Text
+            {...subtitleProps}
             className={"font-inter-medium text-caption text-neutral-500 mt-1"}
           >
             {subtitle}

@@ -1,6 +1,8 @@
-export const parseTime = (iso: string) => {
-  const m = iso.match(/T(\d{2}):(\d{2})/);
-  return m ? +m[1] * 60 + +m[2] : 0;
+export const parseTime = (time: string) => {
+  const direct = time.match(/^(\d{2}):(\d{2})/);
+  if (direct) return +direct[1] * 60 + +direct[2];
+  const iso = time.match(/T(\d{2}):(\d{2})/);
+  return iso ? +iso[1] * 60 + +iso[2] : 0;
 };
 
 export const formatTime = (min: number) =>

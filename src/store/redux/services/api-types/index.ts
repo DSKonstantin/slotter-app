@@ -24,6 +24,19 @@ export type {
   UpdateAdditionalServicePayload,
 } from "./service";
 export type {
+  Appointment,
+  AppointmentStatus,
+  AppointmentCustomer,
+  AppointmentService,
+  PaymentMethod,
+  GetAppointmentsParams,
+  GetAppointmentsResponse,
+  CreateAppointmentPayload,
+  UpdateAppointmentPayload,
+  ReschedulePayload,
+  CancelPayload,
+} from "./appointment";
+export type {
   WorkingDay,
   WorkingDayBreak,
   WorkingDayBreaksAttributesPayload,

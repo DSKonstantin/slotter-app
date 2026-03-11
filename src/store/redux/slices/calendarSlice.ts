@@ -1,21 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { format } from "date-fns";
 
-export type SlotStatus = "available" | "confirmed" | "pending" | "cancelled";
-
-export interface Schedule {
-  id: string;
-  timeStart: string;
-  timeEnd: string;
-  status: SlotStatus;
-  clientName?: string;
-  clientPhone?: string;
-  price?: number;
-  services?: string[];
-  comment?: string;
-  paymentMethod?: "cash" | "sbp" | "online";
-}
-
 export type CalendarMode = "day" | "month";
 
 export interface CalendarFilters {
