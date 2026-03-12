@@ -5,6 +5,10 @@ export const centsToRubles = (cents: number) => {
   return cents / RUBLES_IN_RUBLE_CENTS;
 };
 
+export const rublesToCents = (rubles: number) => {
+  return Math.round(rubles * RUBLES_IN_RUBLE_CENTS);
+};
+
 export const formatRubles = (
   rubles: number,
   locale: string = DEFAULT_PRICE_LOCALE,

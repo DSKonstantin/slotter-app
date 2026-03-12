@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, SectionList, View } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Card,
@@ -13,30 +13,59 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useAppSelector } from "@/src/store/redux/store";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { setSlotDraft } from "@/src/store/redux/slices/slotDraftSlice";
 import BookingLinkModal from "@/src/components/app/calendar/slot/bookingLinkModal";
-import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
+import {
+  useGetServiceCategoriesInfiniteQuery,
+  useGetAdditionalServicesInfiniteQuery,
+} from "@/src/store/redux/services/api/servicesApi";
+import { useUpdateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import type { Service } from "@/src/store/redux/services/api-types";
+import type {
+  AdditionalService,
+  Service,
+} from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
-  { label: "Групповая", value: "group" },
+  { label: "Групповая", disabled: true, value: "group" },
 ];
 
 type ServiceRowProps = {
   service: Service;
+  isSelected: boolean;
   onPress: (service: Service) => void;
 };
 
-const ServiceRow: React.FC<ServiceRowProps> = ({ service, onPress }) => (
+const ServiceRow: React.FC<ServiceRowProps> = ({
+  service,
+  isSelected,
+  onPress,
+}) => (
   <Card
     title={service.name}
     subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+    active={isSelected}
     onPress={() => onPress(service)}
     right={
-      <StSvg name="Expand_right_light" size={24} color={colors.neutral[500]} />
+      isSelected ? (
+        <StSvg
+          name="Check_round_fill"
+          size={24}
+          color={colors.primary.blue[500]}
+        />
+      ) : (
+        <StSvg
+          name="Expand_right_light"
+          size={24}
+          color={colors.neutral[500]}
+        />
+      )
     }
   />
 );
@@ -44,12 +73,23 @@ const ServiceRow: React.FC<ServiceRowProps> = ({ service, onPress }) => (
 interface Props {
   date?: string;
   time?: string;
+  appointmentId?: string;
+  selectedServiceIds?: string;
 }
 
-const SlotSelectService: React.FC<Props> = ({ date, time }) => {
+const SlotSelectService: React.FC<Props> = ({
+  date,
+  time,
+  appointmentId,
+  selectedServiceIds,
+}) => {
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
   const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
   const [bookingLinkVisible, setBookingLinkVisible] = useState(false);
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [updateAppointment, { isLoading: isUpdating }] =
+    useUpdateAppointmentMutation();
 
   const { data, isLoading } = useGetServiceCategoriesInfiniteQuery(
     auth
@@ -57,23 +97,113 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
       : skipToken,
   );
 
+  const { data: additionalData, isLoading: isLoadingAdditional } =
+    useGetAdditionalServicesInfiniteQuery(
+      auth ? { userId: auth.userId, params: {} } : skipToken,
+    );
+
+  const additionalServices = useMemo(
+    () =>
+      (
+        additionalData?.pages.flatMap((p) => p.additional_services) ?? []
+      ).filter((s) => s.is_active),
+    [additionalData],
+  );
+
   const categories =
     data?.pages.flatMap((page) => page.service_categories) ?? [];
 
-  const handleSelectService = useCallback(
-    (service: Service) => {
-      router.push(
-        Routers.app.calendar.slotCreate({
-          date,
-          time,
-          serviceId: String(service.id),
-          serviceName: service.name,
-          duration: String(service.duration),
-        }),
-      );
-    },
-    [date, time],
+  const preselectedIds = useMemo(
+    () => (selectedServiceIds ? selectedServiceIds.split(",").map(Number) : []),
+    [selectedServiceIds],
   );
+
+  const allServices = useMemo(
+    () => categories.flatMap((cat) => cat.services ?? []),
+    [categories],
+  );
+
+  const [selectedServices, setSelectedServices] = useState<Service[]>(() =>
+    allServices.filter((s) => preselectedIds.includes(s.id)),
+  );
+  const [selectedAdditional, setSelectedAdditional] = useState<
+    AdditionalService[]
+  >([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedServices([]);
+      setSelectedAdditional([]);
+    }, []),
+  );
+
+  // когда данные загрузились — предвыбираем если ещё не выбраны
+  const initializedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (
+      !initializedRef.current &&
+      allServices.length > 0 &&
+      preselectedIds.length > 0
+    ) {
+      initializedRef.current = true;
+      setSelectedServices(
+        allServices.filter((s) => preselectedIds.includes(s.id)),
+      );
+    }
+  }, [allServices, preselectedIds]);
+
+  const handleToggleService = useCallback((service: Service) => {
+    setSelectedServices((prev) => {
+      if (prev.some((s) => s.id === service.id)) {
+        return prev.filter((s) => s.id !== service.id);
+      }
+      if (prev.length >= 5) return prev;
+      return [...prev, service];
+    });
+  }, []);
+
+  const handleToggleAdditional = useCallback((service: AdditionalService) => {
+    setSelectedAdditional((prev) =>
+      prev.some((s) => s.id === service.id)
+        ? prev.filter((s) => s.id !== service.id)
+        : [...prev, service],
+    );
+  }, []);
+
+  const handleNext = useCallback(async () => {
+    if (selectedServices.length === 0) return;
+
+    if (appointmentId) {
+      try {
+        await updateAppointment({
+          id: Number(appointmentId),
+          body: { service_ids: selectedServices.map((s) => s.id) },
+        }).unwrap();
+        toast.success("Услуги обновлены");
+        router.back();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось обновить услуги"));
+      }
+      return;
+    }
+
+    dispatch(
+      setSlotDraft({
+        date,
+        time,
+        services: selectedServices,
+        additionalServices: selectedAdditional,
+      }),
+    );
+    router.push(Routers.app.calendar.slotCreate());
+  }, [
+    selectedServices,
+    appointmentId,
+    date,
+    time,
+    selectedAdditional,
+    updateAppointment,
+  ]);
 
   if (!auth) return null;
 
@@ -85,13 +215,13 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
             className="flex-1 px-screen"
             style={{ marginTop: topInset, marginBottom: bottomInset + 16 }}
           >
-            <View className="mb-4">
-              <SegmentedControl
-                options={VIEW_OPTIONS}
-                value="individual"
-                onChange={() => {}}
-              />
-            </View>
+            <SegmentedControl
+              options={VIEW_OPTIONS}
+              value="individual"
+              onChange={(value) => {
+                if (value === "group") setGroupModalVisible(true);
+              }}
+            />
 
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
@@ -121,14 +251,64 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
                     <View className="mb-2">
                       <ServiceRow
                         service={item}
-                        onPress={handleSelectService}
+                        isSelected={selectedServices.some(
+                          (s) => s.id === item.id,
+                        )}
+                        onPress={handleToggleService}
                       />
                     </View>
                   )}
-                  contentContainerStyle={{
-                    paddingBottom: 24,
-                  }}
+                  contentContainerStyle={{ paddingBottom: 24 }}
                   showsVerticalScrollIndicator={false}
+                  ListFooterComponent={
+                    additionalServices.length > 0 ? (
+                      <View className="mt-4">
+                        <Typography
+                          weight="semibold"
+                          className="text-caption text-neutral-500 uppercase mb-2"
+                        >
+                          Дополнительные услуги
+                        </Typography>
+                        <View className="gap-2">
+                          {isLoadingAdditional ? (
+                            <ActivityIndicator color={colors.neutral[400]} />
+                          ) : (
+                            additionalServices.map((service) => {
+                              const isSelected = selectedAdditional.some(
+                                (s) => s.id === service.id,
+                              );
+                              return (
+                                <Card
+                                  key={service.id}
+                                  title={service.name}
+                                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+                                  active={isSelected}
+                                  onPress={() =>
+                                    handleToggleAdditional(service)
+                                  }
+                                  right={
+                                    isSelected ? (
+                                      <StSvg
+                                        name="Check_round_fill"
+                                        size={24}
+                                        color={colors.primary.blue[500]}
+                                      />
+                                    ) : (
+                                      <StSvg
+                                        name="Expand_right_light"
+                                        size={24}
+                                        color={colors.neutral[500]}
+                                      />
+                                    )
+                                  }
+                                />
+                              );
+                            })
+                          )}
+                        </View>
+                      </View>
+                    ) : null
+                  }
                 />
 
                 <View className="gap-2">
@@ -144,7 +324,16 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
                     }
                     onPress={() => setBookingLinkVisible(true)}
                   />
-                  <Button title="Далее" onPress={() => {}} />
+                  <Button
+                    title={
+                      selectedServices.length > 0
+                        ? `Далее (${selectedServices.length})`
+                        : "Далее"
+                    }
+                    disabled={selectedServices.length === 0}
+                    loading={isUpdating}
+                    onPress={handleNext}
+                  />
                 </View>
               </>
             )}
@@ -156,6 +345,11 @@ const SlotSelectService: React.FC<Props> = ({ date, time }) => {
         visible={bookingLinkVisible}
         bookingUrl={personalLink ?? ""}
         onClose={() => setBookingLinkVisible(false)}
+      />
+
+      <ComingSoonModal
+        visible={groupModalVisible}
+        onClose={() => setGroupModalVisible(false)}
       />
     </>
   );

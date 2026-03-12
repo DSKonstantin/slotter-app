@@ -3,13 +3,15 @@ import authReducer from "@/src/store/redux/slices/authSlice";
 import calendarSlice from "@/src/store/redux/slices/calendarSlice";
 import servicesSlice from "@/src/store/redux/slices/servicesSlice";
 import uiReducer from "@/src/store/redux/slices/uiSlice";
+import slotDraftReducer from "@/src/store/redux/slices/slotDraftSlice";
 import { api } from "@/src/store/redux/services/api";
 
 const rootReducer = combineReducers({
+  ui: uiReducer,
   auth: authReducer,
   calendar: calendarSlice,
   services: servicesSlice,
-  ui: uiReducer,
+  slotDraft: slotDraftReducer,
   [api.reducerPath]: api.reducer,
 });
 

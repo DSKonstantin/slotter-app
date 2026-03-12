@@ -11,7 +11,6 @@ type SegmentProps = {
 const Segment = ({ label, isActive, disabled, onPress }: SegmentProps) => {
   return (
     <TouchableOpacity
-      disabled={disabled}
       onPress={onPress}
       activeOpacity={0.7}
       className={`flex-1 rounded-[10px] min-h-[34px] items-center justify-center

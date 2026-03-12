@@ -102,7 +102,7 @@ const AppServicesCategories = () => {
           })),
         }).unwrap();
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Failed to reorder categories"));
+        toast.error(getApiErrorMessage(error, "Не удалось изменить порядок категорий"));
       }
     },
     [auth?.userId, reorderServiceCategories],

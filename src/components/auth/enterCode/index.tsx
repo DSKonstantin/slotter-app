@@ -16,6 +16,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 
 import { toast } from "@backpackapp-io/react-native-toast";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const EnterCode = () => {
   const { phone } = useLocalSearchParams<{
@@ -38,8 +39,8 @@ const EnterCode = () => {
 
       await login(result.token);
       router.replace(getRedirectPath(result.resource));
-    } catch (e: any) {
-      toast.error(e?.data?.error);
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Ошибка входа"));
     }
   }, [confirmTelegramLogin, phone, code, login]);
 

@@ -77,9 +77,9 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onPress}
-        className="rounded-base flex-row overflow-hidden bg-background-surface py-2 flex-1 mb-1"
+        className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1 mb-1"
       >
-        <View className="flex-row flex-1 items-center justify-between px-3">
+        <View className="flex-row flex-1 items-center justify-between">
           <Typography className="text-body text-neutral-900">
             {timeString}
             <Typography className="text-caption text-neutral-900">
@@ -123,28 +123,24 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
           )}
         </View>
 
-        <Typography weight="medium" className="text-body text-neutral-900">
+        <Typography
+          weight="medium"
+          className="text-caption text-neutral-500 mb-1"
+        >
           {clientName}
+          {slot.price_cents > 0 &&
+            ` | ${formatRublesFromCents(slot.price_cents)}`}
         </Typography>
 
-        <View className="flex-row items-center gap-1">
-          {serviceNames ? (
-            <Typography
-              className="text-caption text-neutral-400"
-              numberOfLines={1}
-            >
-              {serviceNames} |
-            </Typography>
-          ) : null}
-          {slot.price_cents > 0 && (
-            <Typography
-              weight="medium"
-              className="text-caption text-neutral-500"
-            >
-              {formatRublesFromCents(slot.price_cents)}
-            </Typography>
-          )}
-        </View>
+        {serviceNames ? (
+          <Typography
+            weight="regular"
+            className="text-caption text-neutral-400 mb-1"
+            numberOfLines={2}
+          >
+            {serviceNames}
+          </Typography>
+        ) : null}
       </View>
     </TouchableOpacity>
   );

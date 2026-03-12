@@ -153,7 +153,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
     <>
       <Typography
         weight="semibold"
-        className="text-display px-screen mb-3 capitalize"
+        className="text-display px-screen capitalize"
       >
         {format(selectedDate, "LLLL yyyy", { locale: ru })}
       </Typography>

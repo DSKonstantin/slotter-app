@@ -22,13 +22,19 @@ export const Routers = {
   app: {
     root: "/(app)",
     calendar: {
-      root: "/(app)/calendar",
+      root: (date?: string) =>
+        date
+          ? ({
+              pathname: "/(app)/calendar",
+              params: { date },
+            } as const)
+          : ("/(app)/calendar" as const),
       schedule: (date?: string) =>
         date
           ? ({
               pathname: "/(app)/calendar/schedule",
               params: { date },
-            }) as const
+            } as const)
           : ("/(app)/calendar/schedule" as const),
       daySchedule: (id: string | number) =>
         ({
@@ -45,21 +51,19 @@ export const Routers = {
           pathname: "/(app)/calendar/slot/[id]",
           params: { id: String(id) },
         }) as const,
-      slotSelectService: (params?: { date?: string; time?: string }) =>
+      slotSelectService: (params?: {
+        date?: string;
+        time?: string;
+        appointmentId?: string;
+        selectedServiceIds?: string;
+      }) =>
         ({
           pathname: "/(app)/calendar/slot/select-service",
           params: params ?? {},
         }) as const,
-      slotCreate: (params?: {
-        date?: string;
-        time?: string;
-        serviceId?: string;
-        serviceName?: string;
-        duration?: string;
-      }) =>
+      slotCreate: () =>
         ({
           pathname: "/(app)/calendar/slot/create",
-          params: params ?? {},
         }) as const,
     },
     chat: "/(app)/chat",

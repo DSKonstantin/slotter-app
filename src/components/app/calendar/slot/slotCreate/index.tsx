@@ -1,9 +1,9 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useForm, FormProvider } from "react-hook-form";
+import { format, parseISO } from "date-fns";
+import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -19,16 +19,29 @@ import {
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { clearSlotDraft } from "@/src/store/redux/slices/slotDraftSlice";
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 
 const SlotCreateSchema = Yup.object({
-  serviceName: Yup.string().required("Выберите услугу"),
+  services: Yup.array(
+    Yup.object({
+      id: Yup.string().required(),
+      name: Yup.string().required(),
+      duration: Yup.number().required(),
+      priceCents: Yup.number().required(),
+    }),
+  ).required(),
   clientName: Yup.string(),
   date: Yup.string().required("Укажите дату"),
   time: Yup.string().required("Укажите время"),
-  duration: Yup.number().min(1).required("Укажите длительность"),
+  duration: Yup.number()
+    .min(0, "Минимальная длительность — 0 минут")
+    .required("Укажите длительность"),
   comment: Yup.string(),
   paymentMethod: Yup.string().oneOf(["cash", "sbp", "online"]).required(),
   sendNotification: Yup.boolean().required(),
@@ -42,32 +55,27 @@ const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "online", label: "Онлайн-банк" },
 ];
 
-interface Props {
-  date?: string;
-  time?: string;
-  serviceId?: string;
-  serviceName?: string;
-  duration?: string;
-}
-
-const SlotCreate: React.FC<Props> = ({
-  date,
-  time,
-  serviceId,
-  serviceName,
-  duration,
-}) => {
+const SlotCreate: React.FC = () => {
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
+  const draft = useAppSelector((s) => s.slotDraft);
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
+
+  const initialServices = draft.services.map((s) => ({
+    id: String(s.id),
+    name: s.name,
+    duration: s.duration,
+    priceCents: s.price_cents,
+  }));
 
   const methods = useForm<SlotCreateFormValues>({
     resolver: yupResolver(SlotCreateSchema) as any,
     defaultValues: {
-      serviceName: serviceName ?? "",
+      services: initialServices,
       clientName: "",
-      date: date ?? "",
-      time: time ?? "",
-      duration: duration ? Number(duration) : 60,
+      date: draft.date ?? "",
+      time: draft.time ?? "",
+      duration: initialServices.reduce((sum, s) => sum + s.duration, 0) || 60,
       comment: "",
       paymentMethod: "cash",
       sendNotification: true,
@@ -76,9 +84,25 @@ const SlotCreate: React.FC<Props> = ({
 
   const { handleSubmit, watch, setValue } = methods;
   const paymentMethod = watch("paymentMethod");
-  const watchedServiceName = watch("serviceName");
-  const watchedDuration = watch("duration");
-  const watchedTime = watch("time");
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
+
+  const { fields, remove } = useFieldArray({
+    control: methods.control,
+    name: "services",
+  });
+
+  const handleRemoveService = useCallback(
+    (index: number) => {
+      if (fields.length === 1) {
+        router.back();
+        return;
+      }
+      remove(index);
+      const next = methods.getValues("services");
+      setValue("duration", next.reduce((sum, s) => sum + s.duration, 0));
+    },
+    [fields.length, remove, methods, setValue],
+  );
 
   const onSubmit = useCallback(
     async (values: SlotCreateFormValues) => {
@@ -89,7 +113,12 @@ const SlotCreate: React.FC<Props> = ({
           body: {
             date: values.date,
             start_time: values.time,
-            ...(serviceId && { service_ids: [Number(serviceId)] }),
+            ...(values.services.length > 0 && {
+              service_ids: values.services.map((s) => Number(s.id)),
+            }),
+            ...(draft.additionalServices.length > 0 && {
+              additional_service_ids: draft.additionalServices.map((s) => s.id),
+            }),
             customer_id: 2,
             duration: values.duration,
             payment_method:
@@ -100,13 +129,14 @@ const SlotCreate: React.FC<Props> = ({
             send_notification: values.sendNotification,
           },
         }).unwrap();
+        dispatch(clearSlotDraft());
         toast.success("Запись создана");
-        router.back();
-      } catch (error: any) {
-        toast.error(error?.data?.error ?? "Не удалось создать запись");
+        router.push(Routers.app.calendar.root(values.date));
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
     },
-    [auth, serviceId, createAppointment],
+    [auth, draft.additionalServices, createAppointment, dispatch],
   );
 
   return (
@@ -122,50 +152,60 @@ const SlotCreate: React.FC<Props> = ({
             }}
             style={{ marginTop: topInset }}
           >
-            {watchedServiceName ? (
-              <Card
-                title={watchedServiceName}
-                subtitle={[
-                  watchedDuration && `${watchedDuration} мин`,
-                  watchedTime,
-                ]
-                  .filter(Boolean)
-                  .join(" | ")}
-                className="bg-primary-blue-500"
-                titleProps={{
-                  style: {
-                    color: colors.neutral[0],
-                  },
-                }}
-                subtitleProps={{
-                  style: {
-                    color: colors.neutral[0],
-                  },
-                }}
-                right={
-                  <IconButton
-                    size="sm"
-                    buttonClassName="bg-transparent"
-                    icon={
-                      <StSvg
-                        name="Close_round"
-                        size={24}
-                        color={colors.neutral[0]}
+            {fields.length > 0 && (
+              <View className="gap-2">
+                {fields.map((field, index) => (
+                  <Card
+                    key={field.id}
+                    title={field.name}
+                    subtitle={[
+                      field.duration && `${field.duration} мин`,
+                      field.priceCents &&
+                        formatRublesFromCents(field.priceCents),
+                    ]
+                      .filter(Boolean)
+                      .join(" | ")}
+                    className="bg-primary-blue-500"
+                    titleProps={{ style: { color: colors.neutral[0] } }}
+                    subtitleProps={{ style: { color: colors.neutral[0] } }}
+                    right={
+                      <IconButton
+                        size="sm"
+                        buttonClassName="bg-transparent"
+                        icon={
+                          <StSvg
+                            name="Close_round"
+                            size={24}
+                            color={colors.neutral[0]}
+                          />
+                        }
+                        onPress={() => handleRemoveService(index)}
                       />
                     }
-                    onPress={() => router.back()}
                   />
-                }
-              />
-            ) : (
-              <View className="mt-4">
-                <RhfTextField
-                  label="Услуга"
-                  name="serviceName"
-                  placeholder="Выберите услугу"
-                />
+                ))}
               </View>
             )}
+
+            {draft.additionalServices.length > 0 && (
+              <View className="gap-2 mt-2">
+                {draft.additionalServices.map((service) => (
+                  <Card
+                    key={service.id}
+                    title={service.name}
+                    subtitle={[
+                      service.duration && `${service.duration} мин`,
+                      service.price_cents &&
+                        formatRublesFromCents(service.price_cents),
+                    ]
+                      .filter(Boolean)
+                      .join(" | ")}
+                    className="bg-background-surface"
+                  />
+                ))}
+              </View>
+            )}
+
             <View className="mt-5 gap-2">
               <RhfTextField
                 name="clientName"
@@ -189,18 +229,42 @@ const SlotCreate: React.FC<Props> = ({
 
             <View className="flex-row gap-3 mt-5">
               <View className="flex-1">
-                <RhfTextField label="Дата" name="date" placeholder="дд.мм" />
+                <RhfTextField
+                  label="Дата"
+                  name="date"
+                  value={draft.date ? format(parseISO(draft.date), "d MMMM") : "—"}
+                  placeholder="дд.мм"
+                  editable={false}
+                  endAdornment={
+                    <StSvg
+                      name="Date_today"
+                      size={24}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                />
               </View>
               <View className="flex-1">
-                <RhfTextField label="Время" name="time" placeholder="чч:мм" />
+                <RhfTextField
+                  label="Время"
+                  name="time"
+                  placeholder="чч:мм"
+                  endAdornment={
+                    <StSvg
+                      name="Time_light"
+                      size={24}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                />
               </View>
             </View>
 
             <View className="mt-1">
               <RhfTextField
+                name="duration"
                 label="Изменить продолжительность (мин)"
                 placeholder="60"
-                name="duration"
               />
             </View>
 
@@ -223,7 +287,14 @@ const SlotCreate: React.FC<Props> = ({
                     key={key}
                     title={label}
                     active={paymentMethod === key}
-                    onPress={() => setValue("paymentMethod", key)}
+                    className={key === "online" ? "opacity-40" : ""}
+                    onPress={() => {
+                      if (key === "online") {
+                        setComingSoonVisible(true);
+                        return;
+                      }
+                      setValue("paymentMethod", key);
+                    }}
                   />
                 ))}
               </View>
@@ -231,11 +302,12 @@ const SlotCreate: React.FC<Props> = ({
 
             <Card
               title="Отправить уведомление"
-              className="mt-1"
+              className="mt-5"
+              left={<StSvg name="Bell" size={24} color={colors.neutral[500]} />}
               right={<RHFSwitch name="sendNotification" />}
             />
 
-            <View className="mt-8 gap-3">
+            <View className="mt-5 gap-3">
               <Button
                 title="Создать запись"
                 loading={isLoading}
@@ -252,6 +324,11 @@ const SlotCreate: React.FC<Props> = ({
           </ScrollView>
         )}
       </ScreenWithToolbar>
+
+      <ComingSoonModal
+        visible={comingSoonVisible}
+        onClose={() => setComingSoonVisible(false)}
+      />
     </FormProvider>
   );
 };

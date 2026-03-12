@@ -13,6 +13,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import categorySchema from "@/src/validation/schemas/category.schema";
 import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type Props = {
   visible: boolean;
@@ -51,8 +52,8 @@ const CreateCategoryModal = ({
       onCreated?.(createdCategory?.service_category);
       methods.reset();
       onClose();
-    } catch (e: any) {
-      toast.error(e?.data?.error || "Не удалось создать категорию");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось создать категорию"));
     }
   });
 

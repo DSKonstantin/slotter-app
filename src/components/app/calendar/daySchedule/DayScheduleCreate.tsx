@@ -16,6 +16,7 @@ import {
   DayScheduleSchema,
   DayScheduleFormValues,
 } from "./DayScheduleForm";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
   const auth = useRequiredAuth();
@@ -53,8 +54,8 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
         },
       }).unwrap();
       router.back();
-    } catch (e: any) {
-      toast.error(e?.data?.error ?? "Ошибка сохранения");
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
     }
   };
 

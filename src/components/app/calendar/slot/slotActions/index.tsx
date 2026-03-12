@@ -139,15 +139,103 @@ const SlotActions: React.FC<Props> = ({
     ]);
   }, [appointmentId, complete]);
 
-  return (
-    <View className="px-screen mt-1 gap-3">
-      {status === "pending" && (
-        <>
+  const renderActions = () => {
+    switch (status) {
+      case "pending":
+        return (
+          <>
+            <Button
+              title="Подтвердить"
+              variant="accent"
+              onPress={handleConfirm}
+              loading={isConfirming}
+              rightIcon={
+                <StSvg
+                  name="Check_round_fill"
+                  size={24}
+                  color={colors.neutral[0]}
+                />
+              }
+            />
+            <Button
+              title="Перенести"
+              variant="clear"
+              rightIcon={
+                <StSvg
+                  name="Refund_Forward"
+                  size={24}
+                  color={colors.neutral[900]}
+                />
+              }
+              onPress={onReschedule}
+            />
+          </>
+        );
+      case "confirmed":
+        return (
+          <>
+            <Button
+              title="Клиент пришёл"
+              rightIcon={
+                <StSvg name="thumb_up" size={24} color={colors.neutral[0]} />
+              }
+              onPress={handleArrive}
+              loading={isArriving}
+            />
+            <View className="flex-row gap-3">
+              <View className="flex-1">
+                <Button
+                  title="Опоздал"
+                  variant="clear"
+                  rightIcon={
+                    <StSvg
+                      name="Sad_alt_2"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={handleLate}
+                  loading={isMarkingLate}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  title="Не явился"
+                  variant="clear"
+                  textClassName="text-accent-red-500"
+                  rightIcon={
+                    <StSvg
+                      name="thumb_down"
+                      size={24}
+                      color={colors.accent.red[500]}
+                    />
+                  }
+                  onPress={handleNoShow}
+                  loading={isMarkingNoShow}
+                />
+              </View>
+            </View>
+            <Button
+              title="Перенести"
+              variant="clear"
+              rightIcon={
+                <StSvg
+                  name="Refund_Forward"
+                  size={24}
+                  color={colors.neutral[900]}
+                />
+              }
+              onPress={onReschedule}
+            />
+          </>
+        );
+      case "arrived":
+        return (
           <Button
-            title="Подтвердить"
+            title="Завершить"
             variant="accent"
-            onPress={handleConfirm}
-            loading={isConfirming}
+            onPress={handleComplete}
+            loading={isCompleting}
             rightIcon={
               <StSvg
                 name="Check_round_fill"
@@ -156,81 +244,15 @@ const SlotActions: React.FC<Props> = ({
               />
             }
           />
-          <Button
-            title="Перенести"
-            variant="clear"
-            rightIcon={
-              <StSvg
-                name="Refund_Forward"
-                size={24}
-                color={colors.neutral[900]}
-              />
-            }
-            onPress={onReschedule}
-          />
-        </>
-      )}
+        );
+      default:
+        return null;
+    }
+  };
 
-      {status === "confirmed" && (
-        <>
-          <Button
-            title="Клиент пришёл"
-            rightIcon={
-              <StSvg name="thumb_up" size={24} color={colors.neutral[0]} />
-            }
-            onPress={handleComplete}
-            loading={isArriving}
-          />
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Button
-                title="Опоздал"
-                variant="clear"
-                rightIcon={
-                  <StSvg
-                    name="Sad_alt_2"
-                    size={24}
-                    color={colors.neutral[900]}
-                  />
-                }
-                onPress={handleLate}
-                loading={isMarkingLate}
-              />
-            </View>
-            <View className="flex-1">
-              <Button
-                title="Не явился"
-                variant="clear"
-                textClassName="text-accent-red-500"
-                rightIcon={
-                  <StSvg
-                    name="thumb_down"
-                    size={24}
-                    color={colors.accent.red[500]}
-                  />
-                }
-                onPress={handleNoShow}
-                loading={isMarkingNoShow}
-              />
-            </View>
-          </View>
-          <Button
-            title="Перенести"
-            variant="clear"
-            rightIcon={
-              <StSvg
-                name="Refund_Forward"
-                size={24}
-                color={colors.neutral[900]}
-              />
-            }
-            onPress={onReschedule}
-          />
-        </>
-      )}
-
-      {status === "completed" && <></>}
-
+  return (
+    <View className="px-screen mt-1 gap-3">
+      {renderActions()}
       {canCancel && (
         <Button
           title="Отменить запись"

@@ -138,7 +138,7 @@ const CalendarHome = () => {
               marginTop: insets.topInset,
             }}
           >
-            <View className="flex-1 mt-4 gap-4">
+            <View className="flex-1 gap-4">
               <SegmentedControl
                 className="mx-screen"
                 value={mode}

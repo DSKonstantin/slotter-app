@@ -20,6 +20,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { Service, ServiceCategory } from "@/src/store/redux/services/api-types";
 import ServiceCategoryItem from "@/src/components/app/menu/services/list/serviceList/serviceCategoryItem";
 import { ServiceListSkeleton } from "@/src/components/app/menu/services/list/listSkeletons";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const ServiceList = () => {
   const auth = useRequiredAuth();
@@ -68,7 +69,7 @@ const ServiceList = () => {
           })),
         }).unwrap();
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Failed to reorder categories"));
+        toast.error(getApiErrorMessage(error, "Не удалось изменить порядок категорий"));
       }
     },
     [auth?.userId, reorderServiceCategories],
