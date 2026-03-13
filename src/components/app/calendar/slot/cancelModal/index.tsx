@@ -42,7 +42,7 @@ const CancelModal = ({ visible, appointmentId, onClose }: Props) => {
     <StModal visible={visible} onClose={handleClose}>
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-2">
-          Отменить запись?
+          Отменить запись
         </Typography>
         <Typography className="text-body text-neutral-500 text-center mb-6">
           Это действие нельзя отменить
@@ -50,18 +50,28 @@ const CancelModal = ({ visible, appointmentId, onClose }: Props) => {
 
         <RhfTextField
           name="cancel_reason"
-          label="Причина отмены (необязательно)"
-          placeholder="Укажите причину..."
+          label="Причина отмены"
+          placeholder="Будет отправлено клиенту"
           multiline
         />
 
+        <View className="bg-accent-red-100 px-4 pt-2.5 rounded-small">
+          <Typography
+            weight="regular"
+            className="text-body text-accent-red-500"
+          >
+            Внимание: Это действие нельзя отменить.{"\n"}Клиент получит
+            уведомление
+          </Typography>
+        </View>
+
         <View className="mt-6 gap-3">
           <Button
-            title="Отменить запись"
+            title="Подтвердить отмену"
             onPress={handleSubmit}
             loading={isLoading}
           />
-          <Button title="Назад" variant="secondary" onPress={handleClose} />
+          <Button title="Назад" variant="clear" onPress={handleClose} />
         </View>
       </FormProvider>
     </StModal>

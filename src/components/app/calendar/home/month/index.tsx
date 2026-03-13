@@ -12,14 +12,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import {
-  endOfMonth,
-  format,
-  parseISO,
-  startOfMonth,
-  subMonths,
-} from "date-fns";
-import { ru } from "date-fns/locale";
+import { endOfMonth, parseISO, startOfMonth, subMonths } from "date-fns";
+import { formatApiDate, formatMonthName } from "@/src/utils/date/formatDate";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setSelectedDay } from "@/src/store/redux/slices/calendarSlice";
 
@@ -42,8 +36,8 @@ const MonthCalendarView = () => {
     auth
       ? {
           userId: auth.userId,
-          date_from: format(currentMonth, "yyyy-MM-dd"),
-          date_to: format(endOfMonth(currentMonth), "yyyy-MM-dd"),
+          date_from: formatApiDate(currentMonth),
+          date_to: formatApiDate(endOfMonth(currentMonth)),
         }
       : skipToken,
   );
@@ -60,7 +54,7 @@ const MonthCalendarView = () => {
     (date: Date) => {
       routerInstance.setParams({
         mode: "day",
-        date: format(date, "yyyy-MM-dd"),
+        date: formatApiDate(date),
       });
     },
     [routerInstance],
@@ -68,13 +62,13 @@ const MonthCalendarView = () => {
 
   const handleMonthChange = useCallback(
     (date: Date) => {
-      dispatch(setSelectedDay(format(date, "yyyy-MM-dd")));
+      dispatch(setSelectedDay(formatApiDate(date)));
     },
     [dispatch],
   );
 
   const prevMonthName = useMemo(
-    () => format(subMonths(currentMonth, 1), "LLLL", { locale: ru }),
+    () => formatMonthName(subMonths(currentMonth, 1)),
     [currentMonth],
   );
 
@@ -86,7 +80,7 @@ const MonthCalendarView = () => {
         leftIcon: <StSvg name="Edit" size={24} color={colors.neutral[900]} />,
         action: () => {
           router.push(
-            Routers.app.calendar.schedule(format(currentMonth, "yyyy-MM-dd")),
+            Routers.app.calendar.schedule(formatApiDate(currentMonth)),
           );
         },
       },
@@ -120,7 +114,7 @@ const MonthCalendarView = () => {
         className="px-screen"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 74,
+          paddingBottom: TAB_BAR_HEIGHT + bottom + 80,
         }}
       >
         <MonthCalendar
@@ -135,7 +129,7 @@ const MonthCalendarView = () => {
       <StModal visible={isOpen} onClose={handleClose}>
         <View className="gap-3">
           <Typography weight="semibold" className="text-display text-center">
-            Расписание на {format(currentMonth, "LLLL", { locale: ru })}
+            Расписание на {formatMonthName(currentMonth)}
           </Typography>
 
           <View className="gap-4 my-4">

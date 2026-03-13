@@ -25,7 +25,7 @@ const TimeSlotListSkeleton = () => {
     <ScrollView
       showsVerticalScrollIndicator={false}
       className="flex-1 pt-4 px-screen"
-      contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 74 }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 80 }}
       scrollEnabled={false}
     >
       <ContentLoader

@@ -13,9 +13,10 @@ import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
-import { skipToken } from "@reduxjs/toolkit/query";
+import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
+
+import DateSelectorSkeleton from "./DateSelectorSkeleton";
+import { HORIZONTAL_PADDING, ITEM_GAP, ITEM_WIDTH } from "./constants";
 
 interface DateItemProps {
   item: Date;
@@ -56,34 +57,23 @@ const DateItem = memo<DateItemProps>(
   ),
 );
 
+DateItem.displayName = "DateItem";
+
 interface DateSelectorProps {
   onSelectDate: (date: Date) => void;
   selectedDate: Date;
+  workingDaysData?: WorkingDaysResponse;
+  isLoading?: boolean;
 }
-
-const ITEM_WIDTH = 44;
-const HORIZONTAL_PADDING = 20;
-const ITEM_GAP = 12;
 
 const DateSelector: React.FC<DateSelectorProps> = ({
   onSelectDate,
   selectedDate,
+  workingDaysData,
+  isLoading = false,
 }) => {
-  const auth = useRequiredAuth();
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const listRef = useRef<FlatList<Date>>(null);
-
-  const dateRange = useMemo(
-    () => ({
-      date_from: format(startOfMonth(selectedDate), "yyyy-MM-dd"),
-      date_to: format(endOfMonth(selectedDate), "yyyy-MM-dd"),
-    }),
-    [selectedDate],
-  );
-
-  const { data: workingDaysData } = useGetWorkingDaysQuery(
-    auth ? { userId: auth.userId, ...dateRange } : skipToken,
-  );
 
   const dates = useMemo(() => {
     const start = startOfMonth(selectedDate);
@@ -97,15 +87,29 @@ const DateSelector: React.FC<DateSelectorProps> = ({
     return result;
   }, [selectedDate]);
 
+  const selectedDateIndex = useMemo(
+    () =>
+      Math.max(
+        dates.findIndex((date) => isSameDay(date, selectedDate)),
+        0,
+      ),
+    [dates, selectedDate],
+  );
+
   const handleDatePress = useCallback(
-    (id: number | undefined, date: Date) => {
-      if (!id) {
+    (id: number | undefined, date: Date, isEmpty: boolean) => {
+      if (!workingDaysData) {
+        onSelectDate(date);
+        return;
+      }
+
+      if (isEmpty || !id) {
         setModalDate(date);
       } else {
         onSelectDate(date);
       }
     },
-    [onSelectDate],
+    [onSelectDate, workingDaysData],
   );
 
   const handleCreatePress = useCallback(() => {
@@ -119,14 +123,15 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   const renderItem = useCallback(
     ({ item }: { item: Date }) => {
       const dateString = format(item, "yyyy-MM-dd");
-      const workingDay = workingDaysData?.[dateString];
-      const isEmpty = !workingDay;
+      const workingDay = workingDaysData?.[dateString] ?? undefined;
+      const isSelected = isSameDay(item, selectedDate);
+      const isEmpty = Boolean(workingDaysData) && !workingDay;
 
       return (
         <DateItem
           item={item}
-          isSelected={isSameDay(item, selectedDate)}
-          isEmpty={isEmpty && !isSameDay(item, selectedDate)}
+          isSelected={isSelected}
+          isEmpty={isEmpty && !isSelected}
           workingDayId={workingDay?.id}
           onPress={handleDatePress}
         />
@@ -136,49 +141,52 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   );
 
   useEffect(() => {
-    const index = dates.findIndex((d) => isSameDay(d, selectedDate));
-    if (index !== -1 && listRef.current) {
+    if (listRef.current) {
       const timer = setTimeout(() => {
         listRef.current?.scrollToIndex({
-          index,
+          index: selectedDateIndex,
           animated: true,
           viewPosition: 0.5,
         });
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [selectedDate, dates]);
+  }, [selectedDateIndex]);
+
+  if (isLoading && !workingDaysData) {
+    return <DateSelectorSkeleton />;
+  }
 
   return (
     <>
-      <Typography
-        weight="semibold"
-        className="text-display px-screen capitalize"
-      >
-        {format(selectedDate, "LLLL yyyy", { locale: ru })}
-      </Typography>
+      <View className="gap-2">
+        <Typography
+          weight="semibold"
+          className="text-caption px-screen capitalize text-center"
+        >
+          {format(selectedDate, "LLLL yyyy", { locale: ru })}
+        </Typography>
 
-      <FlatList
-        ref={listRef}
-        horizontal
-        data={dates}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.toISOString()}
-        showsHorizontalScrollIndicator={false}
-        initialScrollIndex={
-          dates.findIndex((d) => isSameDay(d, selectedDate)) || 0
-        }
-        getItemLayout={(_, index) => ({
-          length: ITEM_WIDTH,
-          offset: index * (ITEM_WIDTH + ITEM_GAP),
-          index,
-        })}
-        contentContainerStyle={{
-          gap: ITEM_GAP,
-          paddingHorizontal: HORIZONTAL_PADDING,
-        }}
-        style={{ flexGrow: 0 }}
-      />
+        <FlatList
+          ref={listRef}
+          horizontal
+          data={dates}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.toISOString()}
+          showsHorizontalScrollIndicator={false}
+          initialScrollIndex={selectedDateIndex}
+          getItemLayout={(_, index) => ({
+            length: ITEM_WIDTH,
+            offset: index * (ITEM_WIDTH + ITEM_GAP),
+            index,
+          })}
+          contentContainerStyle={{
+            gap: ITEM_GAP,
+            paddingHorizontal: HORIZONTAL_PADDING,
+          }}
+          style={{ flexGrow: 0 }}
+        />
+      </View>
 
       <StModal visible={!!modalDate} onClose={() => setModalDate(null)}>
         <View className="gap-3">

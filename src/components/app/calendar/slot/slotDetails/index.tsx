@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import {
   ScrollView,
@@ -43,6 +43,17 @@ const PAYMENT_LABELS: Record<string, string> = {
   online_bank: "Онлайн-банк",
 };
 
+const EDITABLE_STATUSES = ["pending", "confirmed"] as const;
+
+const ARRIVAL_CONFIG: Partial<
+  Record<string, { label: string; variant: "success" | "warning" | "info" }>
+> = {
+  arrived: { label: "Да", variant: "success" },
+  completed: { label: "Да", variant: "success" },
+  late: { label: "Опоздал", variant: "warning" },
+  no_show: { label: "Нет", variant: "info" },
+};
+
 const STATUS_CONFIG = {
   pending: { label: "Ожидает", variant: "warning" as const },
   confirmed: { label: "Подтверждено", variant: "success" as const },
@@ -75,16 +86,26 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
   const methods = useForm({
     defaultValues: {
-      comment: slot?.comment ?? "",
-      duration: String(slot?.duration ?? ""),
-      price: slot ? String(centsToRubles(slot.price_cents)) : "",
+      comment: "",
+      duration: "",
+      price: "",
     },
   });
+
+  useEffect(() => {
+    if (!slot) return;
+    methods.reset({
+      comment: slot.comment ?? "",
+      duration: String(slot.duration),
+      price: String(centsToRubles(slot.price_cents)),
+    });
+  }, [methods, slot]);
 
   const id = Number(slotId);
 
@@ -149,6 +170,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     );
   }
 
+  const canEdit = (EDITABLE_STATUSES as readonly string[]).includes(
+    slot.status,
+  );
   const statusConfig = STATUS_CONFIG[slot.status] ?? null;
   const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
   const serviceNames = slot.services.map((s) => s.name).join(", ");
@@ -215,28 +239,30 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   >
                     {serviceNames || "—"}
                   </Typography>
-                  <IconButton
-                    size="xs"
-                    onPress={() =>
-                      router.push(
-                        Routers.app.calendar.slotSelectService({
-                          date: slot.date,
-                          time: slot.start_time,
-                          appointmentId: String(slot.id),
-                          selectedServiceIds: slot.services
-                            .map((s) => s.id)
-                            .join(","),
-                        }),
-                      )
-                    }
-                    icon={
-                      <StSvg
-                        name="Edit_light"
-                        size={20}
-                        color={colors.neutral[500]}
-                      />
-                    }
-                  />
+                  {canEdit && (
+                    <IconButton
+                      size="xs"
+                      onPress={() =>
+                        router.push(
+                          Routers.app.calendar.slotSelectService({
+                            date: slot.date,
+                            time: slot.start_time,
+                            appointmentId: String(slot.id),
+                            selectedServiceIds: slot.services
+                              .map((s) => s.id)
+                              .join(","),
+                          }),
+                        )
+                      }
+                      icon={
+                        <StSvg
+                          name="Edit_light"
+                          size={20}
+                          color={colors.neutral[500]}
+                        />
+                      }
+                    />
+                  )}
                 </View>
               </View>
 
@@ -280,31 +306,36 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       {slot.duration} мин
                     </Typography>
                   )}
-                  <IconButton
-                    size="xs"
-                    loading={editingDuration && isUpdating}
-                    onPress={
-                      editingDuration
-                        ? handleSaveDuration
-                        : () => {
-                            methods.setValue("duration", String(slot.duration));
-                            setEditingDuration(true);
+                  {(canEdit || editingDuration) && (
+                    <IconButton
+                      size="xs"
+                      loading={editingDuration && isUpdating}
+                      onPress={
+                        editingDuration
+                          ? handleSaveDuration
+                          : () => {
+                              methods.setValue(
+                                "duration",
+                                String(slot.duration),
+                              );
+                              setEditingDuration(true);
+                            }
+                      }
+                      icon={
+                        <StSvg
+                          name={
+                            editingDuration ? "Check_round_fill" : "Edit_light"
                           }
-                    }
-                    icon={
-                      <StSvg
-                        name={
-                          editingDuration ? "Check_round_fill" : "Edit_light"
-                        }
-                        size={20}
-                        color={
-                          editingDuration
-                            ? colors.primary.blue[500]
-                            : colors.neutral[500]
-                        }
-                      />
-                    }
-                  />
+                          size={20}
+                          color={
+                            editingDuration
+                              ? colors.primary.blue[500]
+                              : colors.neutral[500]
+                          }
+                        />
+                      }
+                    />
+                  )}
                 </View>
               </View>
 
@@ -334,42 +365,77 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       {formatRublesFromCents(slot.price_cents)}
                     </Typography>
                   )}
-                  <IconButton
-                    size="xs"
-                    loading={editingPrice && isUpdating}
-                    onPress={
-                      editingPrice
-                        ? handleSavePrice
-                        : () => {
-                            methods.setValue(
-                              "price",
-                              String(centsToRubles(slot.price_cents)),
-                            );
-                            setEditingPrice(true);
+                  {(canEdit || editingPrice) && (
+                    <IconButton
+                      size="xs"
+                      loading={editingPrice && isUpdating}
+                      onPress={
+                        editingPrice
+                          ? handleSavePrice
+                          : () => {
+                              methods.setValue(
+                                "price",
+                                String(centsToRubles(slot.price_cents)),
+                              );
+                              setEditingPrice(true);
+                            }
+                      }
+                      icon={
+                        <StSvg
+                          name={
+                            editingPrice ? "Check_round_fill" : "Edit_light"
                           }
-                    }
-                    icon={
-                      <StSvg
-                        name={editingPrice ? "Check_round_fill" : "Edit_light"}
-                        size={20}
-                        color={
-                          editingPrice
-                            ? colors.primary.blue[500]
-                            : colors.neutral[500]
-                        }
-                      />
-                    }
-                  />
+                          size={20}
+                          color={
+                            editingPrice
+                              ? colors.primary.blue[500]
+                              : colors.neutral[500]
+                          }
+                        />
+                      }
+                    />
+                  )}
                 </View>
               </View>
+
+              <Divider className="my-2" />
+
+              <View className="flex-row items-center justify-between">
+                <Typography className="text-body text-neutral-500">
+                  Способ оплаты
+                </Typography>
+                <Typography
+                  weight="regular"
+                  className="text-body text-neutral-900"
+                >
+                  {PAYMENT_LABELS[slot.payment_method] ?? slot.payment_method}
+                </Typography>
+              </View>
+
+              {ARRIVAL_CONFIG[slot.status] && (
+                <>
+                  <Divider className="my-2" />
+                  <View className="flex-row items-center justify-between">
+                    <Typography className="text-body text-neutral-500">
+                      Клиент пришёл
+                    </Typography>
+                    <Badge
+                      title={ARRIVAL_CONFIG[slot.status]!.label}
+                      variant={ARRIVAL_CONFIG[slot.status]!.variant}
+                      size="sm"
+                    />
+                  </View>
+                </>
+              )}
             </View>
 
             <View className="px-screen mt-5">
               <RhfTextField
-                name="сomment"
+                name="comment"
                 label="Комментарий к записи"
                 placeholder="Комментарий к записи"
                 multiline={true}
+                disabled={true}
               />
             </View>
 

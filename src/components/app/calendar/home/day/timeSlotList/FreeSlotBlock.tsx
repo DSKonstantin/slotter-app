@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { Typography, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -19,9 +19,15 @@ const FreeSlotBlock: React.FC<Props> = ({ date, time, endTime }) => (
     }
     className="flex-1 rounded-base flex-row items-center justify-between overflow-hidden border border-neutral-200 bg-background px-4 mb-1"
   >
-    <Typography className="text-body text-neutral-900">
-      {time} - {endTime} · Свободное время
-    </Typography>
+    <View className="gap-1a">
+      <Typography className="text-body text-neutral-900">
+        {time} - {endTime}
+      </Typography>
+      <Typography className="text-caption text-neutral-500">
+        Свободное время
+      </Typography>
+    </View>
+
     <StSvg name="Add_ring_fill" size={24} color={colors.neutral[900]} />
   </TouchableOpacity>
 );

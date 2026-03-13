@@ -9,6 +9,7 @@ import { Typography } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TimeSlotListSkeleton from "./TimeSlotListSkeleton";
+import EmptySlots from "./EmptySlots";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
 import FreeSlotBlock from "./FreeSlotBlock";
@@ -49,7 +50,7 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
     return (
       <View
         className="flex-1 items-center justify-center"
-        style={{ marginBottom: TAB_BAR_HEIGHT + bottom + 74 }}
+        style={{ marginBottom: TAB_BAR_HEIGHT + bottom + 80 }}
       >
         <Typography className="text-body text-neutral-400">
           День не настроен
@@ -110,22 +111,13 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
     return { segStart, segEnd, content };
   });
 
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
       className="flex-1 pt-4 px-screen"
-      contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 74 }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 80 }}
     >
-      {appointment.length === 0 && (
-        <View
-          className="absolute inset-0 items-center justify-center"
-          style={{ top: 80 }}
-        >
-          <Typography className="text-body text-neutral-400">
-            Нет записей
-          </Typography>
-        </View>
-      )}
       {map(segments, ({ segStart, segEnd, content }) => {
         const showLabel = segStart % 60 === 0;
 

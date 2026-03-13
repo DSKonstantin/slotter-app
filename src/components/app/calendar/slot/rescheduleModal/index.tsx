@@ -17,6 +17,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { colors } from "@/src/styles/colors";
 import { router } from "expo-router";
+import { formatDayMonth } from "@/src/utils/date/formatTime";
 
 type Props = {
   visible: boolean;
@@ -34,8 +35,6 @@ const rescheduleSchema = Yup.object({
   send_notification: Yup.boolean().required(),
 });
 
-type FormValues = Yup.InferType<typeof rescheduleSchema>;
-
 const RescheduleModal = ({
   visible,
   appointmentId,
@@ -44,7 +43,7 @@ const RescheduleModal = ({
 }: Props) => {
   const auth = useRequiredAuth();
 
-  const methods = useForm<FormValues>({
+  const methods = useForm({
     resolver: yupResolver(rescheduleSchema),
     defaultValues: {
       date: defaultDate,
@@ -102,7 +101,7 @@ const RescheduleModal = ({
     <StModal visible={visible} onClose={handleClose}>
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-5">
-          Перенести запись
+          Перенести запись с {formatDayMonth(defaultDate)}
         </Typography>
 
         <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">

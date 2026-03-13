@@ -17,8 +17,17 @@ import {
   DayScheduleFormValues,
 } from "./DayScheduleForm";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
+import { ScrollView, View } from "react-native";
+import { Button, StSvg } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
+  const { left, right } = useSafeAreaInsets();
   const auth = useRequiredAuth();
   const [createWorkingDay, { isLoading }] = useCreateWorkingDayMutation();
 
@@ -65,12 +74,39 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Создать день">
         {({ topInset, bottomInset }) => (
-          <DayScheduleForm
-            topInset={topInset}
-            bottomInset={bottomInset}
-            onSubmit={handleSubmit(onSubmit)}
-            isLoading={isLoading}
-          />
+          <>
+            <SafeAreaView className="flex-1" edges={["left", "right"]}>
+              <ScrollView
+                className="flex-1 px-screen"
+                contentContainerStyle={{
+                  paddingTop: topInset + 16,
+                  paddingBottom: bottomInset + 82,
+                }}
+              >
+                <DayScheduleForm />
+              </ScrollView>
+            </SafeAreaView>
+            <View
+              className="absolute flex-1 w-full"
+              style={{
+                zIndex: 100,
+                bottom: bottomInset + 16,
+                right: 0,
+                paddingRight: left + 20,
+                paddingLeft: right + 20,
+              }}
+            >
+              <Button
+                title="Сохранить изменения"
+                loading={isLoading}
+                disabled={isLoading}
+                rightIcon={
+                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+                }
+                onPress={handleSubmit(onSubmit)}
+              />
+            </View>
+          </>
         )}
       </ScreenWithToolbar>
     </FormProvider>

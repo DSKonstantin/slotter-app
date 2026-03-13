@@ -2,6 +2,7 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Checkbox, Typography } from "@/src/components/ui";
 import { format, getDate } from "date-fns";
+import { formatShortDayName } from "@/src/utils/date/formatDate";
 
 const formatScheduleTime = (scheduleTime: string) => {
   const [start, end] = scheduleTime.split(" - ");
@@ -48,7 +49,7 @@ const ScheduleDayCard = ({
           weight="semibold"
           className="text-body text-neutral-500 capitalize"
         >
-          {format(date, "EEEEEE")}
+          {formatShortDayName(date)}
         </Typography>
       </View>
 

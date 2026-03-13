@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, SectionList, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -83,6 +89,7 @@ const SlotSelectService: React.FC<Props> = ({
   appointmentId,
   selectedServiceIds,
 }) => {
+  const initializedRef = useRef(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
@@ -110,8 +117,10 @@ const SlotSelectService: React.FC<Props> = ({
     [additionalData],
   );
 
-  const categories =
-    data?.pages.flatMap((page) => page.service_categories) ?? [];
+  const categories = useMemo(
+    () => data?.pages.flatMap((page) => page.service_categories) ?? [],
+    [data],
+  );
 
   const preselectedIds = useMemo(
     () => (selectedServiceIds ? selectedServiceIds.split(",").map(Number) : []),
@@ -137,21 +146,6 @@ const SlotSelectService: React.FC<Props> = ({
     }, []),
   );
 
-  // когда данные загрузились — предвыбираем если ещё не выбраны
-  const initializedRef = React.useRef(false);
-  React.useEffect(() => {
-    if (
-      !initializedRef.current &&
-      allServices.length > 0 &&
-      preselectedIds.length > 0
-    ) {
-      initializedRef.current = true;
-      setSelectedServices(
-        allServices.filter((s) => preselectedIds.includes(s.id)),
-      );
-    }
-  }, [allServices, preselectedIds]);
-
   const handleToggleService = useCallback((service: Service) => {
     setSelectedServices((prev) => {
       if (prev.some((s) => s.id === service.id)) {
@@ -163,11 +157,13 @@ const SlotSelectService: React.FC<Props> = ({
   }, []);
 
   const handleToggleAdditional = useCallback((service: AdditionalService) => {
-    setSelectedAdditional((prev) =>
-      prev.some((s) => s.id === service.id)
-        ? prev.filter((s) => s.id !== service.id)
-        : [...prev, service],
-    );
+    setSelectedAdditional((prev) => {
+      if (prev.some((s) => s.id === service.id)) {
+        return prev.filter((s) => s.id !== service.id);
+      }
+      if (prev.length >= 10) return prev;
+      return [...prev, service];
+    });
   }, []);
 
   const handleNext = useCallback(async () => {
@@ -199,11 +195,25 @@ const SlotSelectService: React.FC<Props> = ({
   }, [
     selectedServices,
     appointmentId,
+    dispatch,
     date,
     time,
     selectedAdditional,
     updateAppointment,
   ]);
+
+  useEffect(() => {
+    if (
+      !initializedRef.current &&
+      allServices.length > 0 &&
+      preselectedIds.length > 0
+    ) {
+      initializedRef.current = true;
+      setSelectedServices(
+        allServices.filter((s) => preselectedIds.includes(s.id)),
+      );
+    }
+  }, [allServices, preselectedIds]);
 
   if (!auth) return null;
 
@@ -222,6 +232,17 @@ const SlotSelectService: React.FC<Props> = ({
                 if (value === "group") setGroupModalVisible(true);
               }}
             />
+
+            {selectedServices.length > 0 && (
+              <View className="flex-row justify-between items-center py-2">
+                <Typography className="text-caption text-neutral-500">
+                  Выбрано услуг
+                </Typography>
+                <Typography className="text-caption text-neutral-500">
+                  {selectedServices.length} / 5
+                </Typography>
+              </View>
+            )}
 
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
@@ -263,12 +284,19 @@ const SlotSelectService: React.FC<Props> = ({
                   ListFooterComponent={
                     additionalServices.length > 0 ? (
                       <View className="mt-4">
-                        <Typography
-                          weight="semibold"
-                          className="text-caption text-neutral-500 uppercase mb-2"
-                        >
-                          Дополнительные услуги
-                        </Typography>
+                        <View className="flex-row justify-between items-center mb-2">
+                          <Typography
+                            weight="semibold"
+                            className="text-caption text-neutral-500 uppercase"
+                          >
+                            Дополнительные услуги
+                          </Typography>
+                          {selectedAdditional.length > 0 && (
+                            <Typography className="text-caption text-neutral-500">
+                              {selectedAdditional.length} / 10 выбрано
+                            </Typography>
+                          )}
+                        </View>
                         <View className="gap-2">
                           {isLoadingAdditional ? (
                             <ActivityIndicator color={colors.neutral[400]} />
@@ -326,9 +354,11 @@ const SlotSelectService: React.FC<Props> = ({
                   />
                   <Button
                     title={
-                      selectedServices.length > 0
-                        ? `Далее (${selectedServices.length})`
-                        : "Далее"
+                      selectedServices.length === 0
+                        ? "Далее"
+                        : appointmentId || selectedAdditional.length === 0
+                          ? `Далее (${selectedServices.length})`
+                          : `Далее (${selectedServices.length} + ${selectedAdditional.length} доп)`
                     }
                     disabled={selectedServices.length === 0}
                     loading={isUpdating}

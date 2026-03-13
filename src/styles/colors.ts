@@ -54,7 +54,7 @@ export const colors = {
   accent: {
     azure: { 500: "#6EF6FF" },
     yellow: { 500: "#F6F360", 700: "#928F00" },
-    red: { 500: "#FF383C" },
+    red: { 100: "#FFECF0", 500: "#FF383C" },
     indigo: { 500: "#6155F5" },
     purple: { 500: "#CB30E0" },
     brown: { 500: "#AC7F5E" },

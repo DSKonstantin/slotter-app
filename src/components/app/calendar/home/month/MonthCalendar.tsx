@@ -1,8 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { View, TouchableOpacity, Pressable } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { formatApiDate, formatMonthYear } from "@/src/utils/date/formatDate";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
@@ -51,7 +50,7 @@ const MonthCalendar = ({
             </Pressable>
 
             <Typography className="text-body capitalize w-[125px] text-center">
-              {format(date, "LLLL yyyy", { locale: ru })}
+              {formatMonthYear(date)}
             </Typography>
 
             <Pressable
@@ -127,7 +126,7 @@ const MonthCalendar = ({
 
   return (
     <Calendar
-      initialDate={format(currentMonth, "yyyy-MM-dd")}
+      initialDate={formatApiDate(currentMonth)}
       firstDay={1}
       hideArrows
       hideExtraDays={false}

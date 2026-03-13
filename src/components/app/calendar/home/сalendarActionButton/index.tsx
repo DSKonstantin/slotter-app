@@ -32,7 +32,8 @@ const CalendarActionButton = ({ mode, title, onPress }: Props) => {
       <Button
         onPress={handlePress}
         title={
-          title ?? (mode === "month" ? "Настроить расписание" : "Настроить день")
+          title ??
+          (mode === "month" ? "Настроить расписание" : "Настроить день")
         }
         rightIcon={
           <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />

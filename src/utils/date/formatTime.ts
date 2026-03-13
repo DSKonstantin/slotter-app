@@ -1,9 +1,7 @@
 import { format, parseISO, getHours, getMinutes } from "date-fns";
 
-// Combines a date string ("YYYY-MM-DD") with a time string ("HH:MM:SS") into an ISO datetime.
 export const combineDayTime = (day: string, time: string) => `${day}T${time}`;
 
-// Formats a time string ("HH:MM:SS" or ISO "...THH:MM:SS+03:00") to "HH:MM"
 export const formatTimeString = (time: string) =>
   format(parseISO(time), "HH:mm");
 
@@ -21,4 +19,29 @@ export const getTimeParts = (value: Date | null) => {
     hours: getHours(value),
     minutes: getMinutes(value),
   };
+};
+
+export const formatDayMonth = (date: string) => {
+  if (!date) return "";
+
+  return format(parseISO(date), "dd.MM");
+};
+
+export const parseTime = (time: string) => {
+  const direct = time.match(/^(\d{2}):(\d{2})/);
+  if (direct) return +direct[1] * 60 + +direct[2];
+  const iso = time.match(/T(\d{2}):(\d{2})/);
+  return iso ? +iso[1] * 60 + +iso[2] : 0;
+};
+
+export const formatMinutes = (min: number) =>
+  `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+export const formatTimeFromISO = (iso: string) => {
+  if (!iso) return "";
+  const isoMatch = iso.match(/T(\d{2}):(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}:${isoMatch[2]}`;
+  const timeMatch = iso.match(/^(\d{1,2}):(\d{2})/);
+  if (timeMatch) return `${timeMatch[1]}:${timeMatch[2]}`;
+  return "";
 };

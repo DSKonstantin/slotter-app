@@ -132,15 +132,22 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
             ` | ${formatRublesFromCents(slot.price_cents)}`}
         </Typography>
 
-        {serviceNames ? (
+        {serviceNames && (
           <Typography
             weight="regular"
             className="text-caption text-neutral-400 mb-1"
             numberOfLines={2}
           >
-            {serviceNames}
+            {[
+              serviceNames,
+              slot.additional_services?.length
+                ? `+ ${slot.additional_services.length} доп.`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" | ")}
           </Typography>
-        ) : null}
+        )}
       </View>
     </TouchableOpacity>
   );

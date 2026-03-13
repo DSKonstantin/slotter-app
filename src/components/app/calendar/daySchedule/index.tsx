@@ -1,10 +1,13 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
 import { router } from "expo-router";
 import React, { useRef } from "react";
-import { ActivityIndicator, View } from "react-native";
-import { FormProvider, Resolver, useForm } from "react-hook-form";
+import { ActivityIndicator, ScrollView, View } from "react-native";
+import {
+  FormProvider,
+  Resolver,
+  useForm,
+  useFormContext,
+} from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
 
@@ -15,23 +18,22 @@ import {
 } from "@/src/store/redux/services/api/workingDaysApi";
 import type { WorkingDay } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { formatTimeFromISO } from "@/src/utils/date/formatTime";
+import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Typography } from "@/src/components/ui";
+import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import {
   DayScheduleForm,
   DayScheduleSchema,
   DayScheduleFormValues,
 } from "./DayScheduleForm";
-
-const formatTimeFromISO = (iso: string) => {
-  if (!iso) return "";
-  const isoMatch = iso.match(/T(\d{2}):(\d{2})/);
-  if (isoMatch) return `${isoMatch[1]}:${isoMatch[2]}`;
-  const timeMatch = iso.match(/^(\d{1,2}):(\d{2})/);
-  if (timeMatch) return `${timeMatch[1]}:${timeMatch[2]}`;
-  return "";
-};
+import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { colors } from "@/src/styles/colors";
 
 type DayScheduleEditProps = {
   workingDay: WorkingDay;
@@ -39,6 +41,7 @@ type DayScheduleEditProps = {
 };
 
 const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
+  const { left, right } = useSafeAreaInsets();
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
 
   const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
@@ -53,7 +56,7 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
       atHome: true,
-      date: format(new Date(workingDay.day), "d MMMM, EEEE", { locale: ru }),
+      date: formatFullDateWithDay(new Date(workingDay.day)),
       scheduleStart: formatTimeFromISO(workingDay.start_at),
       scheduleEnd: formatTimeFromISO(workingDay.end_at),
       breaks,
@@ -92,12 +95,41 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Настроить день">
         {({ topInset, bottomInset }) => (
-          <DayScheduleForm
-            topInset={topInset}
-            bottomInset={bottomInset}
-            onSubmit={handleSubmit(onSubmit)}
-            isLoading={isLoading}
-          />
+          <>
+            <SafeAreaView className="flex-1" edges={["left", "right"]}>
+              <ScrollView
+                className="flex-1 px-screen"
+                contentContainerStyle={{
+                  paddingTop: topInset + 16,
+                  paddingBottom: bottomInset + 82,
+                }}
+              >
+                <DayScheduleForm />
+                <Divider className="my-5" />
+                <DayScheduleAppointments date={"date"} />
+              </ScrollView>
+            </SafeAreaView>
+            <View
+              className="absolute flex-1 w-full"
+              style={{
+                zIndex: 100,
+                bottom: bottomInset + 16,
+                right: 0,
+                paddingRight: left + 20,
+                paddingLeft: right + 20,
+              }}
+            >
+              <Button
+                title="Сохранить изменения"
+                loading={isLoading}
+                disabled={isLoading}
+                rightIcon={
+                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+                }
+                onPress={handleSubmit(onSubmit)}
+              />
+            </View>
+          </>
         )}
       </ScreenWithToolbar>
     </FormProvider>
