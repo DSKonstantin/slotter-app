@@ -108,11 +108,11 @@ const fetchMultipart = async (
   // Copy prepared headers, excluding Content-Type so the native layer can set
   // it with the correct multipart boundary.
   const fetchHeaders: Record<string, string> = {};
-  preparedHeaders.forEach((value, key) => {
-    if (key.toLowerCase() !== "content-type") {
+  for (const [key, value] of Object.entries(preparedHeaders.toJSON())) {
+    if (key.toLowerCase() !== "content-type" && typeof value === "string") {
       fetchHeaders[key] = value;
     }
-  });
+  }
 
   try {
     const response = await fetch(url, {

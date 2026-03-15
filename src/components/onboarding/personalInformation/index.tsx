@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -24,6 +24,7 @@ import { surnameField } from "@/src/validation/fields/surname";
 import { professionField } from "@/src/validation/fields/profession";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type PersonalInformationFormValues = {
   name: string;
@@ -34,6 +35,7 @@ type PersonalInformationFormValues = {
   online: boolean;
   onRoad: boolean;
   hideAddress: boolean;
+  avatar: UploadFile | null;
 };
 
 type UploadFile = {
@@ -51,10 +53,10 @@ const PersonalInformationSchema = Yup.object({
   online: Yup.boolean().required(),
   onRoad: Yup.boolean().required(),
   hideAddress: Yup.boolean().required(),
+  avatar: Yup.mixed<UploadFile>().nullable().default(null),
 });
 
 const PersonalInformation = () => {
-  const [avatar, setAvatar] = useState<UploadFile | null>(null);
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
@@ -70,12 +72,14 @@ const PersonalInformation = () => {
       atHome: user?.is_home_work ?? false,
       online: user?.is_online_work ?? false,
       onRoad: user?.is_out_call ?? false,
+      avatar: null,
     },
   });
 
+  const avatar = methods.watch("avatar");
+
   const onSubmit = useCallback(
     async (data: PersonalInformationFormValues) => {
-      // This is now just a failsafe. The layout protects this route.
       if (!auth) return;
 
       try {
@@ -93,11 +97,11 @@ const PersonalInformation = () => {
         formData.append("user[is_online_work]", String(data.online));
         formData.append("user[is_out_call]", String(data.onRoad));
 
-        if (avatar?.uri) {
+        if (data.avatar !== null) {
           formData.append("user[avatar]", {
-            uri: avatar.uri,
-            name: avatar.name || `avatar_${Date.now()}.jpg`,
-            type: avatar.type || "image/jpeg",
+            uri: data.avatar.uri,
+            name: data.avatar.name || `avatar_${Date.now()}.jpg`,
+            type: data.avatar.type || "image/jpeg",
           } as any);
         }
 
@@ -114,7 +118,7 @@ const PersonalInformation = () => {
         );
       }
     },
-    [auth, avatar, updateUser],
+    [auth, updateUser],
   );
 
   const handlePickAvatar = useCallback(
@@ -127,13 +131,13 @@ const PersonalInformation = () => {
         return;
       }
 
-      setAvatar({
+      methods.setValue("avatar", {
         uri: asset.uri,
         name: asset.fileName || `file_${Date.now()}.jpg`,
         type: asset.mimeType || "image/jpeg",
       });
     },
-    [],
+    [methods],
   );
 
   return (
@@ -171,7 +175,7 @@ const PersonalInformation = () => {
             >
               <Avatar
                 size="xl"
-                uri={avatar?.uri ?? undefined}
+                uri={avatar?.uri ?? user?.avatar_url ?? undefined}
                 fallbackIcon={
                   <StSvg name="Camera" size={40} color={colors.neutral[500]} />
                 }

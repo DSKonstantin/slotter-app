@@ -15,6 +15,7 @@ export interface User {
   personal_link: string | null;
   profession: string | null;
   experience: string | null;
+  avatar_url: string | null;
   is_home_work: boolean;
   is_online_work: boolean;
   is_out_call: boolean;
