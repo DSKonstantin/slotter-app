@@ -36,6 +36,7 @@ import {
 } from "@/src/validation/schemas/calendarSchedule.schema";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { Routers } from "@/src/constants/routers";
+import { ScheduleTemplateModal } from "@/src/components/app/calendar/schedule/ScheduleTemplateModal";
 
 type DayItem = {
   date: Date;
@@ -74,6 +75,7 @@ const CalendarSchedule = () => {
   const { date } = useLocalSearchParams<{ date?: string }>();
   const [current, setCurrent] = useState(date ? parseISO(date) : new Date());
   const [modalHeight, setModalHeight] = useState(0);
+  const [modalTemplate, setModalTemplate] = useState(false);
   const auth = useRequiredAuth();
   const [bulkCreateWorkingDays, { isLoading: isSaving }] =
     useBulkCreateWorkingDaysMutation();
@@ -104,7 +106,8 @@ const CalendarSchedule = () => {
   const workingDayKeys = useMemo(() => {
     const map: Record<string, WorkingDayMeta> = {};
     for (const wd of Object.values(workingDaysData ?? {})) {
-      if (wd) map[wd.day] = { id: wd.id, startAt: wd.start_at, endAt: wd.end_at };
+      if (wd)
+        map[wd.day] = { id: wd.id, startAt: wd.start_at, endAt: wd.end_at };
     }
     return map;
   }, [workingDaysData]);
@@ -182,14 +185,20 @@ const CalendarSchedule = () => {
                         style: "destructive",
                         onPress: () => {
                           setValue("selectedDays", []);
-                          router.push(Routers.app.calendar.daySchedule(item.workingDayId!));
+                          router.push(
+                            Routers.app.calendar.daySchedule(
+                              item.workingDayId!,
+                            ),
+                          );
                         },
                       },
                     ],
                   );
                   return;
                 }
-                router.push(Routers.app.calendar.daySchedule(item.workingDayId));
+                router.push(
+                  Routers.app.calendar.daySchedule(item.workingDayId),
+                );
               } else {
                 toggleDay(dateKey);
               }
@@ -207,8 +216,16 @@ const CalendarSchedule = () => {
         title="График"
         rightButton={
           <IconButton
-            icon={<StSvg name="Time" size={28} color={colors.neutral[900]} />}
-            onPress={() => {}}
+            icon={
+              <StSvg
+                name="Load_list_alt"
+                size={28}
+                color={colors.neutral[900]}
+              />
+            }
+            onPress={() => {
+              setModalTemplate(true);
+            }}
           />
         }
       >
@@ -274,6 +291,11 @@ const CalendarSchedule = () => {
         onSave={handleSubmit(handleSave)}
         isLoading={isSaving}
         onHeightChange={(h) => setModalHeight(h + 8)}
+      />
+
+      <ScheduleTemplateModal
+        visible={modalTemplate}
+        onClose={() => setModalTemplate(false)}
       />
     </FormProvider>
   );

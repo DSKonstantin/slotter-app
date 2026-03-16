@@ -11,11 +11,17 @@ import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
+import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { endOfMonth, parseISO, startOfMonth, subMonths } from "date-fns";
 import { formatApiDate, formatMonthName } from "@/src/utils/date/formatDate";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setSelectedDay } from "@/src/store/redux/slices/calendarSlice";
+import type {
+  Appointment,
+  WorkingDay,
+} from "@/src/store/redux/services/api-types";
+import { parseTime } from "@/src/utils/date/formatTime";
 
 const MonthCalendarView = () => {
   const { bottom } = useSafeAreaInsets();
@@ -32,7 +38,7 @@ const MonthCalendarView = () => {
     [selectedDate],
   );
 
-  const { data: workingDaysData } = useGetWorkingDaysQuery(
+  const { data: workingDaysData, isLoading: isWorkingDaysLoading } = useGetWorkingDaysQuery(
     auth
       ? {
           userId: auth.userId,
@@ -40,6 +46,65 @@ const MonthCalendarView = () => {
           date_to: formatApiDate(endOfMonth(currentMonth)),
         }
       : skipToken,
+  );
+
+  const { data: appointmentsData, isLoading: isAppointmentsLoading } = useGetAppointmentsQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          params: {
+            date_from: formatApiDate(currentMonth),
+            date_to: formatApiDate(endOfMonth(currentMonth)),
+            status: ["pending", "confirmed"],
+          },
+        }
+      : skipToken,
+  );
+
+  const appointmentsByDate = useMemo(
+    () => (appointmentsData as Record<string, Appointment[]> | undefined) ?? {},
+    [appointmentsData],
+  );
+
+  const progressMap = useMemo((): Record<string, number> => {
+    if (!workingDaysData) return {};
+
+    const result: Record<string, number> = {};
+
+    for (const [date, workingDay] of Object.entries(workingDaysData)) {
+      if (!workingDay) continue;
+
+      const dayAppointments = appointmentsByDate[date] ?? [];
+      if (dayAppointments.length === 0) continue;
+
+      const wd = workingDay as WorkingDay;
+      const availableMinutes =
+        parseTime(wd.end_at) -
+        parseTime(wd.start_at) -
+        (wd.working_day_breaks ?? []).reduce(
+          (sum, b) => sum + parseTime(b.end_at) - parseTime(b.start_at),
+          0,
+        );
+
+      if (availableMinutes <= 0) continue;
+
+      const bookedMinutes = dayAppointments.reduce(
+        (sum, a) => sum + a.duration,
+        0,
+      );
+      result[date] = Math.min(1, bookedMinutes / availableMinutes);
+    }
+
+    return result;
+  }, [workingDaysData, appointmentsByDate]);
+
+  const totalAppointments = useMemo(
+    () =>
+      Object.values(appointmentsByDate).reduce(
+        (sum, arr) => sum + arr.length,
+        0,
+      ),
+    [appointmentsByDate],
   );
 
   const handleOpen = useCallback(() => {
@@ -122,6 +187,9 @@ const MonthCalendarView = () => {
           onSelectDate={handleSelectDate}
           currentMonth={currentMonth}
           onMonthChange={handleMonthChange}
+          progressMap={progressMap}
+          totalAppointments={totalAppointments}
+          isLoading={isWorkingDaysLoading || isAppointmentsLoading}
         />
       </ScrollView>
       <CalendarActionButton mode="month" onPress={handleOpen} />

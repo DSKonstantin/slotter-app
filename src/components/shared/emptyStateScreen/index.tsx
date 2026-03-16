@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Image, ImageSourcePropType, View } from "react-native";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
@@ -11,7 +11,8 @@ type EmptyStateScreenProps = {
   subtitle: string;
   buttonTitle: string;
   buttonIcon?: string;
-  onPress: () => Promise<void>;
+  isLoading?: boolean;
+  onPress: () => void;
 };
 
 const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
@@ -20,16 +21,10 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   subtitle,
   buttonTitle,
   buttonIcon,
+  isLoading = false,
   onPress,
 }) => {
   const { bottom } = useSafeAreaInsets();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handlePress = async () => {
-    setIsLoading(true);
-    await onPress();
-    setIsLoading(false);
-  };
 
   return (
     <>
@@ -58,7 +53,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
         <Button
           title={buttonTitle}
           loading={isLoading}
-          onPress={handlePress}
+          onPress={onPress}
           rightIcon={
             buttonIcon ? (
               <StSvg name={buttonIcon} size={24} color={colors.neutral[0]} />

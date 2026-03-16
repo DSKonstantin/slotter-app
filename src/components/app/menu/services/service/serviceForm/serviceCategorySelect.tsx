@@ -36,7 +36,7 @@ const ServiceCategorySelect = () => {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetServiceCategoriesInfiniteQuery(
       auth
-        ? { userId: auth.userId, params: { view: "with_services" } }
+        ? { userId: auth.userId, params: { view: "public_profile" } }
         : skipToken,
     );
 

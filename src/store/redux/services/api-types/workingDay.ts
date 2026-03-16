@@ -13,6 +13,7 @@ export interface WorkingDay {
   day: string;
   start_at: string;
   end_at: string;
+  is_active: boolean;
   created_at?: string;
   updated_at?: string;
   working_day_breaks?: WorkingDayBreak[];
@@ -29,6 +30,7 @@ export type CreateWorkingDayPayload = {
   day: string;
   start_at: string;
   end_at: string;
+  is_active: boolean;
   working_day_breaks_attributes?: WorkingDayBreaksAttributesPayload[];
 };
 
@@ -48,6 +50,7 @@ export type UpdateWorkingDayPayload = Partial<{
   day: string;
   start_at: string;
   end_at: string;
+  is_active: boolean;
   working_day_breaks_attributes: WorkingDayBreaksAttributesPayload[];
 }>;
 

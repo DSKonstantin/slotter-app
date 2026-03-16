@@ -51,7 +51,7 @@ const AppServicesCategories = () => {
     isFetchingNextPage,
   } = useGetServiceCategoriesInfiniteQuery(
     auth
-      ? { userId: auth.userId, params: { view: "with_services" } }
+      ? { userId: auth.userId, params: { view: "public_profile" } }
       : skipToken,
   );
   const categories = useMemo(() => {

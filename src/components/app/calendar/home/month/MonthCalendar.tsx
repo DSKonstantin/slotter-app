@@ -1,17 +1,19 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { View, TouchableOpacity, Pressable } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { formatApiDate, formatMonthYear } from "@/src/utils/date/formatDate";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
-import { mockProgressMap } from "@/src/constants/mockCalendarData";
 
 interface Props {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   currentMonth: Date;
   onMonthChange: (date: Date) => void;
+  progressMap: Record<string, number>;
+  totalAppointments: number;
+  isLoading?: boolean;
 }
 
 const MonthCalendar = ({
@@ -19,11 +21,11 @@ const MonthCalendar = ({
   onSelectDate,
   currentMonth,
   onMonthChange,
+  progressMap,
+  totalAppointments,
+  isLoading = false,
 }: Props) => {
-  const appointmentCount = useMemo(
-    () => Object.keys(mockProgressMap).length,
-    [],
-  );
+  const appointmentCount = totalAppointments;
 
   const handleMonthChange = useCallback(
     (month: any) => {
@@ -69,12 +71,12 @@ const MonthCalendar = ({
             </Pressable>
           </View>
           <Typography className="text-neutral-500">
-            {appointmentCount} записей
+            {isLoading ? "—" : `${appointmentCount} записей`}
           </Typography>
         </View>
       );
     },
-    [appointmentCount, handleMonthChange],
+    [appointmentCount, handleMonthChange, isLoading],
   );
 
   const handleDayPress = useCallback(
@@ -88,7 +90,9 @@ const MonthCalendar = ({
     ({ date, state }: any) => {
       const isToday = state === "today";
       const isDisabled = state === "disabled";
-      const progress = date ? mockProgressMap[date.dateString] : 0;
+      const progress = date ? progressMap[date.dateString] : undefined;
+      const showProgress =
+        !isDisabled && date && !isLoading && progress !== undefined;
 
       return (
         <TouchableOpacity
@@ -96,7 +100,7 @@ const MonthCalendar = ({
           className="relative items-center justify-center w-[44px] h-[44px]"
           disabled={!date}
         >
-          {!isDisabled && date && (
+          {showProgress && (
             <View className="absolute">
               <CircularProgressDay progress={progress} />
             </View>
@@ -121,7 +125,7 @@ const MonthCalendar = ({
         </TouchableOpacity>
       );
     },
-    [handleDayPress],
+    [handleDayPress, progressMap, isLoading],
   );
 
   return (

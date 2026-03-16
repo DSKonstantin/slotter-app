@@ -17,7 +17,7 @@ import { DayScheduleBreaksFieldArray } from "./DayScheduleBreaksFieldArray";
 import { colors } from "@/src/styles/colors";
 
 export const DayScheduleSchema = Yup.object().shape({
-  atHome: Yup.boolean().required(),
+  isActive: Yup.boolean().required(),
   date: Yup.string().required(),
   scheduleStart: Yup.string().required(),
   scheduleEnd: Yup.string().required(),
@@ -42,14 +42,14 @@ const parseTimeString = (value: string): Date | null => {
 
 export const DayScheduleForm = () => {
   const { control } = useFormContext<DayScheduleFormValues>();
-  const atHome = useWatch({ control, name: "atHome" });
+  const isActive = useWatch({ control, name: "isActive" });
 
   return (
     <>
-      <Item title="Рабочий день" right={<RHFSwitch name="atHome" />} />
+      <Item title="Рабочий день" right={<RHFSwitch name="isActive" />} />
       <View
-        pointerEvents={!atHome ? "none" : "auto"}
-        className={`mt-5 ${!atHome ? "opacity-40" : "opacity-100"}`}
+        pointerEvents={!isActive ? "none" : "auto"}
+        className={`mt-5 ${!isActive ? "opacity-40" : "opacity-100"}`}
       >
         <RhfTextField name="date" label="Дата" disabled={true} />
 

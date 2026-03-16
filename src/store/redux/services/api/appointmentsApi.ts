@@ -19,7 +19,12 @@ const appointmentsApi = api.injectEndpoints({
       query: ({ userId, params }) => ({
         url: `/users/${userId}/appointments`,
         method: "GET",
-        params,
+        params: params
+          ? {
+              ...params,
+              ...(params.status && { status: params.status.join(",") }),
+            }
+          : undefined,
       }),
       providesTags: ["Appointments"],
     }),

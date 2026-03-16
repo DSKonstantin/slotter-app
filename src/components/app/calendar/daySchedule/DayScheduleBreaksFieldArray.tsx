@@ -7,8 +7,6 @@ import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatTime } from "@/src/utils/date/formatTime";
 
-import type { DayScheduleFormValues } from "./DayScheduleForm";
-
 const MAX_BREAKS = 3;
 
 const parseTimeString = (value: string): Date | null => {
@@ -19,9 +17,13 @@ const parseTimeString = (value: string): Date | null => {
   return d;
 };
 
-export const DayScheduleBreaksFieldArray = () => {
-  const { control } = useFormContext<DayScheduleFormValues>();
-  const { fields, append, remove } = useFieldArray({ control, name: "breaks" });
+type Props = {
+  name?: string;
+};
+
+export const DayScheduleBreaksFieldArray = ({ name = "breaks" }: Props) => {
+  const { control } = useFormContext();
+  const { fields, append, remove } = useFieldArray({ control, name });
 
   const canAddMore = fields.length < MAX_BREAKS;
 
@@ -38,7 +40,7 @@ export const DayScheduleBreaksFieldArray = () => {
           <View key={field.id} className="flex-row items-center gap-2">
             <View className="flex-1">
               <RhfDatePicker
-                name={`breaks.${index}.start`}
+                name={`${name}.${index}.start`}
                 placeholder="12:00"
                 hideErrorText
                 parseValue={parseTimeString}
@@ -51,7 +53,7 @@ export const DayScheduleBreaksFieldArray = () => {
 
             <View className="flex-1">
               <RhfDatePicker
-                name={`breaks.${index}.end`}
+                name={`${name}.${index}.end`}
                 placeholder="13:00"
                 hideErrorText
                 parseValue={parseTimeString}

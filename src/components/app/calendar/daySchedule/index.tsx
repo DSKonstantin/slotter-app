@@ -28,6 +28,7 @@ import {
   DayScheduleSchema,
   DayScheduleFormValues,
 } from "./DayScheduleForm";
+import { useWatch } from "react-hook-form";
 import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
 import {
   SafeAreaView,
@@ -55,7 +56,7 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
-      atHome: true,
+      isActive: workingDay.is_active,
       date: formatFullDateWithDay(new Date(workingDay.day)),
       scheduleStart: formatTimeFromISO(workingDay.start_at),
       scheduleEnd: formatTimeFromISO(workingDay.end_at),
@@ -63,7 +64,8 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
     },
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, control } = methods;
+  const isActive = useWatch({ control, name: "isActive" });
 
   const onSubmit = async (data: DayScheduleFormValues) => {
     try {
@@ -73,6 +75,7 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
         data: {
           start_at: data.scheduleStart,
           end_at: data.scheduleEnd,
+          is_active: data.isActive,
           working_day_breaks_attributes: [
             ...(data.breaks ?? []).map((b) => ({
               id: b.id,
@@ -105,8 +108,16 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
                 }}
               >
                 <DayScheduleForm />
-                <Divider className="my-5" />
-                <DayScheduleAppointments date={"date"} />
+                <View
+                  pointerEvents={!isActive ? "none" : "auto"}
+                  className={!isActive ? "opacity-40" : "opacity-100"}
+                >
+                  <Divider className="my-5" />
+                  <DayScheduleAppointments
+                    userId={userId}
+                    date={workingDay.day}
+                  />
+                </View>
               </ScrollView>
             </SafeAreaView>
             <View

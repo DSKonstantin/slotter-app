@@ -100,7 +100,7 @@ const SlotSelectService: React.FC<Props> = ({
 
   const { data, isLoading } = useGetServiceCategoriesInfiniteQuery(
     auth
-      ? { userId: auth.userId, params: { view: "with_services" } }
+      ? { userId: auth.userId, params: { view: "public_profile" } }
       : skipToken,
   );
 

@@ -17,7 +17,8 @@ import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   setMode,
   setSelectedDay,
-  toggleFilter,
+  setFilters,
+  type CalendarFilters,
 } from "@/src/store/redux/slices/calendarSlice";
 import {
   CALENDAR_VIEW_OPTIONS,
@@ -54,10 +55,14 @@ type CalendarFilterModalProps = {
   onClose: () => void;
 };
 
-const filterOptions = [
-  { label: "Подтвержденные записи", key: "showConfirmed" as const },
-  { label: "Ожидающие подтверждения", key: "showPending" as const },
-  { label: "Отмененные", key: "showCancelled" as const },
+const filterOptions: { label: string; key: keyof CalendarFilters }[] = [
+  { label: "Подтвержденные", key: "showConfirmed" },
+  { label: "Ожидающие подтверждения", key: "showPending" },
+  { label: "Пришли", key: "showArrived" },
+  { label: "Опоздали", key: "showLate" },
+  { label: "Завершённые", key: "showCompleted" },
+  { label: "Не явились", key: "showNoShow" },
+  { label: "Отменённые", key: "showCancelled" },
 ];
 
 const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
@@ -66,6 +71,20 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const filters = useAppSelector((state) => state.calendar.filters);
+  const [draft, setDraft] = useState<CalendarFilters>(filters);
+
+  useEffect(() => {
+    if (visible) setDraft(filters);
+  }, [visible]);
+
+  const handleApply = useCallback(() => {
+    dispatch(setFilters(draft));
+    onClose();
+  }, [dispatch, draft, onClose]);
+
+  const toggleDraft = useCallback((key: keyof CalendarFilters) => {
+    setDraft((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   return (
     <StModal visible={visible} onClose={onClose}>
@@ -82,13 +101,13 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
             <FilterOption
               key={key}
               label={label}
-              value={filters[key]}
-              onPress={() => dispatch(toggleFilter(key))}
+              value={draft[key]}
+              onPress={() => toggleDraft(key)}
             />
           ))}
         </View>
 
-        <Button title="Применить" onPress={onClose} />
+        <Button title="Применить" onPress={handleApply} />
       </View>
     </StModal>
   );

@@ -11,7 +11,7 @@ import {
   LOADER_SPEED,
   BG,
   FG,
-  SKELETON_ROWS,
+  SKELETON_ROW_COUNT,
 } from "./constants";
 
 const TimeSlotListSkeleton = () => {
@@ -19,7 +19,7 @@ const TimeSlotListSkeleton = () => {
   const { bottom } = useSafeAreaInsets();
   const contentWidth = width - H_PAD * 2;
   const rightColWidth = contentWidth - LEFT_COL - RIGHT_GAP;
-  const totalHeight = HOUR_HEIGHT * SKELETON_ROWS.length;
+  const totalHeight = HOUR_HEIGHT * SKELETON_ROW_COUNT;
 
   return (
     <ScrollView
@@ -37,21 +37,19 @@ const TimeSlotListSkeleton = () => {
       >
         <Rect x={LEFT_COL - 1} y={0} width={1} height={totalHeight} />
 
-        {SKELETON_ROWS.map(({ card }, i) => {
+        {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => {
           const rowY = i * HOUR_HEIGHT;
           return (
             <React.Fragment key={i}>
               <Rect x={0} y={rowY + 2} rx={4} ry={4} width={32} height={12} />
-              {card && (
-                <Rect
-                  x={LEFT_COL + RIGHT_GAP}
-                  y={rowY + card.topOffset}
-                  rx={14}
-                  ry={14}
-                  width={Math.round(rightColWidth * card.widthRatio)}
-                  height={card.height}
-                />
-              )}
+              <Rect
+                x={LEFT_COL + RIGHT_GAP}
+                y={rowY + 1}
+                rx={14}
+                ry={14}
+                width={rightColWidth}
+                height={HOUR_HEIGHT - 2}
+              />
             </React.Fragment>
           );
         })}

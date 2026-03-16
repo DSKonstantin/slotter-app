@@ -52,7 +52,7 @@ export type GetAppointmentsParams = {
   date?: string;
   date_from?: string;
   date_to?: string;
-  status?: AppointmentStatus;
+  status?: AppointmentStatus[];
 };
 
 export type GetAppointmentsResponse =

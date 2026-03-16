@@ -53,7 +53,7 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
         style={{ marginBottom: TAB_BAR_HEIGHT + bottom + 80 }}
       >
         <Typography className="text-body text-neutral-400">
-          День не настроен
+          На этот день записей нет
         </Typography>
       </View>
     );
@@ -110,7 +110,6 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
         };
     return { segStart, segEnd, content };
   });
-
 
   return (
     <ScrollView

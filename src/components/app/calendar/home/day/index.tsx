@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 
@@ -8,6 +8,7 @@ import CalendarError from "@/src/components/app/calendar/home/day/CalendarError"
 import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
+import { selectActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
@@ -20,8 +21,9 @@ import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 const DayCalendarView = () => {
   const router = useRouter();
   const auth = useRequiredAuth();
-
+  const [isRetrying, setIsRetrying] = useState(false);
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
+  const activeStatuses = useAppSelector(selectActiveStatuses);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
   const dateRange = useMemo(
@@ -48,11 +50,25 @@ const DayCalendarView = () => {
     isError: isAppointmentsError,
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery(
-    auth ? { userId: auth.userId, params: { date: selectedDay } } : skipToken,
+    auth
+      ? {
+          userId: auth.userId,
+          params: {
+            date: selectedDay,
+          },
+        }
+      : skipToken,
   );
 
-  const selectedWorkingDay = workingDaysData?.[selectedDay] ?? undefined;
-  const appointments = (appointmentsData as Appointment[] | undefined) ?? [];
+  const selectedWorkingDay = useMemo(
+    () => workingDaysData?.[selectedDay] ?? undefined,
+    [workingDaysData, selectedDay],
+  );
+
+  const appointments = useMemo(
+    () => (appointmentsData as Appointment[] | undefined) ?? [],
+    [appointmentsData],
+  );
 
   const handleSelectDate = useCallback(
     (date: Date) => {
@@ -70,36 +86,58 @@ const DayCalendarView = () => {
     }
   }, [router, isDayLoading, selectedWorkingDay, selectedDay]);
 
-  if (!auth) return null;
-
-  const hasError = isDayError || isAppointmentsError;
-  const isLoading =
-    isDayLoading || isAppointmentsLoading || isAppointmentsFetching;
-  const isEmpty = !isLoading && !selectedWorkingDay;
-
-  const content = hasError ? (
-    <CalendarError
-      onRetry={async () => {
-        await Promise.all([refetchWorkingDays(), refetchAppointments()]);
-      }}
-    />
-  ) : isLoading ? (
-    <TimeSlotListSkeleton />
-  ) : isEmpty ? (
-    <EmptySlots
-      onPress={async () => {
-        router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
-      }}
-    />
-  ) : (
-    <TimeSlotList
-      appointment={appointments}
-      breaks={selectedWorkingDay?.working_day_breaks}
-      startAt={selectedWorkingDay?.start_at}
-      endAt={selectedWorkingDay?.end_at}
-      date={selectedDay}
-    />
+  const hasError = useMemo(
+    () => isDayError || isAppointmentsError,
+    [isDayError, isAppointmentsError],
   );
+
+  const isLoading = useMemo(
+    () => isDayLoading || isAppointmentsLoading || isAppointmentsFetching,
+    [isDayLoading, isAppointmentsLoading, isAppointmentsFetching],
+  );
+
+  const isEmpty = useMemo(
+    () => !isLoading && !selectedWorkingDay,
+    [isLoading, selectedWorkingDay],
+  );
+
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    await Promise.all([refetchWorkingDays(), refetchAppointments()]);
+    setIsRetrying(false);
+  }, [refetchWorkingDays, refetchAppointments]);
+
+  const handleEmptyPress = useCallback(() => {
+    router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
+  }, [router, selectedDay]);
+
+  const content = useMemo(() => {
+    if (hasError)
+      return <CalendarError isLoading={isRetrying} onRetry={handleRetry} />;
+    if (isLoading) return <TimeSlotListSkeleton />;
+    if (isEmpty) return <EmptySlots onPress={handleEmptyPress} />;
+    return (
+      <TimeSlotList
+        appointment={appointments}
+        breaks={selectedWorkingDay?.working_day_breaks}
+        startAt={selectedWorkingDay?.start_at}
+        endAt={selectedWorkingDay?.end_at}
+        date={selectedDay}
+      />
+    );
+  }, [
+    hasError,
+    isLoading,
+    isEmpty,
+    isRetrying,
+    handleRetry,
+    handleEmptyPress,
+    appointments,
+    selectedWorkingDay,
+    selectedDay,
+  ]);
+
+  if (!auth) return null;
 
   return (
     <>

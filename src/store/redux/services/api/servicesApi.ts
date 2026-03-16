@@ -350,7 +350,7 @@ const servicesApi = api.injectEndpoints({
             (entry) =>
               entry.endpointName === "getServiceCategories" &&
               isGetCategoriesArg(entry.originalArgs) &&
-              entry.originalArgs.params?.view === "with_services",
+              entry.originalArgs.params?.view === "public_profile",
           )
           .forEach(({ originalArgs }) => {
             patches.push(
@@ -584,7 +584,7 @@ const servicesApi = api.injectEndpoints({
             (entry) =>
               entry.endpointName === "getServiceCategories" &&
               isGetCategoriesArg(entry.originalArgs) &&
-              entry.originalArgs.params?.view === "with_services",
+              entry.originalArgs.params?.view === "public_profile",
           )
           .forEach(({ originalArgs }) => {
             patches.push(

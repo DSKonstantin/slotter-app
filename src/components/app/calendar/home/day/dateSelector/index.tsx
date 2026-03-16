@@ -16,7 +16,10 @@ import { Routers } from "@/src/constants/routers";
 import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
-import { HORIZONTAL_PADDING, ITEM_GAP, ITEM_WIDTH } from "./constants";
+
+const ITEM_WIDTH = 44;
+const ITEM_GAP = 12;
+const HORIZONTAL_PADDING = 20;
 
 interface DateItemProps {
   item: Date;
@@ -153,7 +156,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
     }
   }, [selectedDateIndex]);
 
-  if (isLoading && !workingDaysData) {
+  if (isLoading) {
     return <DateSelectorSkeleton />;
   }
 

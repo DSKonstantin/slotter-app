@@ -17,7 +17,6 @@ import {
   DayScheduleFormValues,
 } from "./DayScheduleForm";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
 import { ScrollView, View } from "react-native";
 import { Button, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -34,7 +33,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
-      atHome: true,
+      isActive: true,
       date: format(new Date(date), "d MMMM, EEEE", { locale: ru }),
       scheduleStart: "",
       scheduleEnd: "",
@@ -53,6 +52,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
           day: date,
           start_at: data.scheduleStart,
           end_at: data.scheduleEnd,
+          is_active: data.isActive,
           ...(data.breaks &&
             data.breaks.length > 0 && {
               working_day_breaks_attributes: data.breaks.map((b) => ({

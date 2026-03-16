@@ -1,42 +1,47 @@
 import React from "react";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { router } from "expo-router";
+
 import { Typography } from "@/src/components/ui";
 import TimeSlotCard from "@/src/components/shared/cards/scheduling/timeSlotCard";
-
-const mockAppointments = [
-  {
-    timeStart: "10:00",
-    clientName: "Анна Петрова",
-    service: "Стрижка + укладка",
-  },
-  {
-    timeStart: "11:00",
-    clientName: "Мария Иванова",
-    service: "Окрашивание",
-  },
-  {
-    timeStart: "15:00",
-    clientName: "Ольга Сидорова",
-    service: "Укладка вечерняя",
-  },
-];
+import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import type { Appointment } from "@/src/store/redux/services/api-types";
+import { formatTimeFromISO } from "@/src/utils/date/formatTime";
+import { Routers } from "@/src/constants/routers";
 
 type Props = {
+  userId: number;
   date: string;
 };
 
-const DayScheduleAppointments = ({ date: _date }: Props) => {
+const DayScheduleAppointments = ({ userId, date }: Props) => {
+  const { data, isLoading } = useGetAppointmentsQuery(
+    userId ? { userId, params: { date } } : skipToken,
+  );
+
+  const appointments = (data as Appointment[] | undefined) ?? [];
+
+  if (isLoading) {
+    return <ActivityIndicator />;
+  }
+
+  if (appointments.length === 0) {
+    return null;
+  }
+
   return (
     <View className="gap-2.5">
       <Typography className="text-caption text-neutral-500">
         Записи на этот день
       </Typography>
-      {mockAppointments.map((appointment, index) => (
+      {appointments.map((appointment) => (
         <TimeSlotCard
-          key={index}
-          time={appointment.timeStart}
-          name={appointment.clientName}
-          service={appointment.service}
+          key={appointment.id}
+          time={formatTimeFromISO(appointment.start_time)}
+          name={appointment.customer.name}
+          service={appointment.services[0]?.name ?? ""}
+          onPress={() => router.push(Routers.app.calendar.slot(appointment.id))}
         />
       ))}
     </View>

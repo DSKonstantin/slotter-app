@@ -1,19 +1,19 @@
 import React from "react";
 import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
-import { StSvg } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
 
 type EmptySlotsProps = {
-  onPress: () => Promise<void>;
+  isLoading?: boolean;
+  onPress: () => void;
 };
 
-const EmptySlots: React.FC<EmptySlotsProps> = ({ onPress }) => (
+const EmptySlots: React.FC<EmptySlotsProps> = ({ isLoading, onPress }) => (
   <EmptyStateScreen
     image={require("@/assets/images/empty-slots.png")}
     title="На этот день записей нет"
     subtitle="Добавьте первую запись или настройте рабочее время"
     buttonTitle="Добавить запись"
     buttonIcon="Add_round_fill"
+    isLoading={isLoading}
     onPress={onPress}
   />
 );

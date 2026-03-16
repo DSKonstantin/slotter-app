@@ -40,7 +40,7 @@ const ServiceList = () => {
     isFetchingNextPage,
   } = useGetServiceCategoriesInfiniteQuery(
     auth
-      ? { userId: auth.userId, params: { view: "with_services" } }
+      ? { userId: auth.userId, params: { view: "public_profile" } }
       : skipToken,
   );
 
@@ -69,7 +69,9 @@ const ServiceList = () => {
           })),
         }).unwrap();
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось изменить порядок категорий"));
+        toast.error(
+          getApiErrorMessage(error, "Не удалось изменить порядок категорий"),
+        );
       }
     },
     [auth?.userId, reorderServiceCategories],
