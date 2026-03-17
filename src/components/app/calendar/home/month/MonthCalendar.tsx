@@ -6,14 +6,19 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
 
+interface MonthCalendarData {
+  progressMap: Record<string, number>;
+  nonWorkingDays: Set<string>;
+  totalAppointments: number;
+  isLoading?: boolean;
+}
+
 interface Props {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   currentMonth: Date;
   onMonthChange: (date: Date) => void;
-  progressMap: Record<string, number>;
-  totalAppointments: number;
-  isLoading?: boolean;
+  data: MonthCalendarData;
 }
 
 const MonthCalendar = ({
@@ -21,11 +26,14 @@ const MonthCalendar = ({
   onSelectDate,
   currentMonth,
   onMonthChange,
-  progressMap,
-  totalAppointments,
-  isLoading = false,
+  data,
 }: Props) => {
-  const appointmentCount = totalAppointments;
+  const {
+    progressMap,
+    nonWorkingDays,
+    totalAppointments: appointmentCount,
+    isLoading = false,
+  } = data;
 
   const handleMonthChange = useCallback(
     (month: any) => {
@@ -90,6 +98,10 @@ const MonthCalendar = ({
     ({ date, state }: any) => {
       const isToday = state === "today";
       const isDisabled = state === "disabled";
+      const isNonWorking =
+        !isLoading && !isDisabled && date
+          ? nonWorkingDays.has(date.dateString)
+          : false;
       const progress = date ? progressMap[date.dateString] : undefined;
       const showProgress =
         !isDisabled && date && !isLoading && progress !== undefined;
@@ -114,7 +126,7 @@ const MonthCalendar = ({
               ${
                 isToday
                   ? "text-primary-blue-500"
-                  : isDisabled
+                  : isDisabled || isNonWorking
                     ? "text-neutral-300"
                     : "text-neutral-900"
               }`}
@@ -125,7 +137,7 @@ const MonthCalendar = ({
         </TouchableOpacity>
       );
     },
-    [handleDayPress, progressMap, isLoading],
+    [handleDayPress, progressMap, nonWorkingDays, isLoading],
   );
 
   return (

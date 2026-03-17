@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
@@ -9,6 +9,7 @@ import {
   endOfMonth,
   addDays,
   getDate,
+  getDay,
   getYear,
   getMonth,
   addMonths,
@@ -37,6 +38,9 @@ import {
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { Routers } from "@/src/constants/routers";
 import { ScheduleTemplateModal } from "@/src/components/app/calendar/schedule/ScheduleTemplateModal";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { setScheduleIntent } from "@/src/store/redux/slices/calendarSlice";
+import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
 
 type DayItem = {
   date: Date;
@@ -72,6 +76,10 @@ const generateMonth = (
 };
 
 const CalendarSchedule = () => {
+  const dispatch = useAppDispatch();
+  const intent = useAppSelector((state) => state.calendar.scheduleIntent);
+  const { initialValues, isLoaded } = useScheduleTemplate();
+
   const { date } = useLocalSearchParams<{ date?: string }>();
   const [current, setCurrent] = useState(date ? parseISO(date) : new Date());
   const [modalHeight, setModalHeight] = useState(0);
@@ -97,6 +105,7 @@ const CalendarSchedule = () => {
     () => watchedSelectedDays ?? [],
     [watchedSelectedDays],
   );
+
   const modalVisible = selectedDays.length > 0;
 
   const { data: workingDaysData } = useGetWorkingDaysQuery(
@@ -209,6 +218,32 @@ const CalendarSchedule = () => {
     },
     [selectedDays, toggleDay, modalVisible, setValue],
   );
+
+  useEffect(() => {
+    if (intent?.type !== "openTemplate") return;
+    if (!isLoaded) return;
+
+    const templateConfigured = initialValues.days.some((d) => d.isEnabled);
+
+    if (templateConfigured) {
+      const firstEnabled = initialValues.days.find((d) => d.isEnabled)!;
+      const autoSelectedDays = days
+        .filter((item) => {
+          const templateIdx = (getDay(item.date) + 6) % 7;
+          return initialValues.days[templateIdx].isEnabled;
+        })
+        .map((item) => item.date.toISOString().split("T")[0]);
+
+      setValue("selectedDays", autoSelectedDays);
+      setValue("scheduleStart", firstEnabled.startAt);
+      setValue("scheduleEnd", firstEnabled.endAt);
+      setValue("breaks", firstEnabled.breaks);
+    } else {
+      setModalTemplate(true);
+    }
+
+    dispatch(setScheduleIntent(null));
+  }, [days, dispatch, initialValues.days, intent, isLoaded, setValue]);
 
   return (
     <FormProvider {...methods}>

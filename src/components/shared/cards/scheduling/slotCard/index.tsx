@@ -91,7 +91,7 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
   });
 
   const detailContent = (
-    <View className="flex-1 py-5 px-4">
+    <View className="flex-1 py-5 px-4 justify-center">
       <View className="flex-row items-center justify-between">
         <Typography className="text-body text-neutral-900">
           {timeString}
@@ -134,9 +134,9 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
     </View>
   );
 
-  if (slot.duration <= 0) {
+  if (slot.duration <= 29) {
     return (
-      <View style={{ zIndex: isExpanded ? 10 : 1 }}>
+      <View className="flex-1" style={{ zIndex: isExpanded ? 10 : 1 }}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={toggleExpand}

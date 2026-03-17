@@ -11,10 +11,13 @@ const MAX_BREAKS = 3;
 
 const parseTimeString = (value: string): Date | null => {
   if (!value) return null;
-  const [h, m] = value.split(":").map(Number);
+  const parts = value.split(":");
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (isNaN(h) || isNaN(m)) return null;
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  return d;
+  return isNaN(d.getTime()) ? null : d;
 };
 
 type Props = {

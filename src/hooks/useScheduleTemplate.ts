@@ -8,20 +8,24 @@ import {
 
 const STORAGE_KEY = "schedule_template";
 
-const defaultValues = ScheduleTemplateSchema.getDefault() as ScheduleTemplateFormValues;
+const defaultValues =
+  ScheduleTemplateSchema.getDefault() as ScheduleTemplateFormValues;
 
 export const useScheduleTemplate = () => {
   const [initialValues, setInitialValues] =
     useState<ScheduleTemplateFormValues>(defaultValues);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-      if (!raw) return;
-      try {
-        setInitialValues(JSON.parse(raw));
-      } catch {
-        // corrupted data — fall back to defaults
+      if (raw) {
+        try {
+          setInitialValues(JSON.parse(raw));
+        } catch {
+          // corrupted data — fall back to defaults
+        }
       }
+      setIsLoaded(true);
     });
   }, []);
 
@@ -29,5 +33,5 @@ export const useScheduleTemplate = () => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(values));
   }, []);
 
-  return { initialValues, save };
+  return { initialValues, save, isLoaded };
 };

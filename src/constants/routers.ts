@@ -22,20 +22,25 @@ export const Routers = {
   app: {
     root: "/(app)",
     calendar: {
-      root: (date?: string) =>
+      root: (date?: string, mode?: string) =>
         date
           ? ({
               pathname: "/(app)/calendar",
-              params: { date },
+              params: { date, ...(mode && { mode }) },
             } as const)
           : ("/(app)/calendar" as const),
-      schedule: (date?: string) =>
-        date
-          ? ({
-              pathname: "/(app)/calendar/schedule",
-              params: { date },
-            } as const)
-          : ("/(app)/calendar/schedule" as const),
+      schedule: (
+        date?: string,
+        extra?: { openTemplate?: boolean; duplicateFrom?: string },
+      ) =>
+        ({
+          pathname: "/(app)/calendar/schedule",
+          params: {
+            ...(date && { date }),
+            ...(extra?.openTemplate && { openTemplate: "true" }),
+            ...(extra?.duplicateFrom && { duplicateFrom: extra.duplicateFrom }),
+          },
+        }) as const,
       daySchedule: (id: string | number) =>
         ({
           pathname: "/(app)/calendar/day-schedule/[id]",

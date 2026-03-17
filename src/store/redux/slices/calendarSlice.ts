@@ -15,15 +15,22 @@ export interface CalendarFilters {
   showCancelled: boolean;
 }
 
+export type ScheduleIntent =
+  | { type: "openTemplate" }
+  | { type: "duplicateFrom"; date: string }
+  | null;
+
 interface CalendarState {
   mode: CalendarMode;
   selectedDay: string;
   filters: CalendarFilters;
+  scheduleIntent: ScheduleIntent;
 }
 
 const initialState: CalendarState = {
   mode: "day",
   selectedDay: format(new Date(), "yyyy-MM-dd"),
+  scheduleIntent: null,
   filters: {
     showPending: true,
     showConfirmed: true,
@@ -55,11 +62,20 @@ const calendarSlice = createSlice({
     setFilters(state, action: PayloadAction<CalendarFilters>) {
       state.filters = action.payload;
     },
+
+    setScheduleIntent(state, action: PayloadAction<ScheduleIntent>) {
+      state.scheduleIntent = action.payload;
+    },
   },
 });
 
-export const { setMode, setSelectedDay, toggleFilter, setFilters } =
-  calendarSlice.actions;
+export const {
+  setMode,
+  setSelectedDay,
+  toggleFilter,
+  setFilters,
+  setScheduleIntent,
+} = calendarSlice.actions;
 
 export const selectActiveStatuses = createSelector(
   (state: RootState) => state.calendar.filters,

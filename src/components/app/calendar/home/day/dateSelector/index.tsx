@@ -9,13 +9,13 @@ import React, {
 import { FlatList, TouchableOpacity, View } from "react-native";
 import { format, addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
+import DateSelectorModal from "@/src/components/app/calendar/home/day/dateSelector/DateSelectorModal";
 
 const ITEM_WIDTH = 44;
 const ITEM_GAP = 12;
@@ -191,38 +191,11 @@ const DateSelector: React.FC<DateSelectorProps> = ({
         />
       </View>
 
-      <StModal visible={!!modalDate} onClose={() => setModalDate(null)}>
-        <View className="gap-3">
-          <Typography
-            weight="semibold"
-            className="mt-2.5 text-display text-center"
-          >
-            {modalDate && format(modalDate, "d MMMM yyyy", { locale: ru })}
-          </Typography>
-
-          <View className="my-4 items-center gap-2">
-            <StSvg name="Calendar_fill" size={48} color={colors.neutral[400]} />
-            <Typography className="text-body">
-              Записей на этот день нет
-            </Typography>
-          </View>
-
-          <Button
-            title="Добавить запись"
-            variant="secondary"
-            textVariant="accent"
-            rightIcon={
-              <StSvg
-                name="Add_round_fill"
-                size={24}
-                color={colors.primary.blue[500]}
-              />
-            }
-            onPress={handleCreatePress}
-          />
-          <Button title="Готово" onPress={() => setModalDate(null)} />
-        </View>
-      </StModal>
+      <DateSelectorModal
+        modalDate={modalDate}
+        onClose={() => setModalDate(null)}
+        onCreatePress={handleCreatePress}
+      />
     </>
   );
 };

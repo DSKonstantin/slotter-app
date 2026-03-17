@@ -7,6 +7,7 @@ import { FormProvider, Resolver, useForm } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { Routers } from "@/src/constants/routers";
 import { useCreateWorkingDayMutation } from "@/src/store/redux/services/api/workingDaysApi";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -62,9 +63,9 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
             }),
         },
       }).unwrap();
-      router.back();
+      router.replace(Routers.app.calendar.root(date, "day"));
     } catch (e) {
-      toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
+      toast.error(getApiErrorMessage(e, "Не удалось создать рабочий день"));
     }
   };
 

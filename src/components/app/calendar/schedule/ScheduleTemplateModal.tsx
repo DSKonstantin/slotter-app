@@ -29,10 +29,13 @@ import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
 
 const parseTimeString = (value: string): Date | null => {
   if (!value) return null;
-  const [h, m] = value.split(":").map(Number);
+  const parts = value.split(":");
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (isNaN(h) || isNaN(m)) return null;
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  return d;
+  return isNaN(d.getTime()) ? null : d;
 };
 
 const DayRow = ({ index }: { index: number }) => {
@@ -94,17 +97,12 @@ type Props = {
 };
 
 export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
-  const { height } = useWindowDimensions();
   const { initialValues, save } = useScheduleTemplate();
 
   const methods = useForm<ScheduleTemplateFormValues>({
     resolver: yupResolver(ScheduleTemplateSchema) as any,
     defaultValues: initialValues,
   });
-
-  useEffect(() => {
-    methods.reset(initialValues);
-  }, [initialValues, methods]);
 
   const handleSave = useCallback(
     async (values: ScheduleTemplateFormValues) => {
@@ -113,6 +111,10 @@ export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
     },
     [onClose, save],
   );
+
+  useEffect(() => {
+    methods.reset(initialValues);
+  }, [initialValues, methods]);
 
   return (
     <StModal visible={visible} onClose={onClose}>
@@ -128,18 +130,16 @@ export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
       </Typography>
 
       <FormProvider {...methods}>
-        <View style={{ maxHeight: height * 0.6 }}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View className="gap-4">
-              {days.map((_, index) => (
-                <View key={index} className="gap-4">
-                  <DayRow index={index} />
-                  {index < days.length - 1 && <Divider />}
-                </View>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View className="gap-4">
+            {days.map((_, index) => (
+              <View key={index} className="gap-4">
+                <DayRow index={index} />
+                {index < days.length - 1 && <Divider />}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
 
         <Button
           title="Сохранить шаблон"
