@@ -1,29 +1,48 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback } from "react";
 import { View, TouchableOpacity, Pressable } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { formatApiDate, formatMonthYear } from "@/src/utils/date/formatDate";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { calendarTheme, calendarStyle } from "@/src/styles/calendarTheme";
 import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
-import { mockProgressMap } from "@/src/constants/mockCalendarData";
+
+interface MonthCalendarData {
+  progressMap: Record<string, number>;
+  nonWorkingDays: Set<string>;
+  totalAppointments: number;
+  isLoading?: boolean;
+}
 
 interface Props {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
+  currentMonth: Date;
+  onMonthChange: (date: Date) => void;
+  data: MonthCalendarData;
 }
 
-const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+const MonthCalendar = ({
+  selectedDate,
+  onSelectDate,
+  currentMonth,
+  onMonthChange,
+  data,
+}: Props) => {
+  const {
+    progressMap,
+    nonWorkingDays,
+    totalAppointments: appointmentCount,
+    isLoading = false,
+  } = data;
 
-  const appointmentCount = useMemo(
-    () => Object.keys(mockProgressMap).length,
-    [],
+  const handleMonthChange = useCallback(
+    (month: any) => {
+      const date = new Date(month.year, month.month - 1, 1);
+      onMonthChange(date);
+    },
+    [onMonthChange],
   );
-
-  const handleMonthChange = useCallback((month: any) => {
-    setCurrentMonth(new Date(month.year, month.month - 1, 1));
-  }, []);
 
   const renderHeader = useCallback(
     (date: any) => {
@@ -31,6 +50,7 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
         <View className="flex-1 flex-row items-center justify-between pb-4">
           <View className="items-center flex-row gap-4">
             <Pressable
+              disabled={isLoading}
               onPress={() =>
                 handleMonthChange({
                   year: date.getFullYear(),
@@ -38,14 +58,19 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
                 })
               }
             >
-              <StSvg name="Expand_left" size={24} color={colors.neutral[500]} />
+              <StSvg
+                name="Expand_left"
+                size={24}
+                color={isLoading ? colors.neutral[300] : colors.neutral[500]}
+              />
             </Pressable>
 
             <Typography className="text-body capitalize w-[125px] text-center">
-              {format(date, "LLLL yyyy", { locale: ru })}
+              {formatMonthYear(date)}
             </Typography>
 
             <Pressable
+              disabled={isLoading}
               onPress={() =>
                 handleMonthChange({
                   year: date.getFullYear(),
@@ -56,17 +81,17 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
               <StSvg
                 name="Expand_right"
                 size={24}
-                color={colors.neutral[500]}
+                color={isLoading ? colors.neutral[300] : colors.neutral[500]}
               />
             </Pressable>
           </View>
           <Typography className="text-neutral-500">
-            {appointmentCount} записей
+            {isLoading ? "—" : `${appointmentCount} записей`}
           </Typography>
         </View>
       );
     },
-    [appointmentCount, handleMonthChange],
+    [appointmentCount, handleMonthChange, isLoading],
   );
 
   const handleDayPress = useCallback(
@@ -80,7 +105,13 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
     ({ date, state }: any) => {
       const isToday = state === "today";
       const isDisabled = state === "disabled";
-      const progress = date ? mockProgressMap[date.dateString] : 0;
+      const isNonWorking =
+        !isLoading && !isDisabled && date
+          ? nonWorkingDays.has(date.dateString)
+          : false;
+      const progress = date ? progressMap[date.dateString] : undefined;
+      const showProgress =
+        !isDisabled && date && !isLoading && progress !== undefined;
 
       return (
         <TouchableOpacity
@@ -88,9 +119,9 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
           className="relative items-center justify-center w-[44px] h-[44px]"
           disabled={!date}
         >
-          {!isDisabled && date && (
+          {showProgress && (
             <View className="absolute">
-              <CircularProgressDay progress={progress} isSelected={isToday} />
+              <CircularProgressDay progress={progress} />
             </View>
           )}
 
@@ -102,7 +133,7 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
               ${
                 isToday
                   ? "text-primary-blue-500"
-                  : isDisabled
+                  : isDisabled || isNonWorking
                     ? "text-neutral-300"
                     : "text-neutral-900"
               }`}
@@ -113,63 +144,24 @@ const MonthCalendar = ({ selectedDate, onSelectDate }: Props) => {
         </TouchableOpacity>
       );
     },
-    [handleDayPress],
+    [handleDayPress, progressMap, nonWorkingDays, isLoading],
   );
 
   return (
     <Calendar
-      initialDate={format(currentMonth, "yyyy-MM-dd")}
+      initialDate={formatApiDate(currentMonth)}
       firstDay={1}
       hideArrows
-      hideExtraDays={false}
+      hideExtraDays={true}
       monthFormat={"MMMM yyyy"}
       onMonthChange={handleMonthChange}
       renderHeader={renderHeader}
-      theme={{
-        calendarBackground: "transparent",
-        textSectionTitleColor: colors.neutral[400],
-        todayTextColor: colors.primary?.blue[500],
-        textDayFontFamily: "inter-regular",
-        textMonthFontFamily: "inter-medium",
-        textMonthFontWeight: 500,
-        textDayHeaderFontFamily: "inter-semibold",
-        textDayHeaderFontSize: 16,
-        monthTextColor: colors.neutral[900],
-        textMonthFontSize: 16,
-        ...calendarTheme,
-      }}
-      style={{
-        paddingLeft: 0,
-        paddingRight: 0,
-      }}
+      theme={calendarTheme}
+      style={calendarStyle.calendar}
       onDayPress={handleDayPress}
       dayComponent={renderDay}
     />
   );
-};
-
-const calendarTheme = {
-  "stylesheet.calendar.main": {
-    monthView: {
-      backgroundColor: "#FFFFFF",
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-    },
-  },
-  "stylesheet.calendar.header": {
-    week: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      backgroundColor: "#FFFFFF",
-      paddingTop: 20,
-      paddingHorizontal: 20,
-      paddingBottom: 8,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-    },
-  },
 };
 
 export default MonthCalendar;

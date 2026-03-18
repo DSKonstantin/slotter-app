@@ -1,28 +1,33 @@
 import { ReactNode } from "react";
-import { TouchableOpacity } from "react-native";
+import {
+  ActivityIndicator,
+  TouchableOpacity,
+  TouchableOpacityProps,
+} from "react-native";
 import { twMerge } from "tailwind-merge";
+import { colors } from "@/src/styles/colors";
 
 type IconButtonSize = "xs" | "sm" | "md" | "lg";
 
-type IconButtonProps = {
+type IconButtonProps = TouchableOpacityProps & {
   icon: ReactNode;
-  onPress?: () => void;
   size?: IconButtonSize;
-  disabled?: boolean;
   buttonClassName?: string;
+  loading?: boolean;
 };
-
 export function IconButton({
   icon,
   onPress,
   size = "md",
   disabled,
+  loading,
   buttonClassName,
+  ...props
 }: IconButtonProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
       activeOpacity={0.7}
       className={twMerge(
         styles.base,
@@ -30,8 +35,13 @@ export function IconButton({
         disabled && "opacity-30",
         buttonClassName,
       )}
+      {...props}
     >
-      {icon}
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.neutral[500]} />
+      ) : (
+        icon
+      )}
     </TouchableOpacity>
   );
 }

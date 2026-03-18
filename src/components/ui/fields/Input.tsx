@@ -2,13 +2,14 @@ import React, { ReactNode } from "react";
 import { TextInput, TextInputProps } from "react-native";
 import { FieldError } from "react-hook-form";
 import { colors } from "@/src/styles/colors";
-import { BaseField } from "./BaseField";
+import { BaseField, FieldSize } from "./BaseField";
 
 type InputProps = {
   label?: string;
   error?: FieldError;
   disabled?: boolean;
   hideErrorText?: boolean;
+  size?: FieldSize;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -19,6 +20,7 @@ export function Input({
   error,
   hideErrorText,
   disabled,
+  size = "md",
   startAdornment,
   endAdornment,
   ...props
@@ -29,6 +31,7 @@ export function Input({
       error={error}
       hideErrorText={hideErrorText}
       disabled={disabled}
+      size={size}
       startAdornment={startAdornment}
       endAdornment={endAdornment}
       renderControl={({ setFocused }) => (
@@ -44,14 +47,21 @@ export function Input({
             setFocused(false);
             props.onBlur?.(e);
           }}
-          className={styles.input}
+          className={inputSizes[size]}
           placeholderTextColor={colors.neutral[300]}
+          style={props.multiline ? styles.multilineStyle : undefined}
         />
       )}
     />
   );
 }
 
+const inputSizes: Record<FieldSize, string> = {
+  md: "flex-1 font-inter-regular text-primary text-[16px] px-4 py-2.5",
+  sm: "flex-1 font-inter-regular text-primary text-[14px] px-3 py-2",
+  xs: "flex-1 font-inter-regular text-primary text-[13px] px-2 py-1",
+};
+
 const styles = {
-  input: "flex-1 font-inter-regular text-primary text-[16px] px-4",
+  multilineStyle: { minHeight: 100 },
 };

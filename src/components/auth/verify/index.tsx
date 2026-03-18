@@ -13,14 +13,15 @@ import { Routers } from "@/src/constants/routers";
 import { phoneField } from "@/src/validation/fields/phone";
 import { maskPhone } from "@/src/utils/mask/maskPhone";
 import { unMask } from "react-native-mask-text";
-import { UserType } from "@/src/store/redux/services/api-types";
+import { AuthResponse, UserType } from "@/src/store/redux/services/api-types";
 import {
   useTelegramLoginMutation,
   useTelegramRegisterMutation,
   useTelegramRegisterStatusQuery,
 } from "@/src/store/redux/services/api/authApi";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { useCountDown } from "@/src/hooks/useCountdown";
+import { useAuth } from "@/src/contexts/AuthContext";
+import getRedirectPath from "@/src/utils/getOnboardingStep";
 
 type VerifyFormValues = {
   phone: string;
@@ -31,6 +32,7 @@ const VerifySchema = Yup.object().shape({
 });
 
 const Verify = () => {
+  const { login } = useAuth();
   const [telegramRegister, { isLoading }] = useTelegramRegisterMutation();
   const [telegramLogin] = useTelegramLoginMutation();
   const [telegramState, setTelegramState] = useState<{
@@ -133,21 +135,20 @@ const Verify = () => {
   }, [pause]);
 
   const handleConfirmed = useCallback(
-    async (token: string) => {
+    async (data: AuthResponse) => {
       try {
-        await accessTokenStorage.set(token);
-        clearState();
-        router.replace(Routers.onboarding.register);
+        await login(data.token);
+        router.replace(getRedirectPath(data.resource));
       } catch (e) {
         console.error("Token save failed:", e);
       }
     },
-    [clearState],
+    [login],
   );
 
   useEffect(() => {
     if (data?.status === "confirmed" && data.token) {
-      handleConfirmed(data.token);
+      handleConfirmed(data);
       return;
     }
 

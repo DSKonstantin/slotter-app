@@ -32,10 +32,18 @@ const RhfColorPicker = ({ name, colors }: Props) => {
           {colors.map((color) => {
             const isSelected = value === color.value;
 
+            const handlePress = () => {
+              if (isSelected) {
+                onChange(null); // сброс
+              } else {
+                onChange(color.value);
+              }
+            };
+
             return (
               <Pressable
                 key={color.value}
-                onPress={() => onChange(color.value)}
+                onPress={handlePress}
                 className="w-14 h-14 rounded-full items-center justify-center"
                 style={{
                   backgroundColor: color.value,

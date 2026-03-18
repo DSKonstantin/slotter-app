@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
-import { View, Text } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
+import { twMerge } from "tailwind-merge";
 
 type BadgeVariant =
   | "primary"
   | "secondary"
+  | "tertiary"
   | "accent"
   | "info"
   | "success"
@@ -15,6 +17,10 @@ type BadgeProps = {
   variant?: BadgeVariant;
   size?: BadgeSize;
   icon?: ReactNode;
+  className?: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  activeOpacity?: number;
 };
 
 export function Badge({
@@ -22,11 +28,21 @@ export function Badge({
   variant = "primary",
   size = "md",
   icon,
+  className,
+  onPress,
+  disabled = false,
+  activeOpacity = 0.7,
 }: BadgeProps) {
-  return (
-    <View
-      className={`${styles.base} ${styles.sizes[size]} ${styles.variants[variant]}`}
-    >
+  const badgeClassName = twMerge(
+    styles.base,
+    styles.sizes[size],
+    styles.variants[variant],
+    disabled ? "opacity-50" : undefined,
+    className,
+  );
+
+  const content = (
+    <>
       <Text
         className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}
       >
@@ -37,8 +53,23 @@ export function Badge({
           {icon}
         </View>
       )}
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={activeOpacity}
+        className={badgeClassName}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View className={badgeClassName}>{content}</View>;
 }
 
 const styles = {
@@ -52,6 +83,7 @@ const styles = {
   variants: {
     primary: "bg-background-black",
     secondary: "bg-background",
+    tertiary: "bg-neutral-400",
     accent: "bg-primary-blue-500",
     info: "bg-primary-blue-100",
     success: "bg-primary-green-500",
@@ -69,6 +101,7 @@ const styles = {
     variants: {
       primary: "text-neutral-200",
       secondary: "text-neutral-500",
+      tertiary: "text-neutral-0",
       accent: "text-accent-azure-500",
       info: "text-primary-blue-500",
       success: "text-primary-green-700",

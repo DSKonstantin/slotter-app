@@ -1,49 +1,45 @@
-import type { RequestStatus } from "@/src/store/redux/types/request-status";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createSelector, PayloadAction } from "@reduxjs/toolkit";
+import { format } from "date-fns";
+import type { AppointmentStatus } from "@/src/store/redux/services/api-types";
+import type { RootState } from "@/src/store/redux/store";
 
 export type CalendarMode = "day" | "month";
-export type CalendarStatus = RequestStatus;
-
-export type ScheduleStatus =
-  | "confirmed"
-  | "pending"
-  | "cancelled"
-  | "available";
-
-export interface Schedule {
-  id: string;
-  clientName?: string;
-  timeStart: string;
-  timeEnd: string;
-  price?: number;
-  status: ScheduleStatus;
-  services?: string[];
-}
 
 export interface CalendarFilters {
-  showConfirmed: boolean;
   showPending: boolean;
+  showConfirmed: boolean;
+  showArrived: boolean;
+  showLate: boolean;
+  showCompleted: boolean;
+  showNoShow: boolean;
   showCancelled: boolean;
 }
 
+export type ScheduleIntent =
+  | { type: "openTemplate" }
+  | { type: "duplicateFrom"; date: string }
+  | null;
+
 interface CalendarState {
   mode: CalendarMode;
-  selectedDate: string;
+  selectedDay: string;
   filters: CalendarFilters;
-  schedule: Schedule[];
-  status: CalendarStatus;
+  scheduleIntent: ScheduleIntent;
 }
 
 const initialState: CalendarState = {
   mode: "day",
-  selectedDate: new Date().toISOString(),
+  selectedDay: format(new Date(), "yyyy-MM-dd"),
+  scheduleIntent: null,
   filters: {
-    showConfirmed: true,
     showPending: true,
-    showCancelled: true,
+    showConfirmed: true,
+    showArrived: true,
+    showLate: true,
+    showCompleted: true,
+    showNoShow: true,
+    showCancelled: false,
   },
-  schedule: [],
-  status: "idle",
 };
 
 const calendarSlice = createSlice({
@@ -54,41 +50,8 @@ const calendarSlice = createSlice({
       state.mode = action.payload;
     },
 
-    setSelectedDate(state, action: PayloadAction<string>) {
-      state.selectedDate = action.payload;
-    },
-
-    setLoading(state) {
-      state.status = "loading";
-    },
-
-    setBookings(state, action: PayloadAction<Schedule[]>) {
-      state.schedule = action.payload;
-      state.status = "idle";
-    },
-
-    addBooking(state, action: PayloadAction<Schedule>) {
-      state.schedule.push(action.payload);
-    },
-
-    updateBooking(state, action: PayloadAction<Schedule>) {
-      const index = state.schedule.findIndex((b) => b.id === action.payload.id);
-
-      if (index !== -1) {
-        state.schedule[index] = action.payload;
-      }
-    },
-
-    removeBooking(state, action: PayloadAction<string>) {
-      state.schedule = state.schedule.filter((b) => b.id !== action.payload);
-    },
-
-    setError(state) {
-      state.status = "error";
-    },
-
-    clearDay(state) {
-      state.schedule = [];
+    setSelectedDay(state, action: PayloadAction<string>) {
+      state.selectedDay = action.payload;
     },
 
     toggleFilter(state, action: PayloadAction<keyof CalendarFilters>) {
@@ -96,28 +59,38 @@ const calendarSlice = createSlice({
       state.filters[key] = !state.filters[key];
     },
 
-    resetFilters(state) {
-      state.filters = {
-        showConfirmed: true,
-        showPending: true,
-        showCancelled: true,
-      };
+    setFilters(state, action: PayloadAction<CalendarFilters>) {
+      state.filters = action.payload;
+    },
+
+    setScheduleIntent(state, action: PayloadAction<ScheduleIntent>) {
+      state.scheduleIntent = action.payload;
     },
   },
 });
 
 export const {
   setMode,
-  setSelectedDate,
-  setLoading,
-  setBookings,
-  addBooking,
-  updateBooking,
-  removeBooking,
-  setError,
-  clearDay,
+  setSelectedDay,
   toggleFilter,
-  resetFilters,
+  setFilters,
+  setScheduleIntent,
 } = calendarSlice.actions;
+
+export const selectActiveStatuses = createSelector(
+  (state: RootState) => state.calendar.filters,
+  (filters): AppointmentStatus[] => {
+    const map: [boolean, AppointmentStatus][] = [
+      [filters.showPending, "pending"],
+      [filters.showConfirmed, "confirmed"],
+      [filters.showArrived, "arrived"],
+      [filters.showLate, "late"],
+      [filters.showCompleted, "completed"],
+      [filters.showNoShow, "no_show"],
+      [filters.showCancelled, "cancelled"],
+    ];
+    return map.filter(([active]) => active).map(([, status]) => status);
+  },
+);
 
 export default calendarSlice.reducer;

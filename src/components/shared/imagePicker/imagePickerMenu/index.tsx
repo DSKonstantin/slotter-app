@@ -28,7 +28,7 @@ const ImagePickerMenu = ({
 }: ImagePickerMenuProps) => {
   return (
     <StModal visible={visible} onClose={onClose}>
-      <View className="gap-3 pb-3">
+      <View className="gap-3">
         <Typography weight="semibold" className="text-display text-center">
           {title}
         </Typography>

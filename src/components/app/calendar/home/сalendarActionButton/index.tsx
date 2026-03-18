@@ -7,10 +7,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   mode?: string;
+  title?: string;
   onPress: () => void;
 }
 
-const CalendarActionButton = ({ mode, onPress }: Props) => {
+const CalendarActionButton = ({ mode, title, onPress }: Props) => {
   const { bottom, left, right } = useSafeAreaInsets();
 
   const handlePress = useCallback(() => {
@@ -28,23 +29,16 @@ const CalendarActionButton = ({ mode, onPress }: Props) => {
         paddingLeft: left + 20,
       }}
     >
-      {mode === "month" ? (
-        <Button
-          onPress={handlePress}
-          title="Настроить расписание"
-          rightIcon={
-            <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />
-          }
-        />
-      ) : (
-        <Button
-          onPress={handlePress}
-          title="Настроить день"
-          rightIcon={
-            <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />
-          }
-        />
-      )}
+      <Button
+        onPress={handlePress}
+        title={
+          title ??
+          (mode === "month" ? "Настроить расписание" : "Настроить день")
+        }
+        rightIcon={
+          <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />
+        }
+      />
     </View>
   );
 };

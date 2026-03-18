@@ -24,17 +24,15 @@ const ToolbarTop = ({
 
   return (
     <View
-      className="mx-screen flex-row items-center justify-between"
+      pointerEvents="box-none"
       style={{
         position: "absolute",
         top: 0,
         left: 0,
         right: 0,
         zIndex: 100,
-        paddingTop: insets.top,
+        paddingTop: insets.top + 8,
         height: TOOLBAR_HEIGHT + insets.top,
-        paddingLeft: insets.left,
-        paddingRight: insets.right,
         backgroundColor: "transparent",
       }}
     >
@@ -51,24 +49,39 @@ const ToolbarTop = ({
         }}
         pointerEvents="none"
       />
-      {showBack ? (
-        <IconButton
-          icon={
-            <StSvg name="Arrow_left" size={24} color={colors.neutral[900]} />
-          }
-          onPress={() => router.back()}
-        />
-      ) : (
-        <View className="w-[48px]" />
-      )}
+      <View
+        className="mx-screen flex-row  items-center justify-between gap-2"
+        style={{
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        }}
+      >
+        {showBack ? (
+          <IconButton
+            icon={
+              <StSvg name="Arrow_left" size={24} color={colors.neutral[900]} />
+            }
+            onPress={() => router.back()}
+          />
+        ) : (
+          <View className="w-[48px]" />
+        )}
 
-      <View className="rounded-full h-[48px] px-5 items-center justify-center bg-background-surface">
-        <Typography weight="semibold" className="text-[17px] leading-[22px]">
-          {title}
-        </Typography>
+        <View className="flex-1 items-center justify-center">
+          <View className="rounded-full h-[48px] px-5 items-center justify-center bg-background-surface max-w-[100%]">
+            <Typography
+              weight="semibold"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              className="text-[17px] leading-[22px]"
+            >
+              {title}
+            </Typography>
+          </View>
+        </View>
+
+        {rightButton ? rightButton : <View className="w-[48px]" />}
       </View>
-
-      {rightButton ? rightButton : <View className="w-[48px]" />}
     </View>
   );
 };

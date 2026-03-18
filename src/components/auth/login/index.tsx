@@ -11,7 +11,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { passwordField } from "@/src/validation/fields/password";
 import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -42,18 +41,16 @@ const Login = () => {
       try {
         const isEmail = data.identifier.includes("@");
 
-        const result = await login({
+        await login({
           email: isEmail ? data.identifier : null,
           phone: isEmail ? "" : data.identifier,
           password: data.password,
           type: UserType.USER,
         }).unwrap();
 
-        await accessTokenStorage.set(result.token);
-
-        router.replace(Routers.app.home.root);
-      } catch (error: any) {
-        toast.error(error?.data?.error);
+        router.replace(Routers.app.root);
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Произошла ошибка"));
       }
     },
     [login],

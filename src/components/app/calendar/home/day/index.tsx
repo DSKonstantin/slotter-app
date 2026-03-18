@@ -1,60 +1,159 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
+import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 
-import DateSelector from "@/src/components/app/calendar/home/day/DateSelector";
-import TimeSlotList from "@/src/components/app/calendar/home/day/TimeSlotList";
+import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
+import CalendarError from "@/src/components/app/calendar/home/day/CalendarError";
+import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
+import { selectActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
 import { Routers } from "@/src/constants/routers";
-import { mockSchedule as schedule } from "@/src/constants/mockSchedule";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
+import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import { skipToken } from "@reduxjs/toolkit/query";
+import type { Appointment } from "@/src/store/redux/services/api-types";
+import EmptySlots from "@/src/components/app/calendar/home/day/timeSlotList/EmptySlots";
+import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 
 const DayCalendarView = () => {
   const router = useRouter();
+  const auth = useRequiredAuth();
+  const [isRetrying, setIsRetrying] = useState(false);
+  const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
+  const activeStatuses = useAppSelector(selectActiveStatuses);
+  const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
-  const selectedDateISO = useAppSelector(
-    (state) => state.calendar.selectedDate,
+  const dateRange = useMemo(
+    () => ({
+      date_from: format(startOfMonth(selectedDate), "yyyy-MM-dd"),
+      date_to: format(endOfMonth(selectedDate), "yyyy-MM-dd"),
+    }),
+    [selectedDate],
   );
 
-  const selectedDate = useMemo(
-    () => new Date(selectedDateISO),
-    [selectedDateISO],
+  const {
+    data: workingDaysData,
+    isLoading: isDayLoading,
+    isError: isDayError,
+    refetch: refetchWorkingDays,
+  } = useGetWorkingDaysQuery(
+    auth ? { userId: auth.userId, ...dateRange } : skipToken,
   );
 
-  const datesWithSchedule = useMemo(() => {
-    const scheduleByDate: { [key: string]: any[] } = {};
-    schedule.forEach((slot) => {
-      const dateKey = slot.timeStart.split("T")[0];
-      if (!scheduleByDate[dateKey]) {
-        scheduleByDate[dateKey] = [];
-      }
-      scheduleByDate[dateKey].push(slot);
-    });
-    return scheduleByDate;
-  }, []);
+  const {
+    data: appointmentsData,
+    isLoading: isAppointmentsLoading,
+    isFetching: isAppointmentsFetching,
+    isError: isAppointmentsError,
+    refetch: refetchAppointments,
+  } = useGetAppointmentsQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          params: {
+            date: selectedDay,
+          },
+        }
+      : skipToken,
+  );
+
+  const selectedWorkingDay = useMemo(
+    () => workingDaysData?.[selectedDay] ?? undefined,
+    [workingDaysData, selectedDay],
+  );
+
+  const appointments = useMemo(
+    () => (appointmentsData as Appointment[] | undefined) ?? [],
+    [appointmentsData],
+  );
 
   const handleSelectDate = useCallback(
     (date: Date) => {
-      const iso = date.toISOString();
-      router.setParams({ date: iso });
+      router.setParams({ date: format(date, "yyyy-MM-dd") });
     },
     [router],
   );
 
   const handlePress = useCallback(() => {
-    router.push(Routers.app.calendar.daySchedule);
-  }, [router]);
+    if (isDayLoading) return;
+    if (selectedWorkingDay) {
+      router.push(Routers.app.calendar.daySchedule(selectedWorkingDay.id));
+    } else {
+      router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
+    }
+  }, [router, isDayLoading, selectedWorkingDay, selectedDay]);
+
+  const hasError = useMemo(
+    () => isDayError || isAppointmentsError,
+    [isDayError, isAppointmentsError],
+  );
+
+  const isLoading = useMemo(
+    () => isDayLoading || isAppointmentsLoading || isAppointmentsFetching,
+    [isDayLoading, isAppointmentsLoading, isAppointmentsFetching],
+  );
+
+  const isEmpty = useMemo(
+    () => !isLoading && !selectedWorkingDay,
+    [isLoading, selectedWorkingDay],
+  );
+
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    await Promise.all([refetchWorkingDays(), refetchAppointments()]);
+    setIsRetrying(false);
+  }, [refetchWorkingDays, refetchAppointments]);
+
+  const handleEmptyPress = useCallback(() => {
+    router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
+  }, [router, selectedDay]);
+
+  const content = useMemo(() => {
+    if (hasError)
+      return <CalendarError isLoading={isRetrying} onRetry={handleRetry} />;
+    if (isLoading) return <TimeSlotListSkeleton />;
+    if (isEmpty) return <EmptySlots onPress={handleEmptyPress} />;
+    return (
+      <TimeSlotList
+        appointment={appointments}
+        breaks={selectedWorkingDay?.working_day_breaks}
+        startAt={selectedWorkingDay?.start_at}
+        endAt={selectedWorkingDay?.end_at}
+        date={selectedDay}
+      />
+    );
+  }, [
+    hasError,
+    isLoading,
+    isEmpty,
+    isRetrying,
+    handleRetry,
+    handleEmptyPress,
+    appointments,
+    selectedWorkingDay,
+    selectedDay,
+  ]);
+
+  if (!auth) return null;
 
   return (
     <>
       <DateSelector
         selectedDate={selectedDate}
         onSelectDate={handleSelectDate}
-        schedule={datesWithSchedule}
+        workingDaysData={workingDaysData ?? undefined}
+        isLoading={isDayLoading}
       />
-      <TimeSlotList schedule={schedule} />
-
-      <CalendarActionButton onPress={handlePress} />
+      {content}
+      {!hasError && !isLoading && !isEmpty && (
+        <CalendarActionButton
+          onPress={handlePress}
+          title={selectedWorkingDay ? "Изменить день" : "Настроить день"}
+        />
+      )}
     </>
   );
 };

@@ -2,12 +2,14 @@ import React, { ReactNode } from "react";
 import { TextInputProps } from "react-native";
 import { Controller, useFormContext } from "react-hook-form";
 import { Input } from "@/src/components/ui";
+import type { FieldSize } from "@/src/components/ui/fields/BaseField";
 
 type RHFTextFieldProps = {
   name: string;
   label?: string;
   hideErrorText?: boolean;
   disabled?: boolean;
+  size?: FieldSize;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   maskFn?: (value: string) => string;
@@ -19,6 +21,7 @@ export function RhfTextField({
   startAdornment,
   endAdornment,
   hideErrorText,
+  size,
   maskFn,
   ...other
 }: RHFTextFieldProps) {
@@ -29,7 +32,7 @@ export function RhfTextField({
       name={name}
       render={({ field: { onChange, value }, fieldState: { error } }) => (
         <Input
-          value={value}
+          value={value != null ? String(value) : ""}
           onChangeText={(text) => {
             const maskedValue = maskFn ? maskFn(text) : text;
             onChange(maskedValue);
@@ -37,6 +40,7 @@ export function RhfTextField({
           label={label}
           error={error}
           hideErrorText={hideErrorText}
+          size={size}
           startAdornment={startAdornment}
           endAdornment={endAdornment}
           {...other}

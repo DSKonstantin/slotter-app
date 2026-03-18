@@ -8,8 +8,13 @@ import { Pressable, Share, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import * as Clipboard from "expo-clipboard";
 import { colors } from "@/src/styles/colors";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 
 const Link = () => {
+  const auth = useRequiredAuth();
+  const [updateUser, { isLoading }] = useUpdateUserMutation();
+
   const link = "slotter.app/ivan_barber";
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,6 +41,23 @@ const Link = () => {
     }
   };
 
+  const handleCompleteOnboarding = useCallback(async () => {
+    if (!auth) return;
+
+    try {
+      await updateUser({
+        id: auth.userId,
+        data: {
+          onboarding_step: "completed",
+        },
+      }).unwrap();
+
+      router.replace(Routers.auth.root);
+    } catch (e) {
+      console.log("Update user error:", e);
+    }
+  }, [updateUser, auth]);
+
   return (
     <AuthScreenLayout
       header={<AuthHeader />}
@@ -43,16 +65,13 @@ const Link = () => {
         <AuthFooter
           primary={{
             title: "Поделиться ссылкой",
-            onPress: () => {
-              handleShare();
-            },
+            onPress: handleShare,
           }}
           secondary={{
             title: "Перейти в кабинет",
             variant: "clear",
-            onPress: () => {
-              router.push(Routers.auth.root);
-            },
+            loading: isLoading,
+            onPress: handleCompleteOnboarding,
           }}
         />
       }

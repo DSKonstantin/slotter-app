@@ -1,25 +1,31 @@
-import React from "react";
-import { TouchableOpacity, View } from "react-native";
-import { Badge, StSvg, Typography } from "@/src/components/ui";
+import React, { useState, useRef } from "react";
+import { TouchableOpacity, View, Animated } from "react-native";
+import { Badge, StSvg, Typography, Button } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import type { Schedule } from "@/src/store/redux/slices/calendarSlice";
+import type { Appointment } from "@/src/store/redux/services/api-types";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { formatTimeString } from "@/src/utils/date/formatTime";
 
 interface SlotCardProps {
-  slot: Schedule;
+  slot: Appointment;
   onPress?: () => void;
 }
 
-const STATUS_CONFIG: Record<
-  "pending" | "confirmed" | "cancelled",
-  {
-    label: string;
-    variant: "success" | "warning" | "info";
-    icon?: React.ReactNode;
-  }
+const STATUS_CONFIG: Partial<
+  Record<
+    Appointment["status"],
+    {
+      label: string;
+      variant: "success" | "warning" | "info";
+      color: string;
+      icon?: React.ReactNode;
+    }
+  >
 > = {
   pending: {
     label: "Ожидает",
     variant: "warning",
+    color: colors.accent?.yellow?.[400] ?? colors.neutral[300],
     icon: (
       <StSvg
         name="Expand_right"
@@ -31,85 +37,167 @@ const STATUS_CONFIG: Record<
   confirmed: {
     label: "Подтверждено",
     variant: "success",
+    color: colors.primary?.blue?.[400] ?? colors.neutral[300],
+  },
+  arrived: {
+    label: "Пришёл",
+    variant: "success",
+    color: colors.primary?.blue?.[400] ?? colors.neutral[300],
+  },
+  late: {
+    label: "Опоздал",
+    variant: "warning",
+    color: colors.accent?.yellow?.[400] ?? colors.neutral[300],
+  },
+  completed: {
+    label: "Завершено",
+    variant: "success",
+    color: colors.neutral[300],
+  },
+  no_show: {
+    label: "Не явился",
+    variant: "info",
+    color: colors.neutral[300],
   },
   cancelled: {
     label: "Отменено",
     variant: "info",
-    icon: (
-      <StSvg name="Close_round_fill" size={16} color={colors.neutral[500]} />
-    ),
+    color: colors.neutral[300],
   },
 };
 
-const formatTime = (isoTime: string) => {
-  const date = new Date(isoTime);
-  const hours = date.getUTCHours().toString().padStart(2, "0");
-  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-};
-
 const SlotCard = ({ slot, onPress }: SlotCardProps) => {
-  const isFree = slot.status === "available";
-  const timeString = `${formatTime(slot.timeStart)} - ${formatTime(
-    slot.timeEnd,
-  )}`;
-  const statusConfig =
-    slot.status === "available" || !slot.status
-      ? null
-      : STATUS_CONFIG[slot.status];
+  const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
+  const statusConfig = STATUS_CONFIG[slot.status] ?? null;
+  const clientName = slot.customer.name;
+  const serviceNames = slot.services.map((s) => s.name).join(", ");
 
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      className={`rounded-base flex-row 
-      justify-between
-       ${
-         isFree
-           ? "border border-neutral-200 px-4 py-4"
-           : "p-4 bg-background-surface border border-transparent"
-       }`}
-    >
-      <View className="justify-center flex-1">
-        <Typography className="text-body">{timeString}</Typography>
+  const [isExpanded, setIsExpanded] = useState(false);
+  const rotation = useRef(new Animated.Value(0)).current;
 
-        {isFree ? (
-          <Typography className="text-neutral-500 text-caption">
-            Свободное время
-          </Typography>
-        ) : (
-          <>
-            <Typography
-              weight="medium"
-              className="mt-1 text-neutral-500 text-caption"
-            >
-              {slot.clientName}{" "}
-              {slot.price && `· ${slot.price.toLocaleString("ru-RU")} ₽`}
-            </Typography>
-            <Typography
-              weight="regular"
-              className="text-neutral-400 text-caption"
-            >
-              {slot.services?.join(", ")}
-            </Typography>
-          </>
-        )}
-      </View>
+  const toggleExpand = () => {
+    const toValue = isExpanded ? 0 : 1;
+    setIsExpanded(!isExpanded);
+    Animated.timing(rotation, {
+      toValue,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
 
-      {isFree ? (
-        <View className="items-center justify-center">
-          <StSvg name="Add_ring_fill" size={24} color={colors.neutral[900]} />
-        </View>
-      ) : (
-        statusConfig && (
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  const detailContent = (
+    <View className="flex-1 py-5 px-4 justify-center">
+      <View className="flex-row items-center justify-between">
+        <Typography className="text-body text-neutral-900">
+          {timeString}
+        </Typography>
+        {statusConfig && (
           <Badge
             size="sm"
             title={statusConfig.label}
             variant={statusConfig.variant}
             icon={statusConfig.icon}
           />
-        )
+        )}
+      </View>
+
+      <Typography
+        weight="medium"
+        className="text-caption text-neutral-500 mb-1"
+      >
+        {clientName}
+        {slot.price_cents > 0 &&
+          ` | ${formatRublesFromCents(slot.price_cents)}`}
+      </Typography>
+
+      {serviceNames && (
+        <Typography
+          weight="regular"
+          className="text-caption text-neutral-400 mb-1"
+          numberOfLines={2}
+        >
+          {[
+            serviceNames,
+            slot.additional_services?.length
+              ? `+ ${slot.additional_services.length} доп.`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" | ")}
+        </Typography>
       )}
+    </View>
+  );
+
+  if (slot.duration <= 29) {
+    return (
+      <View className="flex-1" style={{ zIndex: isExpanded ? 10 : 1 }}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={toggleExpand}
+          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1 mb-1"
+        >
+          <View className="flex-row flex-1 items-center justify-between">
+            <Typography className="text-body text-neutral-900">
+              {timeString}
+              <Typography className="text-caption text-neutral-900">
+                {clientName && ` · ${clientName}`}
+              </Typography>
+            </Typography>
+            {statusConfig && (
+              <View className="gap-2 flex-row items-center">
+                <Badge
+                  size="sm"
+                  title=""
+                  variant={statusConfig.variant}
+                  className="p-0 w-[26px]"
+                />
+                <Animated.View style={{ transform: [{ rotate }] }}>
+                  <StSvg
+                    name="Expand_down"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                </Animated.View>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <View
+            className="absolute left-0 right-0 bg-background-surface rounded-b-base overflow-hidden"
+            style={{ top: "100%", marginTop: -4 }}
+          >
+            {detailContent}
+            <View className="px-3 pb-3">
+              <Button
+                title="Открыть запись"
+                variant="secondary"
+                onPress={() => {
+                  setIsExpanded(false);
+                  onPress?.();
+                }}
+              />
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      className="rounded-base flex-row overflow-hidden bg-background-surface flex-1 mb-1"
+    >
+      {detailContent}
     </TouchableOpacity>
   );
 };

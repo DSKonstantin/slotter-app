@@ -1,11 +1,21 @@
-import { API } from "@/src/store/redux/services/api-types";
+import type { User } from "@/src/store/redux/services/api-types";
 import { Routers } from "@/src/constants/routers";
 
-const getRedirectPath = (user: API.User) => {
-  if (!user.email) return Routers.onboarding.register;
-  if (!user.profession) return Routers.onboarding.personalInformation;
+const getRedirectPath = (user: User) => {
+  if (!user.email) {
+    return Routers.onboarding.register;
+  }
 
-  return Routers.app.home.root;
+  switch (user.onboarding_step) {
+    case "personalInformation":
+      return Routers.onboarding.personalInformation;
+
+    case "completed":
+      return Routers.app.root;
+
+    default:
+      return Routers.auth.root;
+  }
 };
 
 export default getRedirectPath;

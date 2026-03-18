@@ -1,144 +1,201 @@
-import React, { useMemo, useState } from "react";
-import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
-import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
-import { View } from "react-native";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  addDays,
-  getDate,
-  getYear,
-  getMonth,
-  addMonths,
-  subMonths,
-} from "date-fns";
+import React, { useState, useCallback, useMemo } from "react";
+import { Alert, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Calendar } from "react-native-calendars";
+import { addMonths, format, parseISO, subMonths } from "date-fns";
 import { ru } from "date-fns/locale";
-import { TAB_BAR_HEIGHT, TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { FormProvider } from "react-hook-form";
+
+import { IconButton, StSvg, Typography } from "@/src/components/ui";
+import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
+import { colors } from "@/src/styles/colors";
+import { Routers } from "@/src/constants/routers";
+import { getScheduleTimeLabel } from "@/src/utils/calendar/scheduleHelpers";
+import { useCalendarSchedule } from "@/src/hooks/useCalendarSchedule";
 import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { FlashList } from "@shopify/flash-list";
-
-type DayItem = {
-  date: Date;
-  hasSchedule?: boolean;
-  isSelected?: boolean;
-};
-
-const generateMonth = (year: number, month: number): DayItem[] => {
-  const start = startOfMonth(new Date(year, month));
-  const end = endOfMonth(start);
-
-  const days: DayItem[] = [];
-
-  const totalDays = getDate(end);
-
-  for (let i = 0; i < totalDays; i++) {
-    const date = addDays(start, i);
-
-    days.push({
-      date,
-      hasSchedule: [3, 4, 5, 6].includes(getDate(date)),
-      isSelected: [11, 12, 13, 15].includes(getDate(date)),
-    });
-  }
-
-  return days;
-};
+  scheduleCalendarTheme,
+  calendarStyle,
+} from "@/src/styles/calendarTheme";
+import { formatApiDate } from "@/src/utils/date/formatDate";
+import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
+import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
 
 const CalendarSchedule = () => {
-  const [current, setCurrent] = useState(new Date());
-  const { top, bottom } = useSafeAreaInsets();
+  const { date } = useLocalSearchParams<{ date?: string }>();
+  const [current, setCurrent] = useState(date ? parseISO(date) : new Date());
 
-  const days = useMemo(
-    () => generateMonth(getYear(current), getMonth(current)),
+  const {
+    methods,
+    handleSubmit,
+    calendarDays,
+    appointmentDates,
+    modalVisible,
+    modalTemplate,
+    setModalTemplate,
+    isSaving,
+    hasPendingEditableSelection,
+    clearSelection,
+    toggleDay,
+    handleSave,
+    applyTemplateDays,
+  } = useCalendarSchedule(current);
+
+  const calendarDaysMap = useMemo(
+    () => Object.fromEntries(calendarDays.map((day) => [day.date, day])),
+    [calendarDays],
+  );
+
+  const renderHeader = useCallback(
+    () => (
+      <View className="flex-1 flex-row items-center justify-center mb-5">
+        <View className="items-center flex-row gap-4 bg-background-surface h-[48px] rounded-full px-5">
+          <IconButton
+            size="xs"
+            icon={
+              <StSvg name="Expand_left" size={24} color={colors.neutral[500]} />
+            }
+            onPress={() => setCurrent((prev) => subMonths(prev, 1))}
+          />
+          <Typography
+            weight="semibold"
+            className="text-body capitalize w-[125px] text-center"
+          >
+            {format(current, "LLLL yyyy", { locale: ru })}
+          </Typography>
+          <IconButton
+            size="xs"
+            icon={
+              <StSvg
+                name="Expand_right"
+                size={24}
+                color={colors.neutral[500]}
+              />
+            }
+            onPress={() => setCurrent((prev) => addMonths(prev, 1))}
+          />
+        </View>
+      </View>
+    ),
     [current],
   );
 
-  const renderItem = ({ item }: { item: DayItem }) => {
-    return (
-      <View className="m-1">
-        <ScheduleDayCard
-          date={item.date}
-          hasSchedule={item.hasSchedule}
-          isSelected={item.isSelected}
-          showCheckbox={!item.hasSchedule}
-          onPress={() => {
-            console.log("Pressed:", item.date);
-          }}
-        />
-      </View>
-    );
-  };
+  const renderDay = useCallback(
+    ({ date, state }: any) => {
+      const isOtherMonth = state === "disabled";
+      const dayData = date ? calendarDaysMap[date.dateString] : undefined;
+
+      const handlePress = () => {
+        if (!date || isOtherMonth || !dayData) return;
+
+        if (dayData.isExisting && dayData.workingDayId) {
+          if (hasPendingEditableSelection) {
+            Alert.alert(
+              "Несохранённые изменения",
+              "У вас есть несохранённые дни. Если перейти к редактированию, выбор сбросится.",
+              [
+                { text: "Отмена", style: "cancel" },
+                {
+                  text: "Перейти",
+                  style: "destructive",
+                  onPress: () => {
+                    clearSelection();
+                    router.push(
+                      Routers.app.calendar.daySchedule(dayData.workingDayId!),
+                    );
+                  },
+                },
+              ],
+            );
+            return;
+          }
+          router.push(Routers.app.calendar.daySchedule(dayData.workingDayId));
+          return;
+        }
+
+        toggleDay(dayData.date);
+      };
+
+      return (
+        <View className="w-full h-[70px]">
+          <ScheduleDayCard
+            day={date?.day}
+            isWorking={dayData?.isExisting}
+            scheduleTime={
+              dayData?.isExisting ? getScheduleTimeLabel(dayData) : undefined
+            }
+            hasAppointments={
+              !isOtherMonth && appointmentDates.has(date?.dateString ?? "")
+            }
+            isOtherMonth={isOtherMonth}
+            isSelected={dayData?.isSelected}
+            onPress={handlePress}
+          />
+        </View>
+      );
+    },
+    [
+      calendarDaysMap,
+      appointmentDates,
+      hasPendingEditableSelection,
+      clearSelection,
+      toggleDay,
+    ],
+  );
 
   return (
-    <SafeAreaView className="flex-1" edges={["left", "right"]}>
-      <ToolbarTop
+    <FormProvider {...methods}>
+      <ScreenWithToolbar
         title="График"
         rightButton={
           <IconButton
-            icon={<StSvg name="Time" size={28} color={colors.neutral[900]} />}
-            onPress={() => {}}
+            icon={
+              <StSvg
+                name="Load_list_alt"
+                size={28}
+                color={colors.neutral[900]}
+              />
+            }
+            onPress={() => setModalTemplate(true)}
           />
         }
-      />
-      <View
-        className="flex-1"
-        style={{
-          marginTop: TOOLBAR_HEIGHT + top,
-        }}
       >
-        <View className="items-center mb-4 px-screen">
-          <View className="flex-row items-center bg-background-surface rounded-full px-4 py-2 gap-4">
-            <IconButton
-              size="xs"
-              icon={
-                <StSvg
-                  name="Expand_left"
-                  size={24}
-                  color={colors.neutral[500]}
-                />
-              }
-              onPress={() => setCurrent((prev) => subMonths(prev, 1))}
+        {({ topInset }) => (
+          <SafeAreaView
+            edges={["left", "right"]}
+            className="flex-1 px-screen"
+            style={{ paddingTop: topInset }}
+          >
+            <Calendar
+              key={format(current, "yyyy-MM")}
+              initialDate={formatApiDate(current)}
+              firstDay={1}
+              hideArrows
+              hideDayNames
+              hideExtraDays={true}
+              renderHeader={renderHeader}
+              theme={scheduleCalendarTheme}
+              style={calendarStyle.calendar}
+              dayComponent={renderDay}
             />
+          </SafeAreaView>
+        )}
+      </ScreenWithToolbar>
 
-            <Typography
-              weight="semibold"
-              className="text-body capitalize w-[125px] text-center"
-            >
-              {format(current, "LLLL yyyy", { locale: ru })}
-            </Typography>
+      <ScheduleSettingsModal
+        visible={modalVisible}
+        onClose={clearSelection}
+        onSave={handleSubmit(handleSave)}
+        isLoading={isSaving}
+      />
 
-            <IconButton
-              size="xs"
-              icon={
-                <StSvg
-                  name="Expand_right"
-                  size={24}
-                  color={colors.neutral[500]}
-                />
-              }
-              onPress={() => setCurrent((prev) => addMonths(prev, 1))}
-            />
-          </View>
-        </View>
-
-        <FlashList
-          data={days}
-          numColumns={3}
-          keyExtractor={(item) => item.date.toISOString()}
-          renderItem={renderItem}
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
-          }}
-        />
-      </View>
-    </SafeAreaView>
+      <ScheduleTemplateModal
+        visible={modalTemplate}
+        onClose={() => setModalTemplate(false)}
+        onApply={(template) => applyTemplateDays(template.days)}
+      />
+    </FormProvider>
   );
 };
 

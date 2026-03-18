@@ -120,5 +120,5 @@ const styles = {
     clear: "text-neutral-900",
   },
   textAccent: "text-primary-blue-500",
-  textDisabled: "text-neutral-0",
+  textDisabled: "",
 };

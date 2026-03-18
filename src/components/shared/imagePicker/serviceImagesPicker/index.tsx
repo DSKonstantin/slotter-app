@@ -1,23 +1,38 @@
 import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
 
-import React, { useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { Pressable, View } from "react-native";
-import { Image } from "expo-image";
 import { nanoid } from "nanoid/non-secure";
 
-import { Typography, StSvg, Divider } from "@/src/components/ui";
+import { Typography, Divider } from "@/src/components/ui";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
-import { colors } from "@/src/styles/colors";
 import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
+import PhotoPreview from "@/src/components/shared/imagePicker/serviceImagesPicker/PhotoPreview";
+import EmptySlot from "@/src/components/shared/imagePicker/serviceImagesPicker/EmptySlot";
 
 export type PhotoAsset =
   | (ImagePickerAsset & { id: string })
   | (DocumentPickerAsset & { id: string });
 
+export type PhotoAction = "keep" | "upload" | "clear";
+
+export type PhotoSlot = {
+  serverUrl: string | null;
+  localAsset: PhotoAsset | null;
+  action: PhotoAction;
+};
+
+export type AdditionalPhotosState = [
+  PhotoSlot,
+  PhotoSlot,
+  PhotoSlot,
+  PhotoSlot,
+];
+
 export type ServicePhotosValue = {
-  titlePhoto: { assets: PhotoAsset[]; max: number };
-  otherPhoto: { assets: PhotoAsset[]; max: number };
+  mainPhoto: PhotoSlot;
+  additionalPhotos: AdditionalPhotosState;
 };
 
 type Props = {
@@ -25,25 +40,50 @@ type Props = {
   onChange: (next: ServicePhotosValue) => void;
 };
 
+type PickerAsset = ImagePickerAsset | DocumentPickerAsset;
+
+export const MAX_ADDITIONAL_PHOTOS = 4;
+const ADDITIONAL_PHOTO_ROW_SIZE = 2;
+
 type MenuState =
   | { open: false }
   | {
       open: true;
       title: string;
       message?: string;
-      mode: "title" | "other";
-      action: "add" | "replace";
-      replaceId?: string;
       onCamera: () => void | Promise<void>;
       onGallery: () => void | Promise<void>;
       onFiles?: () => void | Promise<void>;
     };
 
+const REQUIREMENTS = [
+  "Формат JPG или PNG, до 5 МБ",
+  "Минимум 800×600 px (лучше 1200×900)",
+  "Без водяных знаков и чужих логотипов",
+  "Хорошее освещение, чёткий фокус",
+] as const;
+
+export const createEmptyPhotoSlot = (
+  serverUrl: string | null = null,
+): PhotoSlot => ({
+  serverUrl,
+  localAsset: null,
+  action: "keep",
+});
+
+export const createDefaultServicePhotos = (): ServicePhotosValue => ({
+  mainPhoto: createEmptyPhotoSlot(),
+  additionalPhotos: [
+    createEmptyPhotoSlot(),
+    createEmptyPhotoSlot(),
+    createEmptyPhotoSlot(),
+    createEmptyPhotoSlot(),
+  ],
+});
+
 export function ServiceImagesPicker({ value, onChange }: Props) {
   const [menu, setMenu] = useState<MenuState>({ open: false });
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
-  const title = value.titlePhoto.assets[0] ?? null;
-  const other = value.otherPhoto.assets;
 
   const closeMenu = useCallback(() => setMenu({ open: false }), []);
 
@@ -54,200 +94,254 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
     [onChange, value],
   );
 
-  const setTitle = useCallback(
-    (asset: ImagePickerAsset | DocumentPickerAsset) => {
-      const next: PhotoAsset = { ...asset, id: nanoid() };
+  const toPhotoAsset = useCallback((asset: PickerAsset): PhotoAsset => {
+    return { ...asset, id: nanoid() };
+  }, []);
 
-      update({
-        titlePhoto: {
-          ...value.titlePhoto,
-          assets: [next],
-        },
-      });
+  const getSlotUri = useCallback((slot: PhotoSlot): string | null => {
+    if (slot.action === "clear") return null;
+    if (slot.localAsset?.uri) return slot.localAsset.uri;
+    return slot.serverUrl;
+  }, []);
+
+  const updateMainPhoto = useCallback(
+    (slot: PhotoSlot) => {
+      update({ mainPhoto: slot });
     },
-    [update, value.titlePhoto],
+    [update],
   );
 
-  const addOther = useCallback(
-    (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => {
+  const updateAdditionalSlot = useCallback(
+    (index: number, updater: (slot: PhotoSlot) => PhotoSlot) => {
+      const next = value.additionalPhotos.map((slot, slotIndex) =>
+        slotIndex === index ? updater(slot) : slot,
+      ) as AdditionalPhotosState;
+
+      update({ additionalPhotos: next });
+    },
+    [update, value.additionalPhotos],
+  );
+
+  const setMainPhoto = useCallback(
+    (asset: PickerAsset) => {
+      updateMainPhoto({
+        ...value.mainPhoto,
+        localAsset: toPhotoAsset(asset),
+        action: "upload",
+      });
+    },
+    [toPhotoAsset, updateMainPhoto, value.mainPhoto],
+  );
+
+  const clearMainPhoto = useCallback(() => {
+    updateMainPhoto({
+      ...value.mainPhoto,
+      localAsset: null,
+      action: value.mainPhoto.serverUrl ? "clear" : "keep",
+    });
+  }, [updateMainPhoto, value.mainPhoto]);
+
+  const addAdditionalPhotos = useCallback(
+    (assets: PickerAsset[]) => {
       if (!assets?.length) return;
 
-      const mapped: PhotoAsset[] = assets.map((a) => ({ ...a, id: nanoid() }));
+      const emptyIndexes = value.additionalPhotos
+        .map((slot, index) => (getSlotUri(slot) ? -1 : index))
+        .filter((index) => index >= 0);
 
-      const next = [...other, ...mapped].slice(0, value.otherPhoto.max);
+      if (!emptyIndexes.length) return;
 
-      update({
-        otherPhoto: {
-          ...value.otherPhoto,
-          assets: next,
-        },
+      const next = [...value.additionalPhotos] as AdditionalPhotosState;
+      const assetsToPlace = assets.slice(0, emptyIndexes.length);
+
+      assetsToPlace.forEach((asset, assetIndex) => {
+        const slotIndex = emptyIndexes[assetIndex];
+        const current = next[slotIndex];
+
+        next[slotIndex] = {
+          ...current,
+          localAsset: toPhotoAsset(asset),
+          action: "upload",
+        };
       });
+
+      update({ additionalPhotos: next });
     },
-    [other, update, value.otherPhoto],
+    [getSlotUri, toPhotoAsset, update, value.additionalPhotos],
   );
 
-  const replaceOther = useCallback(
-    (id: string, asset: ImagePickerAsset | DocumentPickerAsset) => {
-      const next = other.map((x) => (x.id === id ? { ...asset, id } : x));
-
-      update({
-        otherPhoto: {
-          ...value.otherPhoto,
-          assets: next,
-        },
-      });
+  const replaceAdditionalPhoto = useCallback(
+    (index: number, asset: PickerAsset) => {
+      updateAdditionalSlot(index, (slot) => ({
+        ...slot,
+        localAsset: toPhotoAsset(asset),
+        action: "upload",
+      }));
     },
-    [other, update, value.otherPhoto],
+    [toPhotoAsset, updateAdditionalSlot],
   );
 
-  const openTitleMenu = useCallback(() => {
-    const options: ImagePickerOptions = {
-      allowsMultipleSelection: false,
-      allowsEditing: false,
-      aspect: [1, 1],
-      quality: 1,
-    };
+  const clearAdditionalPhoto = useCallback(
+    (index: number) => {
+      updateAdditionalSlot(index, (slot) => ({
+        ...slot,
+        localAsset: null,
+        action: slot.serverUrl ? "clear" : "keep",
+      }));
+    },
+    [updateAdditionalSlot],
+  );
 
-    setMenu({
-      open: true,
-      mode: "title",
-      action: "replace",
-      title: title ? "Заменить титульное фото" : "Добавить титульное фото",
-      message: "Выберите источник",
-      onCamera: async () => {
-        const assets = await pickFromCamera(options);
-        const a = assets?.[0];
-        if (a) setTitle(a);
-        closeMenu();
-      },
-
-      onGallery: async () => {
-        const assets = await pickFromGallery(options);
-        const a = assets?.[0];
-        if (a) setTitle(a);
-        closeMenu();
-      },
-
-      onFiles: async () => {
-        const assets = await pickFromFiles(options);
-        const a = assets?.[0];
-        if (a) setTitle(a);
-        closeMenu();
-      },
-    });
-  }, [
-    title,
-    pickFromCamera,
-    setTitle,
-    closeMenu,
-    pickFromGallery,
-    pickFromFiles,
-  ]);
-
-  const openOtherAddMenu = useCallback(() => {
-    const options: ImagePickerOptions = {
-      allowsMultipleSelection: true,
-      aspect: [4, 3],
-      quality: 1,
-      orderedSelection: true,
-      selectionLimit: value.otherPhoto.max - other.length,
-    };
-
-    setMenu({
-      open: true,
-      mode: "other",
-      action: "add",
-      title: "Добавить фото услуги",
-      message: "Выберите источник",
-
-      onCamera: async () => {
-        const assets = await pickFromCamera(options);
-        if (assets?.length) addOther(assets);
-        closeMenu();
-      },
-
-      onGallery: async () => {
-        const assets = await pickFromGallery(options);
-        if (assets?.length) addOther(assets);
-        closeMenu();
-      },
-
-      onFiles: async () => {
-        const assets = await pickFromFiles(options);
-        if (assets?.length) addOther(assets);
-        closeMenu();
-      },
-    });
-  }, [
-    value.otherPhoto.max,
-    other.length,
-    pickFromCamera,
-    addOther,
-    closeMenu,
-    pickFromGallery,
-    pickFromFiles,
-  ]);
-
-  const openOtherReplaceMenu = useCallback(
-    (id: string) => {
-      const options: ImagePickerOptions = {
-        allowsMultipleSelection: false,
-        aspect: [4, 3],
-        quality: 1,
-      };
-
+  const openPickerMenu = useCallback(
+    ({
+      title,
+      message = "Выберите источник",
+      options,
+      onPick,
+    }: {
+      title: string;
+      message?: string;
+      options: ImagePickerOptions;
+      onPick: (assets: PickerAsset[] | null) => void;
+    }) => {
       setMenu({
         open: true,
-        title: "Заменить фото услуги",
-        message: "Выберите источник",
-        mode: "other",
-        action: "replace",
-
+        title,
+        message,
         onCamera: async () => {
-          const assets = await pickFromCamera(options);
-          const a = assets?.[0];
-          if (a) replaceOther(id, a);
+          onPick(await pickFromCamera(options));
           closeMenu();
         },
-
         onGallery: async () => {
-          const assets = await pickFromGallery(options);
-          const a = assets?.[0];
-          if (a) replaceOther(id, a);
+          onPick(await pickFromGallery(options));
           closeMenu();
         },
-
         onFiles: async () => {
-          const assets = await pickFromFiles(options);
-          const a = assets?.[0];
-          if (a) replaceOther(id, a);
+          onPick(await pickFromFiles(options));
           closeMenu();
         },
       });
     },
-    [pickFromCamera, replaceOther, closeMenu, pickFromGallery, pickFromFiles],
+    [closeMenu, pickFromCamera, pickFromFiles, pickFromGallery],
   );
 
-  const removeTitle = useCallback(() => {
-    update({
-      titlePhoto: {
-        ...value.titlePhoto,
-        assets: [],
+  const openMainPhotoMenu = useCallback(() => {
+    openPickerMenu({
+      title: getSlotUri(value.mainPhoto)
+        ? "Заменить титульное фото"
+        : "Добавить титульное фото",
+      options: {
+        allowsMultipleSelection: false,
+        allowsEditing: false,
+        aspect: [1, 1],
+        quality: 1,
+      },
+      onPick: (assets) => {
+        const asset = assets?.[0];
+        if (asset) setMainPhoto(asset);
       },
     });
-  }, [update, value.titlePhoto]);
+  }, [getSlotUri, openPickerMenu, setMainPhoto, value.mainPhoto]);
 
-  const removeOtherById = useCallback(
-    (id: string) => {
-      update({
-        otherPhoto: {
-          ...value.otherPhoto,
-          assets: other.filter((x) => x.id !== id),
+  const openAdditionalAddMenu = useCallback(() => {
+    const selectionLimit = value.additionalPhotos.filter(
+      (slot) => !getSlotUri(slot),
+    ).length;
+
+    if (selectionLimit <= 0) return;
+
+    openPickerMenu({
+      title: "Добавить фото услуги",
+      options: {
+        allowsMultipleSelection: true,
+        aspect: [4, 3],
+        quality: 1,
+        orderedSelection: true,
+        selectionLimit,
+      },
+      onPick: (assets) => {
+        if (assets?.length) addAdditionalPhotos(assets);
+      },
+    });
+  }, [addAdditionalPhotos, getSlotUri, openPickerMenu, value.additionalPhotos]);
+
+  const openAdditionalReplaceMenu = useCallback(
+    (index: number) => {
+      openPickerMenu({
+        title: "Заменить фото услуги",
+        options: {
+          allowsMultipleSelection: false,
+          aspect: [4, 3],
+          quality: 1,
+        },
+        onPick: (assets) => {
+          const asset = assets?.[0];
+          if (asset) replaceAdditionalPhoto(index, asset);
         },
       });
     },
-    [other, update, value.otherPhoto],
+    [openPickerMenu, replaceAdditionalPhoto],
   );
+
+  const additionalRows = useMemo(() => {
+    const rows: number[][] = [];
+
+    for (let i = 0; i < MAX_ADDITIONAL_PHOTOS; i += ADDITIONAL_PHOTO_ROW_SIZE) {
+      rows.push(
+        Array.from(
+          {
+            length: Math.min(
+              ADDITIONAL_PHOTO_ROW_SIZE,
+              MAX_ADDITIONAL_PHOTOS - i,
+            ),
+          },
+          (_, offset) => i + offset,
+        ),
+      );
+    }
+
+    return rows;
+  }, []);
+
+  const renderAdditionalSlot = useCallback(
+    (index: number) => {
+      const slot = value.additionalPhotos[index];
+      const uri = getSlotUri(slot);
+
+      return (
+        <View key={index} className="flex-1">
+          <Pressable
+            onPress={() => {
+              if (uri) {
+                openAdditionalReplaceMenu(index);
+              } else {
+                openAdditionalAddMenu();
+              }
+            }}
+          >
+            {uri ? (
+              <PhotoPreview
+                uri={uri}
+                radius={14}
+                onRemove={() => clearAdditionalPhoto(index)}
+              />
+            ) : (
+              <EmptySlot variant="other" />
+            )}
+          </Pressable>
+        </View>
+      );
+    },
+    [
+      clearAdditionalPhoto,
+      getSlotUri,
+      openAdditionalAddMenu,
+      openAdditionalReplaceMenu,
+      value.additionalPhotos,
+    ],
+  );
+
+  const mainPhotoUri = getSlotUri(value.mainPhoto);
 
   return (
     <>
@@ -265,13 +359,12 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
               Титульное фото
             </Typography>
 
-            <Pressable onPress={openTitleMenu} className="flex-1">
-              {title ? (
+            <Pressable onPress={openMainPhotoMenu} className="flex-1">
+              {mainPhotoUri ? (
                 <PhotoPreview
-                  uri={title.uri}
+                  uri={mainPhotoUri}
                   radius={20}
-                  mode="title"
-                  onRemove={removeTitle}
+                  onRemove={clearMainPhoto}
                 />
               ) : (
                 <EmptySlot variant="title" />
@@ -287,59 +380,12 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
               Остальные фото
             </Typography>
 
-            <View className="flex-row flex-wrap flex-1 gap-2 mb-2">
-              {Array.from({ length: 2 }).map((_, i) => {
-                const img = other[i];
-
-                return (
-                  <View key={i} className="flex-1">
-                    <Pressable
-                      onPress={() => {
-                        if (img) openOtherReplaceMenu(img.id);
-                        else openOtherAddMenu();
-                      }}
-                    >
-                      {img ? (
-                        <PhotoPreview
-                          uri={img.uri}
-                          radius={14}
-                          mode="other"
-                          onRemove={() => removeOtherById(img.id)}
-                        />
-                      ) : (
-                        <EmptySlot variant="other" />
-                      )}
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
-            <View className="flex-row flex-wrap flex-1 gap-2">
-              {Array.from({ length: 2 }).map((_, i) => {
-                const img = other[i + 2];
-
-                return (
-                  <View key={i} className="flex-1">
-                    <Pressable
-                      onPress={() => {
-                        if (img) openOtherReplaceMenu(img.id);
-                        else openOtherAddMenu();
-                      }}
-                    >
-                      {img ? (
-                        <PhotoPreview
-                          uri={img.uri}
-                          radius={14}
-                          mode="other"
-                          onRemove={() => removeOtherById(img.id)}
-                        />
-                      ) : (
-                        <EmptySlot variant="other" />
-                      )}
-                    </Pressable>
-                  </View>
-                );
-              })}
+            <View className="flex-1 gap-2">
+              {additionalRows.map((row, rowIndex) => (
+                <View key={rowIndex} className="flex-row flex-1 gap-2">
+                  {row.map((index) => renderAdditionalSlot(index))}
+                </View>
+              ))}
             </View>
           </View>
         </View>
@@ -349,102 +395,30 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
         </Typography>
 
         <View className="bg-background-surface rounded-3xl p-5 gap-1">
-          <View className="gap-4">
-            <Typography weight="regular" className="text-body">
-              Формат JPG или PNG, до 5 МБ
-            </Typography>
-            <Divider className="mb-4" />
-          </View>
-
-          <View className="gap-4">
-            <Typography weight="regular" className="text-body">
-              Минимум 800×600 px (лучше 1200×900)
-            </Typography>
-            <Divider className="mb-4" />
-          </View>
-
-          <View className="gap-4">
-            <Typography weight="regular" className="text-body">
-              Без водяных знаков и чужих логотипов
-            </Typography>
-            <Divider className="mb-4" />
-          </View>
-
-          <View className="gap-4">
-            <Typography weight="regular" className="text-body">
-              Хорошее освещение, чёткий фокус
-            </Typography>
-          </View>
+          {REQUIREMENTS.map((text, index) => (
+            <View key={text} className="gap-4">
+              <Typography weight="regular" className="text-body">
+                {text}
+              </Typography>
+              {index < REQUIREMENTS.length - 1 ? (
+                <Divider className="mb-4" />
+              ) : null}
+            </View>
+          ))}
         </View>
       </View>
+
       {menu.open && (
         <ImagePickerMenu
-          visible={menu.open}
+          visible
           onClose={closeMenu}
-          title={menu.open ? menu.title : ""}
-          message={menu.open ? menu.message : ""}
-          onCamera={menu?.onCamera}
+          title={menu.title}
+          message={menu.message}
+          onCamera={menu.onCamera}
           onGallery={menu.onGallery}
           onFiles={menu.onFiles}
         />
       )}
     </>
-  );
-}
-
-function PhotoPreview({
-  uri,
-  radius,
-  mode,
-  onRemove,
-}: {
-  uri: string;
-  radius: number;
-  mode: "title" | "other";
-  onRemove: () => void;
-}) {
-  return (
-    <View className="relative">
-      <Image
-        source={{ uri }}
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: radius,
-        }}
-        contentFit="cover"
-      />
-
-      <Pressable
-        onPress={onRemove}
-        hitSlop={10}
-        className="absolute -top-2 -right-2 rounded-full w-[24px] h-[24px] bg-white items-center justify-center"
-      >
-        <StSvg
-          name="Close_round_fill_light"
-          size={18}
-          color={colors.neutral[900]}
-        />
-      </Pressable>
-    </View>
-  );
-}
-
-function EmptySlot({ variant }: { variant: "title" | "other" }) {
-  return (
-    <View
-      className="border border-neutral-500 border-dashed rounded-small justify-center items-center"
-      style={{
-        height: variant === "title" ? 123 : 58,
-      }}
-    >
-      <View className="items-center justify-center">
-        <StSvg
-          name="Add_ring_fill_light"
-          size={variant === "title" ? 40 : 24}
-          color={colors.neutral[400]}
-        />
-      </View>
-    </View>
   );
 }

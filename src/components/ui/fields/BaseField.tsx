@@ -3,11 +3,14 @@ import { View, Text } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
 
+export type FieldSize = "md" | "sm" | "xs";
+
 type BaseFieldProps = {
   label?: string;
   hideErrorText?: boolean;
   error?: FieldError;
   disabled?: boolean;
+  size?: FieldSize;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -23,6 +26,7 @@ export function BaseField({
   label,
   error,
   disabled,
+  size = "md",
   startAdornment,
   hideErrorText = false,
   endAdornment,
@@ -37,6 +41,7 @@ export function BaseField({
       <View
         className={twMerge(
           styles.base,
+          styles.sizes[size],
           focused && styles.focus,
           error && styles.error,
           disabled && styles.disabled,
@@ -63,7 +68,13 @@ export function BaseField({
 const styles = {
   label: "mb-2 font-inter-medium text-neutral-500 text-caption",
 
-  base: "flex-row items-center min-h-[48px] rounded-small bg-background-surface border border-transparent",
+  base: "flex-row items-center rounded-small bg-background-surface border border-transparent",
+
+  sizes: {
+    md: "min-h-[48px]",
+    sm: "min-h-[38px]",
+    xs: "min-h-[30px]",
+  },
 
   focus: "border-primary-blue-500",
 

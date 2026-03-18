@@ -1,60 +1,81 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
-import { Checkbox, Typography } from "@/src/components/ui";
-import { format, getDate } from "date-fns";
+import { StSvg, Typography } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 
 type Props = {
-  date: Date;
-  hasSchedule?: boolean;
+  day?: number;
+  isWorking?: boolean;
+  scheduleTime?: string;
+  hasAppointments?: boolean;
+  isOtherMonth?: boolean;
   isSelected?: boolean;
-  showCheckbox?: boolean;
   onPress?: () => void;
 };
 
 const ScheduleDayCard = ({
-  date,
-  hasSchedule,
-  showCheckbox,
+  day,
+  isWorking,
+  scheduleTime,
+  hasAppointments,
+  isOtherMonth,
   isSelected,
   onPress,
 }: Props) => {
+  const [start, end] = scheduleTime?.split(" - ") ?? [];
+
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
       onPress={onPress}
-      className={`flex-1 px-4 pt-4 pb-2.5 rounded-base
-       ${isSelected ? "bg-background border border-neutral-200" : "bg-background-surface border border-transparent"} 
-       min-h-[102px] justify-between`}
+      disabled={isOtherMonth || !onPress}
+      activeOpacity={0.7}
+      className={`flex-1 mx-[1px] rounded-xl p-1.5 min-h-[70px] justify-between ${
+        isOtherMonth || !isWorking ? "bg-neutral-100" : "bg-white"
+      }`}
     >
-      <View className="flex-row justify-between items-center">
+      <View className="flex-row justify-between items-start">
         <Typography
           weight="semibold"
-          className={`text-body ${isSelected || hasSchedule ? "text-neutral-900" : "text-neutral-500"}`}
+          className={`text-body ${
+            isOtherMonth
+              ? "text-neutral-300"
+              : isWorking
+                ? "text-neutral-900"
+                : "text-neutral-400"
+          }`}
         >
-          {getDate(date)}
+          {day}
         </Typography>
-        <Typography
-          weight="semibold"
-          className="text-body text-neutral-500 capitalize"
-        >
-          {format(date, "EEEEEE")}
-        </Typography>
+        {!isOtherMonth &&
+          (isSelected ? (
+            <StSvg
+              name="Done_round"
+              size={16}
+              color={colors.primary?.blue[500]}
+            />
+          ) : (
+            hasAppointments && (
+              <View className="w-2 h-2 rounded-[2px] bg-primary-blue-500 mt-0.5" />
+            )
+          ))}
       </View>
 
-      <View className="flex-row justify-between items-center">
-        {hasSchedule && (
-          <View className="bg-primary-blue-100 rounded-lg py-1 px-2">
-            <Typography
-              weight="regular"
-              className="text-primary-blue-500 text-caption"
-            >
-              11:00 - 19:00
-            </Typography>
-          </View>
-        )}
-
-        {showCheckbox && <Checkbox value={!!isSelected} pressable={false} />}
-      </View>
+      {isWorking && start && !isOtherMonth && (
+        <View>
+          <Typography
+            weight="regular"
+            className="text-[10px] text-neutral-500 leading-tight"
+          >
+            {start}–
+          </Typography>
+          <Typography
+            weight="regular"
+            className="text-[10px] text-neutral-500 leading-tight"
+          >
+            {end}
+          </Typography>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
