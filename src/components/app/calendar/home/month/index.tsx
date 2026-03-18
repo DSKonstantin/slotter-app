@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 import MonthCalendar from "@/src/components/app/calendar/home/month/MonthCalendar";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
@@ -37,14 +37,17 @@ const MonthCalendarView = () => {
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(parseISO(selectedDay)),
   );
+  const [pendingMonth, setPendingMonth] = useState<Date | null>(null);
+
+  const fetchMonth = pendingMonth ?? currentMonth;
 
   const { data: workingDaysData, isLoading: isWorkingDaysLoading } =
     useGetWorkingDaysQuery(
       auth
         ? {
             userId: auth.userId,
-            date_from: formatApiDate(currentMonth),
-            date_to: formatApiDate(endOfMonth(currentMonth)),
+            date_from: formatApiDate(fetchMonth),
+            date_to: formatApiDate(endOfMonth(fetchMonth)),
           }
         : skipToken,
     );
@@ -55,68 +58,66 @@ const MonthCalendarView = () => {
         ? {
             userId: auth.userId,
             params: {
-              date_from: formatApiDate(currentMonth),
-              date_to: formatApiDate(endOfMonth(currentMonth)),
+              date_from: formatApiDate(fetchMonth),
+              date_to: formatApiDate(endOfMonth(fetchMonth)),
               status: ["pending", "confirmed"],
             },
           }
         : skipToken,
     );
 
-  const appointmentsByDate = useMemo(
-    () => (appointmentsData as Record<string, Appointment[]> | undefined) ?? {},
-    [appointmentsData],
-  );
+  const isLoading = isWorkingDaysLoading || isAppointmentsLoading;
 
-  const nonWorkingDays = useMemo((): Set<string> => {
-    if (isWorkingDaysLoading || !workingDaysData) return new Set();
-    return new Set(
-      eachDayOfInterval({ start: currentMonth, end: endOfMonth(currentMonth) })
-        .map((d) => formatApiDate(d))
-        .filter((date) => !workingDaysData[date]),
-    );
-  }, [workingDaysData, currentMonth, isWorkingDaysLoading]);
+  const calendarData = useMemo(() => {
+    const appointmentsByDate =
+      (appointmentsData as Record<string, Appointment[]> | undefined) ?? {};
 
-  const progressMap = useMemo((): Record<string, number> => {
-    if (!workingDaysData) return {};
+    const nonWorkingDays: Set<string> =
+      isWorkingDaysLoading || !workingDaysData
+        ? new Set()
+        : new Set(
+            eachDayOfInterval({
+              start: currentMonth,
+              end: endOfMonth(currentMonth),
+            })
+              .map((d) => formatApiDate(d))
+              .filter((date) => !workingDaysData[date]),
+          );
 
-    const result: Record<string, number> = {};
+    const progressMap: Record<string, number> = {};
+    if (workingDaysData) {
+      for (const [date, workingDay] of Object.entries(workingDaysData)) {
+        if (!workingDay) continue;
 
-    for (const [date, workingDay] of Object.entries(workingDaysData)) {
-      if (!workingDay) continue;
+        const dayAppointments = appointmentsByDate[date] ?? [];
+        if (dayAppointments.length === 0) continue;
 
-      const dayAppointments = appointmentsByDate[date] ?? [];
-      if (dayAppointments.length === 0) continue;
+        const wd = workingDay as WorkingDay;
+        const availableMinutes =
+          parseTime(wd.end_at) -
+          parseTime(wd.start_at) -
+          (wd.working_day_breaks ?? []).reduce(
+            (sum, b) => sum + parseTime(b.end_at) - parseTime(b.start_at),
+            0,
+          );
 
-      const wd = workingDay as WorkingDay;
-      const availableMinutes =
-        parseTime(wd.end_at) -
-        parseTime(wd.start_at) -
-        (wd.working_day_breaks ?? []).reduce(
-          (sum, b) => sum + parseTime(b.end_at) - parseTime(b.start_at),
+        if (availableMinutes <= 0) continue;
+
+        const bookedMinutes = dayAppointments.reduce(
+          (sum, a) => sum + a.duration,
           0,
         );
-
-      if (availableMinutes <= 0) continue;
-
-      const bookedMinutes = dayAppointments.reduce(
-        (sum, a) => sum + a.duration,
-        0,
-      );
-      result[date] = Math.min(1, bookedMinutes / availableMinutes);
+        progressMap[date] = Math.min(1, bookedMinutes / availableMinutes);
+      }
     }
 
-    return result;
-  }, [workingDaysData, appointmentsByDate]);
+    const totalAppointments = Object.values(appointmentsByDate).reduce(
+      (sum, arr) => sum + arr.length,
+      0,
+    );
 
-  const totalAppointments = useMemo(
-    () =>
-      Object.values(appointmentsByDate).reduce(
-        (sum, arr) => sum + arr.length,
-        0,
-      ),
-    [appointmentsByDate],
-  );
+    return { nonWorkingDays, progressMap, totalAppointments };
+  }, [workingDaysData, appointmentsData, currentMonth, isWorkingDaysLoading]);
 
   const handleSelectDate = useCallback(
     (date: Date) => {
@@ -129,13 +130,20 @@ const MonthCalendarView = () => {
   );
 
   const handleMonthChange = useCallback((date: Date) => {
-    setCurrentMonth(startOfMonth(date));
+    setPendingMonth(startOfMonth(date));
   }, []);
 
   const prevMonthName = useMemo(
     () => formatMonthName(subMonths(currentMonth, 1)),
     [currentMonth],
   );
+
+  useEffect(() => {
+    if (!isLoading && pendingMonth) {
+      setCurrentMonth(pendingMonth);
+      setPendingMonth(null);
+    }
+  }, [isLoading, pendingMonth]);
 
   if (!auth) return null;
 
@@ -153,12 +161,7 @@ const MonthCalendarView = () => {
           onSelectDate={handleSelectDate}
           currentMonth={currentMonth}
           onMonthChange={handleMonthChange}
-          data={{
-            progressMap,
-            nonWorkingDays,
-            totalAppointments,
-            isLoading: isWorkingDaysLoading || isAppointmentsLoading,
-          }}
+          data={{ ...calendarData, isLoading }}
         />
       </ScrollView>
 

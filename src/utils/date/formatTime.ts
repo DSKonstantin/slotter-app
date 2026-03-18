@@ -27,6 +27,17 @@ export const formatDayMonth = (date: string) => {
   return format(parseISO(date), "dd.MM");
 };
 
+export const parseTimeString = (value: string): Date | null => {
+  if (!value) return null;
+  const parts = value.split(":");
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (isNaN(h) || isNaN(m)) return null;
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 export const parseTime = (time: string) => {
   const direct = time.match(/^(\d{2}):(\d{2})/);
   if (direct) return +direct[1] * 60 + +direct[2];

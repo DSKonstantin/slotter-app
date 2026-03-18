@@ -5,20 +5,9 @@ import { useFieldArray, useFormContext } from "react-hook-form";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { formatTime } from "@/src/utils/date/formatTime";
+import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
 
 const MAX_BREAKS = 3;
-
-const parseTimeString = (value: string): Date | null => {
-  if (!value) return null;
-  const parts = value.split(":");
-  const h = Number(parts[0]);
-  const m = Number(parts[1]);
-  if (isNaN(h) || isNaN(m)) return null;
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return isNaN(d.getTime()) ? null : d;
-};
 
 type Props = {
   name?: string;
@@ -31,14 +20,14 @@ export const DayScheduleBreaksFieldArray = ({ name = "breaks" }: Props) => {
   const canAddMore = fields.length < MAX_BREAKS;
 
   return (
-    <View className="mt-2 gap-3">
+    <View>
       {fields.length > 0 && (
         <Typography className="text-caption text-neutral-500">
           Перерывы
         </Typography>
       )}
 
-      <View className="gap-3">
+      <View className="gap-2">
         {fields.map((field, index) => (
           <View key={field.id} className="flex-row items-center gap-2">
             <View className="flex-1">
@@ -100,7 +89,7 @@ export const DayScheduleBreaksFieldArray = ({ name = "breaks" }: Props) => {
       )}
 
       {!canAddMore && (
-        <Typography className="text-caption text-neutral-900">
+        <Typography className="text-caption text-neutral-900 mt-2">
           Можно добавить максимум {MAX_BREAKS} перерыва
         </Typography>
       )}

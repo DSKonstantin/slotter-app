@@ -46,16 +46,18 @@ const CalendarHome = () => {
       <ScreenWithToolbar
         title="Календарь"
         rightButton={
-          <IconButton
-            icon={
-              <StSvg
-                name="Filter_alt_fill"
-                size={28}
-                color={colors.neutral[900]}
-              />
-            }
-            onPress={handleOpenFilters}
-          />
+          mode === "day" && (
+            <IconButton
+              icon={
+                <StSvg
+                  name="Filter_alt_fill"
+                  size={28}
+                  color={colors.neutral[900]}
+                />
+              }
+              onPress={handleOpenFilters}
+            />
+          )
         }
       >
         {(insets) => (

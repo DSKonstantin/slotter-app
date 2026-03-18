@@ -24,12 +24,8 @@ type ScheduleFormValues = {
 const Schedule = () => {
   const [activeDays, setActiveDays] = useState<string[]>([]);
   const VerifySchema = Yup.object().shape({
-    workingTimeFrom: Yup.string()
-      // .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
-      .required("Укажите время начала"),
-    workingTimeTo: Yup.string()
-      // .matches(/^\d{2}:\d{2}$/, "Введите время полностью")
-      .required("Укажите время окончания"),
+    workingTimeFrom: Yup.string().required("Укажите время начала"),
+    workingTimeTo: Yup.string().required("Укажите время окончания"),
     workingDays: Yup.array()
       .of(Yup.string())
       .min(1, "Выберите минимум один рабочий день")

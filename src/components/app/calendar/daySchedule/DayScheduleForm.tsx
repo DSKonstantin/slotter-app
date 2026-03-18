@@ -7,7 +7,7 @@ import {
 import { useFormContext, useWatch } from "react-hook-form";
 import * as Yup from "yup";
 
-import { formatTime } from "@/src/utils/date/formatTime";
+import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
 
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
@@ -31,14 +31,6 @@ export const DayScheduleSchema = Yup.object().shape({
 });
 
 export type DayScheduleFormValues = Yup.InferType<typeof DayScheduleSchema>;
-
-const parseTimeString = (value: string): Date | null => {
-  if (!value) return null;
-  const [h, m] = value.split(":").map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d;
-};
 
 export const DayScheduleForm = () => {
   const { control } = useFormContext<DayScheduleFormValues>();

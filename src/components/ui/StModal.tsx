@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Dimensions, View, StyleSheet } from "react-native";
+import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
 import { BlurView } from "expo-blur";
@@ -13,8 +13,6 @@ type StModalProps = {
   props?: ModalProps;
 };
 
-const swipeThreshold = Dimensions.get("window").height * 0.1;
-
 export const StModal = ({
   visible,
   onClose,
@@ -22,17 +20,20 @@ export const StModal = ({
   horizontalPadding = true,
   ...props
 }: StModalProps) => {
-  const { bottom, left, right } = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const { top, bottom, left, right } = useSafeAreaInsets();
+  const swipeThreshold = height * 0.1;
 
   const containerStyle = useMemo(
     () => ({
+      maxHeight: height - top,
       paddingBottom: bottom + 8,
       ...(horizontalPadding && {
         paddingLeft: 20 + left,
         paddingRight: 20 + right,
       }),
     }),
-    [bottom, horizontalPadding, left, right],
+    [bottom, height, horizontalPadding, left, right, top],
   );
 
   return (
@@ -40,10 +41,11 @@ export const StModal = ({
       isVisible={visible}
       swipeDirection={"down"}
       swipeThreshold={swipeThreshold}
+      propagateSwipe
       onBackdropPress={onClose}
       onSwipeComplete={onClose}
       statusBarTranslucent
-      style={styles.container}
+      style={[styles.container, { paddingTop: top }]}
       {...props}
     >
       <View

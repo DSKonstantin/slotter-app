@@ -1,249 +1,148 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
-import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
+import React, { useState, useCallback, useMemo } from "react";
 import { Alert, View } from "react-native";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  addDays,
-  getDate,
-  getDay,
-  getYear,
-  getMonth,
-  addMonths,
-  subMonths,
-  parseISO,
-} from "date-fns";
-import { ru } from "date-fns/locale";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Calendar } from "react-native-calendars";
+import { addMonths, format, parseISO, subMonths } from "date-fns";
+import { ru } from "date-fns/locale";
+import { FormProvider } from "react-hook-form";
+
+import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { FlashList } from "@shopify/flash-list";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import {
-  useGetWorkingDaysQuery,
-  useBulkCreateWorkingDaysMutation,
-} from "@/src/store/redux/services/api/workingDaysApi";
-import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
-import { FormProvider, useForm } from "react-hook-form";
-import { toast } from "@backpackapp-io/react-native-toast";
-import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  CalendarScheduleSchema,
-  type CalendarScheduleFormValues,
-} from "@/src/validation/schemas/calendarSchedule.schema";
-import { getApiErrorMessage } from "@/src/utils/apiError";
+import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
+import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
-import { ScheduleTemplateModal } from "@/src/components/app/calendar/schedule/ScheduleTemplateModal";
-import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
-import { setScheduleIntent } from "@/src/store/redux/slices/calendarSlice";
-import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
-
-type DayItem = {
-  date: Date;
-  hasSchedule: boolean;
-  workingDayId?: number;
-  scheduleTime?: string;
-};
-
-type WorkingDayMeta = { id: number; startAt: string; endAt: string };
-
-const generateMonth = (
-  year: number,
-  month: number,
-  workingDayKeys: Record<string, WorkingDayMeta>,
-): DayItem[] => {
-  const start = startOfMonth(new Date(year, month));
-  const end = endOfMonth(start);
-  const days: DayItem[] = [];
-
-  for (let i = 0; i < getDate(end); i++) {
-    const date = addDays(start, i);
-    const key = date.toISOString().split("T")[0];
-    const meta = workingDayKeys[key];
-    days.push({
-      date,
-      hasSchedule: !!meta,
-      workingDayId: meta?.id,
-      scheduleTime: meta ? `${meta.startAt} - ${meta.endAt}` : undefined,
-    });
-  }
-
-  return days;
-};
+import { getScheduleTimeLabel } from "@/src/utils/calendar/scheduleHelpers";
+import { useCalendarSchedule } from "@/src/hooks/useCalendarSchedule";
+import {
+  scheduleCalendarTheme,
+  calendarStyle,
+} from "@/src/styles/calendarTheme";
+import { formatApiDate } from "@/src/utils/date/formatDate";
+import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
+import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
 
 const CalendarSchedule = () => {
-  const dispatch = useAppDispatch();
-  const intent = useAppSelector((state) => state.calendar.scheduleIntent);
-  const { initialValues, isLoaded } = useScheduleTemplate();
-
   const { date } = useLocalSearchParams<{ date?: string }>();
   const [current, setCurrent] = useState(date ? parseISO(date) : new Date());
-  const [modalHeight, setModalHeight] = useState(0);
-  const [modalTemplate, setModalTemplate] = useState(false);
-  const auth = useRequiredAuth();
-  const [bulkCreateWorkingDays, { isLoading: isSaving }] =
-    useBulkCreateWorkingDaysMutation();
 
-  const methods = useForm<CalendarScheduleFormValues>({
-    resolver: yupResolver(CalendarScheduleSchema) as any,
-    defaultValues: {
-      selectedDays: [],
-      scheduleStart: "",
-      scheduleEnd: "",
-      breaks: [],
-    },
-  });
+  const {
+    methods,
+    handleSubmit,
+    calendarDays,
+    appointmentDates,
+    modalVisible,
+    modalTemplate,
+    setModalTemplate,
+    isSaving,
+    hasPendingEditableSelection,
+    clearSelection,
+    toggleDay,
+    handleSave,
+    applyTemplateDays,
+  } = useCalendarSchedule(current);
 
-  const { setValue, getValues, handleSubmit, watch } = methods;
-
-  const watchedSelectedDays = watch("selectedDays");
-  const selectedDays = useMemo(
-    () => watchedSelectedDays ?? [],
-    [watchedSelectedDays],
+  const calendarDaysMap = useMemo(
+    () => Object.fromEntries(calendarDays.map((day) => [day.date, day])),
+    [calendarDays],
   );
 
-  const modalVisible = selectedDays.length > 0;
-
-  const { data: workingDaysData } = useGetWorkingDaysQuery(
-    auth ? { userId: auth.userId } : skipToken,
+  const renderHeader = useCallback(
+    () => (
+      <View className="flex-1 flex-row items-center justify-center mb-5">
+        <View className="items-center flex-row gap-4 bg-background-surface h-[48px] rounded-full px-5">
+          <IconButton
+            size="xs"
+            icon={
+              <StSvg name="Expand_left" size={24} color={colors.neutral[500]} />
+            }
+            onPress={() => setCurrent((prev) => subMonths(prev, 1))}
+          />
+          <Typography
+            weight="semibold"
+            className="text-body capitalize w-[125px] text-center"
+          >
+            {format(current, "LLLL yyyy", { locale: ru })}
+          </Typography>
+          <IconButton
+            size="xs"
+            icon={
+              <StSvg
+                name="Expand_right"
+                size={24}
+                color={colors.neutral[500]}
+              />
+            }
+            onPress={() => setCurrent((prev) => addMonths(prev, 1))}
+          />
+        </View>
+      </View>
+    ),
+    [current],
   );
 
-  const workingDayKeys = useMemo(() => {
-    const map: Record<string, WorkingDayMeta> = {};
-    for (const wd of Object.values(workingDaysData ?? {})) {
-      if (wd)
-        map[wd.day] = { id: wd.id, startAt: wd.start_at, endAt: wd.end_at };
-    }
-    return map;
-  }, [workingDaysData]);
+  const renderDay = useCallback(
+    ({ date, state }: any) => {
+      const isOtherMonth = state === "disabled";
+      const dayData = date ? calendarDaysMap[date.dateString] : undefined;
 
-  const days = useMemo(
-    () => generateMonth(getYear(current), getMonth(current), workingDayKeys),
-    [current, workingDayKeys],
-  );
+      const handlePress = () => {
+        if (!date || isOtherMonth || !dayData) return;
 
-  const toggleDay = useCallback(
-    (dateKey: string) => {
-      const current = getValues("selectedDays") ?? [];
-      const next = current.includes(dateKey)
-        ? current.filter((d) => d !== dateKey)
-        : [...current, dateKey];
-      setValue("selectedDays", next, { shouldDirty: true });
-    },
-    [getValues, setValue],
-  );
+        if (dayData.isExisting && dayData.workingDayId) {
+          if (hasPendingEditableSelection) {
+            Alert.alert(
+              "Несохранённые изменения",
+              "У вас есть несохранённые дни. Если перейти к редактированию, выбор сбросится.",
+              [
+                { text: "Отмена", style: "cancel" },
+                {
+                  text: "Перейти",
+                  style: "destructive",
+                  onPress: () => {
+                    clearSelection();
+                    router.push(
+                      Routers.app.calendar.daySchedule(dayData.workingDayId!),
+                    );
+                  },
+                },
+              ],
+            );
+            return;
+          }
+          router.push(Routers.app.calendar.daySchedule(dayData.workingDayId));
+          return;
+        }
 
-  const handleSave = useCallback(
-    async (values: CalendarScheduleFormValues) => {
-      if (!auth) return;
-
-      const workingDays = values.selectedDays.map((day) => ({
-        day,
-        start_at: values.scheduleStart,
-        end_at: values.scheduleEnd,
-        ...(values.breaks.length > 0 && {
-          working_day_breaks: values.breaks.map((b) => ({
-            start_at: b.start,
-            end_at: b.end,
-          })),
-        }),
-      }));
-
-      try {
-        await bulkCreateWorkingDays({
-          userId: auth.userId,
-          working_days: workingDays,
-        }).unwrap();
-        setValue("selectedDays", []);
-      } catch (error) {
-        toast.error(
-          getApiErrorMessage(error, "Не удалось сохранить расписание"),
-        );
-      }
-    },
-    [auth, bulkCreateWorkingDays, setValue],
-  );
-
-  const renderItem = useCallback(
-    ({ item }: { item: DayItem }) => {
-      const dateKey = item.date.toISOString().split("T")[0];
-      const isSelected = selectedDays.includes(dateKey);
+        toggleDay(dayData.date);
+      };
 
       return (
-        <View className="m-1 flex-1">
+        <View className="w-full h-[70px]">
           <ScheduleDayCard
-            date={item.date}
-            hasSchedule={item.hasSchedule}
-            scheduleTime={item.scheduleTime}
-            showCheckbox={!item.hasSchedule}
-            isSelected={isSelected}
-            onPress={() => {
-              if (item.hasSchedule && item.workingDayId) {
-                if (modalVisible) {
-                  Alert.alert(
-                    "Несохранённые изменения",
-                    "У вас есть несохранённые дни. Если перейти к редактированию, выбор сбросится.",
-                    [
-                      { text: "Отмена", style: "cancel" },
-                      {
-                        text: "Перейти",
-                        style: "destructive",
-                        onPress: () => {
-                          setValue("selectedDays", []);
-                          router.push(
-                            Routers.app.calendar.daySchedule(
-                              item.workingDayId!,
-                            ),
-                          );
-                        },
-                      },
-                    ],
-                  );
-                  return;
-                }
-                router.push(
-                  Routers.app.calendar.daySchedule(item.workingDayId),
-                );
-              } else {
-                toggleDay(dateKey);
-              }
-            }}
+            day={date?.day}
+            isWorking={dayData?.isExisting}
+            scheduleTime={
+              dayData?.isExisting ? getScheduleTimeLabel(dayData) : undefined
+            }
+            hasAppointments={
+              !isOtherMonth && appointmentDates.has(date?.dateString ?? "")
+            }
+            isOtherMonth={isOtherMonth}
+            isSelected={dayData?.isSelected}
+            onPress={handlePress}
           />
         </View>
       );
     },
-    [selectedDays, toggleDay, modalVisible, setValue],
+    [
+      calendarDaysMap,
+      appointmentDates,
+      hasPendingEditableSelection,
+      clearSelection,
+      toggleDay,
+    ],
   );
-
-  useEffect(() => {
-    if (intent?.type !== "openTemplate") return;
-    if (!isLoaded) return;
-
-    const templateConfigured = initialValues.days.some((d) => d.isEnabled);
-
-    if (templateConfigured) {
-      const firstEnabled = initialValues.days.find((d) => d.isEnabled)!;
-      const autoSelectedDays = days
-        .filter((item) => {
-          const templateIdx = (getDay(item.date) + 6) % 7;
-          return initialValues.days[templateIdx].isEnabled;
-        })
-        .map((item) => item.date.toISOString().split("T")[0]);
-
-      setValue("selectedDays", autoSelectedDays);
-      setValue("scheduleStart", firstEnabled.startAt);
-      setValue("scheduleEnd", firstEnabled.endAt);
-      setValue("breaks", firstEnabled.breaks);
-    } else {
-      setModalTemplate(true);
-    }
-
-    dispatch(setScheduleIntent(null));
-  }, [days, dispatch, initialValues.days, intent, isLoaded, setValue]);
 
   return (
     <FormProvider {...methods}>
@@ -258,63 +157,27 @@ const CalendarSchedule = () => {
                 color={colors.neutral[900]}
               />
             }
-            onPress={() => {
-              setModalTemplate(true);
-            }}
+            onPress={() => setModalTemplate(true)}
           />
         }
       >
-        {({ topInset, bottomInset }) => (
+        {({ topInset }) => (
           <SafeAreaView
             edges={["left", "right"]}
-            className="flex-1"
+            className="flex-1 px-screen"
             style={{ paddingTop: topInset }}
           >
-            <View className="items-center mb-4 px-screen">
-              <View className="flex-row items-center bg-background-surface rounded-full px-4 py-2 gap-4">
-                <IconButton
-                  size="xs"
-                  icon={
-                    <StSvg
-                      name="Expand_left"
-                      size={24}
-                      color={colors.neutral[500]}
-                    />
-                  }
-                  onPress={() => setCurrent((prev) => subMonths(prev, 1))}
-                />
-
-                <Typography
-                  weight="semibold"
-                  className="text-body capitalize w-[125px] text-center"
-                >
-                  {format(current, "LLLL yyyy", { locale: ru })}
-                </Typography>
-
-                <IconButton
-                  size="xs"
-                  icon={
-                    <StSvg
-                      name="Expand_right"
-                      size={24}
-                      color={colors.neutral[500]}
-                    />
-                  }
-                  onPress={() => setCurrent((prev) => addMonths(prev, 1))}
-                />
-              </View>
-            </View>
-
-            <FlashList
-              data={days}
-              numColumns={3}
-              keyExtractor={(item) => item.date.toISOString()}
-              renderItem={renderItem}
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingBottom:
-                  bottomInset + 16 + (modalVisible ? modalHeight : 0),
-              }}
+            <Calendar
+              key={format(current, "yyyy-MM")}
+              initialDate={formatApiDate(current)}
+              firstDay={1}
+              hideArrows
+              hideDayNames
+              hideExtraDays={true}
+              renderHeader={renderHeader}
+              theme={scheduleCalendarTheme}
+              style={calendarStyle.calendar}
+              dayComponent={renderDay}
             />
           </SafeAreaView>
         )}
@@ -322,15 +185,15 @@ const CalendarSchedule = () => {
 
       <ScheduleSettingsModal
         visible={modalVisible}
-        onClose={() => setValue("selectedDays", [])}
+        onClose={clearSelection}
         onSave={handleSubmit(handleSave)}
         isLoading={isSaving}
-        onHeightChange={(h) => setModalHeight(h + 8)}
       />
 
       <ScheduleTemplateModal
         visible={modalTemplate}
         onClose={() => setModalTemplate(false)}
+        onApply={(template) => applyTemplateDays(template.days)}
       />
     </FormProvider>
   );

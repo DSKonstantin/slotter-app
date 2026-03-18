@@ -46,22 +46,6 @@ const ScheduleActionsModal = ({
         },
       },
       {
-        title: "Дублировать прошлый месяц",
-        subtitle: `Скопировать график с ${prevMonthName}`,
-        leftIcon: <StSvg name="Folder" size={24} color={colors.neutral[900]} />,
-        action: () => {
-          dispatch(
-            setScheduleIntent({
-              type: "duplicateFrom",
-              date: formatApiDate(subMonths(currentMonth, 1)),
-            }),
-          );
-          router.push(
-            Routers.app.calendar.schedule(formatApiDate(currentMonth)),
-          );
-        },
-      },
-      {
         title: "Применить шаблон",
         subtitle: "Настроенный вами график пн-вс",
         leftIcon: <StSvg name="Order" size={24} color={colors.neutral[900]} />,
@@ -73,7 +57,7 @@ const ScheduleActionsModal = ({
         },
       },
     ],
-    [currentMonth, prevMonthName, dispatch],
+    [currentMonth, dispatch],
   );
 
   return (

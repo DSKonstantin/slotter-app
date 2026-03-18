@@ -18,7 +18,7 @@ import {
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
-import { formatTime } from "@/src/utils/date/formatTime";
+import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
 import {
   ScheduleTemplateSchema,
   type ScheduleTemplateFormValues,
@@ -26,17 +26,6 @@ import {
 import { days } from "@/src/constants/days";
 import { DayScheduleBreaksFieldArray } from "@/src/components/app/calendar/daySchedule/DayScheduleBreaksFieldArray";
 import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
-
-const parseTimeString = (value: string): Date | null => {
-  if (!value) return null;
-  const parts = value.split(":");
-  const h = Number(parts[0]);
-  const m = Number(parts[1]);
-  if (isNaN(h) || isNaN(m)) return null;
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return isNaN(d.getTime()) ? null : d;
-};
 
 const DayRow = ({ index }: { index: number }) => {
   const { control } = useFormContext<ScheduleTemplateFormValues>();
@@ -47,7 +36,7 @@ const DayRow = ({ index }: { index: number }) => {
   });
 
   return (
-    <View className="gap-3">
+    <View className="gap-2">
       <View className="flex-row items-center justify-between">
         <Typography weight="semibold" className="text-body">
           {days[index].fullLabel}
@@ -56,7 +45,7 @@ const DayRow = ({ index }: { index: number }) => {
       </View>
 
       {isEnabled && (
-        <View className="gap-3">
+        <View className="gap-2">
           <View className="flex-row gap-2">
             <View className="flex-1">
               <RhfDatePicker
@@ -94,9 +83,11 @@ const DayRow = ({ index }: { index: number }) => {
 type Props = {
   visible: boolean;
   onClose: () => void;
+  onApply?: (values: ScheduleTemplateFormValues) => void;
 };
 
-export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
+export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
+  const { height } = useWindowDimensions();
   const { initialValues, save } = useScheduleTemplate();
 
   const methods = useForm<ScheduleTemplateFormValues>({
@@ -112,6 +103,15 @@ export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
     [onClose, save],
   );
 
+  const handleApply = useCallback(
+    async (values: ScheduleTemplateFormValues) => {
+      await save(values);
+      onApply?.(values);
+      onClose();
+    },
+    [onApply, onClose, save],
+  );
+
   useEffect(() => {
     methods.reset(initialValues);
   }, [initialValues, methods]);
@@ -124,13 +124,19 @@ export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
 
       <Typography
         weight="regular"
-        className="text-neutral-500 text-body text-center mb-6"
+        className="text-neutral-500 text-body text-center mb-5"
       >
-        Применяется к новым месяцам автоматически
+        Шаблон месяца, применяется сразу до конца месяца
       </Typography>
 
       <FormProvider {...methods}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+          style={{
+            maxHeight: Math.max(height * 0.55, 320),
+          }}
+        >
           <View className="gap-4">
             {days.map((_, index) => (
               <View key={index} className="gap-4">
@@ -148,6 +154,15 @@ export const ScheduleTemplateModal = ({ visible, onClose }: Props) => {
             <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
           }
           onPress={methods.handleSubmit(handleSave)}
+        />
+        <Button
+          title="Применить шаблон"
+          variant="secondary"
+          buttonClassName="mt-3"
+          rightIcon={
+            <StSvg name="Check_fill" size={24} color={colors.neutral[900]} />
+          }
+          onPress={methods.handleSubmit(handleApply)}
         />
       </FormProvider>
     </StModal>
