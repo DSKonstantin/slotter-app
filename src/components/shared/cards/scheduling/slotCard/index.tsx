@@ -1,5 +1,11 @@
 import React, { useState, useRef } from "react";
-import { TouchableOpacity, View, Animated } from "react-native";
+import {
+  TouchableOpacity,
+  View,
+  Animated,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { Badge, StSvg, Typography, Button } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import type { Appointment } from "@/src/store/redux/services/api-types";
@@ -9,6 +15,7 @@ import { formatTimeString } from "@/src/utils/date/formatTime";
 interface SlotCardProps {
   slot: Appointment;
   onPress?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 const STATUS_CONFIG: Partial<
@@ -66,7 +73,7 @@ const STATUS_CONFIG: Partial<
   },
 };
 
-const SlotCard = ({ slot, onPress }: SlotCardProps) => {
+const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
   const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
   const statusConfig = STATUS_CONFIG[slot.status] ?? null;
   const clientName = slot.customer.name;
@@ -136,11 +143,16 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
 
   if (slot.duration <= 29) {
     return (
-      <View className="flex-1" style={{ zIndex: isExpanded ? 10 : 1 }}>
+      <View
+        style={[
+          containerStyle,
+          { zIndex: isExpanded ? 10 : 1, elevation: isExpanded ? 10 : 1 },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={toggleExpand}
-          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1 mb-1"
+          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1"
         >
           <View className="flex-row flex-1 items-center justify-between">
             <Typography className="text-body text-neutral-900">
@@ -172,7 +184,7 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
         {isExpanded && (
           <View
             className="absolute left-0 right-0 bg-background-surface rounded-b-base overflow-hidden"
-            style={{ top: "100%", marginTop: -4 }}
+            style={{ top: "100%", marginTop: 0 }}
           >
             {detailContent}
             <View className="px-3 pb-3">
@@ -195,7 +207,8 @@ const SlotCard = ({ slot, onPress }: SlotCardProps) => {
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      className="rounded-base flex-row overflow-hidden bg-background-surface flex-1 mb-1"
+      className="rounded-base flex-row overflow-hidden bg-background-surface"
+      style={containerStyle}
     >
       {detailContent}
     </TouchableOpacity>

@@ -8,7 +8,6 @@ import CalendarError from "@/src/components/app/calendar/home/day/CalendarError"
 import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
-import { selectActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
@@ -23,7 +22,6 @@ const DayCalendarView = () => {
   const auth = useRequiredAuth();
   const [isRetrying, setIsRetrying] = useState(false);
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
-  const activeStatuses = useAppSelector(selectActiveStatuses);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
   const dateRange = useMemo(

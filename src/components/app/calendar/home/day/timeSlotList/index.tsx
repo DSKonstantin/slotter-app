@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useMemo } from "react";
 import type {
   Appointment,
+  AppointmentStatus,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
 import { View, ScrollView } from "react-native";
@@ -12,14 +13,56 @@ import TimeSlotListSkeleton from "./TimeSlotListSkeleton";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
 import FreeSlotBlock from "./FreeSlotBlock";
-import { HOUR_HEIGHT, MINUTE_HEIGHT } from "./constants";
+import FilteredSlotBlock from "./FilteredSlotBlock";
+import {
+  LONG_SLOT_MIN_HEIGHT,
+  MINUTE_HEIGHT,
+  SHORT_SLOT_MIN_HEIGHT,
+  SLOT_GAP,
+} from "./constants";
 import { parseTime, formatTime } from "./utils";
 import { Routers } from "@/src/constants/routers";
+import { useAppSelector } from "@/src/store/redux/store";
+import { selectActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
 
 interface TimeLabelsProps {
   segStart: number;
   segEnd: number;
 }
+
+type TimeSlotListProps = {
+  appointment: Appointment[];
+  breaks?: WorkingDayBreak[];
+  startAt?: string;
+  endAt?: string;
+  date?: string;
+  workingDayId?: number;
+  isLoading?: boolean;
+};
+
+type ParsedBreak = {
+  start: number;
+  end: number;
+  breakItem: WorkingDayBreak;
+};
+
+type ParsedAppointment = {
+  start: number;
+  end: number;
+  slot: Appointment;
+  blocksTime: boolean;
+  isVisible: boolean;
+};
+
+type SegmentContent =
+  | { kind: "break"; breakItem: WorkingDayBreak }
+  | {
+      kind: "slots";
+      slots: Appointment[];
+      showFreeSlotBlock: boolean;
+      showFilteredBlock: boolean;
+      filteredBlockMinHeight: number;
+    };
 
 const TimeLabels = ({ segStart, segEnd }: TimeLabelsProps) => {
   const firstHour = Math.ceil(segStart / 60);
@@ -47,44 +90,168 @@ const TimeLabels = ({ segStart, segEnd }: TimeLabelsProps) => {
   );
 };
 
-const HalfHourLines = ({ segStart, segEnd }: TimeLabelsProps) => {
-  const firstHalf = Math.ceil(segStart / 30);
-  const lastHalf = Math.floor(segEnd / 30);
+const getSlotMinHeight = (slot: Appointment) =>
+  slot.duration > 29 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
 
-  return (
-    <>
-      {Array.from(
-        { length: lastHalf - firstHalf + 1 },
-        (_, i) => (firstHalf + i) * 30,
-      )
-        .filter((hMin) => hMin % 60 !== 0 && hMin >= segStart && hMin < segEnd)
-        .map((hMin) => (
-          <View
-            key={hMin}
-            className="absolute right-0 h-0 border-b border-dashed border-neutral-200"
-            style={{
-              top: (hMin - segStart) * MINUTE_HEIGHT,
-              left: -49,
-            }}
-          />
-        ))}
-    </>
+const slotOccupiesTime = (slot: Appointment) =>
+  slot.status !== "cancelled" && slot.duration > 0;
+
+const occupiesTime = ({ blocksTime, slot }: ParsedAppointment) =>
+  blocksTime && slot.duration > 0;
+
+const parseBreaks = (breaks: WorkingDayBreak[]): ParsedBreak[] =>
+  breaks.map((breakItem) => ({
+    start: parseTime(breakItem.start_at),
+    end: parseTime(breakItem.end_at),
+    breakItem,
+  }));
+
+const parseAppointments = (
+  appointments: Appointment[],
+  visibleStatuses: AppointmentStatus[],
+): ParsedAppointment[] => {
+  const visibleStatusesSet = new Set(visibleStatuses);
+
+  return appointments.map((slot) => {
+    const start = parseTime(slot.start_time);
+
+    return {
+      start,
+      end: start + slot.duration,
+      slot,
+      blocksTime: slot.status !== "cancelled",
+      isVisible: visibleStatusesSet.has(slot.status),
+    };
+  });
+};
+
+const collectTimePoints = (
+  dayStart: number,
+  dayEnd: number,
+  parsedBreaks: ParsedBreak[],
+  blockingAppointments: ParsedAppointment[],
+) => {
+  const timePoints = new Set<number>([dayStart, dayEnd]);
+  const startHour = Math.ceil(dayStart / 60);
+  const endHour = Math.floor(dayEnd / 60);
+
+  for (let hour = startHour; hour <= endHour; hour++) {
+    const hourMinute = hour * 60;
+    const insideBreak = parsedBreaks.some(
+      (breakItem) => breakItem.start < hourMinute && breakItem.end > hourMinute,
+    );
+    const insideAppointment = blockingAppointments.some(
+      ({ start, end, slot }) =>
+        slot.duration > 0 && start < hourMinute && end > hourMinute,
+    );
+
+    if (!insideBreak && !insideAppointment) {
+      timePoints.add(hourMinute);
+    }
+  }
+
+  parsedBreaks.forEach((breakItem) => {
+    timePoints.add(breakItem.start);
+    timePoints.add(breakItem.end);
+  });
+
+  blockingAppointments.forEach((appointment) => {
+    const isInsideLongerAppointment =
+      appointment.slot.duration === 0 &&
+      blockingAppointments.some(
+        (other) =>
+          other.slot.duration > 0 &&
+          other.start < appointment.start &&
+          other.end > appointment.start,
+      );
+
+    if (
+      !isInsideLongerAppointment &&
+      appointment.start >= dayStart &&
+      appointment.start <= dayEnd
+    ) {
+      timePoints.add(appointment.start);
+    }
+
+    if (appointment.end > dayStart && appointment.end <= dayEnd) {
+      timePoints.add(appointment.end);
+    }
+  });
+
+  return Array.from(timePoints).sort((a, b) => a - b);
+};
+
+const buildSegments = (
+  timePoints: number[],
+  parsedBreaks: ParsedBreak[],
+  parsedAppointments: ParsedAppointment[],
+) =>
+  timePoints.slice(0, -1).map((segStart, index) => {
+    const segEnd = timePoints[index + 1];
+    const breakItem = parsedBreaks.find(
+      (parsedBreak) =>
+        parsedBreak.start <= segStart && parsedBreak.end >= segEnd,
+    );
+
+    if (breakItem) {
+      return {
+        segStart,
+        segEnd,
+        content: { kind: "break", breakItem: breakItem.breakItem } as const,
+      };
+    }
+
+    const segmentAppointments = parsedAppointments
+      .filter(({ start }) => start >= segStart && start < segEnd)
+      .sort((a, b) => a.start - b.start);
+    const visibleAppointments = segmentAppointments.filter(
+      ({ isVisible }) => isVisible,
+    );
+    const hiddenOccupiedAppointments = segmentAppointments.filter(
+      (appointment) => !appointment.isVisible && occupiesTime(appointment),
+    );
+
+    return {
+      segStart,
+      segEnd,
+      content: {
+        kind: "slots",
+        slots: visibleAppointments.map(({ slot }) => slot),
+        showFreeSlotBlock: !segmentAppointments.some(occupiesTime),
+        showFilteredBlock:
+          hiddenOccupiedAppointments.length > 0 &&
+          visibleAppointments.length === 0,
+        filteredBlockMinHeight:
+          hiddenOccupiedAppointments.reduce(
+            (total, appointment) => total + getSlotMinHeight(appointment.slot),
+            0,
+          ) +
+          SLOT_GAP * Math.max(0, hiddenOccupiedAppointments.length - 1),
+      } as const,
+    };
+  });
+
+const getSegmentHeight = (
+  segStart: number,
+  segEnd: number,
+  content: SegmentContent,
+) => {
+  const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
+
+  if (content.kind === "break") return baseGridHeight;
+  const slotsMinHeight =
+    content.slots.reduce((total, slot) => total + getSlotMinHeight(slot), 0) +
+    SLOT_GAP * content.slots.length;
+  const freeSlotHeight = content.showFreeSlotBlock ? LONG_SLOT_MIN_HEIGHT : 0;
+  const filteredBlockHeight = content.showFilteredBlock
+    ? Math.max(SHORT_SLOT_MIN_HEIGHT, content.filteredBlockMinHeight)
+    : 0;
+
+  return Math.max(
+    baseGridHeight,
+    slotsMinHeight + freeSlotHeight + filteredBlockHeight,
   );
 };
-
-type TimeSlotListProps = {
-  appointment: Appointment[];
-  breaks?: WorkingDayBreak[];
-  startAt?: string;
-  endAt?: string;
-  date?: string;
-  workingDayId?: number;
-  isLoading?: boolean;
-};
-
-type SegmentContent =
-  | { kind: "break"; breakItem: WorkingDayBreak }
-  | { kind: "slots"; slots: Appointment[] };
 
 const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointment,
@@ -95,6 +262,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   isLoading,
 }) => {
   const { bottom } = useSafeAreaInsets();
+  const visibleStatuses = useAppSelector(selectActiveStatuses);
 
   const handleSlotPress = useCallback((id: number) => {
     router.push(Routers.app.calendar.slot(id));
@@ -103,82 +271,22 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const segments = useMemo(() => {
     if (!startAt || !endAt) return null;
 
-    const start = parseTime(startAt);
-    const end = parseTime(endAt);
+    const dayStart = parseTime(startAt);
+    const dayEnd = parseTime(endAt);
+    const parsedBreaks = parseBreaks(breaks);
+    const parsedAppointments = parseAppointments(appointment, visibleStatuses);
+    const blockingAppointments = parsedAppointments.filter(
+      ({ blocksTime }) => blocksTime,
+    );
+    const timePoints = collectTimePoints(
+      dayStart,
+      dayEnd,
+      parsedBreaks,
+      blockingAppointments,
+    );
 
-    const parsedBreaks = breaks.map((b) => ({
-      start: parseTime(b.start_at),
-      end: parseTime(b.end_at),
-      breakItem: b,
-    }));
-
-    const parsedAppointments = appointment.map((s) => ({
-      start: parseTime(s.start_time),
-      slot: s,
-    }));
-
-    const timePoints = new Set<number>();
-
-    // Always bound the grid to the working day
-    timePoints.add(start);
-    timePoints.add(end);
-
-    // Only add whole-hour boundaries strictly within the working day
-    const startHour = Math.ceil(start / 60);
-    const endHour = Math.floor(end / 60);
-
-    for (let h = startHour; h <= endHour; h++) {
-      const hMin = h * 60;
-      const insideBreak = parsedBreaks.some(
-        (b) => b.start < hMin && b.end > hMin,
-      );
-      const insideAppointment = parsedAppointments.some(
-        ({ start: t, slot }) =>
-          slot.duration > 0 && t < hMin && t + slot.duration > hMin,
-      );
-      if (!insideBreak && !insideAppointment) timePoints.add(hMin);
-    }
-
-    parsedBreaks.forEach((b) => {
-      timePoints.add(b.start);
-      timePoints.add(b.end);
-    });
-
-    parsedAppointments.forEach(({ start: t, slot }) => {
-      const e = t + slot.duration;
-      const isInsideLongerAppointment =
-        slot.duration === 0 &&
-        parsedAppointments.some(
-          (other) =>
-            other.slot.duration > 0 &&
-            other.start < t &&
-            other.start + other.slot.duration > t,
-        );
-      if (!isInsideLongerAppointment && t >= start && t <= end)
-        timePoints.add(t);
-      if (e > start && e <= end) timePoints.add(e);
-    });
-
-    const sorted = Array.from(timePoints).sort((a, b) => a - b);
-
-    return sorted.slice(0, -1).map((segStart, i) => {
-      const segEnd = sorted[i + 1];
-      const breakItem = parsedBreaks.find(
-        (b) => b.start <= segStart && b.end >= segEnd,
-      );
-
-      const content: SegmentContent = breakItem
-        ? { kind: "break", breakItem: breakItem.breakItem }
-        : {
-            kind: "slots",
-            slots: parsedAppointments
-              .filter(({ start: t }) => t >= segStart && t < segEnd)
-              .map(({ slot }) => slot),
-          };
-
-      return { segStart, segEnd, content };
-    });
-  }, [appointment, breaks, startAt, endAt]);
+    return buildSegments(timePoints, parsedBreaks, parsedAppointments);
+  }, [appointment, visibleStatuses, breaks, startAt, endAt]);
 
   if (isLoading) {
     return <TimeSlotListSkeleton />;
@@ -208,12 +316,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
           key={segStart}
           className="flex-row"
           style={{
-            height: (() => {
-              const base = (segEnd - segStart) * MINUTE_HEIGHT;
-              if (content.kind !== "slots") return base;
-              if (content.slots.length > 0) return Math.max(base, HOUR_HEIGHT);
-              return Math.max(base, 40);
-            })(),
+            height: getSegmentHeight(segStart, segEnd, content),
           }}
         >
           <View className="border-r border-neutral-200 relative w-[50px]">
@@ -221,25 +324,31 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
           </View>
 
           <View className="flex-1 pl-2.5 relative">
-            {content.kind === "slots" && content.slots.length === 0 && (
-              <HalfHourLines segStart={segStart} segEnd={segEnd} />
-            )}
             {content.kind === "break" ? (
               <BreakBlock breakItem={content.breakItem} />
-            ) : content.slots.length > 0 ? (
-              content.slots.map((slot) => (
-                <SlotCard
-                  key={slot.id}
-                  slot={slot}
-                  onPress={() => handleSlotPress(slot.id)}
-                />
-              ))
             ) : (
-              <FreeSlotBlock
-                date={date}
-                time={formatTime(segStart)}
-                endTime={formatTime(segEnd)}
-              />
+              <>
+                {content.slots.map((slot) => (
+                  <SlotCard
+                    key={slot.id}
+                    slot={slot}
+                    onPress={() => handleSlotPress(slot.id)}
+                    containerStyle={{
+                      ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
+                      minHeight: getSlotMinHeight(slot),
+                      marginBottom: SLOT_GAP,
+                    }}
+                  />
+                ))}
+                {content.showFilteredBlock && <FilteredSlotBlock />}
+                {content.showFreeSlotBlock && (
+                  <FreeSlotBlock
+                    date={date}
+                    time={formatTime(segStart)}
+                    endTime={formatTime(segEnd)}
+                  />
+                )}
+              </>
             )}
           </View>
         </View>

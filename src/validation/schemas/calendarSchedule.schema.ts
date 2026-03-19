@@ -73,8 +73,16 @@ const breakSchema = Yup.object().shape({
 
 const scheduleDraftSchema = Yup.object()
   .shape({
-    scheduleStart: Yup.string().default(""),
-    scheduleEnd: Yup.string().default(""),
+    scheduleStart: Yup.string().when("$mode", {
+      is: "bulk",
+      then: (schema) => schema.required("Обязательное поле"),
+      otherwise: (schema) => schema.default(""),
+    }),
+    scheduleEnd: Yup.string().when("$mode", {
+      is: "bulk",
+      then: (schema) => schema.required("Обязательное поле"),
+      otherwise: (schema) => schema.default(""),
+    }),
     breaks: Yup.array().of(breakSchema).required().default([]),
   })
   .test(
@@ -92,8 +100,18 @@ const calendarDaySchema = Yup.object()
     workingDayId: Yup.number().optional(),
     isExisting: Yup.boolean().required().default(false),
     isSelected: Yup.boolean().required().default(false),
-    scheduleStart: Yup.string().default(""),
-    scheduleEnd: Yup.string().default(""),
+    scheduleStart: Yup.string().when(["isSelected", "isExisting"], {
+      is: (isSelected: boolean, isExisting: boolean) =>
+        isSelected && !isExisting,
+      then: (schema) => schema.required("Обязательное поле"),
+      otherwise: (schema) => schema.default(""),
+    }),
+    scheduleEnd: Yup.string().when(["isSelected", "isExisting"], {
+      is: (isSelected: boolean, isExisting: boolean) =>
+        isSelected && !isExisting,
+      then: (schema) => schema.required("Обязательное поле"),
+      otherwise: (schema) => schema.default(""),
+    }),
     breaks: Yup.array().of(breakSchema).required().default([]),
   })
   .default({
@@ -129,23 +147,6 @@ export const CalendarScheduleSchema = Yup.object()
     }),
     calendarDays: Yup.array().of(calendarDaySchema).required().default([]),
   })
-  .test(
-    "bulk-common-draft",
-    "Заполните рабочее время",
-    (value) =>
-      value?.mode !== "bulk" ||
-      getSelectedEditableDays(value?.calendarDays).length === 0 ||
-      (!!value.commonDraft?.scheduleStart && !!value.commonDraft?.scheduleEnd),
-  )
-  .test(
-    "per-day-days-required",
-    "Настройте расписание для выбранных дней",
-    (value) =>
-      value?.mode !== "perDay" ||
-      getSelectedEditableDays(value?.calendarDays).every(
-        (day) => !!day.scheduleStart && !!day.scheduleEnd,
-      ),
-  )
   .test(
     "per-day-time-range",
     "Время окончания должно быть позже времени начала",

@@ -32,6 +32,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "transparent",
   },
+  mainWeek: {
+    marginVertical: 4,
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
   scheduleMainWeek: {
     marginVertical: 1,
     flexDirection: "row",
@@ -56,6 +61,7 @@ export const calendarTheme = {
   ...baseCalendarTheme,
   "stylesheet.calendar.main": {
     monthView: styles.monthView,
+    week: styles.mainWeek,
   },
   "stylesheet.calendar.header": {
     week: styles.week,

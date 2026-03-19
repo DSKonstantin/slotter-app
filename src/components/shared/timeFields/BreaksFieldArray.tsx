@@ -13,7 +13,7 @@ type Props = {
   name?: string;
 };
 
-export const DayScheduleBreaksFieldArray = ({ name = "breaks" }: Props) => {
+export const BreaksFieldArray = ({ name = "breaks" }: Props) => {
   const { control } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
 
@@ -22,12 +22,12 @@ export const DayScheduleBreaksFieldArray = ({ name = "breaks" }: Props) => {
   return (
     <View>
       {fields.length > 0 && (
-        <Typography className="text-caption text-neutral-500">
+        <Typography className="text-caption text-neutral-500 mb-2">
           Перерывы
         </Typography>
       )}
 
-      <View className="gap-2">
+      <View className="gap-2 mb-2">
         {fields.map((field, index) => (
           <View key={field.id} className="flex-row items-center gap-2">
             <View className="flex-1">

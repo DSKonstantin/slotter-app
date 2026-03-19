@@ -13,7 +13,7 @@ import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { days } from "@/src/constants/days";
 import { colors } from "@/src/styles/colors";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
-import { BreaksFieldArray } from "@/src/components/onboarding/schedule/breaksFieldArray";
+import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
 
 type ScheduleFormValues = {
   workingTimeFrom: string;

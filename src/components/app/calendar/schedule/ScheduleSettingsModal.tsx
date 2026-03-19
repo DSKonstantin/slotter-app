@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Alert, StyleSheet, View } from "react-native";
-import { useFormContext, useWatch } from "react-hook-form";
+import { FormProvider, useFormContext, useWatch } from "react-hook-form";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
-import BottomSheet, {
+import {
+  BottomSheetModal,
   BottomSheetScrollView,
   type BottomSheetBackgroundProps,
 } from "@gorhom/bottom-sheet";
 
-import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
-import { DayScheduleBreaksFieldArray } from "@/src/components/app/calendar/daySchedule/DayScheduleBreaksFieldArray";
+import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
+import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
 import {
   Button,
   Divider,
@@ -21,14 +20,10 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { pluralize } from "@/src/utils/text/pluralize";
-import {
-  areUniformDays,
-  clearSelectedDay,
-  createDraftFromDay,
-} from "@/src/utils/calendar/scheduleHelpers";
+import { formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { parseISO } from "date-fns";
+import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
 
 type Props = {
@@ -37,80 +32,6 @@ type Props = {
   onSave: () => void;
   isLoading?: boolean;
 };
-
-const ScheduleTimeFields = ({
-  startName,
-  endName,
-}: {
-  startName: string;
-  endName: string;
-}) => (
-  <View className="flex-row gap-2">
-    <View className="flex-1">
-      <RhfDatePicker
-        name={startName}
-        placeholder="9:00"
-        hideErrorText
-        parseValue={parseTimeString}
-        formatValue={formatTime}
-        endAdornment={
-          <StSvg name="Time" size={24} color={colors.neutral[500]} />
-        }
-      />
-    </View>
-    <View className="w-5 items-center mt-[25px]">
-      <Divider />
-    </View>
-    <View className="flex-1">
-      <RhfDatePicker
-        name={endName}
-        placeholder="18:00"
-        hideErrorText
-        parseValue={parseTimeString}
-        formatValue={formatTime}
-        endAdornment={
-          <StSvg name="Time" size={24} color={colors.neutral[500]} />
-        }
-      />
-    </View>
-  </View>
-);
-
-const DayScheduleCard = ({
-  index,
-  date,
-  onRemove,
-}: {
-  index: number;
-  date: string;
-  onRemove: () => void;
-}) => (
-  <View className="rounded-[28px] bg-background-surface px-4 py-4">
-    <View className="flex-row items-center justify-between gap-3 mb-3">
-      <View>
-        <Typography weight="semibold" className="text-body capitalize">
-          {format(parseISO(date), "d MMMM", { locale: ru })}
-        </Typography>
-        <Typography className="text-caption text-neutral-500 capitalize">
-          {format(parseISO(date), "EEEE", { locale: ru })}
-        </Typography>
-      </View>
-      <IconButton
-        size="sm"
-        onPress={onRemove}
-        buttonClassName="bg-accent-red-500"
-        icon={<StSvg name="Close_square" size={24} color={colors.neutral[0]} />}
-      />
-    </View>
-    <ScheduleTimeFields
-      startName={`calendarDays.${index}.scheduleStart`}
-      endName={`calendarDays.${index}.scheduleEnd`}
-    />
-    <View className="mt-3">
-      <DayScheduleBreaksFieldArray name={`calendarDays.${index}.breaks`} />
-    </View>
-  </View>
-);
 
 const ScheduleSettingsModalContent = ({
   onClose,
@@ -159,33 +80,28 @@ const ScheduleSettingsModalContent = ({
       if (nextMode === mode) return;
 
       if (nextMode === "perDay") {
+        selectedEditableDays.forEach(({ index }) => {
+          setValue(`calendarDays.${index}.scheduleStart`, "", { shouldDirty: true });
+          setValue(`calendarDays.${index}.scheduleEnd`, "", { shouldDirty: true });
+          setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
+        });
         setValue("mode", "perDay", { shouldDirty: true });
-        return;
-      }
-
-      const scheduleDays = selectedEditableDays.map(({ day }) => day);
-      const firstDay = scheduleDays[0];
-
-      const applyBulkMode = () => {
-        if (firstDay) {
-          setValue("commonDraft", createDraftFromDay(firstDay), {
-            shouldDirty: true,
-          });
-        }
-        setValue("mode", "bulk", { shouldDirty: true });
-      };
-
-      if (areUniformDays(scheduleDays)) {
-        applyBulkMode();
         return;
       }
 
       Alert.alert(
         "Переключить режим?",
-        "Индивидуальные настройки будут заменены общим расписанием.",
+        "Индивидуальные настройки дней будут сброшены.",
         [
           { text: "Отмена", style: "cancel" },
-          { text: "Переключить", style: "destructive", onPress: applyBulkMode },
+          {
+            text: "Переключить",
+            style: "destructive",
+            onPress: () => {
+              setValue("commonDraft", { scheduleStart: "", scheduleEnd: "", breaks: [] }, { shouldDirty: true });
+              setValue("mode", "bulk", { shouldDirty: true });
+            },
+          },
         ],
       );
     },
@@ -256,23 +172,45 @@ const ScheduleSettingsModalContent = ({
       {canSave ? (
         mode === "bulk" ? (
           <>
-            <ScheduleTimeFields
+            <TimeFields
+              label="Рабочее время"
               startName="commonDraft.scheduleStart"
               endName="commonDraft.scheduleEnd"
             />
             <View className="mt-3 mb-4">
-              <DayScheduleBreaksFieldArray name="commonDraft.breaks" />
+              <BreaksFieldArray name="commonDraft.breaks" />
             </View>
           </>
         ) : (
-          <View className="gap-3 mb-4">
-            {selectedEditableDays.map(({ day, index }) => (
-              <DayScheduleCard
-                key={day.date}
-                index={index}
-                date={day.date}
-                onRemove={() => removeDay(index)}
-              />
+          <View className="gap-4 mb-4">
+            {selectedEditableDays.map(({ day, index }, i) => (
+              <View key={day.date}>
+                {i > 0 && <Divider className="mb-4" />}
+                <View className="flex-row items-center justify-between mb-2">
+                  <Typography className="text-neutral-500 text-caption">
+                    {`Рабочее время · ${formatDayMonthLong(parseISO(day.date))}`}
+                  </Typography>
+                  <IconButton
+                    size="xs"
+                    buttonClassName="bg-accent-red-500"
+                    onPress={() => removeDay(index)}
+                    icon={
+                      <StSvg
+                        name="Close_square"
+                        size={20}
+                        color={colors.neutral[0]}
+                      />
+                    }
+                  />
+                </View>
+                <TimeFields
+                  startName={`calendarDays.${index}.scheduleStart`}
+                  endName={`calendarDays.${index}.scheduleEnd`}
+                />
+                <View className="mt-3">
+                  <BreaksFieldArray name={`calendarDays.${index}.breaks`} />
+                </View>
+              </View>
             ))}
           </View>
         )
@@ -302,17 +240,9 @@ export const ScheduleSettingsModal = ({
   onSave,
   isLoading,
 }: Props) => {
-  const { bottom } = useSafeAreaInsets();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["45%", "85%"], []);
-
-  useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.snapToIndex(0);
-    } else {
-      bottomSheetRef.current?.close();
-    }
-  }, [visible]);
+  const methods = useFormContext<CalendarScheduleFormValues>();
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["20%", "45%", "85%"], []);
 
   const renderBackground = useCallback(
     ({ style }: BottomSheetBackgroundProps) => (
@@ -325,29 +255,39 @@ export const ScheduleSettingsModal = ({
     [],
   );
 
+  const renderBackdrop = useCallback(() => null, []);
+
+  useEffect(() => {
+    if (visible) {
+      bottomSheetRef.current?.present();
+    } else {
+      bottomSheetRef.current?.dismiss();
+    }
+  }, [visible]);
+
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={bottomSheetRef}
-      index={-1}
+      index={1}
       snapPoints={snapPoints}
-      enablePanDownToClose
+      enablePanDownToClose={false}
       detached
-      bottomInset={TAB_BAR_HEIGHT + bottom + 16}
       style={styles.sheet}
       backgroundComponent={renderBackground}
       handleIndicatorStyle={styles.handle}
-      onChange={(index) => {
-        if (index === -1) onClose();
-      }}
+      backdropComponent={renderBackdrop}
+      onDismiss={onClose}
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
-        <ScheduleSettingsModalContent
-          onClose={onClose}
-          onSave={onSave}
-          isLoading={isLoading}
-        />
+        <FormProvider {...methods}>
+          <ScheduleSettingsModalContent
+            onClose={onClose}
+            onSave={onSave}
+            isLoading={isLoading}
+          />
+        </FormProvider>
       </BottomSheetScrollView>
-    </BottomSheet>
+    </BottomSheetModal>
   );
 };
 

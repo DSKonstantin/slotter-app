@@ -25,12 +25,8 @@ const AppointmentCard = ({ time, name, service, onPress }: Props) => {
           {time}
         </Typography>
 
-        <Typography
-          weight="regular"
-          className="text-body text-neutral-500"
-          numberOfLines={1}
-        >
-          {name} · {service}
+        <Typography weight="regular" className="text-body text-neutral-500">
+          {name} {service && `| ${service}`}
         </Typography>
       </View>
 

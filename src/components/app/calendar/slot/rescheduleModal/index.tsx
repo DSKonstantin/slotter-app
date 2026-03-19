@@ -17,6 +17,8 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { colors } from "@/src/styles/colors";
 import { router } from "expo-router";
+import { parseISO } from "date-fns";
+import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 
 type Props = {
@@ -61,7 +63,12 @@ const RescheduleModal = ({
 
   const { data: availableSlots, isFetching: isFetchingSlots } =
     useGetAvailableSlotsQuery(
-      { userId: auth?.userId ?? 0, date: dateValue, step: 15 },
+      {
+        userId: auth?.userId ?? 0,
+        date: dateValue,
+        step: 15,
+        appointment_id: appointmentId,
+      },
       { skip: !isValidDate || !auth },
     );
 

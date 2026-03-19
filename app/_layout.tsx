@@ -18,6 +18,7 @@ import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-d
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toasts } from "@backpackapp-io/react-native-toast";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "@/src/store/redux/store";
@@ -56,29 +57,34 @@ function InitialLayout() {
         >
           <KeyboardProvider>
             <AutocompleteDropdownContextProvider>
-              <Stack>
-                <Stack.Protected
-                  guard={isAuthenticated && isOnboardingComplete}
-                >
-                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                </Stack.Protected>
-                <Stack.Protected
-                  guard={isAuthenticated && !isOnboardingComplete}
-                >
-                  <Stack.Screen
-                    name="(onboarding)"
-                    options={{ headerShown: false }}
-                  />
-                </Stack.Protected>
-                <Stack.Protected guard={!isAuthenticated}>
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                </Stack.Protected>
-              </Stack>
-              <Toasts overrideDarkMode={true} />
-              <StatusBar style="auto" />
+              <BottomSheetModalProvider>
+                <Stack>
+                  <Stack.Protected
+                    guard={isAuthenticated && isOnboardingComplete}
+                  >
+                    <Stack.Screen
+                      name="(app)"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack.Protected>
+                  <Stack.Protected
+                    guard={isAuthenticated && !isOnboardingComplete}
+                  >
+                    <Stack.Screen
+                      name="(onboarding)"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack.Protected>
+                  <Stack.Protected guard={!isAuthenticated}>
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack.Protected>
+                </Stack>
+                <Toasts overrideDarkMode={true} />
+                <StatusBar style="auto" />
+              </BottomSheetModalProvider>
             </AutocompleteDropdownContextProvider>
           </KeyboardProvider>
         </ThemeProvider>

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { useFocusEffect } from "expo-router";
 import { Alert, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -42,6 +43,12 @@ const CalendarSchedule = () => {
     applyTemplateDays,
   } = useCalendarSchedule(current);
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => clearSelection();
+    }, [clearSelection]),
+  );
+
   const calendarDaysMap = useMemo(
     () => Object.fromEntries(calendarDays.map((day) => [day.date, day])),
     [calendarDays],
@@ -83,11 +90,11 @@ const CalendarSchedule = () => {
 
   const renderDay = useCallback(
     ({ date, state }: any) => {
-      const isOtherMonth = state === "disabled";
+      const isToday = state === "today";
       const dayData = date ? calendarDaysMap[date.dateString] : undefined;
 
       const handlePress = () => {
-        if (!date || isOtherMonth || !dayData) return;
+        if (!date || !dayData) return;
 
         if (dayData.isExisting && dayData.workingDayId) {
           if (hasPendingEditableSelection) {
@@ -125,11 +132,9 @@ const CalendarSchedule = () => {
             scheduleTime={
               dayData?.isExisting ? getScheduleTimeLabel(dayData) : undefined
             }
-            hasAppointments={
-              !isOtherMonth && appointmentDates.has(date?.dateString ?? "")
-            }
-            isOtherMonth={isOtherMonth}
+            hasAppointments={appointmentDates.has(date?.dateString ?? "")}
             isSelected={dayData?.isSelected}
+            isToday={isToday}
             onPress={handlePress}
           />
         </View>
@@ -172,7 +177,7 @@ const CalendarSchedule = () => {
               initialDate={formatApiDate(current)}
               firstDay={1}
               hideArrows
-              hideDayNames
+              // hideDayNames
               hideExtraDays={true}
               renderHeader={renderHeader}
               theme={scheduleCalendarTheme}

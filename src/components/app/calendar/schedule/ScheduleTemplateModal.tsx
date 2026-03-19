@@ -24,7 +24,7 @@ import {
   type ScheduleTemplateFormValues,
 } from "@/src/validation/schemas/scheduleTemplate.schema";
 import { days } from "@/src/constants/days";
-import { DayScheduleBreaksFieldArray } from "@/src/components/app/calendar/daySchedule/DayScheduleBreaksFieldArray";
+import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
 import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
 
 const DayRow = ({ index }: { index: number }) => {
@@ -73,7 +73,7 @@ const DayRow = ({ index }: { index: number }) => {
             </View>
           </View>
 
-          <DayScheduleBreaksFieldArray name={`days.${index}.breaks`} />
+          <BreaksFieldArray name={`days.${index}.breaks`} />
         </View>
       )}
     </View>

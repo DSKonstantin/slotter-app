@@ -63,9 +63,7 @@ const EditableRow = ({
               <StSvg
                 name={editing ? "Check_round_fill" : "Edit_light"}
                 size={20}
-                color={
-                  editing ? colors.primary.blue[500] : colors.neutral[500]
-                }
+                color={editing ? colors.primary.blue[500] : colors.neutral[500]}
               />
             }
           />
