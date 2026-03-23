@@ -134,7 +134,7 @@ const Home = () => {
                   color={colors.accent.red[500]}
                 />
               }
-              onPress={() => router.push(Routers.app.menu.account)}
+              onPress={() => router.push(Routers.app.menu.account.root)}
             />
             <HomeCard
               disabled

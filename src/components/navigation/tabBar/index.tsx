@@ -80,7 +80,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
           size="lg"
           icon={
             <StSvg
-              name={isMenuOpen ? "Close" : "Add_round"}
+              name={isMenuOpen ? "Close_round" : "Menu"}
               size={36}
               color={colors.primary.blue[500]}
             />

@@ -67,13 +67,9 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-
-      // getMe pending
       .addMatcher(authApi.endpoints.getMe.matchPending, (state) => {
         state.status = "loading";
       })
-
-      // getMe fulfilled
       .addMatcher(
         authApi.endpoints.getMe.matchFulfilled,
         (state, { payload }) => {
@@ -82,46 +78,34 @@ const authSlice = createSlice({
           state.status = user ? "authenticated" : "unauthenticated";
         },
       )
-
-      // getMe rejected
       .addMatcher(authApi.endpoints.getMe.matchRejected, (state) => {
         state.user = null;
         state.status = "unauthenticated";
       })
-
-      // login
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,
         (state, { payload }) => {
           setAuthenticatedUser(state, payload);
         },
       )
-
-      // confirmTelegramLogin
       .addMatcher(
         authApi.endpoints.confirmTelegramLogin.matchFulfilled,
         (state, { payload }) => {
           setAuthenticatedUser(state, payload);
         },
       )
-
-      // telegramRegisterStatus
       .addMatcher(
         authApi.endpoints.telegramRegisterStatus.matchFulfilled,
         (state, { payload }) => {
           setAuthenticatedUser(state, payload);
         },
       )
-
-      // updateUser
       .addMatcher(
         authApi.endpoints.updateUser.matchFulfilled,
         (state, { payload }) => {
           setUserOnly(state, payload);
         },
       )
-
-      // updateCustomer
       .addMatcher(
         authApi.endpoints.updateCustomer.matchFulfilled,
         (state, { payload }) => {

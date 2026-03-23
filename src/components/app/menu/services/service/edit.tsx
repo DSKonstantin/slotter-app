@@ -19,6 +19,7 @@ import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type EditServiceProps = {
   serviceId: number;

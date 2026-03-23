@@ -17,4 +17,5 @@ export { Item } from "./Item";
 export { Switch } from "./Switch";
 export { StSvg } from "./StSvg";
 export { PaginationDots } from "./PaginationDots";
+export { BottomSheetHandle } from "./BottomSheetHandle";
 export { SegmentedControl } from "./segmentedControl";

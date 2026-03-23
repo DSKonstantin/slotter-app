@@ -3,6 +3,7 @@ import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
 import { BlurView } from "expo-blur";
+import { BottomSheetHandle } from "./BottomSheetHandle";
 
 type StModalProps = {
   visible: boolean;
@@ -53,9 +54,7 @@ export const StModal = ({
         style={containerStyle}
       >
         <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
-        <View className="items-center mb-3">
-          <View className="w-[83px] h-1 rounded-large bg-[#78788029]" />
-        </View>
+        <BottomSheetHandle />
 
         {children}
       </View>

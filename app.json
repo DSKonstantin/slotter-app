@@ -74,7 +74,13 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Разрешите $(PRODUCT_NAME) доступ к контактам для быстрого добавления клиентов"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -75,6 +75,21 @@ export const Routers = {
     clients: {
       root: "/(app)/clients",
       create: "/(app)/clients/create" as const,
+      detail: (id: string | number) =>
+        ({
+          pathname: "/(app)/clients/[id]",
+          params: { id: String(id) },
+        }) as const,
+      statistics: (id: string | number) =>
+        ({
+          pathname: "/(app)/clients/[id]/statistics",
+          params: { id: String(id) },
+        }) as const,
+      balance: (id: string | number) =>
+        ({
+          pathname: "/(app)/clients/[id]/balance",
+          params: { id: String(id) },
+        }) as const,
     },
     menu: {
       schedule: "/(app)/(menu)/schedule",
@@ -115,7 +130,18 @@ export const Routers = {
           }) as const,
       },
 
-      account: "/(app)/(menu)/account",
+      account: {
+        root: "/(app)/(menu)/account" as const,
+        personalInformation:
+          "/(app)/(menu)/account/personal-information" as const,
+        about: "/(app)/(menu)/account/about" as const,
+        links: "/(app)/(menu)/account/links" as const,
+        booking: "/(app)/(menu)/account/booking" as const,
+        notifications: "/(app)/(menu)/account/notifications" as const,
+        preview: "/(app)/(menu)/account/preview" as const,
+        gallery: "/(app)/(menu)/account/gallery" as const,
+        support: "/(app)/(menu)/account/support" as const,
+      },
     },
   },
 } as const;

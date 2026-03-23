@@ -36,6 +36,7 @@ function InitialLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    "TJF-Anomaly": require("@/assets/fonts/TJF-Anomaly-Regular.ttf"),
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 

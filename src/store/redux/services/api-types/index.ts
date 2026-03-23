@@ -37,6 +37,19 @@ export type {
   CancelPayload,
 } from "./appointment";
 export type {
+  Customer,
+  CustomerTag,
+  CustomerStats,
+  CustomerStatPoint,
+  CustomerStatsResponse,
+  CustomerBalancePoint,
+  CustomerBalanceResponse,
+  GetCustomersParams,
+  GetCustomersResponse,
+  CreateCustomerPayload,
+  UpdateCustomerPayload,
+} from "./customer";
+export type {
   WorkingDay,
   WorkingDayBreak,
   WorkingDayBreaksAttributesPayload,
