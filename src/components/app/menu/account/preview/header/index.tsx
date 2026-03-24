@@ -1,14 +1,58 @@
-import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import type { User } from "@/src/store/redux/services/api-types/user";
+import React, { useCallback, useState } from "react";
+import { View, Image, StyleSheet, Text } from "react-native";
+import type { NativeSyntheticEvent, TextLayoutEventData } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Avatar } from "@/src/components/ui/Avatar";
 import { Tag } from "@/src/components/ui/Tag";
 import { Typography } from "@/src/components/ui/Typography";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { colors } from "@/src/styles/colors";
-import type { User } from "@/src/store/redux/services/api-types/user";
 
 type Props = { user: User };
+
+const AboutMe = ({ text }: { text: string }) => {
+  const [truncatedText, setTruncatedText] = useState<string | null>(null);
+
+  const onHiddenLayout = useCallback(
+    (e: NativeSyntheticEvent<TextLayoutEventData>) => {
+      const lines = e.nativeEvent.lines;
+      if (lines.length <= 2) return;
+
+      const twoLines = lines
+        .slice(0, 2)
+        .map((l) => l.text)
+        .join("")
+        .trimEnd();
+      const lastSpace = twoLines.lastIndexOf(" ", twoLines.length - 4);
+      setTruncatedText(
+        twoLines.slice(0, lastSpace > 0 ? lastSpace : twoLines.length - 4),
+      );
+    },
+    [],
+  );
+
+  return (
+    <View style={{ maxWidth: 250 }}>
+      <Text
+        style={{ position: "absolute", opacity: 0 }}
+        className="font-inter-regular text-caption"
+        onTextLayout={onHiddenLayout}
+      >
+        {text}
+      </Text>
+      <Text className="font-inter-regular text-caption text-neutral-0">
+        {truncatedText !== null ? truncatedText : text}
+        {truncatedText !== null && (
+          <Text className="font-inter-semibold text-caption text-neutral-300">
+            {" "}
+            ... Ещё
+          </Text>
+        )}
+      </Text>
+    </View>
+  );
+};
 
 type PreviewHeaderImageProps = { uri?: string };
 
@@ -48,23 +92,7 @@ export const PreviewHeaderContent = ({ user }: Props) => {
         </View>
       </View>
 
-      {user.about_me ? (
-        <View style={{ maxWidth: 250 }} className="gap-0.5">
-          <Typography
-            weight="regular"
-            className="text-caption text-neutral-0"
-            numberOfLines={2}
-          >
-            {user.about_me}
-          </Typography>
-          <Typography
-            weight="semibold"
-            className="text-caption text-neutral-300"
-          >
-            Ещё
-          </Typography>
-        </View>
-      ) : null}
+      {user.about_me ? <AboutMe text={user.about_me} /> : null}
 
       {user.address ? (
         <Tag

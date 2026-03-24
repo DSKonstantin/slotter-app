@@ -74,13 +74,34 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const id = Number(slotId);
 
   const handleSave = async () => {
+    if (!slot || !editingField) return;
+
     const duration = Number(methods.getValues("duration"));
     const price = Number(methods.getValues("price"));
-    if (!duration || duration <= 0 || price < 0) return;
+
+    if (editingField === "duration") {
+      if (!duration || duration <= 0) return;
+      if (duration === slot.duration) {
+        setEditingField(null);
+        return;
+      }
+    }
+
+    if (editingField === "price") {
+      if (price < 0) return;
+      if (rublesToCents(price) === slot.price_cents) {
+        setEditingField(null);
+        return;
+      }
+    }
+
     try {
       await updateAppointment({
         id,
-        body: { duration, price_cents: rublesToCents(price) },
+        body:
+          editingField === "duration"
+            ? { duration }
+            : { price_cents: rublesToCents(price) },
       }).unwrap();
       toast.success("Сохранено");
       setEditingField(null);
@@ -132,6 +153,18 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
           const statusConfig = STATUS_CONFIG[slot.status] ?? null;
           const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
           const serviceNames = slot.services.map((s) => s.name).join(", ");
+          const additionalServiceNames = slot.additional_services
+            .map((s) => s.name)
+            .join(", ");
+          const serviceSelectionParams = {
+            date: slot.date,
+            time: slot.start_time,
+            appointmentId: String(slot.id),
+            selectedServiceIds: slot.services.map((s) => s.id).join(","),
+            selectedAdditionalServiceIds: slot.additional_services
+              .map((s) => s.id)
+              .join(","),
+          };
 
           return (
             <>
@@ -195,14 +228,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                             size="xs"
                             onPress={() =>
                               router.push(
-                                Routers.app.calendar.slotSelectService({
-                                  date: slot.date,
-                                  time: slot.start_time,
-                                  appointmentId: String(slot.id),
-                                  selectedServiceIds: slot.services
-                                    .map((s) => s.id)
-                                    .join(","),
-                                }),
+                                Routers.app.calendar.slotSelectService(
+                                  serviceSelectionParams,
+                                ),
                               )
                             }
                             icon={
@@ -217,6 +245,41 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       </View>
                     }
                   />
+
+                  {(canEdit || slot.additional_services.length > 0) && (
+                    <InfoRow
+                      label="Доп. услуги"
+                      right={
+                        <View className="flex-row items-center gap-1 flex-1 justify-end">
+                          <Typography
+                            weight="regular"
+                            className="text-body text-neutral-900 flex-shrink text-right"
+                          >
+                            {additionalServiceNames || "—"}
+                          </Typography>
+                          {canEdit && (
+                            <IconButton
+                              size="xs"
+                              onPress={() =>
+                                router.push(
+                                  Routers.app.calendar.slotSelectService(
+                                    serviceSelectionParams,
+                                  ),
+                                )
+                              }
+                              icon={
+                                <StSvg
+                                  name="Edit_light"
+                                  size={20}
+                                  color={colors.neutral[500]}
+                                />
+                              }
+                            />
+                          )}
+                        </View>
+                      }
+                    />
+                  )}
 
                   <InfoRow
                     label="Дата и время"

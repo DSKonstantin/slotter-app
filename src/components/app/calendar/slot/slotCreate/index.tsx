@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -277,6 +278,9 @@ const SlotCreate: React.FC = () => {
                 label="Клиент"
                 placeholder="Поиск по имени или телефону"
                 hideErrorText
+                startAdornment={
+                  <StSvg name="Search" size={24} color={colors.neutral[900]} />
+                }
               />
               <Button
                 title=" Создать нового клиента"
@@ -294,14 +298,11 @@ const SlotCreate: React.FC = () => {
 
             <View className="flex-row gap-3 mt-5">
               <View className="flex-1">
-                <RhfTextField
-                  label="Дата"
+                <RhfCalendarDatePicker
                   name="date"
-                  value={
-                    draft.date ? formatDayMonthLong(parseISO(draft.date)) : "—"
-                  }
+                  label="Дата"
                   placeholder="дд.мм"
-                  editable={false}
+                  displayFormat={(iso) => formatDayMonthLong(parseISO(iso))}
                   endAdornment={
                     <StSvg
                       name="Date_today"
@@ -332,6 +333,8 @@ const SlotCreate: React.FC = () => {
                 name="duration"
                 label="Изменить продолжительность (мин)"
                 placeholder="60"
+                keyboardType="number-pad"
+                maxLength={4}
               />
             </View>
 

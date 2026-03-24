@@ -1,43 +1,18 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  ScrollView,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { FlatList, Pressable, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { Button, PaginationDots, Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
-import type {
-  Service,
-  ServiceCategory,
-} from "@/src/store/redux/services/api-types";
 import { colors } from "@/src/styles/colors";
 import PreviewServiceCard from "@/src/components/app/menu/account/preview/services/PreviewServiceCard";
+import ServicesSkeleton from "@/src/components/app/menu/account/preview/services/ServicesSkeleton";
 
-type PreviewServiceCategory = ServiceCategory & {
-  services: Service[];
-};
+type ServiceItem = { serviceId: number; service: any };
 
 const Services = () => {
   const auth = useRequiredAuth();
-  const { width } = useWindowDimensions();
-  const listRef = useRef<FlatList<Service>>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    null,
-  );
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const listRef = useRef<FlatList<ServiceItem>>(null);
 
   const {
     data,
@@ -52,123 +27,49 @@ const Services = () => {
     auth
       ? {
           userId: auth.userId,
-          params: { view: "public_profile", per_page: 100 },
+          params: { view: "public_profile" },
         }
       : skipToken,
   );
+
+  const services = useMemo<ServiceItem[]>(() => {
+    return (data?.pages.flatMap((page) => page.service_categories) ?? [])
+      .filter((category) => category.is_active)
+      .flatMap((category) =>
+        (category.services ?? [])
+          .filter((service) => service.is_active)
+          .map((service) => ({ serviceId: service.id, service })),
+      );
+  }, [data]);
+
+  const handleRetry = useCallback(() => {
+    refetch({ refetchCachedPages: false });
+  }, [refetch]);
 
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage || isError) return;
     fetchNextPage();
   }, [fetchNextPage, hasNextPage, isError, isFetchingNextPage]);
 
-  const categories = useMemo<PreviewServiceCategory[]>(() => {
-    return (data?.pages.flatMap((page) => page.service_categories) ?? [])
-      .filter((category) => category.is_active)
-      .map((category) => ({
-        ...category,
-        services: (category.services ?? []).filter(
-          (service) => service.is_active,
-        ),
-      }))
-      .filter((category) => category.services.length > 0);
-  }, [data]);
-
-  const totalServicesCount = useMemo(
-    () =>
-      categories.reduce(
-        (sum, category) => sum + (category.services?.length ?? 0),
-        0,
-      ),
-    [categories],
-  );
-
-  useEffect(() => {
-    if (!categories.length) {
-      setSelectedCategoryId(null);
-      return;
-    }
-
-    setSelectedCategoryId((prev) =>
-      categories.some((category) => category.id === prev)
-        ? prev
-        : categories[0].id,
-    );
-  }, [categories]);
-
-  const selectedCategory = useMemo(
-    () =>
-      categories.find((category) => category.id === selectedCategoryId) ??
-      categories[0] ??
-      null,
-    [categories, selectedCategoryId],
-  );
-
-  const cardWidth = useMemo(() => Math.min(width - 76, 340), [width]);
-  const snapInterval = useMemo(() => cardWidth + 12, [cardWidth]);
-  const listTrailingPadding = useMemo(
-    () => Math.max(width - 40 - cardWidth, 0),
-    [cardWidth, width],
-  );
-
-  useEffect(() => {
-    setActiveSlideIndex(0);
-    listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [selectedCategory?.id]);
-
-  const handleRetry = useCallback(() => {
-    refetch({ refetchCachedPages: false });
-  }, [refetch]);
-
-  const handleCategoryPress = useCallback((categoryId: number) => {
-    setSelectedCategoryId(categoryId);
-  }, []);
-
-  const handleMomentumScrollEnd = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const nextIndex = Math.round(
-        event.nativeEvent.contentOffset.x / snapInterval,
-      );
-      setActiveSlideIndex(nextIndex);
-    },
-    [snapInterval],
-  );
-
-  const handleDotSelect = useCallback(
-    (index: number) => {
-      setActiveSlideIndex(index);
-      listRef.current?.scrollToOffset({
-        offset: index * snapInterval,
-        animated: true,
-      });
-    },
-    [snapInterval],
-  );
-
   if (!auth) return null;
 
   if (isLoading && !data) {
-    return (
-      <View className="gap-3 rounded-[28px] bg-background-surface p-5">
-        <Typography weight="semibold" className="text-[20px] text-neutral-900">
-          Услуги
-        </Typography>
-        <View className="h-[240px] items-center justify-center rounded-[24px] bg-background">
-          <ActivityIndicator color={colors.neutral[400]} />
-        </View>
-      </View>
-    );
+    return <ServicesSkeleton />;
   }
 
   if (isError && !data) {
     return (
-      <View className="gap-3 rounded-[28px] bg-background-surface p-5">
+      <View className="gap-3 mx-screen">
         <Typography weight="semibold" className="text-[20px] text-neutral-900">
           Услуги
         </Typography>
-        <View className="gap-3 rounded-[24px] bg-background p-4">
-          <Typography className="text-body text-neutral-500">
-            Не удалось загрузить список услуг.
+        <View
+          style={{ width: 187 }}
+          className="items-center gap-3 rounded-[28px] bg-background-surface p-8"
+        >
+          <StSvg name="Sad_alt_2" size={40} color={colors.neutral[300]} />
+          <Typography className="text-center text-body text-neutral-500">
+            Не удалось загрузить услуги
           </Typography>
           <Button
             title="Повторить"
@@ -181,86 +82,44 @@ const Services = () => {
     );
   }
 
-  if (!selectedCategory) return null;
+  if (!services.length) return null;
 
   return (
-    <View className="gap-4">
-      <View className="flex-row items-end justify-between gap-3">
-        <View className="flex-1 gap-1">
-          <Typography
-            weight="semibold"
-            className="text-[20px] text-neutral-900"
-          >
-            Услуги
-          </Typography>
-          <Typography className="text-body text-neutral-500">
-            {totalServicesCount} {totalServicesCount === 1 ? "услуга" : "услуг"}
-          </Typography>
-        </View>
+    <View className="gap-2">
+      <View className="flex-1 gap-1 flex-row justify-between mx-screen">
+        <Typography weight="semibold" className="text-body text-neutral-900">
+          Услуги
+        </Typography>
 
-        {isFetchingNextPage ? (
-          <ActivityIndicator color={colors.neutral[400]} />
-        ) : null}
+        <Pressable
+          onPress={() => {}}
+          className="flex-row items-center active:opacity-70"
+        >
+          <Typography className="text-body text-neutral-500">Все</Typography>
+          <StSvg
+            name="Expand_right_light"
+            size={20}
+            color={colors.neutral[500]}
+          />
+        </Pressable>
       </View>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View className="flex-row gap-2 pr-5">
-          {categories.map((category) => {
-            const isActive = category.id === selectedCategory.id;
-
-            return (
-              <Pressable
-                key={category.id}
-                onPress={() => handleCategoryPress(category.id)}
-                className={`rounded-full px-4 py-3 ${
-                  isActive ? "bg-background-black" : "bg-background-surface"
-                }`}
-              >
-                <Typography
-                  weight="semibold"
-                  className={`text-caption uppercase ${
-                    isActive ? "text-neutral-0" : "text-neutral-500"
-                  }`}
-                >
-                  {category.name}
-                </Typography>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
 
       <FlatList
         ref={listRef}
-        data={selectedCategory.services}
+        data={services}
         horizontal
+        className="pl-screen"
+        contentContainerStyle={{
+          paddingRight: 20,
+        }}
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(service) => String(service.id)}
+        keyExtractor={(item) => String(item.serviceId)}
         decelerationRate="fast"
-        snapToInterval={snapInterval}
         snapToAlignment="start"
         disableIntervalMomentum
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        contentContainerStyle={{ paddingRight: listTrailingPadding }}
-        ItemSeparatorComponent={() => <View className="w-3" />}
-        renderItem={({ item }) => (
-          <PreviewServiceCard
-            service={item}
-            categoryName={selectedCategory.name}
-            width={cardWidth}
-          />
-        )}
+        ItemSeparatorComponent={() => <View className="w-4" />}
+        renderItem={({ item }) => <PreviewServiceCard service={item.service} />}
       />
-
-      {selectedCategory.services.length > 1 ? (
-        <View className="items-center">
-          <PaginationDots
-            count={selectedCategory.services.length}
-            activeIndex={activeSlideIndex}
-            onSelect={handleDotSelect}
-          />
-        </View>
-      ) : null}
     </View>
   );
 };

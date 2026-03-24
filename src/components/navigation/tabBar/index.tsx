@@ -7,6 +7,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
+import { usePathname } from "expo-router";
+
+const HIDDEN_TAB_BAR_ROUTES = ["/account/preview"];
 
 const StTabBar: React.FC<BottomTabBarProps> = ({
   state,
@@ -16,6 +19,11 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
   const dispatch = useAppDispatch();
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const activeRoute = state.routes[state.index]?.name;
+  const pathname = usePathname();
+
+  if (HIDDEN_TAB_BAR_ROUTES.some((route) => pathname.endsWith(route))) {
+    return null;
+  }
 
   return (
     <View
@@ -82,7 +90,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
             <StSvg
               name={isMenuOpen ? "Close_round" : "Menu"}
               size={36}
-              color={colors.primary.blue[500]}
+              color={colors.neutral[900]}
             />
           }
           onPress={() => dispatch(setTabMenuOpen(!isMenuOpen))}

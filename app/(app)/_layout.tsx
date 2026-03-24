@@ -3,11 +3,8 @@ import { View } from "react-native";
 import { Tabs } from "expo-router";
 import StTabBar from "@/src/components/navigation/tabBar";
 import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
-import { useAppSelector } from "@/src/store/redux/store";
 
 export default function TabsLayout() {
-  const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
-
   return (
     <View style={{ flex: 1 }}>
       <Tabs
@@ -20,7 +17,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="clients" />
       </Tabs>
 
-      {isMenuOpen && <TabMenu />}
+      <TabMenu />
     </View>
   );
 }

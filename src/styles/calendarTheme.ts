@@ -48,16 +48,33 @@ const baseCalendarTheme = {
   calendarBackground: "transparent",
   textSectionTitleColor: colors.neutral[400],
   todayTextColor: colors.primary?.blue[500],
-  textDayFontFamily: "inter-regular",
-  textMonthFontFamily: "inter-medium",
+  dayTextColor: colors.neutral[900],
+  textDisabledColor: colors.neutral[300],
+  selectedDayBackgroundColor: colors.primary.blue[500],
+  selectedDayTextColor: colors.neutral[0],
+  arrowColor: colors.neutral[900],
+  textDayFontFamily: "Inter_400Regular",
+  textMonthFontFamily: "Inter_500Medium",
   textMonthFontWeight: "500" as const,
-  textDayHeaderFontFamily: "inter-semibold",
-  textDayHeaderFontSize: 16,
+  textDayHeaderFontFamily: "Inter_600SemiBold",
+  textDayHeaderFontSize: 13,
+  textDayFontSize: 15,
   monthTextColor: colors.neutral[900],
   textMonthFontSize: 16,
 };
 
 export const calendarTheme = {
+  ...baseCalendarTheme,
+  "stylesheet.calendar.main": {
+    monthView: styles.monthView,
+    week: styles.mainWeek,
+  },
+  "stylesheet.calendar.header": {
+    week: styles.week,
+  },
+};
+
+export const pickerCalendarTheme = {
   ...baseCalendarTheme,
   "stylesheet.calendar.main": {
     monthView: styles.monthView,

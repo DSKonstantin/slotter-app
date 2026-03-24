@@ -82,9 +82,9 @@ const styles = {
 
   disabled: "",
 
-  adornmentStart: "mx-2",
+  adornmentStart: "ml-2",
 
-  adornmentEnd: "mx-2",
+  adornmentEnd: "mr-2",
 
   errorText:
     "min-h-[20px] font-inter-medium mt-[2px] text-accent-red-500 text-caption",

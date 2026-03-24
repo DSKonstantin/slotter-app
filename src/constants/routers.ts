@@ -61,6 +61,7 @@ export const Routers = {
         time?: string;
         appointmentId?: string;
         selectedServiceIds?: string;
+        selectedAdditionalServiceIds?: string;
       }) =>
         ({
           pathname: "/(app)/calendar/slot/select-service",

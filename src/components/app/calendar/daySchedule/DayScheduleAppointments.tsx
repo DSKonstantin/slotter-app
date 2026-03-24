@@ -20,7 +20,9 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
     userId ? { userId, params: { date } } : skipToken,
   );
 
-  const appointments = (data as Appointment[] | undefined) ?? [];
+  const appointments = ((data as Appointment[] | undefined) ?? [])
+    .slice()
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
   if (isLoading) {
     return <ActivityIndicator />;

@@ -3,6 +3,7 @@ import { StyleProp, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import { TAB_BAR_HEIGHT, TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { ToolbarProvider } from "@/src/components/shared/layout/toolbarContext";
 
 type ScreenWithToolbarProps = {
   title: string;
@@ -32,12 +33,14 @@ const ScreenWithToolbar = ({
   );
 
   return (
-    <View className="relative flex-1">
-      <ToolbarTop title={title} rightButton={rightButton} />
-      <View className={className} style={style}>
-        {typeof children === "function" ? children(insets) : children}
+    <ToolbarProvider>
+      <View className="relative flex-1">
+        <ToolbarTop title={title} rightButton={rightButton} />
+        <View className={className} style={style}>
+          {typeof children === "function" ? children(insets) : children}
+        </View>
       </View>
-    </View>
+    </ToolbarProvider>
   );
 };
 

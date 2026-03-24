@@ -2,6 +2,7 @@ export { Button } from "./Button";
 export { Input } from "./fields/Input";
 export { Autocomplete } from "./fields/Autocomplete";
 export { DatePicker } from "./fields/DatePicker";
+export { CalendarDatePicker } from "./fields/CalendarDatePicker";
 export { DropDown } from "./fields/DropDown";
 export { Tabs } from "./Tabs";
 export { Checkbox } from "./Checkbox";

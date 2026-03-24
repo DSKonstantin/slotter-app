@@ -3,11 +3,11 @@ import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
+import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { Routers } from "@/src/constants/routers";
-import { useAppDispatch } from "@/src/store/redux/store";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
 type MenuItem = {
@@ -44,7 +44,8 @@ const MENU_ITEMS: MenuItem[] = [
 
 const TabMenu = () => {
   const dispatch = useAppDispatch();
-  const { bottom } = useSafeAreaInsets();
+  const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
+  const { bottom, left: leftInset, right: rightInset } = useSafeAreaInsets();
 
   const handleClose = useCallback(() => {
     dispatch(setTabMenuOpen(false));
@@ -59,6 +60,8 @@ const TabMenu = () => {
     [handleClose],
   );
 
+  if (!isMenuOpen) return null;
+
   return (
     <View className="absolute inset-0" pointerEvents="box-none">
       <Pressable
@@ -68,10 +71,15 @@ const TabMenu = () => {
       />
 
       <View
-        className="absolute right-5 bg-white rounded-base py-2 shadow-md"
         style={{
-          bottom: TAB_BAR_HEIGHT + bottom + 12,
+          position: "absolute",
+          bottom: bottom,
+          left: leftInset + 20,
+          right: rightInset + 94,
           minWidth: 210,
+          backgroundColor: "#fff",
+          borderRadius: 30,
+          paddingVertical: 8,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
@@ -99,16 +107,6 @@ const TabMenu = () => {
             </Typography>
           </Pressable>
         ))}
-      </View>
-
-      <View className="absolute right-5" style={{ bottom: bottom + 2 }}>
-        <IconButton
-          size="lg"
-          icon={
-            <StSvg name="Close_round" size={30} color={colors.neutral[900]} />
-          }
-          onPress={handleClose}
-        />
       </View>
     </View>
   );

@@ -10,7 +10,7 @@ import {
   PreviewHeaderContent,
 } from "@/src/components/app/menu/account/preview/header";
 import PreviewLinks from "@/src/components/app/menu/account/preview/links";
-import { BottomSheetHandle } from "@/src/components/ui";
+import { BottomSheetHandle, IconButton, StSvg } from "@/src/components/ui";
 import Booking from "@/src/components/app/menu/account/preview/booking";
 import Services from "@/src/components/app/menu/account/preview/services";
 import Footer from "@/src/components/app/menu/account/preview/footer";
@@ -21,12 +21,19 @@ const AccountPreview = () => {
 
   if (!user) return null;
 
-  const links: string[] = user.personal_link ? [user.personal_link] : [];
-
-  const hasLinks = links.length > 0;
-
   return (
     <View className="flex-1">
+      <ToolbarTop
+        title="Режим просмотра"
+        rightButton={
+          <IconButton
+            icon={
+              <StSvg name="link_alt" size={28} color={colors.neutral[900]} />
+            }
+            onPress={() => {}}
+          />
+        }
+      />
       <ParallaxScrollView
         headerImage={<PreviewHeaderImage uri={user.avatar_url ?? undefined} />}
         headerContent={<PreviewHeaderContent user={user} />}
@@ -35,22 +42,16 @@ const AccountPreview = () => {
           dark: colors.background.DEFAULT,
         }}
         headerHeight={500}
-        contentInset={{ bottom: bottom + 80 }}
+        contentInset={{ bottom: bottom }}
       >
-        <View className="gap-5 pt-2 px-screen">
+        <View className="gap-7 pt-2">
           <BottomSheetHandle />
-
           <Booking />
-
           <Services />
-
-          {hasLinks && <PreviewLinks links={links} />}
-
+          <PreviewLinks user={user} />
           <Footer />
         </View>
       </ParallaxScrollView>
-
-      <ToolbarTop title="Режим просмотра" />
     </View>
   );
 };
