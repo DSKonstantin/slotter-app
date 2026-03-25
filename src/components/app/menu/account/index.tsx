@@ -103,7 +103,7 @@ const AccountScreen = () => {
                 name={[user?.first_name, user?.last_name]
                   .filter(Boolean)
                   .join(" ")}
-                size="sm"
+                size="md"
               />
             }
             className="mx-screen mb-7"

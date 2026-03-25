@@ -5,9 +5,9 @@ import { twMerge } from "tailwind-merge";
 const SIZE_MAP = {
   xs: 34,
   sm: 40,
-  md: 50,
-  lg: 70,
-  xl: 100,
+  md: 44,
+  lg: 60,
+  xl: 70,
 } as const;
 
 type AvatarProps = {

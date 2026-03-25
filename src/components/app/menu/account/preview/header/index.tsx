@@ -8,6 +8,7 @@ import { Tag } from "@/src/components/ui/Tag";
 import { Typography } from "@/src/components/ui/Typography";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { colors } from "@/src/styles/colors";
+import { Badge } from "@/src/components/ui";
 
 type Props = { user: User };
 
@@ -84,13 +85,11 @@ export const PreviewHeaderContent = ({ user }: Props) => {
           <Typography weight="semibold" className="text-2xl text-neutral-0">
             {fullName || "Имя не указано"}
           </Typography>
-          {user.profession ? (
-            <Typography className="text-body text-neutral-400">
-              {user.profession}
-            </Typography>
-          ) : null}
         </View>
       </View>
+      {user.profession ? (
+        <Badge title={user.profession} size="sm" variant="info" />
+      ) : null}
 
       {user.about_me ? <AboutMe text={user.about_me} /> : null}
 

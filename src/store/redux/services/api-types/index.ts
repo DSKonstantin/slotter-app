@@ -3,6 +3,7 @@ export type { BaseResponse, Pagination, PaginatedResponse } from "./common";
 export { UserType } from "./user";
 export type {
   User,
+  AppointmentStep,
   AuthResponse,
   TelegramRegisterResponse,
   TelegramRegisterStatusResponse,

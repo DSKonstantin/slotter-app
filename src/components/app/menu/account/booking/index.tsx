@@ -4,36 +4,42 @@ import { FormProvider, useController, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Divider, Item, StModal, StSvg, Typography } from "@/src/components/ui";
+import { Item, StModal, StSvg, Typography } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
+import { useAppSelector } from "@/src/store/redux/store";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import type { AppointmentStep } from "@/src/store/redux/services/api-types";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type FormValues = {
   autoConfirm: boolean;
-  bookingStep: string;
-  prepayment: boolean;
+  bookingStep: AppointmentStep;
 };
 
 const schema = Yup.object({
   autoConfirm: Yup.boolean().required(),
-  bookingStep: Yup.string().required(),
-  prepayment: Yup.boolean().required(),
+  bookingStep: Yup.mixed<AppointmentStep>().required(),
 });
 
-const BOOKING_STEPS = [
-  { label: "15 минут", value: "15" },
-  { label: "30 минут", value: "30" },
-  { label: "1 час", value: "60" },
-  { label: "2 часа", value: "120" },
+const BOOKING_STEPS: { label: string; value: AppointmentStep }[] = [
+  { label: "5 минут", value: "five_minutes" },
+  { label: "10 минут", value: "ten_minutes" },
+  { label: "15 минут", value: "fifteen_minutes" },
+  { label: "30 минут", value: "thirty_minutes" },
+  { label: "1 час", value: "one_hour" },
 ];
 
-const formatStep = (value: string) => {
+const formatStep = (value: AppointmentStep) => {
   return BOOKING_STEPS.find((s) => s.value === value)?.label ?? value;
 };
 
-function BookingStepField() {
+function BookingStepField({ onSelect }: { onSelect: () => void }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const { field } = useController({ name: "bookingStep" });
+  const { field } = useController<FormValues, "bookingStep">({
+    name: "bookingStep",
+  });
 
   return (
     <>
@@ -59,6 +65,7 @@ function BookingStepField() {
               onPress={() => {
                 field.onChange(step.value);
                 setModalVisible(false);
+                onSelect();
               }}
               right={
                 field.value === step.value ? (
@@ -78,14 +85,31 @@ function BookingStepField() {
 }
 
 const Booking = () => {
+  const user = useAppSelector((s) => s.auth.user);
+  const [updateUser] = useUpdateUserMutation();
+
   const methods = useForm<FormValues>({
     resolver: yupResolver(schema),
     defaultValues: {
-      autoConfirm: false,
-      bookingStep: "60",
-      prepayment: false,
+      autoConfirm: user?.is_auto_approve ?? true,
+      bookingStep: user?.appointment_step ?? "one_hour",
     },
   });
+
+  const onSubmit = async (values: FormValues) => {
+    if (!user) return;
+    try {
+      await updateUser({
+        id: user.id,
+        data: {
+          is_auto_approve: values.autoConfirm,
+          appointment_step: values.bookingStep,
+        },
+      }).unwrap();
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
+    }
+  };
 
   return (
     <FormProvider {...methods}>
@@ -95,12 +119,15 @@ const Booking = () => {
             <View className="overflow-hidden gap-2">
               <Item
                 title="Авто-подтверждение"
-                right={<RHFSwitch name="autoConfirm" />}
+                right={
+                  <RHFSwitch
+                    name="autoConfirm"
+                    onChange={() => methods.handleSubmit(onSubmit)()}
+                  />
+                }
               />
-              <BookingStepField />
-              <Item
-                title="Предоплата"
-                right={<RHFSwitch name="prepayment" />}
+              <BookingStepField
+                onSelect={() => methods.handleSubmit(onSubmit)()}
               />
             </View>
           </View>

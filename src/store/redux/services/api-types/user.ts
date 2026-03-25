@@ -1,4 +1,11 @@
 // src/store/redux/services/api-types/user.ts
+export type AppointmentStep =
+  | "five_minutes"
+  | "ten_minutes"
+  | "fifteen_minutes"
+  | "thirty_minutes"
+  | "one_hour";
+
 export enum UserType {
   USER = "user",
   CUSTOM = "custom",
@@ -22,6 +29,11 @@ export interface User {
   phone_confirmed_at: string | null;
   telegram_id: number | null;
   onboarding_step: string;
+  is_auto_approve: boolean;
+  appointment_step: AppointmentStep;
+  is_notify_booking: boolean;
+  is_notify_cancellation: boolean;
+  is_notify_reminder: boolean;
 }
 
 export interface AuthResponse {

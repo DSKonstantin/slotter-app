@@ -25,6 +25,7 @@ type AutocompleteProps = {
 
   dataSet?: AutocompleteItem[];
   onSelectItem?: (a: any) => void;
+  onChangeText?: (text: string) => void;
   placeholder?: string;
 };
 
@@ -36,6 +37,7 @@ export function Autocomplete({
   dataSet,
   hideErrorText,
   onSelectItem,
+  onChangeText,
   placeholder = "Введите",
 }: AutocompleteProps) {
   const dropdownController = useRef<IAutocompleteDropdownRef | null>(null);
@@ -61,6 +63,7 @@ export function Autocomplete({
             if (!text?.trim()) {
               dropdownController.current?.setItem?.({ id: "" });
             }
+            onChangeText?.(text ?? "");
           }}
           onSelectItem={onSelectItem}
           dataSet={dataSet ?? []}

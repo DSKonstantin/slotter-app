@@ -11,6 +11,7 @@ import { Button, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import RHFTagInput from "@/src/components/app/menu/account/about/tagInput";
+import { AddressField } from "@/src/components/shared/addressField";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -54,8 +55,6 @@ const AboutSpecialist = () => {
       onRoad: user?.is_out_call ?? false,
     },
   });
-
-  const hideAddress = methods.watch("hideAddress");
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
@@ -118,25 +117,7 @@ const AboutSpecialist = () => {
                     />
                   </View>
                 </View>
-                <View className="gap-2">
-                  <RhfTextField
-                    name="address"
-                    label="Адрес"
-                    placeholder="Москва, ул. Пушкина, 5"
-                    editable={!hideAddress}
-                  />
-                  <Item
-                    title="Скрыть адрес"
-                    left={
-                      <StSvg
-                        name="View_hide_fill"
-                        size={24}
-                        color={colors.neutral[900]}
-                      />
-                    }
-                    right={<RHFSwitch name="hideAddress" />}
-                  />
-                </View>
+                <AddressField />
               </View>
             </KeyboardAwareScrollView>
 
