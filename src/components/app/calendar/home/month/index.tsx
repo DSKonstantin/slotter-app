@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import { RefreshControl, ScrollView } from "react-native";
 import MonthCalendar from "@/src/components/app/calendar/home/month/MonthCalendar";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -31,6 +31,7 @@ const MonthCalendarView = () => {
   const routerInstance = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
@@ -41,30 +42,36 @@ const MonthCalendarView = () => {
 
   const fetchMonth = pendingMonth ?? currentMonth;
 
-  const { data: workingDaysData, isLoading: isWorkingDaysLoading } =
-    useGetWorkingDaysQuery(
-      auth
-        ? {
-            userId: auth.userId,
+  const {
+    data: workingDaysData,
+    isLoading: isWorkingDaysLoading,
+    refetch: refetchWorkingDays,
+  } = useGetWorkingDaysQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          date_from: formatApiDate(fetchMonth),
+          date_to: formatApiDate(endOfMonth(fetchMonth)),
+        }
+      : skipToken,
+  );
+
+  const {
+    data: appointmentsData,
+    isLoading: isAppointmentsLoading,
+    refetch: refetchAppointments,
+  } = useGetAppointmentsQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          params: {
             date_from: formatApiDate(fetchMonth),
             date_to: formatApiDate(endOfMonth(fetchMonth)),
-          }
-        : skipToken,
-    );
-
-  const { data: appointmentsData, isLoading: isAppointmentsLoading } =
-    useGetAppointmentsQuery(
-      auth
-        ? {
-            userId: auth.userId,
-            params: {
-              date_from: formatApiDate(fetchMonth),
-              date_to: formatApiDate(endOfMonth(fetchMonth)),
-              status: ["pending", "confirmed"],
-            },
-          }
-        : skipToken,
-    );
+            status: ["pending", "confirmed"],
+          },
+        }
+      : skipToken,
+  );
 
   const isLoading = isWorkingDaysLoading || isAppointmentsLoading;
 
@@ -133,6 +140,16 @@ const MonthCalendarView = () => {
     setPendingMonth(startOfMonth(date));
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    try {
+      await Promise.all([refetchWorkingDays(), refetchAppointments()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchAppointments, refetchWorkingDays]);
+
   const prevMonthName = useMemo(
     () => formatMonthName(subMonths(currentMonth, 1)),
     [currentMonth],
@@ -155,6 +172,9 @@ const MonthCalendarView = () => {
         contentContainerStyle={{
           paddingBottom: TAB_BAR_HEIGHT + bottom + 80,
         }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         <MonthCalendar
           selectedDate={selectedDate}

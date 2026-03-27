@@ -18,7 +18,6 @@ import Footer from "@/src/components/app/menu/account/preview/footer";
 const AccountPreview = () => {
   const user = useAppSelector((s) => s.auth.user);
   const { bottom } = useSafeAreaInsets();
-
   if (!user) return null;
 
   return (

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
+import { RefreshControl, ScrollView } from "react-native";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
@@ -20,6 +21,7 @@ import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 const DayCalendarView = () => {
   const router = useRouter();
   const auth = useRequiredAuth();
+  const [refreshing, setRefreshing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
@@ -44,7 +46,6 @@ const DayCalendarView = () => {
   const {
     data: appointmentsData,
     isLoading: isAppointmentsLoading,
-    isFetching: isAppointmentsFetching,
     isError: isAppointmentsError,
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery(
@@ -90,8 +91,8 @@ const DayCalendarView = () => {
   );
 
   const isLoading = useMemo(
-    () => isDayLoading || isAppointmentsLoading || isAppointmentsFetching,
-    [isDayLoading, isAppointmentsLoading, isAppointmentsFetching],
+    () => isDayLoading || isAppointmentsLoading,
+    [isDayLoading, isAppointmentsLoading],
   );
 
   const isEmpty = useMemo(
@@ -99,11 +100,29 @@ const DayCalendarView = () => {
     [isLoading, selectedWorkingDay],
   );
 
+  const refetchAll = useCallback(async () => {
+    await Promise.all([refetchWorkingDays(), refetchAppointments()]);
+  }, [refetchAppointments, refetchWorkingDays]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    try {
+      await refetchAll();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchAll]);
+
   const handleRetry = useCallback(async () => {
     setIsRetrying(true);
-    await Promise.all([refetchWorkingDays(), refetchAppointments()]);
-    setIsRetrying(false);
-  }, [refetchWorkingDays, refetchAppointments]);
+
+    try {
+      await refetchAll();
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [refetchAll]);
 
   const handleEmptyPress = useCallback(() => {
     router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
@@ -111,9 +130,32 @@ const DayCalendarView = () => {
 
   const content = useMemo(() => {
     if (hasError)
-      return <CalendarError isLoading={isRetrying} onRetry={handleRetry} />;
+      return (
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+        >
+          <CalendarError isLoading={isRetrying} onRetry={handleRetry} />
+        </ScrollView>
+      );
     if (isLoading) return <TimeSlotListSkeleton />;
-    if (isEmpty) return <EmptySlots onPress={handleEmptyPress} />;
+    if (isEmpty)
+      return (
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+        >
+          <EmptySlots onPress={handleEmptyPress} />
+        </ScrollView>
+      );
     return (
       <TimeSlotList
         appointment={appointments}
@@ -121,12 +163,16 @@ const DayCalendarView = () => {
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
         date={selectedDay}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
       />
     );
   }, [
     hasError,
     isLoading,
     isEmpty,
+    refreshing,
+    handleRefresh,
     isRetrying,
     handleRetry,
     handleEmptyPress,

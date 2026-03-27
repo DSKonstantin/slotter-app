@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { View, Text, ActivityIndicator, ScrollView } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Badge, Typography } from "@/src/components/ui";
@@ -26,7 +32,10 @@ const BarChart = ({ data }: BarChartProps) => {
             className="w-full rounded-t-lg bg-primary-blue-500"
             style={{ height: Math.max((item.count / max) * 120, 4) }}
           />
-          <Text className="font-inter-regular text-[10px] text-neutral-400" numberOfLines={1}>
+          <Text
+            className="font-inter-regular text-[10px] text-neutral-400"
+            numberOfLines={1}
+          >
             {item.period}
           </Text>
         </View>
@@ -40,10 +49,21 @@ type Props = { customerId: number };
 const ClientStatistics = ({ customerId }: Props) => {
   const auth = useRequiredAuth();
   const [period, setPeriod] = useState("month");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading } = useGetCustomerStatsQuery(
+  const { data, isLoading, refetch } = useGetCustomerStatsQuery(
     auth ? { userId: auth.userId, customerId, period } : skipToken,
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   if (!auth) return null;
 
@@ -57,6 +77,9 @@ const ClientStatistics = ({ customerId }: Props) => {
             paddingBottom: bottomInset + 16,
             gap: 16,
           }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
         >
           {/* Period selector */}
           <View className="px-screen flex-row gap-2">
@@ -121,11 +144,14 @@ const ClientStatistics = ({ customerId }: Props) => {
                     Последний визит
                   </Text>
                   <Text className="font-inter-semibold text-body text-neutral-900">
-                    {new Date(data.stats.last_visit_at).toLocaleDateString("ru-RU", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    {new Date(data.stats.last_visit_at).toLocaleDateString(
+                      "ru-RU",
+                      {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      },
+                    )}
                   </Text>
                 </View>
               )}
