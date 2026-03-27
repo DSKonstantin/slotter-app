@@ -205,9 +205,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       label="Статус"
                       right={
                         <Badge
+                          size="sm"
                           title={statusConfig.label}
                           variant={statusConfig.variant}
-                          size="sm"
+                          icon={statusConfig.icon}
                         />
                       }
                     />

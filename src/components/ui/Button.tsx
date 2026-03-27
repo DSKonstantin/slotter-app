@@ -11,7 +11,7 @@ export interface CustomBtn {
   title: string;
   onPress: () => void;
   size?: "sm" | "md" | "lg";
-  variant?: "primary" | "secondary" | "accent" | "clear";
+  variant?: "primary" | "secondary" | "accent" | "clear" | "destructive";
   textVariant?: "default" | "accent";
   direction?: "horizontal" | "vertical";
 
@@ -88,6 +88,7 @@ const getLoaderColor = (variant: CustomBtn["variant"]) => {
     case "secondary":
     case "clear":
       return "#000";
+    case "destructive":
     default:
       return "#fff";
   }
@@ -110,6 +111,7 @@ const styles = {
     secondary: "bg-background-surface",
     accent: "bg-primary-blue-500",
     clear: "transparent",
+    destructive: "bg-error-500",
   },
 
   textBase: "font-inter-semibold text-[16px]",
@@ -118,6 +120,7 @@ const styles = {
     secondary: "text-neutral-900",
     accent: "text-neutral-0",
     clear: "text-neutral-900",
+    destructive: "text-accent-red-500",
   },
   textAccent: "text-primary-blue-500",
   textDisabled: "",

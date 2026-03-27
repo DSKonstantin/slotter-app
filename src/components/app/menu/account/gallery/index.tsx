@@ -1,12 +1,19 @@
 import React, { useState } from "react";
-import { Dimensions, Image, Pressable, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { toast } from "@backpackapp-io/react-native-toast";
-import * as ImagePicker from "expo-image-picker";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Badge, IconButton, StSvg } from "@/src/components/ui";
+import { useImagePicker } from "@/src/hooks/useImagePicker";
+import { Badge, Button, IconButton, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { GalleryViewer } from "./GalleryViewer";
+import { GalleryViewer } from "./galleryViewer";
 import type { CropData, GalleryPhoto } from "./types";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -22,6 +29,28 @@ const ITEM_HEIGHT = ITEM_WIDTH * (5 / 4);
 const Gallery = () => {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { pickFromGallery } = useImagePicker();
+
+  const toggleEditMode = () => {
+    setIsEditMode((prev) => {
+      if (prev) setSelectedIds(new Set());
+      return !prev;
+    });
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const handleAddPhoto = async () => {
     if (photos.length >= MAX_PHOTOS) {
@@ -29,24 +58,24 @@ const Gallery = () => {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+    const assets = await pickFromGallery({
       allowsMultipleSelection: true,
       quality: 1,
     });
-
-    if (result.canceled) return;
+    if (!assets) return;
 
     const availableSlots = MAX_PHOTOS - photos.length;
-    const selectedAssets = result.assets.slice(0, availableSlots);
+    const selectedAssets = assets.slice(0, availableSlots);
 
-    if (selectedAssets.length < result.assets.length) {
+    if (selectedAssets.length < assets.length) {
       toast.error(`Можно добавить максимум ${MAX_PHOTOS} фото`);
     }
 
     const newPhotos: GalleryPhoto[] = selectedAssets.map((asset) => ({
       id: `${Date.now()}_${asset.uri}`,
       originalUri: asset.uri,
+      width: asset.width,
+      height: asset.height,
       croppedUri: null,
       cropData: null,
       isCover: false,
@@ -60,6 +89,25 @@ const Gallery = () => {
     setViewerIndex(null);
   };
 
+  const handleDeleteSelected = () => {
+    Alert.alert(
+      `Удалить ${selectedIds.size} фото?`,
+      "Это действие нельзя отменить",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: () => {
+            setPhotos((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+            setSelectedIds(new Set());
+            setIsEditMode(false);
+          },
+        },
+      ],
+    );
+  };
+
   const handleSetCover = (id: string) => {
     setPhotos((prev) => prev.map((p) => ({ ...p, isCover: p.id === id })));
   };
@@ -69,15 +117,6 @@ const Gallery = () => {
     croppedUri: string,
     cropData: CropData,
   ) => {
-    const currentPhoto = photos.find((photo) => photo.id === id);
-
-    // TODO: отправить на бэк { original: originalUri, cropped: croppedUri, crop: cropData }
-    console.log("Crop payload:", {
-      id,
-      originalUri: currentPhoto?.originalUri,
-      croppedUri,
-      cropData,
-    });
     setPhotos((prev) =>
       prev.map((p) => (p.id === id ? { ...p, croppedUri, cropData } : p)),
     );
@@ -88,61 +127,112 @@ const Gallery = () => {
       <ScreenWithToolbar
         title="Галерея"
         rightButton={
-          <View className="flex-row gap-1">
-            <IconButton
-              onPress={handleAddPhoto}
-              icon={
-                <StSvg name="Add_round" size={24} color={colors.neutral[900]} />
-              }
-            />
-            <IconButton
-              onPress={() => {
-                /* TODO: edit mode */
-              }}
-              icon={
-                <StSvg name="Edit_fill" size={24} color={colors.neutral[900]} />
-              }
-            />
+          <View className="items-end w-[48px] h-[48px]">
+            <View className="absolute right-0 flex-row bg-background-surface h-[48px] items-center rounded-full">
+              <IconButton
+                onPress={handleAddPhoto}
+                icon={
+                  <StSvg
+                    name="Add_round"
+                    size={28}
+                    color={colors.neutral[900]}
+                  />
+                }
+              />
+              <IconButton
+                onPress={toggleEditMode}
+                icon={
+                  <StSvg
+                    name="Edit_fill"
+                    size={28}
+                    color={
+                      isEditMode
+                        ? colors.primary.blue[500]
+                        : colors.neutral[900]
+                    }
+                  />
+                }
+              />
+            </View>
           </View>
         }
       >
-        {({ topInset }) => (
-          <FlashList
-            data={photos}
-            numColumns={NUM_COLUMNS}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{
-              paddingTop: topInset + GAP,
-              paddingHorizontal: HORIZONTAL_PADDING,
-              paddingBottom: GAP,
-            }}
-            renderItem={({ item, index }) => (
+        {({ topInset, bottomInset }) => (
+          <View className="flex-1">
+            <FlashList
+              data={photos}
+              numColumns={NUM_COLUMNS}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{
+                paddingTop: topInset,
+                paddingHorizontal: HORIZONTAL_PADDING,
+                paddingBottom: bottomInset + (isEditMode ? 80 : 16),
+              }}
+              renderItem={({ item, index }) => {
+                const isSelected = selectedIds.has(item.id);
+                return (
+                  <View style={styles.column}>
+                    <Pressable
+                      onPress={() =>
+                        isEditMode
+                          ? toggleSelect(item.id)
+                          : setViewerIndex(index)
+                      }
+                      style={styles.item}
+                    >
+                      <Image
+                        source={{ uri: item.croppedUri ?? item.originalUri }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                      {item.isCover && !isEditMode && (
+                        <View className="absolute top-1.5 left-1.5">
+                          <Badge
+                            title="Главное фото"
+                            variant="accent"
+                            size="sm"
+                          />
+                        </View>
+                      )}
+                      {isEditMode && (
+                        <View
+                          className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full border-2 items-center justify-center ${
+                            isSelected
+                              ? "bg-primary-blue-500 border-primary-blue-500"
+                              : "bg-neutral-900/30 border-neutral-0"
+                          }`}
+                        >
+                          {isSelected && (
+                            <StSvg
+                              name="Done_round"
+                              size={14}
+                              color={colors.neutral[0]}
+                            />
+                          )}
+                        </View>
+                      )}
+                      {isEditMode && isSelected && (
+                        <View className="absolute inset-0 bg-primary-blue-500/20" />
+                      )}
+                    </Pressable>
+                  </View>
+                );
+              }}
+            />
+
+            {isEditMode && selectedIds.size > 0 && (
               <View
-                style={[
-                  styles.column,
-                  index % NUM_COLUMNS === 0
-                    ? styles.leftColumn
-                    : styles.rightColumn,
-                ]}
+                className="absolute left-4 right-4"
+                style={{ bottom: bottomInset + 16 }}
               >
-                <Pressable
-                  onPress={() => setViewerIndex(index)}
-                  style={styles.item}
-                >
-                  <Image
-                    source={{ uri: item.croppedUri ?? item.originalUri }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                  />
-                  {item.isCover && (
-                    <View className="absolute top-1.5 left-1.5">
-                      <Badge title="Главное фото" variant="accent" size="sm" />
-                    </View>
-                  )}
-                </Pressable>
+                <Button
+                  title={`Удалить (${selectedIds.size})`}
+                  variant="destructive"
+                  onPress={handleDeleteSelected}
+                />
               </View>
             )}
-          />
+          </View>
         )}
       </ScreenWithToolbar>
 
@@ -164,12 +254,7 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
     marginBottom: GAP,
-  },
-  leftColumn: {
-    paddingRight: GAP / 2,
-  },
-  rightColumn: {
-    paddingLeft: GAP / 2,
+    paddingHorizontal: GAP / 2,
   },
   item: {
     width: "100%",

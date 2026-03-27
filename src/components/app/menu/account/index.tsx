@@ -88,7 +88,7 @@ const AccountScreen = () => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingTop: topInset + 16,
+            paddingTop: topInset,
             paddingBottom: bottomInset + 16,
           }}
         >

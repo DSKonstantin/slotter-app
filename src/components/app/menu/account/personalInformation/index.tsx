@@ -119,6 +119,7 @@ const PersonalInformation = () => {
                     <Avatar
                       size="xl"
                       uri={avatar?.uri ?? user?.avatar_url ?? undefined}
+                      showPhotoIcon={true}
                       fallbackIcon={
                         <StSvg
                           name="Camera"

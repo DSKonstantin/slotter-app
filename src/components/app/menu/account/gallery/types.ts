@@ -1,6 +1,8 @@
 export type GalleryPhoto = {
   id: string;
   originalUri: string;
+  width: number;
+  height: number;
   croppedUri: string | null;
   cropData: CropData | null;
   isCover: boolean;
