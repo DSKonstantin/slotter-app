@@ -4,7 +4,7 @@ import type {
   AppointmentStatus,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { View, ScrollView } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Typography } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
@@ -38,6 +38,8 @@ type TimeSlotListProps = {
   date?: string;
   workingDayId?: number;
   isLoading?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 };
 
 type ParsedBreak = {
@@ -260,6 +262,8 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   endAt,
   date,
   isLoading,
+  refreshing = false,
+  onRefresh,
 }) => {
   const { bottom } = useSafeAreaInsets();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
@@ -310,6 +314,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       showsVerticalScrollIndicator={false}
       className="flex-1 pt-4 px-screen"
       contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 80 }}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ) : undefined
+      }
     >
       {segments.map(({ segStart, segEnd, content }) => (
         <View

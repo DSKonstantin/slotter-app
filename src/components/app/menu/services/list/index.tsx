@@ -1,7 +1,8 @@
 import React, { memo, useCallback, useState } from "react";
-import { View } from "react-native";
+import { RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { NestableScrollContainer } from "react-native-draggable-flatlist";
+import { skipToken } from "@reduxjs/toolkit/query";
 import {
   Button,
   Divider,
@@ -15,6 +16,10 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import AdditionalList from "@/src/components/app/menu/services/list/additionalList";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import {
+  useGetAdditionalServicesInfiniteQuery,
+  useGetServiceCategoriesInfiniteQuery,
+} from "@/src/store/redux/services/api/servicesApi";
 import {
   toggleEditMode,
   toggleSearchMode,
@@ -70,7 +75,18 @@ const ServicesToolbarActions = memo(ServicesToolbarActionsComponent);
 
 const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const auth = useRequiredAuth();
+  const { refetch: refetchServiceCategories } =
+    useGetServiceCategoriesInfiniteQuery(
+      auth
+        ? { userId: auth.userId, params: { view: "public_profile" } }
+        : skipToken,
+    );
+  const { refetch: refetchAdditionalServices } =
+    useGetAdditionalServicesInfiniteQuery(
+      auth ? { userId: auth.userId } : skipToken,
+    );
   const createServiceLink = useCallback(() => {
     setCreateModalVisible(false);
     router.push(Routers.app.menu.services.create());
@@ -88,6 +104,19 @@ const AppServices = () => {
   const createService = useCallback(() => {
     setCreateModalVisible(true);
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    try {
+      await Promise.all([
+        refetchServiceCategories({ refetchCachedPages: false }),
+        refetchAdditionalServices({ refetchCachedPages: false }),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchAdditionalServices, refetchServiceCategories]);
 
   if (!auth) {
     return null;
@@ -140,6 +169,12 @@ const AppServices = () => {
                   gap: 24,
                   paddingBottom: bottomInset + 8,
                 }}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                  />
+                }
               >
                 <ServiceList />
 

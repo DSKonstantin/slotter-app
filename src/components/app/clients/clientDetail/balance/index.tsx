@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { View, Text, ActivityIndicator, ScrollView } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Badge, Typography } from "@/src/components/ui";
@@ -24,10 +30,6 @@ type LineChartProps = {
 
 const LineChart = ({ data }: LineChartProps) => {
   const max = Math.max(...data.map((d) => d.amount_cents), 1);
-  const points = data.map((d, i) => ({
-    x: (i / Math.max(data.length - 1, 1)) * 100,
-    y: 100 - (d.amount_cents / max) * 80,
-  }));
 
   return (
     <View className="h-[120px] flex-row items-end justify-between gap-1 pt-2">
@@ -40,7 +42,10 @@ const LineChart = ({ data }: LineChartProps) => {
             }}
           />
           {index % Math.ceil(data.length / 4) === 0 && (
-            <Text className="font-inter-regular text-[10px] text-neutral-400" numberOfLines={1}>
+            <Text
+              className="font-inter-regular text-[10px] text-neutral-400"
+              numberOfLines={1}
+            >
               {item.period}
             </Text>
           )}
@@ -55,10 +60,21 @@ type Props = { customerId: number };
 const ClientBalance = ({ customerId }: Props) => {
   const auth = useRequiredAuth();
   const [period, setPeriod] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading } = useGetCustomerBalanceQuery(
+  const { data, isLoading, refetch } = useGetCustomerBalanceQuery(
     auth ? { userId: auth.userId, customerId, period } : skipToken,
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   if (!auth) return null;
 
@@ -72,6 +88,9 @@ const ClientBalance = ({ customerId }: Props) => {
             paddingBottom: bottomInset + 16,
             gap: 16,
           }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
         >
           {/* Total amount */}
           <View className="px-screen items-center py-4">
