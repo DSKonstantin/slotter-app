@@ -15,7 +15,7 @@ type GalleryViewerProps = {
   onClose: () => void;
   onDelete: (id: string) => void;
   onSetCover: (id: string) => void;
-  onCropDone: (id: string, croppedUri: string, cropData: CropData) => void;
+  onCropDone: (id: string, cropData: CropData) => void;
 };
 
 export function GalleryViewer({
@@ -32,15 +32,13 @@ export function GalleryViewer({
 
   const current = photos[currentIndex];
 
-  const handleCropDone = (croppedUri: string, cropData: CropData) => {
+  const handleCropDone = (cropData: CropData) => {
     setCropVisible(false);
-    onCropDone(current.id, croppedUri, cropData);
+    onCropDone(current.id, cropData);
   };
 
   const renderItem = useCallback((item: GalleryPhoto, index: number) => {
-    return (
-      <GalleryImage uri={item.croppedUri ?? item.originalUri} index={index} />
-    );
+    return <GalleryImage uri={item.photoUrl} index={index} />;
   }, []);
 
   return (
@@ -54,8 +52,7 @@ export function GalleryViewer({
       <GestureHandlerRootView className="flex-1">
         {cropVisible ? (
           <CropView
-            originalUri={current.originalUri}
-            resolution={{ width: current.width, height: current.height }}
+            originalUri={current.photoUrl}
             onDone={handleCropDone}
             onCancel={() => setCropVisible(false)}
           />

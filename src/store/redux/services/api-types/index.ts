@@ -63,3 +63,12 @@ export type {
   WorkingDaysResponse,
   WorkingDayBreaksResponse,
 } from "./workingDay";
+export type {
+  GalleryPhoto,
+  GalleryPhotosResponse,
+  GalleryPhotoCropData,
+  CreateGalleryPhotoPayload,
+  BulkCreateGalleryPhotosPayload,
+  UpdateGalleryPhotoPayload,
+  GalleryPhotoPositionPayload,
+} from "./galleryPhoto";

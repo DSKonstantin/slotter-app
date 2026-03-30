@@ -23,6 +23,8 @@ export const api = createApi({
     "WorkingDayBreaks",
     "Appointments",
     "Customers",
+    "GalleryPhotos",
+    "User",
   ],
   endpoints: () => ({}),
 });

@@ -1,4 +1,6 @@
 // src/store/redux/services/api-types/user.ts
+import type { GalleryPhoto } from "./galleryPhoto";
+
 export type AppointmentStep =
   | "five_minutes"
   | "ten_minutes"
@@ -34,6 +36,7 @@ export interface User {
   is_notify_booking: boolean;
   is_notify_cancellation: boolean;
   is_notify_reminder: boolean;
+  gallery_photos: GalleryPhoto[];
 }
 
 export interface AuthResponse {

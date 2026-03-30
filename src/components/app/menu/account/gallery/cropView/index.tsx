@@ -1,7 +1,10 @@
 import React, { useRef } from "react";
-import { View, Image } from "react-native";
-import { CropZoom, type CropZoomRefType } from "react-native-zoom-toolkit";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { View, Image, ActivityIndicator } from "react-native";
+import {
+  CropZoom,
+  useImageResolution,
+  type CropZoomRefType,
+} from "react-native-zoom-toolkit";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -11,36 +14,24 @@ import { CROP_SIZE } from "./constants";
 
 type CropViewProps = {
   originalUri: string;
-  resolution: {
-    width: number;
-    height: number;
-  };
-  onDone: (croppedUri: string, cropData: CropData) => void;
+  onDone: (cropData: CropData) => void;
   onCancel: () => void;
 };
 
-export function CropView({
-  originalUri,
-  resolution,
-  onDone,
-  onCancel,
-}: CropViewProps) {
+export function CropView({ originalUri, onDone, onCancel }: CropViewProps) {
   const insets = useSafeAreaInsets();
   const cropRef = useRef<CropZoomRefType>(null);
+  const { isFetching, resolution } = useImageResolution({ uri: originalUri });
 
-  const handleCrop = async () => {
+  const handleCrop = () => {
     if (!cropRef.current || !resolution) return;
-
-    const cropResult = cropRef.current.crop();
-    const imageRef = await ImageManipulator.manipulate(originalUri)
-      .crop(cropResult.crop)
-      .renderAsync();
-
-    const saved = await imageRef.saveAsync({
-      format: SaveFormat.PNG,
+    const { crop } = cropRef.current.crop();
+    onDone({
+      originX: crop.originX / resolution.width,
+      originY: crop.originY / resolution.height,
+      width: crop.width / resolution.width,
+      height: crop.height / resolution.height,
     });
-
-    onDone(saved.uri, cropResult.crop);
   };
 
   return (
@@ -57,17 +48,23 @@ export function CropView({
         />
       </View>
 
-      <CropZoom
-        ref={cropRef}
-        cropSize={CROP_SIZE}
-        resolution={resolution}
-        OverlayComponent={() => <CropOverlay />}
-      >
-        <Image
-          source={{ uri: originalUri }}
-          style={{ width: "100%", height: "100%" }}
-        />
-      </CropZoom>
+      {isFetching || !resolution ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={colors.neutral[0]} />
+        </View>
+      ) : (
+        <CropZoom
+          ref={cropRef}
+          cropSize={CROP_SIZE}
+          resolution={resolution}
+          OverlayComponent={() => <CropOverlay />}
+        >
+          <Image
+            source={{ uri: originalUri }}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </CropZoom>
+      )}
 
       <View
         className="absolute left-4 right-4"
