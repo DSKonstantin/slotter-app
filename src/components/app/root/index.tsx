@@ -1,153 +1,81 @@
 import React from "react";
-import { View } from "react-native";
-import { StSvg, Divider, Tag } from "@/src/components/ui";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ParallaxScrollView from "@/src/components/parallaxScrollView";
-import { colors } from "@/src/styles/colors";
-import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
-import HomeCard from "@/src/components/shared/cards/homeCard";
+import { ScrollView, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { StSvg, Typography } from "@/src/components/ui";
+import { formatShortDayName } from "@/src/utils/date/formatDate";
+import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
 
-import HomeNotificationsBlock from "@/src/components/app/root/homeNotificationsBlock";
-import SpecialistHomeAssistantEmpty from "@/src/components/app/root/specialistHomeAssistantEmpty";
+import HomeHeader from "@/src/components/app/root/homeHeader";
 import SpecialistHomeAssistant from "@/src/components/app/root/specialistHomeAssistant";
-import DateHeader from "@/src/components/app/root/dateHeader";
-import { router } from "expo-router";
-import { Routers } from "@/src/constants/routers";
+import HomeBannerCard from "@/src/components/app/root/homeBannerCard";
+import HomeNotificationsBlock from "@/src/components/app/root/homeNotificationsBlock";
+import { colors } from "@/src/styles/colors";
+
+const today = new Date();
+const dateChip = `Сегодня • ${formatShortDayName(today)} • ${formatDayMonth(today.toISOString())}`;
 
 const Home = () => {
-  const { bottom, top, left, right } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{
-        light: colors.background.black,
-        dark: colors.background.black,
-      }}
-      headerHeight={500}
-      contentInset={{
-        top,
-        right,
-        left,
-        bottom: TAB_BAR_HEIGHT + bottom + 16,
-      }}
-      headerContent={
-        <View
-          className="flex-1 px-screen pb-4 justify-between"
-          style={{
-            marginLeft: left,
-            marginRight: right,
-          }}
-        >
-          <View className="flex-1 justify-center gap-8 mt-4">
-            <DateHeader />
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+      <HomeHeader />
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
+        }}
+      >
+        <View className="px-screen gap-3 mt-2 flex-1 justify-between">
+          <View className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <Typography
+                weight="semibold"
+                className="text-caption text-neutral-500"
+              >
+                Показатели
+              </Typography>
+              <View className="relative" style={{ width: 12, height: 20 }}>
+                <StSvg
+                  name="Expand_up_light"
+                  size={12}
+                  color={colors.neutral[500]}
+                  style={{ position: "absolute", top: 0 }}
+                />
+                <View
+                  className="absolute bottom-0"
+                  style={{
+                    transform: [{ rotate: "180deg" }],
+                  }}
+                >
+                  <StSvg
+                    name="Expand_up_light"
+                    size={12}
+                    color={colors.neutral[500]}
+                  />
+                </View>
+              </View>
+            </View>
+            <View className="bg-background-card rounded-full flex-row items-center gap-2">
+              <View className="w-4 h-4 bg-primary-green-500 rounded-md" />
+              <Typography className="text-caption">{dateChip}</Typography>
+            </View>
+
             <SpecialistHomeAssistant />
-            {/*<SpecialistHomeAssistantEmpty />*/}
           </View>
 
-          <View className="gap-2">
+          <View className="gap-2 mb-4">
             <ScheduleSelectRow />
             <HomeNotificationsBlock />
           </View>
         </View>
-      }
-    >
-      <View className="flex-1 px-screen pt-2">
-        <View className="items-center justify-center">
-          <View className="w-20">
-            <Divider className="h-[4px] rounded-large" />
-          </View>
-        </View>
-
-        <View className="mt-9 gap-3">
-          <View className="flex-row gap-3">
-            <HomeCard
-              title="График"
-              startAdornment={
-                <StSvg
-                  name="Date_today"
-                  size={26}
-                  color={colors.neutral[900]}
-                />
-              }
-              endAdornment={
-                <StSvg
-                  name="Alarm_fill"
-                  size={24}
-                  color={colors.accent.red[500]}
-                />
-              }
-              onPress={() => router.push(Routers.app.menu.schedule)}
-            />
-            <HomeCard
-              title="Клиенты"
-              startAdornment={
-                <StSvg
-                  name="Group_fill"
-                  size={26}
-                  color={colors.neutral[900]}
-                />
-              }
-              endAdornment={<Tag title="+2%" variant="info" size="sm" />}
-            />
-          </View>
-          <View className="flex-row gap-3">
-            <HomeCard
-              title="Финансы"
-              startAdornment={
-                <StSvg
-                  name="Wallet_fill"
-                  size={26}
-                  color={colors.neutral[900]}
-                />
-              }
-              endAdornment={<Tag title="+6%" variant="info" size="sm" />}
-              onPress={() => router.push(Routers.app.menu.finances)}
-            />
-            <HomeCard
-              title="Услуги"
-              startAdornment={
-                <StSvg
-                  name="Desk_alt_fill"
-                  size={26}
-                  color={colors.neutral[900]}
-                />
-              }
-              onPress={() => router.push(Routers.app.menu.services.root)}
-              endAdornment={<Tag title="12" variant="info" size="sm" />}
-            />
-          </View>
-          <View className="flex-row gap-3">
-            <HomeCard
-              title="Аккаунт"
-              startAdornment={
-                <StSvg
-                  name="User_circle"
-                  size={26}
-                  color={colors.neutral[900]}
-                />
-              }
-              endAdornment={
-                <StSvg
-                  name="Alarm_fill"
-                  size={24}
-                  color={colors.accent.red[500]}
-                />
-              }
-              onPress={() => router.push(Routers.app.menu.account.root)}
-            />
-            <HomeCard
-              disabled
-              title="Акции"
-              startAdornment={
-                <StSvg name="Percent" size={26} color={colors.neutral[900]} />
-              }
-              endAdornment={<Tag title="0 активно" size="sm" />}
-            />
-          </View>
-        </View>
-      </View>
-    </ParallaxScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

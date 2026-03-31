@@ -5,8 +5,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import { ActivityIndicator, SectionList, View } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Card,
@@ -212,15 +213,6 @@ const SlotSelectService: React.FC<Props> = ({
     selectedAdditional,
     updateAppointment,
   ]);
-
-  useFocusEffect(
-    useCallback(() => {
-      initializedServicesRef.current = false;
-      initializedAdditionalRef.current = false;
-      setSelectedServices([]);
-      setSelectedAdditional([]);
-    }, []),
-  );
 
   useEffect(() => {
     if (

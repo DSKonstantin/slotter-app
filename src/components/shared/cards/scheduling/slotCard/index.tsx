@@ -5,6 +5,7 @@ import {
   Animated,
   type StyleProp,
   type ViewStyle,
+  Pressable,
 } from "react-native";
 import { Badge, StSvg, Typography, Button } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -43,20 +44,30 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
     outputRange: ["0deg", "180deg"],
   });
 
-  const detailContent = (
-    <View className="flex-1 py-5 px-4 justify-center">
+  const detailContent = (isShort: boolean) => (
+    <Pressable
+      className={`flex-1 ${isShort ? "pt-5" : "py-5"} px-4 justify-center`}
+      onPress={isShort ? toggleExpand : onPress}
+    >
       <View className="flex-row items-center justify-between">
         <Typography className="text-body text-neutral-900">
           {timeString}
         </Typography>
-        {statusConfig && (
-          <Badge
-            size="sm"
-            title={statusConfig.label}
-            variant={statusConfig.variant}
-            icon={statusConfig.icon}
-          />
-        )}
+        <View className="flex-row items-center gap-2">
+          {statusConfig && (
+            <Badge
+              size="sm"
+              title={statusConfig.label}
+              variant={statusConfig.variant}
+              icon={statusConfig.icon}
+            />
+          )}
+          {isShort && (
+            <Animated.View style={{ transform: [{ rotate }] }}>
+              <StSvg name="Expand_down" size={24} color={colors.neutral[900]} />
+            </Animated.View>
+          )}
+        </View>
       </View>
 
       <Typography
@@ -84,12 +95,13 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
             .join(" | ")}
         </Typography>
       )}
-    </View>
+    </Pressable>
   );
 
   if (slot.duration <= 29) {
     return (
       <View
+        className="relative"
         style={[
           containerStyle,
           { zIndex: isExpanded ? 10 : 1, elevation: isExpanded ? 10 : 1 },
@@ -129,20 +141,18 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
 
         {isExpanded && (
           <View
-            className="absolute left-0 right-0 bg-background-surface rounded-b-base overflow-hidden"
-            style={{ top: "100%", marginTop: 0 }}
+            className="absolute left-0 right-0 rounded-t-base bg-background-surface rounded-b-base overflow-hidden"
+            style={{ top: 0, marginTop: 0 }}
           >
-            {detailContent}
-            <View className="px-3 pb-3">
-              <Button
-                title="Открыть запись"
-                variant="secondary"
-                onPress={() => {
-                  setIsExpanded(false);
-                  onPress?.();
-                }}
-              />
-            </View>
+            {detailContent(true)}
+            <Button
+              title="Открыть запись"
+              variant="secondary"
+              onPress={() => {
+                setIsExpanded(false);
+                onPress?.();
+              }}
+            />
           </View>
         )}
       </View>
@@ -150,14 +160,12 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      className="rounded-base flex-row overflow-hidden bg-background-surface"
+    <View
+      className="rounded-base overflow-hidden bg-background-surface"
       style={containerStyle}
     >
-      {detailContent}
-    </TouchableOpacity>
+      {detailContent(false)}
+    </View>
   );
 };
 

@@ -16,7 +16,7 @@ type Props = {
 const SpecialistHomeNotifications = ({ data, onPress }: Props) => {
   return (
     <TouchableOpacity
-      className="flex-row justify-between items-center bg-background-card rounded-base px-4 py-2 overflow-hidden"
+      className="flex-row justify-between items-center bg-primary-blue-100 rounded-base px-4 py-2 overflow-hidden"
       activeOpacity={0.7}
       onPress={onPress}
     >

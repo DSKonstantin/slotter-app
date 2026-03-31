@@ -79,24 +79,27 @@ export const CalendarDatePicker = ({
               </Text>
             </View>
 
-            <Calendar
-              current={value ?? today}
-              onDayPress={(day) => {
-                onChange(day.dateString);
-                setOpen(false);
-              }}
-              markedDates={
-                value
-                  ? {
-                      [value]: {
-                        selected: true,
-                        selectedColor: colors.primary.blue[500],
-                      },
-                    }
-                  : {}
-              }
-              theme={pickerCalendarTheme}
-            />
+            <View className="px-screen" style={{ minHeight: 370 }}>
+              <Calendar
+                current={value ?? today}
+                onDayPress={(day) => {
+                  onChange(day.dateString);
+                  setOpen(false);
+                }}
+                markedDates={
+                  value
+                    ? {
+                        [value]: {
+                          selected: true,
+                          selectedColor: colors.primary.blue[500],
+                        },
+                      }
+                    : {}
+                }
+                hideExtraDays
+                theme={pickerCalendarTheme}
+              />
+            </View>
           </StModal>
         </>
       )}

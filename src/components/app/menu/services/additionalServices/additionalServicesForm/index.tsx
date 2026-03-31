@@ -46,6 +46,7 @@ const AdditionalServicesForm = ({
           />
           <RhfTextField
             name="price"
+            keyboardType="numeric"
             label="Стоимость (₽)"
             placeholder="Введите цену услуги"
           />

@@ -3,6 +3,7 @@ import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
 import { BlurView } from "expo-blur";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BottomSheetHandle } from "./BottomSheetHandle";
 
 type StModalProps = {
@@ -11,6 +12,7 @@ type StModalProps = {
   children: React.ReactNode;
   containerClassName?: string;
   horizontalPadding?: boolean;
+  keyboardAware?: boolean;
   props?: ModalProps;
 };
 
@@ -19,6 +21,7 @@ export const StModal = ({
   onClose,
   children,
   horizontalPadding = true,
+  keyboardAware = false,
   ...props
 }: StModalProps) => {
   const { height } = useWindowDimensions();
@@ -56,7 +59,16 @@ export const StModal = ({
         <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
         <BottomSheetHandle />
 
-        {children}
+        {keyboardAware ? (
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </KeyboardAwareScrollView>
+        ) : (
+          children
+        )}
       </View>
     </Modal>
   );

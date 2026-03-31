@@ -7,7 +7,6 @@ import * as Yup from "yup";
 import { StModal, Button, Typography, Card, StSvg } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import {
   useRescheduleAppointmentMutation,
   useGetAvailableSlotsQuery,
@@ -112,13 +111,13 @@ const RescheduleModal = ({
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose}>
+    <StModal visible={visible} onClose={handleClose} keyboardAware>
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-5">
           Перенести запись с {formatDayMonth(defaultDate)}
         </Typography>
 
-        <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
+        <View>
           <RhfTextField
             name="date"
             label="Новая дата"
@@ -177,7 +176,7 @@ const RescheduleModal = ({
               Нет доступных слотов на эту дату
             </Typography>
           )}
-        </KeyboardAwareScrollView>
+        </View>
 
         <View className="mt-6 gap-3">
           <Button

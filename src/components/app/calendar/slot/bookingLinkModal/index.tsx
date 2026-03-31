@@ -47,7 +47,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose}>
+    <StModal visible={visible} onClose={handleClose} keyboardAware={true}>
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-5">
           Ссылка на бронирование

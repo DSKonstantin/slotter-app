@@ -5,6 +5,8 @@ import { Routers } from "@/src/constants/routers";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
+import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { formatTime } from "@/src/utils/date/formatTime";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -153,8 +155,8 @@ const SlotCreate: React.FC = () => {
           },
         }).unwrap();
         dispatch(clearSlotDraft());
-        toast.success("Запись создана");
-        router.push(Routers.app.calendar.root(values.date));
+        router.dismissAll();
+        router.navigate(Routers.app.calendar.root(values.date));
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
@@ -313,10 +315,18 @@ const SlotCreate: React.FC = () => {
                 />
               </View>
               <View className="flex-1">
-                <RhfTextField
-                  label="Время"
+                <RhfDatePicker
                   name="time"
+                  label="Время"
                   placeholder="чч:мм"
+                  formatValue={(date: Date) => formatTime(date)}
+                  parseValue={(value: string) => {
+                    if (!value) return null;
+                    const [hours, minutes] = value.split(":").map(Number);
+                    const d = new Date();
+                    d.setHours(hours, minutes, 0, 0);
+                    return d;
+                  }}
                   endAdornment={
                     <StSvg
                       name="Time_light"

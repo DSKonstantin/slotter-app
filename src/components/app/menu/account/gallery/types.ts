@@ -1,3 +1,10 @@
+export type PendingPhoto = {
+  uri: string;
+  mimeType: string;
+  fileName: string;
+  cropData: CropData | null;
+};
+
 export type GalleryPhoto = {
   id: string;
   originalUrl: string;

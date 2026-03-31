@@ -88,7 +88,6 @@ const HomeNotificationsBlock = () => {
           count={NOTIFICATIONS.length}
           activeIndex={index}
           onSelect={(nextIndex) => {
-            console.log("go to", nextIndex);
             setIndex(nextIndex);
           }}
         />

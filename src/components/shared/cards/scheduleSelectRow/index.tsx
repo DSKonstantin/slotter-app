@@ -45,8 +45,11 @@ const ScheduleSelectRow = () => {
   }, [preset, navigateWithDate]);
 
   return (
-    <View className="flex-row justify-between items-center bg-background-card rounded-base">
-      <Pressable onPress={handleNavigate} className="py-4 pl-4 mr-1">
+    <View className="flex-row justify-between items-center bg-background-surface rounded-base">
+      <Pressable
+        onPress={handleNavigate}
+        className="py-4 pl-4 mr-1 active:opacity-70"
+      >
         <Typography weight="semibold" className="text-body">
           Открыть расписание на
         </Typography>

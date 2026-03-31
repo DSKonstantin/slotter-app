@@ -155,7 +155,12 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   }, [category, methods]);
 
   return (
-    <StModal visible={visible} onClose={onClose} horizontalPadding={false}>
+    <StModal
+      visible={visible}
+      onClose={onClose}
+      horizontalPadding={false}
+      keyboardAware={true}
+    >
       <FormProvider {...methods}>
         <Typography
           weight="semibold"

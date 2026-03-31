@@ -12,7 +12,6 @@ import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
 import { toast } from "@backpackapp-io/react-native-toast";
 import categorySchema from "@/src/validation/schemas/category.schema";
 import type { ServiceCategory } from "@/src/store/redux/services/api-types";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type Props = {
@@ -63,9 +62,9 @@ const CreateCategoryModal = ({
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose}>
+    <StModal visible={visible} onClose={handleClose} keyboardAware>
       <FormProvider {...methods}>
-        <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
+        <View>
           <Typography weight="semibold" className="text-display text-center">
             Новая категория услуг
           </Typography>
@@ -94,7 +93,7 @@ const CreateCategoryModal = ({
             onPress={handleFormSubmit}
             loading={isLoading}
           />
-        </KeyboardAwareScrollView>
+        </View>
       </FormProvider>
     </StModal>
   );

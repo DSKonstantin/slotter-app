@@ -22,7 +22,8 @@ import {
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { GalleryViewer } from "./galleryViewer";
-import type { CropData, GalleryPhoto } from "./types";
+import { PhotoUploadPreview } from "./photoUploadPreview";
+import type { CropData, GalleryPhoto, PendingPhoto } from "./types";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
   useBulkCreateGalleryPhotosMutation,
@@ -84,6 +85,7 @@ const Gallery = () => {
     [galleryResponse?.gallery_photos],
   );
 
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(null);
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
   const isEditMode = selectedIds !== null;
@@ -130,19 +132,37 @@ const Gallery = () => {
 
     if (!selectedAssets.length) return;
 
+    setPendingPhotos(
+      selectedAssets.map((asset, index) => ({
+        uri: asset.uri,
+        mimeType: asset.mimeType ?? "image/jpeg",
+        fileName: asset.fileName ?? `gallery-photo-${photos.length + index + 1}.jpg`,
+        cropData: null,
+      })),
+    );
+  };
+
+  const handleUploadAll = async (pending: PendingPhoto[]) => {
     const formData = new FormData();
 
-    selectedAssets.forEach((asset, index) => {
+    pending.forEach((photo) => {
       formData.append("gallery_photos[][photo]", {
-        uri: asset.uri,
-        type: asset.mimeType ?? "image/jpeg",
-        name:
-          asset.fileName ?? `gallery-photo-${photos.length + index + 1}.jpg`,
+        uri: photo.uri,
+        type: photo.mimeType,
+        name: photo.fileName,
       } as never);
+
+      if (photo.cropData) {
+        formData.append("gallery_photos[][crop_data][x]", String(photo.cropData.originX));
+        formData.append("gallery_photos[][crop_data][y]", String(photo.cropData.originY));
+        formData.append("gallery_photos[][crop_data][width]", String(photo.cropData.width));
+        formData.append("gallery_photos[][crop_data][height]", String(photo.cropData.height));
+      }
     });
 
     try {
       await bulkCreateGalleryPhotos({ userId, data: formData }).unwrap();
+      setPendingPhotos(null);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось загрузить фото"));
     }
@@ -357,6 +377,15 @@ const Gallery = () => {
           onDelete={handleDelete}
           onSetCover={handleSetCover}
           onCropDone={handleCropDone}
+        />
+      )}
+
+      {pendingPhotos !== null && (
+        <PhotoUploadPreview
+          photos={pendingPhotos}
+          isUploading={isUploading}
+          onClose={() => setPendingPhotos(null)}
+          onUpload={handleUploadAll}
         />
       )}
     </>

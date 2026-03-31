@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View } from "react-native";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
+import debounce from "lodash/debounce";
 import { Item, StSvg } from "@/src/components/ui";
 import { Autocomplete } from "@/src/components/ui/fields/Autocomplete";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -12,6 +13,11 @@ export function AddressField() {
   const hideAddress = useWatch({ name: "hideAddress" });
   const [query, setQuery] = useState("");
   const { suggestions } = useDaDataSuggestions(query);
+
+  const debouncedSetQuery = useMemo(
+    () => debounce((text: string) => setQuery(text), 500),
+    [],
+  );
 
   return (
     <View className="gap-2">
@@ -27,7 +33,10 @@ export function AddressField() {
             hideErrorText
             disabled={hideAddress}
             dataSet={suggestions}
-            onChangeText={setQuery}
+            onChangeText={(text) => {
+              onChange(text);
+              debouncedSetQuery(text);
+            }}
             onSelectItem={(item) => {
               if (item) {
                 onChange(item.id);
