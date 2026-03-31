@@ -1,7 +1,6 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 .idea
-.env
 .env*.local
 
 .github/copilot-review.md
@@ -50,3 +49,4 @@ app-example
 # generated native folders
 /ios
 /android
+config.bat
