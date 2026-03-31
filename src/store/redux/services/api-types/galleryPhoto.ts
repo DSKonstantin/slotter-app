@@ -10,8 +10,9 @@ export interface GalleryPhoto {
   id: number;
   position: number;
   crop_data: GalleryPhotoCropData | null;
-  thumbnail_url: string;
+  thumbnail_photo_url: string;
   photo_url: string;
+  original_photo_url: string;
   blurhash: string | null;
 }
 

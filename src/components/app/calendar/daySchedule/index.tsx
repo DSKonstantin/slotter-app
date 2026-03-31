@@ -30,6 +30,7 @@ import {
   DayScheduleFormValues,
 } from "./DayScheduleForm";
 import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -152,8 +153,12 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
     data: workingDay,
     isLoading,
     isError,
+    refetch,
   } = useGetWorkingDayQuery(
     auth ? { userId: auth.userId, id: workingDayId } : skipToken,
+    {
+      refetchOnMountOrArgChange: true,
+    },
   );
 
   if (!auth) return null;
@@ -171,11 +176,12 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
 
         if (isError || !workingDay) {
           return (
-            <View className="flex-1 items-center justify-center px-screen">
-              <Typography className="text-body text-neutral-400 text-center">
-                Не удалось загрузить данные дня
-              </Typography>
-            </View>
+            <ErrorScreen
+              title="Не удалось загрузить данные дня"
+              isLoading={isLoading}
+              withTabBar={false}
+              onRetry={refetch}
+            />
           );
         }
 

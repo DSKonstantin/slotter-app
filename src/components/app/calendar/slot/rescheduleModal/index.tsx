@@ -20,6 +20,7 @@ import { router } from "expo-router";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 type Props = {
   visible: boolean;
@@ -63,13 +64,19 @@ const RescheduleModal = ({
 
   const { data: availableSlots, isFetching: isFetchingSlots } =
     useGetAvailableSlotsQuery(
+      auth
+        ? {
+            userId: auth.userId,
+            date: dateValue,
+            step: 15,
+            appointment_id: appointmentId,
+          }
+        : skipToken,
+
       {
-        userId: auth?.userId ?? 0,
-        date: dateValue,
-        step: 15,
-        appointment_id: appointmentId,
+        skip: !visible || !isValidDate,
+        refetchOnMountOrArgChange: true,
       },
-      { skip: !isValidDate || !auth },
     );
 
   const [reschedule, { isLoading }] = useRescheduleAppointmentMutation();

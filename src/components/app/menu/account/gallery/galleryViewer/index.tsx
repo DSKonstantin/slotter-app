@@ -52,7 +52,7 @@ export function GalleryViewer({
       <GestureHandlerRootView className="flex-1">
         {cropVisible ? (
           <CropView
-            originalUri={current.photoUrl}
+            originalUri={current.originalUrl}
             onDone={handleCropDone}
             onCancel={() => setCropVisible(false)}
           />

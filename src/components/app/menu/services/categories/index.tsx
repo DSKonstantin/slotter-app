@@ -7,6 +7,7 @@ import DraggableFlatList, {
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 import { colors } from "@/src/styles/colors";
 
@@ -132,16 +133,7 @@ const AppServicesCategories = () => {
 
   return (
     <>
-      <ScreenWithToolbar
-        title="Категории услуг"
-        rightButton={
-          <IconButton
-            icon={<StSvg name="Search" size={28} color={colors.neutral[900]} />}
-            onPress={() => {}}
-            accessibilityLabel="Search categories"
-          />
-        }
-      >
+      <ScreenWithToolbar title="Категории услуг">
         {({ topInset, bottomInset }) => {
           if (isLoading && !data) {
             return (
@@ -156,21 +148,12 @@ const AppServicesCategories = () => {
 
           if (isError && !data) {
             return (
-              <View
-                className="flex-1 items-center justify-center px-screen gap-4"
-                style={{ marginTop: topInset, marginBottom: bottomInset }}
-              >
-                <Typography className="text-body text-accent-red-500">
-                  Ошибка загрузки категорий.
-                </Typography>
-                <Button
-                  title="Повторить"
-                  onPress={handleRefresh}
-                  loading={isFetching}
-                  disabled={isFetching}
-                  buttonClassName="w-full"
-                />
-              </View>
+              <ErrorScreen
+                title="Не удалось загрузить категории"
+                isLoading={isFetching}
+                withTabBar={false}
+                onRetry={handleRefresh}
+              />
             );
           }
           return (

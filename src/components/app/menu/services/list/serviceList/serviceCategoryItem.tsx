@@ -45,6 +45,7 @@ const ServiceCategoryItem = ({
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsExpanded((prev) => !prev);
   }, []);
+
   const getDeletePressHandler = useCallback(
     (serviceId: number) => () => {
       if (isDeleting) return;

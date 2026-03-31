@@ -42,8 +42,9 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const toUiPhoto = (p: ApiGalleryPhoto): GalleryPhoto => ({
   id: String(p.id),
+  originalUrl: p.original_photo_url,
   photoUrl: p.photo_url,
-  thumbnailUrl: p.thumbnail_url,
+  thumbnailUrl: p.thumbnail_photo_url,
   cropData: p.crop_data
     ? {
         originX: p.crop_data.x,
@@ -77,9 +78,11 @@ const Gallery = () => {
   const [updateGalleryPhoto] = useUpdateGalleryPhotoMutation();
   const [deleteGalleryPhoto] = useDeleteGalleryPhotoMutation();
 
-  const serverPhotos = galleryResponse?.gallery_photos ?? EMPTY_GALLERY_PHOTOS;
-
-  const photos = useMemo(() => serverPhotos.map(toUiPhoto), [serverPhotos]);
+  const photos = useMemo(
+    () =>
+      (galleryResponse?.gallery_photos ?? EMPTY_GALLERY_PHOTOS).map(toUiPhoto),
+    [galleryResponse?.gallery_photos],
+  );
 
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
@@ -262,29 +265,33 @@ const Gallery = () => {
         title="Галерея"
         rightButton={
           <View className="items-end w-[48px] h-[48px]">
-            <View className="absolute right-0 flex-row bg-background-surface h-[48px] items-center rounded-full">
+            <View
+              className={`absolute right-0 flex-row bg-background-surface h-[48px] items-center rounded-full ${
+                !isEditMode && "px-2.5"
+              }`}
+            >
+              {!isEditMode && (
+                <IconButton
+                  size="sm"
+                  onPress={handleAddPhoto}
+                  disabled={isUploading}
+                  icon={
+                    <StSvg
+                      name="Add_round"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                />
+              )}
               <IconButton
-                onPress={handleAddPhoto}
-                disabled={isUploading}
-                icon={
-                  <StSvg
-                    name="Add_round"
-                    size={28}
-                    color={colors.neutral[900]}
-                  />
-                }
-              />
-              <IconButton
+                size={isEditMode ? "md" : "sm"}
                 onPress={toggleEditMode}
                 icon={
                   <StSvg
-                    name="Edit_fill"
-                    size={28}
-                    color={
-                      isEditMode
-                        ? colors.primary.blue[500]
-                        : colors.neutral[900]
-                    }
+                    name={isEditMode ? "Close_round" : "Edit_fill"}
+                    size={24}
+                    color={colors.neutral[900]}
                   />
                 }
               />
@@ -294,11 +301,11 @@ const Gallery = () => {
       >
         {({ topInset, bottomInset }) => (
           <View className="flex-1">
-            {isGalleryLoading && !serverPhotos.length ? (
+            {isGalleryLoading && !photos.length ? (
               <View className="flex-1 items-center justify-center">
                 <ActivityIndicator />
               </View>
-            ) : isGalleryError && !serverPhotos.length ? (
+            ) : isGalleryError && !photos.length ? (
               <View className="flex-1 items-center justify-center px-screen">
                 <Typography className="text-center text-error">
                   Не удалось загрузить галерею

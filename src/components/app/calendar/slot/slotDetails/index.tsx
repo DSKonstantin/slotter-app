@@ -8,9 +8,11 @@ import {
 } from "react-native";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   IconButton,
   StSvg,
@@ -55,8 +57,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const {
     data: slot,
     isLoading,
+    isError,
     refetch,
-  } = useGetAppointmentQuery(Number(slotId));
+  } = useGetAppointmentQuery(Number(slotId), {
+    refetchOnMountOrArgChange: true,
+  });
 
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
@@ -131,6 +136,17 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               >
                 <ActivityIndicator color={colors.neutral[400]} />
               </View>
+            );
+          }
+
+          if (isError) {
+            return (
+              <ErrorScreen
+                title="Не удалось загрузить запись"
+                isLoading={isLoading}
+                withTabBar={false}
+                onRetry={refetch}
+              />
             );
           }
 

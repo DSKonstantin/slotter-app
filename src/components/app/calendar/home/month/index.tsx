@@ -24,6 +24,7 @@ import type {
 } from "@/src/store/redux/services/api-types";
 import { parseTime } from "@/src/utils/date/formatTime";
 import ScheduleActionsModal from "./ScheduleActionsModal";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 const MonthCalendarView = () => {
   const { bottom } = useSafeAreaInsets();
@@ -45,6 +46,7 @@ const MonthCalendarView = () => {
   const {
     data: workingDaysData,
     isLoading: isWorkingDaysLoading,
+    isError: isWorkingDaysError,
     refetch: refetchWorkingDays,
   } = useGetWorkingDaysQuery(
     auth
@@ -59,6 +61,7 @@ const MonthCalendarView = () => {
   const {
     data: appointmentsData,
     isLoading: isAppointmentsLoading,
+    isError: isAppointmentsError,
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery(
     auth
@@ -74,6 +77,7 @@ const MonthCalendarView = () => {
   );
 
   const isLoading = isWorkingDaysLoading || isAppointmentsLoading;
+  const isError = isWorkingDaysError || isAppointmentsError;
 
   const calendarData = useMemo(() => {
     const appointmentsByDate =
@@ -163,6 +167,16 @@ const MonthCalendarView = () => {
   }, [isLoading, pendingMonth]);
 
   if (!auth) return null;
+
+  if (isError && !workingDaysData && !appointmentsData) {
+    return (
+      <ErrorScreen
+        title="Не удалось загрузить календарь"
+        isLoading={isLoading}
+        onRetry={handleRefresh}
+      />
+    );
+  }
 
   return (
     <>

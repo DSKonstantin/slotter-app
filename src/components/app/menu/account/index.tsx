@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { ScrollView, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import {
   Avatar,
@@ -15,6 +15,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector, useAppDispatch } from "@/src/store/redux/store";
 import { logout } from "@/src/store/redux/slices/authSlice";
+import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 
 type NavItem = {
   title: string;
@@ -74,6 +75,14 @@ const AccountScreen = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const dispatch = useAppDispatch();
+  const [refreshing, setRefreshing] = useState(false);
+  const [triggerGetMe] = useLazyGetMeQuery();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await triggerGetMe();
+    setRefreshing(false);
+  }, [triggerGetMe]);
 
   const handleLogout = useCallback(() => {
     dispatch(logout());
@@ -91,6 +100,9 @@ const AccountScreen = () => {
             paddingTop: topInset,
             paddingBottom: bottomInset + 16,
           }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
         >
           <Card
             title={[user?.first_name, user?.last_name]

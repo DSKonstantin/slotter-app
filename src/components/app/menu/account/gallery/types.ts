@@ -1,5 +1,6 @@
 export type GalleryPhoto = {
   id: string;
+  originalUrl: string;
   photoUrl: string;
   thumbnailUrl: string;
   cropData: CropData | null;

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { Text, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
 import {
@@ -9,11 +9,9 @@ import { Button, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import {
-  useGetServiceCategoriesInfiniteQuery,
   useReorderServiceCategoriesMutation,
   useReorderServicesMutation,
 } from "@/src/store/redux/services/api/servicesApi";
-import { skipToken } from "@reduxjs/toolkit/query";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { useAppSelector } from "@/src/store/redux/store";
@@ -22,31 +20,26 @@ import ServiceCategoryItem from "@/src/components/app/menu/services/list/service
 import { ServiceListSkeleton } from "@/src/components/app/menu/services/list/listSkeletons";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
-const ServiceList = () => {
+type ServiceListProps = {
+  categories: ServiceCategory[];
+  isLoading: boolean;
+  isError: boolean;
+  isFetching: boolean;
+  onRefresh: () => void;
+};
+
+const ServiceList = ({
+  categories,
+  isLoading,
+  isError,
+  isFetching,
+  onRefresh,
+}: ServiceListProps) => {
   const auth = useRequiredAuth();
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const [reorderServices] = useReorderServicesMutation();
   const listConfig = useInfiniteListConfig();
-
-  const {
-    data,
-    isLoading,
-    isError,
-    isFetching,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useGetServiceCategoriesInfiniteQuery(
-    auth
-      ? { userId: auth.userId, params: { view: "public_profile" } }
-      : skipToken,
-  );
-
-  const categories = useMemo(() => {
-    return data?.pages.flatMap((page) => page.service_categories) ?? [];
-  }, [data]);
 
   const handleDragEnd = useCallback(
     async ({
@@ -76,17 +69,6 @@ const ServiceList = () => {
     },
     [auth?.userId, reorderServiceCategories],
   );
-
-  const handleEndReached = useCallback(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
-    fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const handleRefresh = useCallback(() => {
-    if (isFetchingNextPage) return;
-
-    refetch({ refetchCachedPages: false });
-  }, [isFetchingNextPage, refetch]);
 
   const handleServicePress = useCallback(
     (serviceId: number, categoryId: number) => {
@@ -124,11 +106,11 @@ const ServiceList = () => {
     [auth?.userId, reorderServices],
   );
 
-  if (isLoading && !data) {
+  if (isLoading && !categories.length) {
     return <ServiceListSkeleton />;
   }
 
-  if (isError && !data) {
+  if (isError && !categories.length) {
     return (
       <View className="flex-1 items-center justify-center px-screen gap-4">
         <Text className="text-body text-accent-red-500">
@@ -136,7 +118,7 @@ const ServiceList = () => {
         </Text>
         <Button
           title="Повторить"
-          onPress={handleRefresh}
+          onPress={onRefresh}
           loading={isFetching}
           disabled={isFetching}
           buttonClassName="w-full"
@@ -151,9 +133,6 @@ const ServiceList = () => {
       scrollEnabled={false}
       keyExtractor={(item) => String(item.id)}
       showsVerticalScrollIndicator={false}
-      onRefresh={handleRefresh}
-      refreshing={isFetching && !isFetchingNextPage && !isLoading}
-      onEndReached={handleEndReached}
       onDragEnd={isEditMode ? handleDragEnd : undefined}
       contentContainerStyle={{
         paddingHorizontal: listConfig.contentContainerStyle.paddingHorizontal,
