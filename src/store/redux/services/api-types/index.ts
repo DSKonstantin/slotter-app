@@ -49,6 +49,9 @@ export type {
   GetCustomersResponse,
   CreateCustomerPayload,
   UpdateCustomerPayload,
+  AssignTagPayload,
+  CreateCustomerTagPayload,
+  UpdateCustomerTagPayload,
 } from "./customer";
 export type {
   WorkingDay,

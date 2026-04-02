@@ -4,7 +4,17 @@ import type { AppointmentStatus } from "@/src/store/redux/services/api-types";
 
 const STATUS_MAP: Record<
   AppointmentStatus,
-  { label: string; variant: "primary" | "success" | "warning" | "accent" | "tertiary" | "info" | "secondary" }
+  {
+    label: string;
+    variant:
+      | "primary"
+      | "success"
+      | "warning"
+      | "accent"
+      | "tertiary"
+      | "info"
+      | "secondary";
+  }
 > = {
   pending: { label: "Ожидание", variant: "warning" },
   confirmed: { label: "Подтверждена", variant: "info" },
@@ -18,7 +28,10 @@ const STATUS_MAP: Record<
 type Props = { status: AppointmentStatus };
 
 const AppointmentStatusBadge = ({ status }: Props) => {
-  const { label, variant } = STATUS_MAP[status] ?? { label: status, variant: "secondary" as const };
+  const { label, variant } = STATUS_MAP[status] ?? {
+    label: status,
+    variant: "secondary" as const,
+  };
   return <Badge title={label} variant={variant} size="sm" />;
 };
 

@@ -1,4 +1,3 @@
-import * as Yup from "yup";
 import React from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -10,7 +9,7 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { phoneField } from "@/src/validation/fields/phone";
+import { VerifySchema } from "@/src/validation/schemas/verify.schema";
 import { maskPhone } from "@/src/utils/mask/maskPhone";
 import { unMask } from "react-native-mask-text";
 import { colors } from "@/src/styles/colors";
@@ -18,10 +17,6 @@ import { colors } from "@/src/styles/colors";
 type RestoreLoginFormValues = {
   phone: string;
 };
-
-const VerifySchema = Yup.object().shape({
-  phone: phoneField,
-});
 
 const RestoreLogin = () => {
   const methods = useForm({

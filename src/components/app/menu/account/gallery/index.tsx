@@ -30,6 +30,7 @@ import {
   useGetGalleryPhotosQuery,
   useUpdateGalleryPhotoMutation,
   useDeleteGalleryPhotoMutation,
+  useReorderGalleryPhotosMutation,
 } from "@/src/store/redux/services/api/galleryApi";
 import type { GalleryPhoto as ApiGalleryPhoto } from "@/src/store/redux/services/api-types";
 import {
@@ -45,7 +46,8 @@ const toUiPhoto = (p: ApiGalleryPhoto): GalleryPhoto => ({
   id: String(p.id),
   originalUrl: p.original_photo_url,
   photoUrl: p.photo_url,
-  thumbnailUrl: p.thumbnail_photo_url,
+  croppedUrl: p.cropped_photo_url ?? null,
+  thumbnailUrl: p.cropped_photo_url ?? p.thumbnail_photo_url,
   cropData: p.crop_data
     ? {
         originX: p.crop_data.x,
@@ -78,6 +80,7 @@ const Gallery = () => {
     useBulkCreateGalleryPhotosMutation();
   const [updateGalleryPhoto] = useUpdateGalleryPhotoMutation();
   const [deleteGalleryPhoto] = useDeleteGalleryPhotoMutation();
+  const [reorderGalleryPhotos] = useReorderGalleryPhotosMutation();
 
   const photos = useMemo(
     () =>
@@ -85,7 +88,9 @@ const Gallery = () => {
     [galleryResponse?.gallery_photos],
   );
 
-  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(null);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
+    null,
+  );
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
   const isEditMode = selectedIds !== null;
@@ -136,8 +141,10 @@ const Gallery = () => {
       selectedAssets.map((asset, index) => ({
         uri: asset.uri,
         mimeType: asset.mimeType ?? "image/jpeg",
-        fileName: asset.fileName ?? `gallery-photo-${photos.length + index + 1}.jpg`,
+        fileName:
+          asset.fileName ?? `gallery-photo-${photos.length + index + 1}.jpg`,
         cropData: null,
+        croppedUri: null,
       })),
     );
   };
@@ -153,10 +160,22 @@ const Gallery = () => {
       } as never);
 
       if (photo.cropData) {
-        formData.append("gallery_photos[][crop_data][x]", String(photo.cropData.originX));
-        formData.append("gallery_photos[][crop_data][y]", String(photo.cropData.originY));
-        formData.append("gallery_photos[][crop_data][width]", String(photo.cropData.width));
-        formData.append("gallery_photos[][crop_data][height]", String(photo.cropData.height));
+        formData.append(
+          "gallery_photos[][crop_data][x]",
+          String(photo.cropData.originX),
+        );
+        formData.append(
+          "gallery_photos[][crop_data][y]",
+          String(photo.cropData.originY),
+        );
+        formData.append(
+          "gallery_photos[][crop_data][width]",
+          String(photo.cropData.width),
+        );
+        formData.append(
+          "gallery_photos[][crop_data][height]",
+          String(photo.cropData.height),
+        );
       }
     });
 
@@ -205,8 +224,19 @@ const Gallery = () => {
     );
   };
 
-  const handleSetCover = (_id: string) => {
-    // TODO: реализовать через API (reorder — position 0)
+  const handleSetCover = async (id: string) => {
+    const positions = [
+      { id: Number(id), position: 0 },
+      ...photos
+        .filter((p) => p.id !== id)
+        .map((p, index) => ({ id: Number(p.id), position: index + 1 })),
+    ];
+    try {
+      await reorderGalleryPhotos({ userId, positions }).unwrap();
+      toast.success("Обложка обновлена");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось обновить обложку"));
+    }
   };
 
   const handleCropDone = async (id: string, cropData: CropData) => {
@@ -251,7 +281,7 @@ const Gallery = () => {
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />
-          {item.isCover && !isEditMode && (
+          {index === 0 && !isEditMode && (
             <View className="absolute top-1.5 left-1.5">
               <Badge title="Главное фото" variant="accent" size="sm" />
             </View>
@@ -357,6 +387,7 @@ const Gallery = () => {
                     style={{ bottom: bottomInset + 16 }}
                   >
                     <Button
+                      buttonClassName="bg-background-surface"
                       title={`Удалить (${selectedIds.size})`}
                       variant="destructive"
                       onPress={handleDeleteSelected}

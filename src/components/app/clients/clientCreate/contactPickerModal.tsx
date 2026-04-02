@@ -3,14 +3,13 @@ import {
   View,
   Text,
   FlatList,
-  TextInput,
   Pressable,
   ActivityIndicator,
-  Modal,
+  useWindowDimensions,
 } from "react-native";
 import * as Contacts from "expo-contacts";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
+
+import { Avatar, Input, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
 export type PickedContact = {
@@ -30,33 +29,31 @@ type ContactItem = {
   phone: string;
 };
 
-const ContactRow = React.memo(
-  ({
-    item,
-    onPress,
-  }: {
-    item: ContactItem;
-    onPress: (item: ContactItem) => void;
-  }) => (
-    <Pressable
-      className="flex-row items-center px-screen py-3 gap-3 active:opacity-70"
-      onPress={() => onPress(item)}
-    >
-      <Avatar name={item.name} size="sm" />
-      <View className="flex-1">
-        <Text className="font-inter-semibold text-body text-neutral-900">
-          {item.name}
-        </Text>
-        <Text className="font-inter-regular text-caption text-neutral-500">
-          {item.phone}
-        </Text>
-      </View>
-    </Pressable>
-  ),
+const ContactRow = ({
+  item,
+  onPress,
+}: {
+  item: ContactItem;
+  onPress: (item: ContactItem) => void;
+}) => (
+  <Pressable
+    className="flex-row items-center px-screen py-3 gap-3 active:opacity-70"
+    onPress={() => onPress(item)}
+  >
+    <Avatar name={item.name} size="sm" />
+    <View className="flex-1">
+      <Text className="font-inter-semibold text-body text-neutral-900">
+        {item.name}
+      </Text>
+      <Text className="font-inter-regular text-caption text-neutral-500">
+        {item.phone}
+      </Text>
+    </View>
+  </Pressable>
 );
 
 const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
-  const { top, bottom } = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const [contacts, setContacts] = useState<ContactItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -88,19 +85,11 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (visible) {
-      setSearch("");
-      loadContacts();
-    }
-  }, [visible, loadContacts]);
-
   const filtered = useMemo(() => {
     if (!search.trim()) return contacts;
     const q = search.toLowerCase();
     return contacts.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) || c.phone.includes(q),
+      (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q),
     );
   }, [contacts, search]);
 
@@ -112,46 +101,34 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
     [onSelect, onClose],
   );
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <View className="flex-1 bg-background" style={{ paddingTop: top }}>
-        {/* Header */}
-        <View className="flex-row items-center px-screen py-3 gap-2">
-          <Text className="flex-1 font-inter-semibold text-[18px] text-neutral-900">
-            Выбрать контакт
-          </Text>
-          <IconButton
-            icon={
-              <StSvg
-                name="close_ring_fill_light"
-                size={28}
-                color={colors.neutral[900]}
-              />
-            }
-            onPress={onClose}
-            accessibilityLabel="Закрыть"
-          />
-        </View>
+  useEffect(() => {
+    if (visible) {
+      setSearch("");
+      loadContacts();
+    }
+  }, [visible, loadContacts]);
 
-        {/* Search */}
-        <View className="px-screen pb-3">
-          <View className="flex-row items-center bg-white rounded-2xl px-4 h-[48px] border border-background gap-2">
+  return (
+    <StModal visible={visible} onClose={onClose} horizontalPadding={false}>
+      <View className="px-screen pb-3">
+        <Typography weight="semibold" className="text-display text-center">
+          Выбрать контакт
+        </Typography>
+      </View>
+
+      <View className="px-screen pb-3">
+        <Input
+          placeholder="Поиск"
+          value={search}
+          onChangeText={setSearch}
+          returnKeyType="search"
+          autoFocus
+          hideErrorText
+          startAdornment={
             <StSvg name="Search" size={20} color={colors.neutral[400]} />
-            <TextInput
-              className="flex-1 font-inter-regular text-body text-neutral-900"
-              placeholder="Поиск"
-              placeholderTextColor={colors.neutral[400]}
-              value={search}
-              onChangeText={setSearch}
-              returnKeyType="search"
-              autoFocus
-            />
-            {search.length > 0 && (
+          }
+          endAdornment={
+            search.length > 0 ? (
               <Pressable onPress={() => setSearch("")}>
                 <StSvg
                   name="close_ring_fill_light"
@@ -159,40 +136,39 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
                   color={colors.neutral[400]}
                 />
               </Pressable>
-            )}
-          </View>
-        </View>
-
-        {/* List */}
-        {loading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator />
-          </View>
-        ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: bottom + 16 }}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <ContactRow item={item} onPress={handleSelect} />
-            )}
-            ItemSeparatorComponent={() => (
-              <View className="mx-screen h-px bg-background" />
-            )}
-            ListEmptyComponent={
-              <View className="flex-1 items-center justify-center pt-20 gap-2">
-                <StSvg name="User_fill" size={40} color={colors.neutral[300]} />
-                <Typography className="text-body text-neutral-400">
-                  {search ? "Контакты не найдены" : "Нет контактов"}
-                </Typography>
-              </View>
-            }
-          />
-        )}
+            ) : undefined
+          }
+        />
       </View>
-    </Modal>
+
+      {loading ? (
+        <View className="items-center justify-center py-10">
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: height * 0.55 }}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <ContactRow item={item} onPress={handleSelect} />
+          )}
+          ItemSeparatorComponent={() => (
+            <View className="mx-screen h-px bg-background" />
+          )}
+          ListEmptyComponent={
+            <View className="items-center justify-center pt-10 gap-2">
+              <StSvg name="User_fill" size={40} color={colors.neutral[300]} />
+              <Typography className="text-body text-neutral-400">
+                {search ? "Контакты не найдены" : "Нет контактов"}
+              </Typography>
+            </View>
+          }
+        />
+      )}
+    </StModal>
   );
 };
 

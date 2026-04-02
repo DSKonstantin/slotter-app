@@ -3,18 +3,20 @@ export type PendingPhoto = {
   mimeType: string;
   fileName: string;
   cropData: CropData | null;
+  croppedUri: string | null;
 };
 
 export type GalleryPhoto = {
   id: string;
   originalUrl: string;
   photoUrl: string;
+  croppedUrl: string | null;
   thumbnailUrl: string;
   cropData: CropData | null;
   isCover: boolean;
 };
 
-/** All values are relative (0–1), not pixels */
+/** All values are in pixels */
 export type CropData = {
   originX: number;
   originY: number;

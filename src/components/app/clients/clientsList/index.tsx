@@ -1,77 +1,71 @@
 import React, { useCallback, useMemo, useState } from "react";
-import {
-  View,
-  FlatList,
-  Pressable,
-  Text,
-  ActivityIndicator,
-} from "react-native";
+import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Avatar, Badge, Button, StSvg, Typography } from "@/src/components/ui";
-import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
+import {
+  useGetCustomersQuery,
+  useGetCustomerTagsQuery,
+} from "@/src/store/redux/services/api/customersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
 import type { Customer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 
-const FILTERS = [
-  { label: "Все", value: undefined },
-  { label: "Новые", value: "new" },
-  { label: "Постоянные", value: "regular" },
-];
-
 const ClientRow = React.memo(function ClientRow({ item }: { item: Customer }) {
   return (
-    <Pressable
-      className="flex-row items-center bg-white rounded-2xl p-4 min-h-[64px] active:opacity-70"
+    <Card
+      title={item.name}
+      subtitle={item.phone || undefined}
+      left={<Avatar name={item.name} size="md" />}
+      right={
+        <StSvg
+          name="Expand_right_light"
+          size={24}
+          color={colors.neutral[500]}
+        />
+      }
       onPress={() => router.push(Routers.app.clients.detail(item.id))}
-    >
-      <Avatar name={item.name} size="md" />
-      <View className="flex-1 ml-3 gap-0.5">
-        <Text className="font-inter-semibold text-body text-neutral-900">
-          {item.name}
-        </Text>
-        {item.phone ? (
-          <Text className="font-inter-regular text-caption text-neutral-500">
-            {item.phone}
-          </Text>
-        ) : null}
-      </View>
-      {item.customer_tag ? (
-        <View
-          className="h-[26px] px-3 rounded-full items-center justify-center"
-          style={{ backgroundColor: item.customer_tag.color + "22" }}
-        >
-          <Text
-            className="font-inter-medium text-caption"
-            style={{ color: item.customer_tag.color }}
-          >
-            {item.customer_tag.name}
-          </Text>
-        </View>
-      ) : null}
-    </Pressable>
+    />
   );
 });
 
 type ClientsContentProps = {
   topInset: number;
   bottomInset: number;
-  userId: number;
 };
 
-const ClientsContent = ({
-  topInset,
-  bottomInset,
-  userId,
-}: ClientsContentProps) => {
+const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
+  const auth = useRequiredAuth();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | undefined>(
     undefined,
   );
   const [refreshing, setRefreshing] = useState(false);
+
+  const { data: tagsData } = useGetCustomerTagsQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
+
+  const filters = useMemo(
+    () => [
+      { label: "Все", value: undefined },
+      ...(tagsData?.customer_tags ?? []).map((t) => ({
+        label: t.name,
+        value: String(t.id),
+      })),
+    ],
+    [tagsData?.customer_tags],
+  );
 
   useToolbarSearch({
     placeholder: "Имя или телефон",
@@ -79,10 +73,7 @@ const ClientsContent = ({
   });
 
   const { data, isLoading, isError, refetch, isFetching } =
-    useGetCustomersQuery({
-      userId,
-      params: { query: search || undefined },
-    });
+    useGetCustomersQuery();
 
   const customers = useMemo(() => data?.customers ?? [], [data?.customers]);
 
@@ -98,9 +89,8 @@ const ClientsContent = ({
 
   return (
     <View className="flex-1" style={{ paddingTop: topInset }}>
-      {/* Filters */}
       <View className="flex-row px-screen pb-3 gap-2">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <Badge
             key={f.label}
             title={f.label}
@@ -108,6 +98,20 @@ const ClientsContent = ({
             onPress={() => setActiveFilter(f.value)}
           />
         ))}
+      </View>
+
+      <View className="flex-row gap-2.5 px-screen mb-5">
+        <Button
+          title="Статистика"
+          buttonClassName="flex-1"
+          onPress={() => {}}
+        />
+        <Button
+          title="Рассылка"
+          variant="clear"
+          buttonClassName="flex-1"
+          onPress={() => {}}
+        />
       </View>
 
       {isLoading && !data ? (
@@ -170,11 +174,7 @@ const ClientsList = () => {
   return (
     <ScreenWithToolbar title="Клиенты">
       {({ topInset, bottomInset }) => (
-        <ClientsContent
-          topInset={topInset}
-          bottomInset={bottomInset}
-          userId={auth.userId}
-        />
+        <ClientsContent topInset={topInset} bottomInset={bottomInset} />
       )}
     </ScreenWithToolbar>
   );

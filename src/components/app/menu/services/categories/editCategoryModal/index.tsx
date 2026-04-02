@@ -24,7 +24,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import categorySchema from "@/src/validation/schemas/category.schema";
+import { categorySchema } from "@/src/validation/schemas/category.schema";
 import type { Service } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 

@@ -66,4 +66,19 @@ export type CreateCustomerPayload = {
   customer_tag_id?: number;
 };
 
-export type UpdateCustomerPayload = Partial<CreateCustomerPayload>;
+export type UpdateCustomerPayload = {
+  name?: string;
+  email?: string;
+  note?: string;
+};
+
+export type AssignTagPayload = {
+  customer_tag_id: number;
+};
+
+export type CreateCustomerTagPayload = {
+  name: string;
+  color: string;
+};
+
+export type UpdateCustomerTagPayload = Partial<CreateCustomerTagPayload>;

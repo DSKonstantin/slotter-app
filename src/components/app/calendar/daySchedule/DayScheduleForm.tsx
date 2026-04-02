@@ -1,29 +1,14 @@
 import React from "react";
 import { View } from "react-native";
 import { useFormContext, useWatch } from "react-hook-form";
-import * as Yup from "yup";
-
+import { type DayScheduleFormValues } from "@/src/validation/schemas/daySchedule.schema";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Item } from "@/src/components/ui";
 import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
 import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
 
-export const DayScheduleSchema = Yup.object().shape({
-  isActive: Yup.boolean().required(),
-  date: Yup.string().required(),
-  scheduleStart: Yup.string().required(),
-  scheduleEnd: Yup.string().required(),
-  breaks: Yup.array().of(
-    Yup.object().shape({
-      id: Yup.number().optional(),
-      start: Yup.string().required(),
-      end: Yup.string().required(),
-    }),
-  ),
-});
-
-export type DayScheduleFormValues = Yup.InferType<typeof DayScheduleSchema>;
+export type { DayScheduleFormValues };
 
 export const DayScheduleForm = () => {
   const { control } = useFormContext<DayScheduleFormValues>();

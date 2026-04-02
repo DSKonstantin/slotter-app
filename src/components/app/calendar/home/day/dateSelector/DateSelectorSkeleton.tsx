@@ -38,7 +38,6 @@ const DateSelectorSkeleton = () => {
   const contentWidth = width;
   const contentHeight = ITEM_TOP_OFFSET + ITEM_HEIGHT + ITEM_BOTTOM_PADDING;
 
-
   return (
     <View className="gap-2">
       <ContentLoader

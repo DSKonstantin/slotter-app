@@ -1,4 +1,3 @@
-import * as Yup from "yup";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -10,7 +9,10 @@ import { Typography, Button, StModal } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { phoneField } from "@/src/validation/fields/phone";
+import {
+  VerifySchema,
+  type VerifyFormValues,
+} from "@/src/validation/schemas/verify.schema";
 import { maskPhone } from "@/src/utils/mask/maskPhone";
 import { unMask } from "react-native-mask-text";
 import { AuthResponse, UserType } from "@/src/store/redux/services/api-types";
@@ -22,14 +24,6 @@ import {
 import { useCountDown } from "@/src/hooks/useCountdown";
 import { useAuth } from "@/src/contexts/AuthContext";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
-
-type VerifyFormValues = {
-  phone: string;
-};
-
-const VerifySchema = Yup.object().shape({
-  phone: phoneField,
-});
 
 const Verify = () => {
   const { login } = useAuth();

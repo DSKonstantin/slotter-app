@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 import { colors } from "@/src/styles/colors";
-import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import CreateActionModal from "./CreateActionModal";
 
 const HomeHeader = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -42,7 +42,7 @@ const HomeHeader = () => {
         icon={<StSvg name="Add_round" size={24} color={colors.neutral[900]} />}
       />
 
-      <ComingSoonModal
+      <CreateActionModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />

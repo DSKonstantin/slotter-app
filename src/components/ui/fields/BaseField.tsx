@@ -11,6 +11,7 @@ type BaseFieldProps = {
   error?: FieldError;
   disabled?: boolean;
   size?: FieldSize;
+  multiline?: boolean;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -27,6 +28,7 @@ export function BaseField({
   error,
   disabled,
   size = "md",
+  multiline,
   startAdornment,
   hideErrorText = false,
   endAdornment,
@@ -41,6 +43,7 @@ export function BaseField({
       <View
         className={twMerge(
           styles.base,
+          multiline ? styles.baseTop : styles.baseCenter,
           styles.sizes[size],
           focused && styles.focus,
           error && styles.error,
@@ -68,7 +71,9 @@ export function BaseField({
 const styles = {
   label: "mb-2 font-inter-medium text-neutral-500 text-caption",
 
-  base: "flex-row items-center rounded-small bg-background-surface border border-transparent",
+  base: "flex-row rounded-small bg-background-surface border border-transparent",
+  baseCenter: "items-center",
+  baseTop: "items-start",
 
   sizes: {
     md: "min-h-[48px]",

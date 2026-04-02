@@ -10,7 +10,7 @@ import { colors } from "@/src/styles/colors";
 import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
 import { toast } from "@backpackapp-io/react-native-toast";
-import categorySchema from "@/src/validation/schemas/category.schema";
+import { categorySchema } from "@/src/validation/schemas/category.schema";
 import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 

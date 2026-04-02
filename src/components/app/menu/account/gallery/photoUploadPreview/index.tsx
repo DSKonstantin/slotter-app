@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FlatList, Image, Modal, Pressable, View } from "react-native";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
@@ -25,10 +26,22 @@ export function PhotoUploadPreview({
   const [photos, setPhotos] = useState<PendingPhoto[]>(initialPhotos);
   const [cropIndex, setCropIndex] = useState<number | null>(null);
 
-  const handleCropDone = (cropData: CropData) => {
+  const handleCropDone = async (cropData: CropData) => {
     if (cropIndex === null) return;
+    const photo = photos[cropIndex];
+    const imageRef = await ImageManipulator.manipulate(photo.uri)
+      .crop({
+        originX: cropData.originX,
+        originY: cropData.originY,
+        width: cropData.width,
+        height: cropData.height,
+      })
+      .renderAsync();
+    const result = await imageRef.saveAsync({ format: SaveFormat.JPEG });
     setPhotos((prev) =>
-      prev.map((p, i) => (i === cropIndex ? { ...p, cropData } : p)),
+      prev.map((p, i) =>
+        i === cropIndex ? { ...p, cropData, croppedUri: result.uri } : p,
+      ),
     );
     setCropIndex(null);
   };
@@ -95,7 +108,7 @@ export function PhotoUploadPreview({
                   onPress={() => setCropIndex(index)}
                 >
                   <Image
-                    source={{ uri: item.uri }}
+                    source={{ uri: item.croppedUri ?? item.uri }}
                     style={{ width: "100%", height: "100%" }}
                     resizeMode="cover"
                   />

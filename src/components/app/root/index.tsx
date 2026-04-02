@@ -12,7 +12,6 @@ import ScheduleSelectRow from "@/src/components/shared/cards/scheduleSelectRow";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import SpecialistHomeAssistant from "@/src/components/app/root/specialistHomeAssistant";
-import HomeBannerCard from "@/src/components/app/root/homeBannerCard";
 import HomeNotificationsBlock from "@/src/components/app/root/homeNotificationsBlock";
 import { colors } from "@/src/styles/colors";
 

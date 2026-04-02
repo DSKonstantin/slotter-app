@@ -38,7 +38,9 @@ export function GalleryViewer({
   };
 
   const renderItem = useCallback((item: GalleryPhoto, index: number) => {
-    return <GalleryImage uri={item.photoUrl} index={index} />;
+    return (
+      <GalleryImage uri={item.croppedUrl ?? item.photoUrl} index={index} />
+    );
   }, []);
 
   return (

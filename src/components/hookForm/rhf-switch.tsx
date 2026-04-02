@@ -7,7 +7,11 @@ type RHFSwitchProps = {
   onChange?: (value: boolean) => void;
 };
 
-export default function RHFSwitch({ name, disabled, onChange }: RHFSwitchProps) {
+export default function RHFSwitch({
+  name,
+  disabled,
+  onChange,
+}: RHFSwitchProps) {
   const { control } = useFormContext();
 
   return (

@@ -9,8 +9,11 @@ import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import { formatTime } from "@/src/utils/date/formatTime";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
 import { toast } from "@backpackapp-io/react-native-toast";
+import {
+  SlotCreateSchema,
+  type SlotCreateFormValues,
+} from "@/src/validation/schemas/slotCreate.schema";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -33,28 +36,6 @@ import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/app
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
-
-const SlotCreateSchema = Yup.object({
-  services: Yup.array(
-    Yup.object({
-      id: Yup.string().required(),
-      name: Yup.string().required(),
-      duration: Yup.number().required(),
-      priceCents: Yup.number().required(),
-    }),
-  ).required(),
-  clientName: Yup.string(),
-  date: Yup.string().required("Укажите дату"),
-  time: Yup.string().required("Укажите время"),
-  duration: Yup.number()
-    .min(0, "Минимальная длительность — 0 минут")
-    .required("Укажите длительность"),
-  comment: Yup.string(),
-  paymentMethod: Yup.string().oneOf(["cash", "sbp", "online"]).required(),
-  sendNotification: Yup.boolean().required(),
-});
-
-type SlotCreateFormValues = Yup.InferType<typeof SlotCreateSchema>;
 
 const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "cash", label: "Наличные" },

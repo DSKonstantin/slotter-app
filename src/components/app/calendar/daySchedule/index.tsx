@@ -25,10 +25,10 @@ import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import {
-  DayScheduleForm,
   DayScheduleSchema,
-  DayScheduleFormValues,
-} from "./DayScheduleForm";
+  type DayScheduleFormValues,
+} from "@/src/validation/schemas/daySchedule.schema";
+import { DayScheduleForm } from "./DayScheduleForm";
 import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
 import ErrorScreen from "@/src/components/shared/errorScreen";
 import {

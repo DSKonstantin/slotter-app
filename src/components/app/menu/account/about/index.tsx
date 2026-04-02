@@ -2,7 +2,10 @@ import React, { useCallback } from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import {
+  AccountAboutSchema,
+  type AccountAboutFormValues,
+} from "@/src/validation/schemas/accountAbout.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
@@ -18,33 +21,13 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 
-type FormValues = {
-  aboutMe: string;
-  tags: string[];
-  address: string;
-  hideAddress: boolean;
-  atHome: boolean;
-  online: boolean;
-  onRoad: boolean;
-};
-
-const schema = Yup.object({
-  aboutMe: Yup.string().max(500, "Максимум 500 символов").default(""),
-  tags: Yup.array().of(Yup.string().required()).default([]),
-  address: Yup.string().max(100, "Максимум 100 символов").default(""),
-  hideAddress: Yup.boolean().required(),
-  atHome: Yup.boolean().required(),
-  online: Yup.boolean().required(),
-  onRoad: Yup.boolean().required(),
-});
-
 const AboutSpecialist = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
-  const methods = useForm<FormValues>({
-    resolver: yupResolver(schema),
+  const methods = useForm<AccountAboutFormValues>({
+    resolver: yupResolver(AccountAboutSchema),
     defaultValues: {
       aboutMe: user?.about_me ?? "",
       tags: [],
@@ -57,7 +40,7 @@ const AboutSpecialist = () => {
   });
 
   const onSubmit = useCallback(
-    async (data: FormValues) => {
+    async (data: AccountAboutFormValues) => {
       if (!auth) return;
       try {
         await updateUser({

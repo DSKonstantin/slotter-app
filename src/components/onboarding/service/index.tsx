@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import * as Yup from "yup";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { OnboardingServiceSchema } from "@/src/validation/schemas/onboardingService.schema";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
@@ -19,23 +19,19 @@ import {
   ServicePhotosValue,
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 
-type ServiceFormValues = object;
-
 const Service = () => {
   const [photos, setPhotos] = useState<ServicePhotosValue>(
     createDefaultServicePhotos(),
   );
 
-  const VerifySchema = Yup.object().shape({});
-
   const methods = useForm({
-    resolver: yupResolver(VerifySchema),
+    resolver: yupResolver(OnboardingServiceSchema),
     defaultValues: {
       name: "",
     },
   });
 
-  const onSubmit = (data: ServiceFormValues) => {
+  const onSubmit = (data: object) => {
     console.log("SUBMIT", data);
     router.push(Routers.onboarding.schedule);
   };

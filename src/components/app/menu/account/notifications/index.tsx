@@ -2,7 +2,10 @@ import React from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import {
+  AccountNotificationsSchema,
+  type AccountNotificationsFormValues,
+} from "@/src/validation/schemas/accountNotifications.schema";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Item } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -11,24 +14,12 @@ import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
-type FormValues = {
-  newBooking: boolean;
-  clientCancellation: boolean;
-  reminders: boolean;
-};
-
-const schema = Yup.object({
-  newBooking: Yup.boolean().required(),
-  clientCancellation: Yup.boolean().required(),
-  reminders: Yup.boolean().required(),
-});
-
 const AccountNotifications = () => {
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser] = useUpdateUserMutation();
 
-  const methods = useForm<FormValues>({
-    resolver: yupResolver(schema),
+  const methods = useForm<AccountNotificationsFormValues>({
+    resolver: yupResolver(AccountNotificationsSchema),
     defaultValues: {
       newBooking: user?.is_notify_booking ?? true,
       clientCancellation: user?.is_notify_cancellation ?? true,
@@ -36,7 +27,7 @@ const AccountNotifications = () => {
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: AccountNotificationsFormValues) => {
     if (!user) return;
     try {
       await updateUser({

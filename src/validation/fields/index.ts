@@ -1,0 +1,9 @@
+export { avatarField } from "./avatar";
+export { descriptionField } from "./description";
+export { durationField } from "./duration";
+export { nameField } from "./name";
+export { passwordField } from "./password";
+export { phoneField } from "./phone";
+export { priceField } from "./price";
+export { professionField } from "./profession";
+export { surnameField } from "./surname";

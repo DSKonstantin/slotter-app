@@ -1,51 +1,69 @@
 import React, { useCallback, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, FlatList, ScrollView, View } from "react-native";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useForm, FormProvider } from "react-hook-form";
+import { maskPhone } from "@/src/utils/mask/maskPhone";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import {
+  ClientCreateSchema,
+  type ClientCreateFormValues,
+} from "@/src/validation/schemas/clientCreate.schema";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, StSvg } from "@/src/components/ui";
+import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useContactsPermission } from "@/src/hooks/useContactsPermission";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import {
+  useCreateCustomerMutation,
+  useGetCustomerTagsQuery,
+} from "@/src/store/redux/services/api/customersApi";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 import ContactPickerModal, {
   type PickedContact,
 } from "@/src/components/app/clients/clientCreate/contactPickerModal";
-
-const ClientCreateSchema = Yup.object({
-  name: Yup.string().required("Укажите имя"),
-  phone: Yup.string(),
-  comment: Yup.string(),
-});
-
-type ClientCreateFormValues = Yup.InferType<typeof ClientCreateSchema>;
+import CreateTagModal from "@/src/components/app/clients/clientCreate/createTagModal";
 
 const ClientCreate = () => {
-  const { bottom } = useSafeAreaInsets();
+  const auth = useRequiredAuth();
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [createTagVisible, setCreateTagVisible] = useState(false);
+
+  const { data: tagsData } = useGetCustomerTagsQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
   const { isGranted, requestOrOpenSettings } = useContactsPermission();
 
   const methods = useForm({
     resolver: yupResolver(ClientCreateSchema),
-    defaultValues: { name: "", phone: "", comment: "" },
+    defaultValues: { name: "", phone: "", comment: "", customer_tag: null },
   });
 
-  const { handleSubmit, setValue } = methods;
+  const { handleSubmit, setValue, reset, control } = methods;
+  const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
 
-  const onSubmit = useCallback(async (_values: ClientCreateFormValues) => {
-    try {
-      // TODO: connect real API
-      toast.success("Клиент создан");
-      router.back();
-    } catch {
-      toast.error("Не удалось создать клиента");
-    }
-  }, []);
+  const [createCustomer, { isLoading }] = useCreateCustomerMutation();
+
+  const onSubmit = useCallback(
+    async (values: ClientCreateFormValues) => {
+      try {
+        await createCustomer({
+          name: values.name.trim(),
+          phone: values.phone?.trim() || undefined,
+          note: values.comment?.trim() || undefined,
+          customer_tag_id: values.customer_tag?.id ?? undefined,
+        }).unwrap();
+        reset();
+        router.back();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось создать клиента"));
+      }
+    },
+    [createCustomer, reset],
+  );
 
   const handleContactsPress = useCallback(async () => {
     if (isGranted) {
@@ -74,20 +92,39 @@ const ClientCreate = () => {
     [setValue],
   );
 
+  if (!auth) return null;
+
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Новый клиент">
-        {({ topInset }) => (
+        {({ topInset, bottomInset }) => (
           <>
             <ScrollView
               showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
               contentContainerStyle={{
-                paddingBottom: TAB_BAR_HEIGHT + bottom + 24,
+                paddingBottom: 16,
                 paddingHorizontal: 20,
               }}
               style={{ marginTop: topInset }}
             >
+              <RhfTextField
+                label="Имя"
+                name="name"
+                placeholder="Анна Петрова"
+              />
+
+              <View className="mt-1">
+                <RhfTextField
+                  label="Телефон"
+                  name="phone"
+                  maxLength={16}
+                  hideErrorText
+                  placeholder="+7 (___) ___-__-__"
+                  keyboardType="phone-pad"
+                  maskFn={maskPhone}
+                />
+              </View>
+
               <View className="mt-4">
                 <Button
                   title="Выбрать из контактов"
@@ -103,20 +140,44 @@ const ClientCreate = () => {
                 />
               </View>
 
-              <View className="mt-4">
-                <RhfTextField
-                  label="Имя"
-                  name="name"
-                  placeholder="Введите имя"
+              <View className="mt-5">
+                <Typography className="mb-2 font-inter-medium text-neutral-500 text-caption">
+                  Категория
+                </Typography>
+                <FlatList
+                  horizontal
+                  data={tagsData?.customer_tags ?? []}
+                  keyExtractor={(item) => String(item.id)}
+                  showsHorizontalScrollIndicator={false}
+                  className="mb-2"
+                  contentContainerStyle={{ paddingRight: 8 }}
+                  renderItem={({ item }) => (
+                    <Badge
+                      title={item.name}
+                      variant={
+                        selectedTag?.id === item.id ? "accent" : "secondary"
+                      }
+                      onPress={() =>
+                        setValue(
+                          "customer_tag",
+                          selectedTag?.id === item.id ? null : item,
+                        )
+                      }
+                      className="mr-2"
+                    />
+                  )}
                 />
-              </View>
-
-              <View className="mt-4">
-                <RhfTextField
-                  label="Телефон"
-                  name="phone"
-                  placeholder="+7 (___) ___-__-__"
-                  keyboardType="phone-pad"
+                <Button
+                  title="Создать новую категорию"
+                  variant="clear"
+                  onPress={() => setCreateTagVisible(true)}
+                  rightIcon={
+                    <StSvg
+                      name="Add_ring_fill_light"
+                      size={18}
+                      color={colors.neutral[900]}
+                    />
+                  }
                 />
               </View>
 
@@ -128,19 +189,33 @@ const ClientCreate = () => {
                   multiline
                 />
               </View>
-
-              <View className="mt-8">
-                <Button
-                  title="Создать клиента"
-                  onPress={handleSubmit(onSubmit)}
-                />
-              </View>
             </ScrollView>
+
+            <View
+              className="px-screen bg-background"
+              style={{ paddingTop: 8, paddingBottom: bottomInset + 16 }}
+            >
+              <Button
+                title="Создать клиента"
+                rightIcon={
+                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+                }
+                onPress={handleSubmit(onSubmit)}
+                loading={isLoading}
+              />
+            </View>
 
             <ContactPickerModal
               visible={pickerVisible}
               onClose={() => setPickerVisible(false)}
               onSelect={handleContactSelect}
+            />
+
+            <CreateTagModal
+              visible={createTagVisible}
+              userId={auth.userId}
+              onClose={() => setCreateTagVisible(false)}
+              onCreated={(tag) => setValue("customer_tag", tag)}
             />
           </>
         )}

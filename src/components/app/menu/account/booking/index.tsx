@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { FormProvider, useController, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import {
+  AccountBookingSchema,
+  type AccountBookingFormValues,
+} from "@/src/validation/schemas/accountBooking.schema";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Item, StModal, StSvg, Typography } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -12,16 +15,6 @@ import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import type { AppointmentStep } from "@/src/store/redux/services/api-types";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-
-type FormValues = {
-  autoConfirm: boolean;
-  bookingStep: AppointmentStep;
-};
-
-const schema = Yup.object({
-  autoConfirm: Yup.boolean().required(),
-  bookingStep: Yup.mixed<AppointmentStep>().required(),
-});
 
 const BOOKING_STEPS: { label: string; value: AppointmentStep }[] = [
   { label: "5 минут", value: "five_minutes" },
@@ -37,7 +30,7 @@ const formatStep = (value: AppointmentStep) => {
 
 function BookingStepField({ onSelect }: { onSelect: () => void }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const { field } = useController<FormValues, "bookingStep">({
+  const { field } = useController<AccountBookingFormValues, "bookingStep">({
     name: "bookingStep",
   });
 
@@ -88,15 +81,15 @@ const Booking = () => {
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser] = useUpdateUserMutation();
 
-  const methods = useForm<FormValues>({
-    resolver: yupResolver(schema),
+  const methods = useForm<AccountBookingFormValues>({
+    resolver: yupResolver(AccountBookingSchema),
     defaultValues: {
       autoConfirm: user?.is_auto_approve ?? true,
       bookingStep: user?.appointment_step ?? "one_hour",
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: AccountBookingFormValues) => {
     if (!user) return;
     try {
       await updateUser({

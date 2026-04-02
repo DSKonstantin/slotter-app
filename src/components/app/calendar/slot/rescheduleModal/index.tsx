@@ -2,8 +2,6 @@ import React, { memo } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
-
 import { StModal, Button, Typography, Card, StSvg } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
@@ -11,6 +9,10 @@ import {
   useRescheduleAppointmentMutation,
   useGetAvailableSlotsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
+import {
+  RescheduleSchema,
+  type RescheduleFormValues,
+} from "@/src/validation/schemas/slotReschedule.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -28,15 +30,6 @@ type Props = {
   onClose: () => void;
 };
 
-const rescheduleSchema = Yup.object({
-  date: Yup.string()
-    .required("Укажите дату")
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Формат: YYYY-MM-DD"),
-  start_time: Yup.string().required("Выберите время"),
-  reason: Yup.string(),
-  send_notification: Yup.boolean().required(),
-});
-
 const RescheduleModal = ({
   visible,
   appointmentId,
@@ -46,7 +39,7 @@ const RescheduleModal = ({
   const auth = useRequiredAuth();
 
   const methods = useForm({
-    resolver: yupResolver(rescheduleSchema),
+    resolver: yupResolver(RescheduleSchema),
     defaultValues: {
       date: defaultDate,
       start_time: "",

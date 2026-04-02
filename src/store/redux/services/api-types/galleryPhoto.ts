@@ -11,6 +11,7 @@ export interface GalleryPhoto {
   position: number;
   crop_data: GalleryPhotoCropData | null;
   thumbnail_photo_url: string;
+  cropped_photo_url: string | null;
   photo_url: string;
   original_photo_url: string;
   blurhash: string | null;

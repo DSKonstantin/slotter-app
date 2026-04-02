@@ -1,9 +1,9 @@
 import * as Yup from "yup";
 import { passwordField } from "@/src/validation/fields/password";
 
-const loginSchema = Yup.object({
+export const loginSchema = Yup.object({
   identifier: Yup.string().required("Введите номер телефона или email"),
   password: passwordField,
 });
 
-export default loginSchema;
+export type LoginFormValues = Yup.InferType<typeof loginSchema>;

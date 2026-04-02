@@ -1,6 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import { Button, IconButton, StModal, StSvg, Typography } from "@/src/components/ui";
+import {
+  Button,
+  IconButton,
+  StModal,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 
 interface Props {
   visible: boolean;

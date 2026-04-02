@@ -8,6 +8,7 @@ import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 import { usePathname } from "expo-router";
+import { CommonActions } from "@react-navigation/native";
 
 const HIDDEN_TAB_BAR_ROUTES = ["/account/preview"];
 
@@ -60,13 +61,24 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
             return (
               <Pressable
                 key={tab.key}
-                onPress={() => navigation.navigate(tab.key)}
+                onPress={() => {
+                  if (isActive) {
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 0,
+                        routes: [{ name: tab.key }],
+                      }),
+                    );
+                  } else {
+                    navigation.navigate(tab.key);
+                  }
+                }}
                 className={`flex-1 px-2 py-1.5 items-center justify-center
                 h-[58px] gap-0.5
-                rounded-full ${isActive ? "bg-neutral-100" : "transparent"}`}
+                rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "transparent"}`}
               >
                 <StSvg
-                  name={tab.icon as any}
+                  name={tab.icon as string}
                   size={32}
                   color={isActive ? colors.neutral[900] : colors.neutral[500]}
                 />

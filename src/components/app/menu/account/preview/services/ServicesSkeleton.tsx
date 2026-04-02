@@ -17,7 +17,14 @@ const ServiceCardSkeleton = () => {
       foregroundColor={colors.neutral[100]}
     >
       {/* Image */}
-      <Rect x="0" y="0" rx="20" ry="20" width={CARD_WIDTH} height={CARD_HEIGHT} />
+      <Rect
+        x="0"
+        y="0"
+        rx="20"
+        ry="20"
+        width={CARD_WIDTH}
+        height={CARD_HEIGHT}
+      />
       {/* Title */}
       <Rect x="4" y={CARD_HEIGHT + 8} rx="6" ry="6" width="140" height="14" />
       {/* Subtitle line 1 */}

@@ -1,12 +1,16 @@
 import { api } from "../api";
 import type {
   Customer,
+  CustomerTag,
   CustomerStatsResponse,
   CustomerBalanceResponse,
   GetCustomersParams,
   GetCustomersResponse,
   CreateCustomerPayload,
   UpdateCustomerPayload,
+  AssignTagPayload,
+  CreateCustomerTagPayload,
+  UpdateCustomerTagPayload,
 } from "@/src/store/redux/services/api-types";
 
 const customersApi = api.injectEndpoints({
@@ -14,22 +18,19 @@ const customersApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getCustomers: builder.query<
       GetCustomersResponse,
-      { userId: number; params?: GetCustomersParams }
+      GetCustomersParams | void
     >({
-      query: ({ userId, params }) => ({
-        url: `/users/${userId}/customers`,
+      query: (params) => ({
+        url: "/customers",
         method: "GET",
-        params,
+        params: params ?? undefined,
       }),
       providesTags: ["Customers"],
     }),
 
-    getCustomer: builder.query<
-      { customer: Customer },
-      { userId: number; customerId: number }
-    >({
-      query: ({ userId, customerId }) => ({
-        url: `/users/${userId}/customers/${customerId}`,
+    getCustomer: builder.query<{ customer: Customer }, { customerId: number }>({
+      query: ({ customerId }) => ({
+        url: `/customers/${customerId}`,
         method: "GET",
       }),
       providesTags: ["Customers"],
@@ -59,10 +60,10 @@ const customersApi = api.injectEndpoints({
 
     createCustomer: builder.mutation<
       { customer: Customer },
-      { userId: number; body: CreateCustomerPayload }
+      CreateCustomerPayload
     >({
-      query: ({ userId, body }) => ({
-        url: `/users/${userId}/customers`,
+      query: (body) => ({
+        url: "/customers",
         method: "POST",
         data: { customer: body },
       }),
@@ -71,25 +72,92 @@ const customersApi = api.injectEndpoints({
 
     updateCustomer: builder.mutation<
       { customer: Customer },
-      { userId: number; customerId: number; body: UpdateCustomerPayload }
+      { customerId: number; body: UpdateCustomerPayload }
     >({
-      query: ({ userId, customerId, body }) => ({
-        url: `/users/${userId}/customers/${customerId}`,
+      query: ({ customerId, body }) => ({
+        url: `/customers/${customerId}`,
         method: "PATCH",
         data: { customer: body },
       }),
       invalidatesTags: ["Customers"],
     }),
 
-    deleteCustomer: builder.mutation<
-      void,
-      { userId: number; customerId: number }
-    >({
-      query: ({ userId, customerId }) => ({
-        url: `/users/${userId}/customers/${customerId}`,
+    deleteCustomer: builder.mutation<void, { customerId: number }>({
+      query: ({ customerId }) => ({
+        url: `/customers/${customerId}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Customers"],
+    }),
+
+    assignTag: builder.mutation<
+      { customer: Customer },
+      { customerId: number; body: AssignTagPayload }
+    >({
+      query: ({ customerId, body }) => ({
+        url: `/customers/${customerId}/assign_tag`,
+        method: "POST",
+        data: body,
+      }),
+      invalidatesTags: ["Customers"],
+    }),
+
+    unassignTag: builder.mutation<
+      { customer: Customer },
+      { customerId: number }
+    >({
+      query: ({ customerId }) => ({
+        url: `/customers/${customerId}/unassign_tag`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Customers"],
+    }),
+
+    // Customer Tags
+    getCustomerTags: builder.query<
+      { customer_tags: CustomerTag[] },
+      { userId: number }
+    >({
+      query: ({ userId }) => ({
+        url: `/users/${userId}/customer_tags`,
+        method: "GET",
+      }),
+      providesTags: ["CustomerTags"],
+    }),
+
+    createCustomerTag: builder.mutation<
+      { customer_tag: CustomerTag },
+      { userId: number; body: CreateCustomerTagPayload }
+    >({
+      query: ({ userId, body }) => ({
+        url: `/users/${userId}/customer_tags`,
+        method: "POST",
+        data: { customer_tag: body },
+      }),
+      invalidatesTags: ["CustomerTags"],
+    }),
+
+    updateCustomerTag: builder.mutation<
+      { customer_tag: CustomerTag },
+      { userId: number; tagId: number; body: UpdateCustomerTagPayload }
+    >({
+      query: ({ userId, tagId, body }) => ({
+        url: `/users/${userId}/customer_tags/${tagId}`,
+        method: "PATCH",
+        data: { customer_tag: body },
+      }),
+      invalidatesTags: ["CustomerTags"],
+    }),
+
+    deleteCustomerTag: builder.mutation<
+      void,
+      { userId: number; tagId: number }
+    >({
+      query: ({ userId, tagId }) => ({
+        url: `/users/${userId}/customer_tags/${tagId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["CustomerTags"],
     }),
   }),
 });
@@ -102,4 +170,10 @@ export const {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
+  useAssignTagMutation,
+  useUnassignTagMutation,
+  useGetCustomerTagsQuery,
+  useCreateCustomerTagMutation,
+  useUpdateCustomerTagMutation,
+  useDeleteCustomerTagMutation,
 } = customersApi;

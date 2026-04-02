@@ -81,8 +81,12 @@ const ScheduleSettingsModalContent = ({
 
       if (nextMode === "perDay") {
         selectedEditableDays.forEach(({ index }) => {
-          setValue(`calendarDays.${index}.scheduleStart`, "", { shouldDirty: true });
-          setValue(`calendarDays.${index}.scheduleEnd`, "", { shouldDirty: true });
+          setValue(`calendarDays.${index}.scheduleStart`, "", {
+            shouldDirty: true,
+          });
+          setValue(`calendarDays.${index}.scheduleEnd`, "", {
+            shouldDirty: true,
+          });
           setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
         });
         setValue("mode", "perDay", { shouldDirty: true });
@@ -98,7 +102,11 @@ const ScheduleSettingsModalContent = ({
             text: "Переключить",
             style: "destructive",
             onPress: () => {
-              setValue("commonDraft", { scheduleStart: "", scheduleEnd: "", breaks: [] }, { shouldDirty: true });
+              setValue(
+                "commonDraft",
+                { scheduleStart: "", scheduleEnd: "", breaks: [] },
+                { shouldDirty: true },
+              );
               setValue("mode", "bulk", { shouldDirty: true });
             },
           },

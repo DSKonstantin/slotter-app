@@ -24,13 +24,13 @@ export function CropView({ originalUri, onDone, onCancel }: CropViewProps) {
   const { isFetching, resolution } = useImageResolution({ uri: originalUri });
 
   const handleCrop = () => {
-    if (!cropRef.current || !resolution) return;
+    if (!cropRef.current) return;
     const { crop } = cropRef.current.crop();
     onDone({
-      originX: crop.originX / resolution.width,
-      originY: crop.originY / resolution.height,
-      width: crop.width / resolution.width,
-      height: crop.height / resolution.height,
+      originX: crop.originX,
+      originY: crop.originY,
+      width: crop.width,
+      height: crop.height,
     });
   };
 

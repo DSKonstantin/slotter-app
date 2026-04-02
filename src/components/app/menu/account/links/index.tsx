@@ -2,32 +2,19 @@ import React from "react";
 import { View } from "react-native";
 import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
+import {
+  AccountLinksSchema,
+  type AccountLinksFormValues,
+} from "@/src/validation/schemas/accountLinks.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
 
-type FormValues = {
-  links: { url: string }[];
-};
-
-const schema = Yup.object({
-  links: Yup.array()
-    .of(
-      Yup.object({
-        url: Yup.string()
-          .url("Введите корректную ссылку")
-          .required("Ссылка не может быть пустой"),
-      }),
-    )
-    .required(),
-});
-
 const Links = () => {
-  const methods = useForm<FormValues>({
-    resolver: yupResolver(schema),
+  const methods = useForm<AccountLinksFormValues>({
+    resolver: yupResolver(AccountLinksSchema),
     defaultValues: {
       links: [{ url: "" }],
     },
@@ -40,7 +27,7 @@ const Links = () => {
 
   const watchedLinks = methods.watch("links");
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = (data: AccountLinksFormValues) => {
     // TODO: save links
     console.log(data);
   };

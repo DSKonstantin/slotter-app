@@ -6,30 +6,19 @@ import { FormProvider, useForm } from "react-hook-form";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
-import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { passwordField } from "@/src/validation/fields/password";
+import { loginSchema } from "@/src/validation/schemas/login.schema";
 import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 
-type LoginFormValues = {
-  identifier: string;
-  password: string;
-};
-
-const VerifySchema = Yup.object().shape({
-  identifier: Yup.string().required("Введите номер телефона или email"),
-  password: passwordField,
-});
-
 const Login = () => {
   const [login, { isLoading }] = useLoginMutation();
 
   const methods = useForm({
-    resolver: yupResolver(VerifySchema),
+    resolver: yupResolver(loginSchema),
     defaultValues: {
       identifier: "",
       password: "",
@@ -37,7 +26,7 @@ const Login = () => {
   });
 
   const onSubmit = useCallback(
-    async (data: LoginFormValues) => {
+    async (data: { identifier: string; password: string }) => {
       try {
         const isEmail = data.identifier.includes("@");
 
