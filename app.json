@@ -11,10 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": [
-          "ru",
-          "en"
-        ],
+        "CFBundleLocalizations": ["ru", "en"],
         "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании"
       },
       "bundleIdentifier": "com.anonymous.slotter"
@@ -54,14 +51,8 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": [
-              "ru",
-              "en"
-            ],
-            "android": [
-              "ru",
-              "en"
-            ]
+            "ios": ["ru", "en"],
+            "android": ["ru", "en"]
           }
         }
       ],
@@ -74,7 +65,13 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Разрешите $(PRODUCT_NAME) доступ к контактам для быстрого добавления клиентов"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

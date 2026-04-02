@@ -20,7 +20,7 @@ const PaginationDots = ({ count, activeIndex, onSelect, className }: Props) => {
           onPress={() => onSelect?.(i)}
           className={twMerge(
             "h-2 rounded-full",
-            i === activeIndex ? "w-7 bg-background" : "w-2 bg-neutral-500",
+            i === activeIndex ? "w-7 bg-neutral-900" : "w-2 bg-neutral-500",
           )}
         />
       ))}

@@ -6,55 +6,26 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { Avatar, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { StepProgress } from "@/src/components/ui/StepProgress";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
-import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
+import { AddressField } from "@/src/components/shared/addressField";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { CameraType, ImagePickerAsset } from "expo-image-picker";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { nameField } from "@/src/validation/fields/name";
-import { surnameField } from "@/src/validation/fields/surname";
-import { professionField } from "@/src/validation/fields/profession";
+import {
+  PersonalInformationSchema,
+  type PersonalInformationFormValues,
+} from "@/src/validation/schemas/onboardingPersonalInformation.schema";
+import type { UploadFile } from "@/src/types/upload";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-
-type PersonalInformationFormValues = {
-  name: string;
-  surname: string;
-  profession: string;
-  address?: Yup.Maybe<string | undefined>;
-  atHome: boolean;
-  online: boolean;
-  onRoad: boolean;
-  hideAddress: boolean;
-  avatar: UploadFile | null;
-};
-
-type UploadFile = {
-  uri: string;
-  name: string;
-  type: string;
-};
-
-const PersonalInformationSchema = Yup.object({
-  name: nameField,
-  surname: surnameField,
-  profession: professionField,
-  address: Yup.string().notRequired(),
-  atHome: Yup.boolean().required(),
-  online: Yup.boolean().required(),
-  onRoad: Yup.boolean().required(),
-  hideAddress: Yup.boolean().required(),
-  avatar: Yup.mixed<UploadFile>().nullable().default(null),
-});
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
@@ -201,29 +172,8 @@ const PersonalInformation = () => {
           <Item title="Онлайн" right={<RHFSwitch name="online" />} />
           <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
         </View>
-        <View className="gap-2 mb-8">
-          <RHFAutocomplete
-            label="Адрес"
-            placeholder="Москва, ул. Пушкина, 5"
-            name="address"
-            hideErrorText
-            dataSet={[
-              { id: "Alpha", title: "Alpha" },
-              { id: "Beta", title: "Beta" },
-              { id: "Gamma", title: "Gamma" },
-            ]}
-          />
-          <Item
-            title="Скрыть адрес"
-            left={
-              <StSvg
-                name="View_hide_fill"
-                size={24}
-                color={colors.neutral[900]}
-              />
-            }
-            right={<RHFSwitch name="hideAddress" />}
-          />
+        <View className="mb-8">
+          <AddressField />
         </View>
       </AuthScreenLayout>
     </FormProvider>

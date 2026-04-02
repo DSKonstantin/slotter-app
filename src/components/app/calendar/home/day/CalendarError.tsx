@@ -1,5 +1,5 @@
 import React from "react";
-import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 type CalendarErrorProps = {
   isLoading?: boolean;
@@ -10,14 +10,10 @@ const CalendarError: React.FC<CalendarErrorProps> = ({
   isLoading,
   onRetry,
 }) => (
-  <EmptyStateScreen
-    image={require("@/assets/images/no-internet.png")}
+  <ErrorScreen
     title="Не удалось загрузить календарь"
-    subtitle="Проверьте подключение к интернету и попробуйте снова"
-    buttonTitle="Повторить"
-    buttonIcon="Refresh_2"
     isLoading={isLoading}
-    onPress={onRetry}
+    onRetry={onRetry}
   />
 );
 

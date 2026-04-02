@@ -9,7 +9,8 @@ type BadgeVariant =
   | "accent"
   | "info"
   | "success"
-  | "warning";
+  | "warning"
+  | "error";
 type BadgeSize = "sm" | "md";
 
 type BadgeProps = {
@@ -88,6 +89,7 @@ const styles = {
     info: "bg-primary-blue-100",
     success: "bg-primary-green-500",
     warning: "bg-accent-yellow-500",
+    error: "bg-accent-red-100",
   },
 
   text: {
@@ -106,6 +108,7 @@ const styles = {
       info: "text-primary-blue-500",
       success: "text-primary-green-700",
       warning: "text-accent-yellow-700",
+      error: "text-accent-red-500",
     },
   },
 

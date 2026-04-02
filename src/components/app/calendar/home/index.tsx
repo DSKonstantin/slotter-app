@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconButton, SegmentedControl, StSvg } from "@/src/components/ui";
@@ -7,6 +7,7 @@ import MonthCalendarView from "@/src/components/app/calendar/home/month";
 import CalendarFilterModal from "@/src/components/app/calendar/home/calendarFilterModal";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
+  setFilterModalOpen,
   setMode,
   setSelectedDay,
 } from "@/src/store/redux/slices/calendarSlice";
@@ -18,14 +19,20 @@ import { colors } from "@/src/styles/colors";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 
 const CalendarHome = () => {
-  const [isFilterOpen, setFilterOpen] = useState(false);
   const router = useRouter();
   const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
   const dispatch = useAppDispatch();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
+  const isFilterOpen = useAppSelector(
+    (state) => state.calendar.isFilterModalOpen,
+  );
 
-  const handleOpenFilters = useCallback(() => setFilterOpen(true), []);
-  const handleCloseFilters = useCallback(() => setFilterOpen(false), []);
+  const handleOpenFilters = useCallback(() => {
+    dispatch(setFilterModalOpen(true));
+  }, [dispatch]);
+  const handleCloseFilters = useCallback(() => {
+    dispatch(setFilterModalOpen(false));
+  }, [dispatch]);
 
   const handleModeChange = useCallback(
     (value: string) => {

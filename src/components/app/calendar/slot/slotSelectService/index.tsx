@@ -5,8 +5,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import { ActivityIndicator, SectionList, View } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Card,
@@ -81,6 +82,7 @@ interface Props {
   time?: string;
   appointmentId?: string;
   selectedServiceIds?: string;
+  selectedAdditionalServiceIds?: string;
 }
 
 const SlotSelectService: React.FC<Props> = ({
@@ -88,8 +90,10 @@ const SlotSelectService: React.FC<Props> = ({
   time,
   appointmentId,
   selectedServiceIds,
+  selectedAdditionalServiceIds,
 }) => {
-  const initializedRef = useRef(false);
+  const initializedServicesRef = useRef(false);
+  const initializedAdditionalRef = useRef(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
@@ -127,6 +131,14 @@ const SlotSelectService: React.FC<Props> = ({
     [selectedServiceIds],
   );
 
+  const preselectedAdditionalIds = useMemo(
+    () =>
+      selectedAdditionalServiceIds
+        ? selectedAdditionalServiceIds.split(",").map(Number)
+        : [],
+    [selectedAdditionalServiceIds],
+  );
+
   const allServices = useMemo(
     () => categories.flatMap((cat) => cat.services ?? []),
     [categories],
@@ -138,13 +150,6 @@ const SlotSelectService: React.FC<Props> = ({
   const [selectedAdditional, setSelectedAdditional] = useState<
     AdditionalService[]
   >([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      setSelectedServices([]);
-      setSelectedAdditional([]);
-    }, []),
-  );
 
   const handleToggleService = useCallback((service: Service) => {
     setSelectedServices((prev) => {
@@ -166,6 +171,10 @@ const SlotSelectService: React.FC<Props> = ({
     });
   }, []);
 
+  const handleCreateService = useCallback(() => {
+    router.push(Routers.app.menu.services.create());
+  }, []);
+
   const handleNext = useCallback(async () => {
     if (selectedServices.length === 0) return;
 
@@ -173,7 +182,10 @@ const SlotSelectService: React.FC<Props> = ({
       try {
         await updateAppointment({
           id: Number(appointmentId),
-          body: { service_ids: selectedServices.map((s) => s.id) },
+          body: {
+            service_ids: selectedServices.map((s) => s.id),
+            additional_service_ids: selectedAdditional.map((s) => s.id),
+          },
         }).unwrap();
         toast.success("Услуги обновлены");
         router.back();
@@ -204,16 +216,31 @@ const SlotSelectService: React.FC<Props> = ({
 
   useEffect(() => {
     if (
-      !initializedRef.current &&
+      !initializedServicesRef.current &&
       allServices.length > 0 &&
       preselectedIds.length > 0
     ) {
-      initializedRef.current = true;
+      initializedServicesRef.current = true;
       setSelectedServices(
         allServices.filter((s) => preselectedIds.includes(s.id)),
       );
     }
   }, [allServices, preselectedIds]);
+
+  useEffect(() => {
+    if (
+      !initializedAdditionalRef.current &&
+      additionalServices.length > 0 &&
+      preselectedAdditionalIds.length > 0
+    ) {
+      initializedAdditionalRef.current = true;
+      setSelectedAdditional(
+        additionalServices.filter((s) =>
+          preselectedAdditionalIds.includes(s.id),
+        ),
+      );
+    }
+  }, [additionalServices, preselectedAdditionalIds]);
 
   if (!auth) return null;
 
@@ -247,6 +274,13 @@ const SlotSelectService: React.FC<Props> = ({
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
                 <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : allServices.length === 0 ? (
+              <View className="flex-1 items-center justify-center gap-4">
+                <Typography className="text-body text-neutral-500 text-center">
+                  У вас пока нет услуг
+                </Typography>
+                <Button title="Создать услугу" onPress={handleCreateService} />
               </View>
             ) : (
               <>

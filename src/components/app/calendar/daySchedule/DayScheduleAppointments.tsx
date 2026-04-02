@@ -4,10 +4,10 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 
 import { Typography } from "@/src/components/ui";
-import TimeSlotCard from "@/src/components/shared/cards/scheduling/timeSlotCard";
+import AppointmentCard from "@/src/components/shared/cards/scheduling/appointmentCard";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { Appointment } from "@/src/store/redux/services/api-types";
-import { formatTimeFromISO } from "@/src/utils/date/formatTime";
+import { formatTimeString } from "@/src/utils/date/formatTime";
 import { Routers } from "@/src/constants/routers";
 
 type Props = {
@@ -20,7 +20,9 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
     userId ? { userId, params: { date } } : skipToken,
   );
 
-  const appointments = (data as Appointment[] | undefined) ?? [];
+  const appointments = ((data as Appointment[] | undefined) ?? [])
+    .slice()
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
   if (isLoading) {
     return <ActivityIndicator />;
@@ -36,11 +38,11 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
         Записи на этот день
       </Typography>
       {appointments.map((appointment) => (
-        <TimeSlotCard
+        <AppointmentCard
           key={appointment.id}
-          time={formatTimeFromISO(appointment.start_time)}
+          time={`${formatTimeString(appointment.start_time)} - ${formatTimeString(appointment.end_time)}`}
           name={appointment.customer.name}
-          service={appointment.services[0]?.name ?? ""}
+          service={appointment.services.map((s) => s.name).join(", ")}
           onPress={() => router.push(Routers.app.calendar.slot(appointment.id))}
         />
       ))}

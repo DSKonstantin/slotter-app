@@ -32,6 +32,7 @@ export function Input({
       hideErrorText={hideErrorText}
       disabled={disabled}
       size={size}
+      multiline={props.multiline}
       startAdornment={startAdornment}
       endAdornment={endAdornment}
       renderControl={({ setFocused }) => (
@@ -49,6 +50,7 @@ export function Input({
           }}
           className={inputSizes[size]}
           placeholderTextColor={colors.neutral[300]}
+          textAlignVertical={props.multiline ? "top" : "center"}
           style={props.multiline ? styles.multilineStyle : undefined}
         />
       )}

@@ -25,7 +25,9 @@ type AutocompleteProps = {
 
   dataSet?: AutocompleteItem[];
   onSelectItem?: (a: any) => void;
+  onChangeText?: (text: string) => void;
   placeholder?: string;
+  emptyText?: string;
 };
 
 export function Autocomplete({
@@ -36,7 +38,9 @@ export function Autocomplete({
   dataSet,
   hideErrorText,
   onSelectItem,
+  onChangeText,
   placeholder = "Введите",
+  emptyText = "Ничего не найдено",
 }: AutocompleteProps) {
   const dropdownController = useRef<IAutocompleteDropdownRef | null>(null);
 
@@ -48,7 +52,7 @@ export function Autocomplete({
       disabled={disabled}
       renderControl={({ setFocused }) => (
         <AutocompleteDropdown
-          initialValue={value ? { id: value } : undefined}
+          initialValue={value ? { id: value, title: value } : undefined}
           controller={(controller) => {
             dropdownController.current = controller;
           }}
@@ -61,9 +65,11 @@ export function Autocomplete({
             if (!text?.trim()) {
               dropdownController.current?.setItem?.({ id: "" });
             }
+            onChangeText?.(text ?? "");
           }}
           onSelectItem={onSelectItem}
           dataSet={dataSet ?? []}
+          emptyResultText={emptyText}
           containerStyle={{ flex: 1 }}
           inputContainerStyle={{
             borderRadius: 14,

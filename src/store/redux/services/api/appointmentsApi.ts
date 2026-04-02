@@ -39,12 +39,17 @@ const appointmentsApi = api.injectEndpoints({
 
     getAvailableSlots: builder.query<
       string[],
-      { userId: number; date: string; step?: 5 | 10 | 15 }
+      {
+        userId: number;
+        date: string;
+        step?: 5 | 10 | 15;
+        appointment_id?: number;
+      }
     >({
-      query: ({ userId, date, step = 15 }) => ({
+      query: ({ userId, date, step = 15, appointment_id }) => ({
         url: `/users/${userId}/available_slots`,
         method: "GET",
-        params: { date, step },
+        params: { date, step, ...(appointment_id && { appointment_id }) },
       }),
     }),
 

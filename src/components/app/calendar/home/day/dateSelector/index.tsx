@@ -48,7 +48,7 @@ const DateItem = memo<DateItemProps>(
       </Typography>
 
       <View
-        className={`w-[32px] h-[32px] justify-center items-center rounded-full ${
+        className={`w-[32px] h-[32px] justify-center items-center rounded-full overflow-hidden ${
           isSelected ? "bg-background-surface" : "bg-transparent"
         }`}
       >

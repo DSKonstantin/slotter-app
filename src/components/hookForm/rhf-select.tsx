@@ -7,6 +7,7 @@ type RHFSelectFieldProps = {
   name: string;
   label?: string;
   placeholder?: string;
+  emptyText?: string;
   disabled?: boolean;
   items: ItemType<string>[];
 };
@@ -16,6 +17,7 @@ export function RHFSelect({
   label,
   items,
   placeholder,
+  emptyText,
   disabled,
 }: RHFSelectFieldProps) {
   const { control } = useFormContext();
@@ -31,6 +33,7 @@ export function RHFSelect({
           onChange={onChange}
           items={items}
           placeholder={placeholder}
+          emptyText={emptyText}
           disabled={disabled}
           error={error}
         />

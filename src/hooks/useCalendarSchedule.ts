@@ -42,43 +42,37 @@ export const useCalendarSchedule = (current: Date) => {
   const [bulkCreateWorkingDays, { isLoading: isSaving }] =
     useBulkCreateWorkingDaysMutation();
 
-  const monthStart = useMemo(() => startOfMonth(current), [current]);
-  const monthEnd = useMemo(() => endOfMonth(current), [current]);
+  const dateRange = useMemo(() => {
+    if (!auth) return null;
+    return {
+      userId: auth.userId,
+      date_from: format(startOfMonth(current), "yyyy-MM-dd"),
+      date_to: format(endOfMonth(current), "yyyy-MM-dd"),
+    };
+  }, [auth, current]);
 
-  const queryParams = auth
-    ? {
-        userId: auth.userId,
-        date_from: format(monthStart, "yyyy-MM-dd"),
-        date_to: format(monthEnd, "yyyy-MM-dd"),
-      }
-    : skipToken;
-
-  const { data: workingDaysData } = useGetWorkingDaysQuery(queryParams);
+  const { data: workingDaysData } = useGetWorkingDaysQuery(
+    dateRange ?? skipToken,
+  );
 
   const { data: appointmentsData } = useGetAppointmentsQuery(
-    auth
+    dateRange
       ? {
-          userId: auth.userId,
+          userId: dateRange.userId,
           params: {
-            date_from: format(monthStart, "yyyy-MM-dd"),
-            date_to: format(monthEnd, "yyyy-MM-dd"),
+            date_from: dateRange.date_from,
+            date_to: dateRange.date_to,
             status: ["pending", "confirmed"],
           },
         }
       : skipToken,
   );
 
-  const appointmentDates = useMemo(
-    () =>
-      new Set(
-        Object.entries(
-          (appointmentsData as Record<string, Appointment[]> | undefined) ?? {},
-        )
-          .filter(([_, arr]) => arr.length > 0)
-          .map(([date]) => date),
-      ),
-    [appointmentsData],
-  );
+  const appointmentDates = useMemo(() => {
+    const data =
+      (appointmentsData as Record<string, Appointment[]> | undefined) ?? {};
+    return new Set(Object.keys(data).filter((date) => data[date].length > 0));
+  }, [appointmentsData]);
 
   const initialFormValues = useMemo(
     () => buildFormValues(current, workingDaysData),
@@ -86,13 +80,20 @@ export const useCalendarSchedule = (current: Date) => {
   );
 
   const methods = useForm<CalendarScheduleFormValues>({
-    resolver: yupResolver(CalendarScheduleSchema) as any,
+    resolver: (values, context, options) =>
+      (yupResolver(CalendarScheduleSchema) as any)(
+        values,
+        { ...context, mode: values.mode },
+        options,
+      ),
     defaultValues: initialFormValues,
   });
 
   const { control, formState, getValues, handleSubmit, reset, setValue } =
     methods;
   const previousMonthKeyRef = useRef(format(current, "yyyy-MM"));
+  const isDirtyRef = useRef(formState.isDirty);
+  isDirtyRef.current = formState.isDirty;
 
   const watchedMode = useWatch({ control, name: "mode" }) ?? "bulk";
   const watchedCommonDraft =
@@ -104,18 +105,13 @@ export const useCalendarSchedule = (current: Date) => {
     [initialFormValues.calendarDays, watchedCalendarDays],
   );
 
-  const selectedCalendarDays = useMemo(
-    () => calendarDays.filter((day) => day.isSelected),
-    [calendarDays],
-  );
   const editableSelectedDays = useMemo(
-    () => selectedCalendarDays.filter((day) => !day.isExisting),
-    [selectedCalendarDays],
+    () => calendarDays.filter((day) => day.isSelected && !day.isExisting),
+    [calendarDays],
   );
 
   const hasPendingEditableSelection = editableSelectedDays.length > 0;
-  const modalVisible = selectedCalendarDays.length > 0;
-
+  const modalVisible = calendarDays.some((day) => day.isSelected);
 
   const clearSelection = useCallback(() => {
     const currentCalendarDays = getValues("calendarDays") ?? [];
@@ -125,6 +121,7 @@ export const useCalendarSchedule = (current: Date) => {
       setValue("calendarDays", nextCalendarDays);
     }
     setValue("mode", "bulk");
+    setValue("commonDraft", { scheduleStart: "", scheduleEnd: "", breaks: [] });
   }, [getValues, setValue]);
 
   const toggleDay = useCallback(
@@ -147,11 +144,17 @@ export const useCalendarSchedule = (current: Date) => {
       if (!auth) return;
 
       const workingDays = values.calendarDays
-        .filter((day) => day.isSelected && !day.isExisting)
+        .filter(
+          (day) =>
+            day.isSelected &&
+            !day.isExisting &&
+            !!day.scheduleStart &&
+            !!day.scheduleEnd,
+        )
         .map((day) => ({
           day: day.date,
-          start_at: day.scheduleStart,
-          end_at: day.scheduleEnd,
+          start_at: day.scheduleStart!,
+          end_at: day.scheduleEnd!,
           ...(day.breaks.length > 0 && {
             working_day_breaks: day.breaks.map((item) => ({
               start_at: item.start,
@@ -221,10 +224,10 @@ export const useCalendarSchedule = (current: Date) => {
     const monthChanged = previousMonthKeyRef.current !== monthKey;
     previousMonthKeyRef.current = monthKey;
 
-    if (!formState.isDirty || monthChanged) {
+    if (!isDirtyRef.current || monthChanged) {
       reset(initialFormValues);
     }
-  }, [current, formState.isDirty, initialFormValues, reset]);
+  }, [current, initialFormValues, reset]);
 
   useEffect(() => {
     if (watchedMode !== "bulk") return;

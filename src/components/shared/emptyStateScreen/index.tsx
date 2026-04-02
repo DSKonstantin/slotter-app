@@ -12,6 +12,7 @@ type EmptyStateScreenProps = {
   buttonTitle: string;
   buttonIcon?: string;
   isLoading?: boolean;
+  withTabBar?: boolean;
   onPress: () => void;
 };
 
@@ -22,6 +23,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   buttonTitle,
   buttonIcon,
   isLoading = false,
+  withTabBar = true,
   onPress,
 }) => {
   const { bottom } = useSafeAreaInsets();
@@ -48,7 +50,9 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
       </View>
       <View
         className="px-screen"
-        style={{ marginBottom: TAB_BAR_HEIGHT + bottom + 16 }}
+        style={{
+          marginBottom: (withTabBar ? TAB_BAR_HEIGHT : 0) + bottom + 16,
+        }}
       >
         <Button
           title={buttonTitle}

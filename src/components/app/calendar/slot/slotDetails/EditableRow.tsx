@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
-import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
+import { RhfEditableRowInput } from "./EditableRowInput";
 import InfoRow from "./InfoRow";
 
 interface EditableRowProps {
@@ -37,13 +37,11 @@ const EditableRow = ({
       <View className="flex-row items-center gap-1 flex-1 justify-end">
         {editing ? (
           <View className="flex-1">
-            <RhfTextField
+            <RhfEditableRowInput
               name={fieldName}
               placeholder={placeholder}
               keyboardType="numeric"
-              hideErrorText
               autoFocus
-              size="xs"
             />
           </View>
         ) : (
@@ -63,9 +61,7 @@ const EditableRow = ({
               <StSvg
                 name={editing ? "Check_round_fill" : "Edit_light"}
                 size={20}
-                color={
-                  editing ? colors.primary.blue[500] : colors.neutral[500]
-                }
+                color={editing ? colors.primary.blue[500] : colors.neutral[500]}
               />
             }
           />

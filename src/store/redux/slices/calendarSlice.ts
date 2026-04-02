@@ -25,12 +25,14 @@ interface CalendarState {
   selectedDay: string;
   filters: CalendarFilters;
   scheduleIntent: ScheduleIntent;
+  isFilterModalOpen: boolean;
 }
 
 const initialState: CalendarState = {
   mode: "day",
   selectedDay: format(new Date(), "yyyy-MM-dd"),
   scheduleIntent: null,
+  isFilterModalOpen: false,
   filters: {
     showPending: true,
     showConfirmed: true,
@@ -66,6 +68,10 @@ const calendarSlice = createSlice({
     setScheduleIntent(state, action: PayloadAction<ScheduleIntent>) {
       state.scheduleIntent = action.payload;
     },
+
+    setFilterModalOpen(state, action: PayloadAction<boolean>) {
+      state.isFilterModalOpen = action.payload;
+    },
   },
 });
 
@@ -75,6 +81,7 @@ export const {
   toggleFilter,
   setFilters,
   setScheduleIntent,
+  setFilterModalOpen,
 } = calendarSlice.actions;
 
 export const selectActiveStatuses = createSelector(

@@ -7,6 +7,7 @@ import DraggableFlatList, {
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 import { colors } from "@/src/styles/colors";
 
@@ -34,6 +35,7 @@ type SelectedCategory = {
 const AppServicesCategories = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<SelectedCategory | null>(null);
   const [updateServiceCategory] = useUpdateServiceCategoryMutation();
@@ -102,7 +104,9 @@ const AppServicesCategories = () => {
           })),
         }).unwrap();
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось изменить порядок категорий"));
+        toast.error(
+          getApiErrorMessage(error, "Не удалось изменить порядок категорий"),
+        );
       }
     },
     [auth?.userId, reorderServiceCategories],
@@ -114,8 +118,13 @@ const AppServicesCategories = () => {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleRefresh = useCallback(() => {
-    if (isFetchingNextPage) return;
-    refetch({ refetchCachedPages: false });
+    if (isFetchingNextPage) return Promise.resolve();
+
+    setRefreshing(true);
+
+    return refetch({ refetchCachedPages: false }).finally(() => {
+      setRefreshing(false);
+    });
   }, [isFetchingNextPage, refetch]);
 
   if (!auth) {
@@ -124,16 +133,7 @@ const AppServicesCategories = () => {
 
   return (
     <>
-      <ScreenWithToolbar
-        title="Категории услуг"
-        rightButton={
-          <IconButton
-            icon={<StSvg name="Search" size={28} color={colors.neutral[900]} />}
-            onPress={() => {}}
-            accessibilityLabel="Search categories"
-          />
-        }
-      >
+      <ScreenWithToolbar title="Категории услуг">
         {({ topInset, bottomInset }) => {
           if (isLoading && !data) {
             return (
@@ -148,21 +148,12 @@ const AppServicesCategories = () => {
 
           if (isError && !data) {
             return (
-              <View
-                className="flex-1 items-center justify-center px-screen gap-4"
-                style={{ marginTop: topInset, marginBottom: bottomInset }}
-              >
-                <Typography className="text-body text-accent-red-500">
-                  Ошибка загрузки категорий.
-                </Typography>
-                <Button
-                  title="Повторить"
-                  onPress={handleRefresh}
-                  loading={isFetching}
-                  disabled={isFetching}
-                  buttonClassName="w-full"
-                />
-              </View>
+              <ErrorScreen
+                title="Не удалось загрузить категории"
+                isLoading={isFetching}
+                withTabBar={false}
+                onRetry={handleRefresh}
+              />
             );
           }
           return (
@@ -186,6 +177,8 @@ const AppServicesCategories = () => {
                 onDragEnd={handleDragEnd}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={listConfig.onEndReachedThreshold}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
                 renderItem={({
                   item,
                   drag,

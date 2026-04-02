@@ -13,10 +13,10 @@ import { useCreateWorkingDayMutation } from "@/src/store/redux/services/api/work
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 
 import {
-  DayScheduleForm,
   DayScheduleSchema,
-  DayScheduleFormValues,
-} from "./DayScheduleForm";
+  type DayScheduleFormValues,
+} from "@/src/validation/schemas/daySchedule.schema";
+import { DayScheduleForm } from "./DayScheduleForm";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { ScrollView, View } from "react-native";
 import { Button, StSvg } from "@/src/components/ui";

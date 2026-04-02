@@ -33,7 +33,6 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    // 🔹 Telegram Register Status
     telegramRegisterStatus: builder.query<
       TelegramRegisterStatusResponse,
       { uuid: string }
@@ -45,7 +44,6 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    // 🔹 Telegram Login (отправка кода)
     telegramLogin: builder.mutation<
       TelegramLoginResponse,
       { phone: string; type: UserType }
@@ -57,7 +55,6 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    // 🔹 Подтверждение Telegram Login
     confirmTelegramLogin: builder.mutation<
       AuthResponse,
       { phone: string; code: string }
@@ -69,7 +66,6 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    // 🔹 Классический login
     login: builder.mutation<
       AuthResponse,
       {

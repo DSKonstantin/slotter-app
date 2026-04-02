@@ -2,22 +2,26 @@ import React, { memo } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
-
 import { StModal, Button, Typography, Card, StSvg } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import {
   useRescheduleAppointmentMutation,
   useGetAvailableSlotsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
+import {
+  RescheduleSchema,
+  type RescheduleFormValues,
+} from "@/src/validation/schemas/slotReschedule.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { colors } from "@/src/styles/colors";
 import { router } from "expo-router";
+import { parseISO } from "date-fns";
+import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 type Props = {
   visible: boolean;
@@ -25,15 +29,6 @@ type Props = {
   defaultDate?: string;
   onClose: () => void;
 };
-
-const rescheduleSchema = Yup.object({
-  date: Yup.string()
-    .required("Укажите дату")
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Формат: YYYY-MM-DD"),
-  start_time: Yup.string().required("Выберите время"),
-  reason: Yup.string(),
-  send_notification: Yup.boolean().required(),
-});
 
 const RescheduleModal = ({
   visible,
@@ -44,7 +39,7 @@ const RescheduleModal = ({
   const auth = useRequiredAuth();
 
   const methods = useForm({
-    resolver: yupResolver(rescheduleSchema),
+    resolver: yupResolver(RescheduleSchema),
     defaultValues: {
       date: defaultDate,
       start_time: "",
@@ -61,8 +56,19 @@ const RescheduleModal = ({
 
   const { data: availableSlots, isFetching: isFetchingSlots } =
     useGetAvailableSlotsQuery(
-      { userId: auth?.userId ?? 0, date: dateValue, step: 15 },
-      { skip: !isValidDate || !auth },
+      auth
+        ? {
+            userId: auth.userId,
+            date: dateValue,
+            step: 15,
+            appointment_id: appointmentId,
+          }
+        : skipToken,
+
+      {
+        skip: !visible || !isValidDate,
+        refetchOnMountOrArgChange: true,
+      },
     );
 
   const [reschedule, { isLoading }] = useRescheduleAppointmentMutation();
@@ -98,13 +104,13 @@ const RescheduleModal = ({
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose}>
+    <StModal visible={visible} onClose={handleClose} keyboardAware>
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-5">
           Перенести запись с {formatDayMonth(defaultDate)}
         </Typography>
 
-        <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
+        <View>
           <RhfTextField
             name="date"
             label="Новая дата"
@@ -163,7 +169,7 @@ const RescheduleModal = ({
               Нет доступных слотов на эту дату
             </Typography>
           )}
-        </KeyboardAwareScrollView>
+        </View>
 
         <View className="mt-6 gap-3">
           <Button

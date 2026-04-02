@@ -4,10 +4,16 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
+import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { formatTime } from "@/src/utils/date/formatTime";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
 import { toast } from "@backpackapp-io/react-native-toast";
+import {
+  SlotCreateSchema,
+  type SlotCreateFormValues,
+} from "@/src/validation/schemas/slotCreate.schema";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -30,28 +36,6 @@ import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/app
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
-
-const SlotCreateSchema = Yup.object({
-  services: Yup.array(
-    Yup.object({
-      id: Yup.string().required(),
-      name: Yup.string().required(),
-      duration: Yup.number().required(),
-      priceCents: Yup.number().required(),
-    }),
-  ).required(),
-  clientName: Yup.string(),
-  date: Yup.string().required("Укажите дату"),
-  time: Yup.string().required("Укажите время"),
-  duration: Yup.number()
-    .min(0, "Минимальная длительность — 0 минут")
-    .required("Укажите длительность"),
-  comment: Yup.string(),
-  paymentMethod: Yup.string().oneOf(["cash", "sbp", "online"]).required(),
-  sendNotification: Yup.boolean().required(),
-});
-
-type SlotCreateFormValues = Yup.InferType<typeof SlotCreateSchema>;
 
 const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "cash", label: "Наличные" },
@@ -152,8 +136,8 @@ const SlotCreate: React.FC = () => {
           },
         }).unwrap();
         dispatch(clearSlotDraft());
-        toast.success("Запись создана");
-        router.push(Routers.app.calendar.root(values.date));
+        router.dismissAll();
+        router.navigate(Routers.app.calendar.root(values.date));
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
@@ -277,6 +261,9 @@ const SlotCreate: React.FC = () => {
                 label="Клиент"
                 placeholder="Поиск по имени или телефону"
                 hideErrorText
+                startAdornment={
+                  <StSvg name="Search" size={24} color={colors.neutral[900]} />
+                }
               />
               <Button
                 title=" Создать нового клиента"
@@ -294,14 +281,11 @@ const SlotCreate: React.FC = () => {
 
             <View className="flex-row gap-3 mt-5">
               <View className="flex-1">
-                <RhfTextField
-                  label="Дата"
+                <RhfCalendarDatePicker
                   name="date"
-                  value={
-                    draft.date ? formatDayMonthLong(parseISO(draft.date)) : "—"
-                  }
+                  label="Дата"
                   placeholder="дд.мм"
-                  editable={false}
+                  displayFormat={(iso) => formatDayMonthLong(parseISO(iso))}
                   endAdornment={
                     <StSvg
                       name="Date_today"
@@ -312,10 +296,18 @@ const SlotCreate: React.FC = () => {
                 />
               </View>
               <View className="flex-1">
-                <RhfTextField
-                  label="Время"
+                <RhfDatePicker
                   name="time"
+                  label="Время"
                   placeholder="чч:мм"
+                  formatValue={(date: Date) => formatTime(date)}
+                  parseValue={(value: string) => {
+                    if (!value) return null;
+                    const [hours, minutes] = value.split(":").map(Number);
+                    const d = new Date();
+                    d.setHours(hours, minutes, 0, 0);
+                    return d;
+                  }}
                   endAdornment={
                     <StSvg
                       name="Time_light"
@@ -332,6 +324,8 @@ const SlotCreate: React.FC = () => {
                 name="duration"
                 label="Изменить продолжительность (мин)"
                 placeholder="60"
+                keyboardType="number-pad"
+                maxLength={4}
               />
             </View>
 

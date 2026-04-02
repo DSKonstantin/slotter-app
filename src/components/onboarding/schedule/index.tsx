@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import * as Yup from "yup";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  OnboardingScheduleSchema,
+  type OnboardingScheduleFormValues,
+} from "@/src/validation/schemas/onboardingSchedule.schema";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
@@ -13,28 +16,13 @@ import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { days } from "@/src/constants/days";
 import { colors } from "@/src/styles/colors";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
-import { BreaksFieldArray } from "@/src/components/onboarding/schedule/breaksFieldArray";
-
-type ScheduleFormValues = {
-  workingTimeFrom: string;
-  workingTimeTo: string;
-  workingDays: (string | undefined)[];
-};
+import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
 
 const Schedule = () => {
   const [activeDays, setActiveDays] = useState<string[]>([]);
-  const VerifySchema = Yup.object().shape({
-    workingTimeFrom: Yup.string().required("Укажите время начала"),
-    workingTimeTo: Yup.string().required("Укажите время окончания"),
-    workingDays: Yup.array()
-      .of(Yup.string())
-      .min(1, "Выберите минимум один рабочий день")
-      .required("Выберите рабочие дни"),
-    breaks: Yup.array(),
-  });
 
   const methods = useForm({
-    resolver: yupResolver(VerifySchema),
+    resolver: yupResolver(OnboardingScheduleSchema),
     defaultValues: {
       workingTimeFrom: "",
       workingTimeTo: "",
@@ -59,7 +47,7 @@ const Schedule = () => {
     });
   };
 
-  const onSubmit = (data: ScheduleFormValues) => {
+  const onSubmit = (data: OnboardingScheduleFormValues) => {
     console.log("SUBMIT", data);
     router.push(Routers.onboarding.notification);
   };

@@ -13,7 +13,6 @@ import {
 import { colors } from "@/src/styles/colors";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { toast } from "@backpackapp-io/react-native-toast";
 
 type Props = {
   visible: boolean;
@@ -29,6 +28,7 @@ const CHANNEL_OPTIONS = [
 
 const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
   const [channel, setChannel] = useState("slotter");
+  const [isCopied, setIsCopied] = useState(false);
 
   const methods = useForm({
     defaultValues: { client: null, message: "" },
@@ -36,17 +36,18 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(bookingUrl);
-    toast.success("Ссылка скопирована");
+    setIsCopied(true);
   };
 
   const handleClose = () => {
     methods.reset();
     setChannel("slotter");
+    setIsCopied(false);
     onClose();
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose}>
+    <StModal visible={visible} onClose={handleClose} keyboardAware={true}>
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-5">
           Ссылка на бронирование
@@ -56,7 +57,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
           <RHFSelect
             name="client"
             label="Клиент"
-            placeholder="Выберите клиента"
+            placeholder="Кому отправляем"
             items={[]}
           />
 
@@ -87,6 +88,11 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
               <StSvg name="Copy" size={24} color={colors.neutral[900]} />
             }
           />
+          {isCopied && (
+            <Typography className="text-caption text-primary-blue-500 text-center">
+              Ссылка скопирована
+            </Typography>
+          )}
           <Button title="Отправить" onPress={handleClose} />
         </View>
       </FormProvider>

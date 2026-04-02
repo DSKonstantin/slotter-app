@@ -7,7 +7,7 @@ import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { Routers } from "@/src/constants/routers";
-import { useAppDispatch } from "@/src/store/redux/store";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
 type MenuItem = {
@@ -20,28 +20,32 @@ type MenuItem = {
 const MENU_ITEMS: MenuItem[] = [
   {
     label: "График",
-    icon: "Date_range_fill",
+    icon: "Date_today",
     route: Routers.app.menu.schedule,
   },
   {
     label: "Уведомления",
-    icon: "Notification",
+    icon: "Bell_fill",
     route: Routers.app.menu.notifications,
   },
-  { label: "Клиенты", icon: "Group_fill", route: Routers.app.clients },
-  { label: "Финансы", icon: "Wallet", route: Routers.app.menu.finances },
-  { label: "Услуги", icon: "Bag_fill", route: Routers.app.menu.services.root },
+  { label: "Финансы", icon: "Wallet_fill", route: Routers.app.menu.finances },
+  {
+    label: "Услуги",
+    icon: "Desk_alt_fill",
+    route: Routers.app.menu.services.root,
+  },
   {
     label: "Аккаунт",
-    icon: "Account_circle_fill",
-    route: Routers.app.menu.account,
+    icon: "User_circle",
+    route: Routers.app.menu.account.root,
   },
   { label: "Акции", icon: "Percent", disabled: true },
 ];
 
 const TabMenu = () => {
   const dispatch = useAppDispatch();
-  const { bottom } = useSafeAreaInsets();
+  const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
+  const { bottom, left: leftInset, right: rightInset } = useSafeAreaInsets();
 
   const handleClose = useCallback(() => {
     dispatch(setTabMenuOpen(false));
@@ -56,19 +60,21 @@ const TabMenu = () => {
     [handleClose],
   );
 
+  if (!isMenuOpen) return null;
+
   return (
     <View className="absolute inset-0" pointerEvents="box-none">
       <Pressable
-        className="absolute inset-0"
+        className="absolute inset-0 bg-black/40"
         onPress={handleClose}
-        style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
       />
 
       <View
-        className="absolute right-5 bg-white rounded-base py-2 shadow-md"
+        className="absolute"
         style={{
-          bottom: TAB_BAR_HEIGHT + bottom + 12,
-          minWidth: 210,
+          bottom,
+          left: leftInset + 20,
+          right: rightInset + 94,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
@@ -76,17 +82,19 @@ const TabMenu = () => {
           elevation: 8,
         }}
       >
-        <View className="absolute top-2 right-2">
+        <View className="mb-2 items-end">
           <IconButton
-            size="sm"
+            onPress={() => {}}
             icon={
-              <StSvg name="Settings" size={20} color={colors.neutral[900]} />
+              <StSvg
+                name="Setting_alt_fill"
+                size={28}
+                color={colors.neutral[900]}
+              />
             }
-            onPress={() => handleNavigate(Routers.app.menu.account)}
           />
         </View>
-
-        <View className="pt-2">
+        <View className="bg-white rounded-[30px] py-2">
           {MENU_ITEMS.map((item) => (
             <Pressable
               key={item.label}
@@ -110,14 +118,6 @@ const TabMenu = () => {
             </Pressable>
           ))}
         </View>
-      </View>
-
-      <View className="absolute right-5" style={{ bottom: bottom + 2 }}>
-        <IconButton
-          size="lg"
-          icon={<StSvg name="Close" size={28} color={colors.neutral[900]} />}
-          onPress={handleClose}
-        />
       </View>
     </View>
   );

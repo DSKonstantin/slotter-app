@@ -54,7 +54,7 @@ export const Card = ({
         className="flex-grow"
         {...(pressContent ? { onPress } : {})}
       >
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-1">
           <Text
             {...titleProps}
             className={`font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
@@ -67,7 +67,7 @@ export const Card = ({
         {subtitle && (
           <Text
             {...subtitleProps}
-            className={"font-inter-medium text-caption text-neutral-500 mt-1"}
+            className={"font-inter-medium text-caption text-neutral-500"}
           >
             {subtitle}
           </Text>
@@ -81,7 +81,7 @@ export const Card = ({
       </ContentComponent>
 
       {right ? (
-        <View className="ml-3 flex-row items-center gap-2">{right}</View>
+        <View className="ml-3 flex-row items-center gap-1">{right}</View>
       ) : null}
     </CardRootComponent>
   );

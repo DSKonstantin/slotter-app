@@ -3,6 +3,7 @@ export type { BaseResponse, Pagination, PaginatedResponse } from "./common";
 export { UserType } from "./user";
 export type {
   User,
+  AppointmentStep,
   AuthResponse,
   TelegramRegisterResponse,
   TelegramRegisterStatusResponse,
@@ -37,6 +38,22 @@ export type {
   CancelPayload,
 } from "./appointment";
 export type {
+  Customer,
+  CustomerTag,
+  CustomerStats,
+  CustomerStatPoint,
+  CustomerStatsResponse,
+  CustomerBalancePoint,
+  CustomerBalanceResponse,
+  GetCustomersParams,
+  GetCustomersResponse,
+  CreateCustomerPayload,
+  UpdateCustomerPayload,
+  AssignTagPayload,
+  CreateCustomerTagPayload,
+  UpdateCustomerTagPayload,
+} from "./customer";
+export type {
   WorkingDay,
   WorkingDayBreak,
   WorkingDayBreaksAttributesPayload,
@@ -49,3 +66,12 @@ export type {
   WorkingDaysResponse,
   WorkingDayBreaksResponse,
 } from "./workingDay";
+export type {
+  GalleryPhoto,
+  GalleryPhotosResponse,
+  GalleryPhotoCropData,
+  CreateGalleryPhotoPayload,
+  BulkCreateGalleryPhotosPayload,
+  UpdateGalleryPhotoPayload,
+  GalleryPhotoPositionPayload,
+} from "./galleryPhoto";

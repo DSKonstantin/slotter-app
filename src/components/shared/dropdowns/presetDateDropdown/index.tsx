@@ -72,7 +72,7 @@ export const PresetDateDropdown = <T extends ItemType<string>>({
       }}
       textStyle={{
         fontSize: 16,
-        lineHeight: 24,
+        lineHeight: 22,
         letterSpacing: -0.17,
         color: colors.neutral[500],
       }}

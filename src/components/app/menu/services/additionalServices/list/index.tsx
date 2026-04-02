@@ -1,4 +1,4 @@
-import React, { useCallback, memo, useMemo } from "react";
+import React, { useCallback, memo, useMemo, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
@@ -7,6 +7,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 
 import { Button, Card, StSvg, Typography, Switch } from "@/src/components/ui";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 import { colors } from "@/src/styles/colors";
 
@@ -26,6 +27,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const AdditionalServicesList = () => {
+  const [refreshing, setRefreshing] = useState(false);
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
   const [reorderAdditionalServices] = useReorderAdditionalServicesMutation();
   const auth = useRequiredAuth();
@@ -110,8 +112,13 @@ const AdditionalServicesList = () => {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleRefresh = useCallback(() => {
-    if (isFetchingNextPage) return;
-    refetch({ refetchCachedPages: false });
+    if (isFetchingNextPage) return Promise.resolve();
+
+    setRefreshing(true);
+
+    return refetch({ refetchCachedPages: false }).finally(() => {
+      setRefreshing(false);
+    });
   }, [isFetchingNextPage, refetch]);
 
   const handleServicePress = useCallback((serviceId: number) => {
@@ -138,21 +145,12 @@ const AdditionalServicesList = () => {
 
         if (isError && !data) {
           return (
-            <View
-              className="flex-1 items-center justify-center px-screen gap-4"
-              style={{ marginTop: topInset, marginBottom: bottomInset }}
-            >
-              <Typography className="text-body text-accent-red-500">
-                Ошибка загрузки услуг.
-              </Typography>
-              <Button
-                title="Повторить"
-                onPress={handleRefresh}
-                loading={isFetching}
-                disabled={isFetching}
-                buttonClassName="w-full"
-              />
-            </View>
+            <ErrorScreen
+              title="Не удалось загрузить услуги"
+              isLoading={isFetching}
+              withTabBar={false}
+              onRetry={handleRefresh}
+            />
           );
         }
 
@@ -177,6 +175,8 @@ const AdditionalServicesList = () => {
               onDragEnd={handleDragEnd}
               onEndReached={handleEndReached}
               onEndReachedThreshold={listConfig.onEndReachedThreshold}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
               renderItem={({
                 item,
                 drag,

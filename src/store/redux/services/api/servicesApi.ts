@@ -15,7 +15,7 @@ import { PaginatedServiceCategoriesResponse } from "@/src/store/redux/services/a
 
 type GetServiceCategoriesQueryArg = {
   userId: number;
-  params?: Record<string, string | number>;
+  params?: Record<string, string | number | boolean>;
 };
 
 const isGetCategoriesArg = (
@@ -230,10 +230,14 @@ const servicesApi = api.injectEndpoints({
       ],
     }),
 
-    getServices: builder.query<Service[], { categoryId: number }>({
-      query: ({ categoryId }) => ({
+    getServices: builder.query<
+      Service[],
+      { categoryId: number; params?: { with_deleted?: boolean } }
+    >({
+      query: ({ categoryId, params }) => ({
         url: `/service_categories/${categoryId}/services`,
         method: "GET",
+        params,
       }),
       providesTags: (result, _error, arg) =>
         result

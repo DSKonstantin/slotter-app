@@ -7,6 +7,7 @@ import {
   Resolver,
   useForm,
   useFormContext,
+  useWatch,
 } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -24,12 +25,12 @@ import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import {
-  DayScheduleForm,
   DayScheduleSchema,
-  DayScheduleFormValues,
-} from "./DayScheduleForm";
-import { useWatch } from "react-hook-form";
+  type DayScheduleFormValues,
+} from "@/src/validation/schemas/daySchedule.schema";
+import { DayScheduleForm } from "./DayScheduleForm";
 import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -39,9 +40,16 @@ import { colors } from "@/src/styles/colors";
 type DayScheduleEditProps = {
   workingDay: WorkingDay;
   userId: number;
+  topInset: number;
+  bottomInset: number;
 };
 
-const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
+const DayScheduleEdit = ({
+  workingDay,
+  userId,
+  topInset,
+  bottomInset,
+}: DayScheduleEditProps) => {
   const { left, right } = useSafeAreaInsets();
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
 
@@ -96,53 +104,44 @@ const DayScheduleEdit = ({ workingDay, userId }: DayScheduleEditProps) => {
 
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar title="Настроить день">
-        {({ topInset, bottomInset }) => (
-          <>
-            <SafeAreaView className="flex-1" edges={["left", "right"]}>
-              <ScrollView
-                className="flex-1 px-screen"
-                contentContainerStyle={{
-                  paddingTop: topInset + 16,
-                  paddingBottom: bottomInset + 82,
-                }}
-              >
-                <DayScheduleForm />
-                <View
-                  pointerEvents={!isActive ? "none" : "auto"}
-                  className={!isActive ? "opacity-40" : "opacity-100"}
-                >
-                  <Divider className="my-5" />
-                  <DayScheduleAppointments
-                    userId={userId}
-                    date={workingDay.day}
-                  />
-                </View>
-              </ScrollView>
-            </SafeAreaView>
-            <View
-              className="absolute flex-1 w-full"
-              style={{
-                zIndex: 100,
-                bottom: bottomInset + 16,
-                right: 0,
-                paddingRight: left + 20,
-                paddingLeft: right + 20,
-              }}
-            >
-              <Button
-                title="Сохранить изменения"
-                loading={isLoading}
-                disabled={isLoading}
-                rightIcon={
-                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-                }
-                onPress={handleSubmit(onSubmit)}
-              />
-            </View>
-          </>
-        )}
-      </ScreenWithToolbar>
+      <SafeAreaView className="flex-1" edges={["left", "right"]}>
+        <ScrollView
+          className="flex-1 px-screen"
+          contentContainerStyle={{
+            paddingTop: topInset,
+            paddingBottom: bottomInset + 82,
+          }}
+        >
+          <DayScheduleForm />
+          <View
+            pointerEvents={!isActive ? "none" : "auto"}
+            className={!isActive ? "opacity-40" : "opacity-100"}
+          >
+            <Divider className="my-5" />
+            <DayScheduleAppointments userId={userId} date={workingDay.day} />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+      <View
+        className="absolute flex-1 w-full"
+        style={{
+          zIndex: 100,
+          bottom: bottomInset + 16,
+          right: 0,
+          paddingRight: left + 20,
+          paddingLeft: right + 20,
+        }}
+      >
+        <Button
+          title="Сохранить изменения"
+          loading={isLoading}
+          disabled={isLoading}
+          rightIcon={
+            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+          }
+          onPress={handleSubmit(onSubmit)}
+        />
+      </View>
     </FormProvider>
   );
 };
@@ -154,39 +153,49 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
     data: workingDay,
     isLoading,
     isError,
+    refetch,
   } = useGetWorkingDayQuery(
     auth ? { userId: auth.userId, id: workingDayId } : skipToken,
+    {
+      refetchOnMountOrArgChange: true,
+    },
   );
 
   if (!auth) return null;
 
-  if (isLoading) {
-    return (
-      <ScreenWithToolbar title="Настроить день">
-        {() => (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator />
-          </View>
-        )}
-      </ScreenWithToolbar>
-    );
-  }
+  return (
+    <ScreenWithToolbar title="Настроить день">
+      {({ topInset, bottomInset }) => {
+        if (isLoading) {
+          return (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator />
+            </View>
+          );
+        }
 
-  if (isError || !workingDay) {
-    return (
-      <ScreenWithToolbar title="Настроить день">
-        {() => (
-          <View className="flex-1 items-center justify-center px-screen">
-            <Typography className="text-body text-neutral-400 text-center">
-              Не удалось загрузить данные дня
-            </Typography>
-          </View>
-        )}
-      </ScreenWithToolbar>
-    );
-  }
+        if (isError || !workingDay) {
+          return (
+            <ErrorScreen
+              title="Не удалось загрузить данные дня"
+              isLoading={isLoading}
+              withTabBar={false}
+              onRetry={refetch}
+            />
+          );
+        }
 
-  return <DayScheduleEdit workingDay={workingDay} userId={auth.userId} />;
+        return (
+          <DayScheduleEdit
+            workingDay={workingDay}
+            userId={auth.userId}
+            topInset={topInset}
+            bottomInset={bottomInset}
+          />
+        );
+      }}
+    </ScreenWithToolbar>
+  );
 };
 
 export default CalendarDaySchedule;

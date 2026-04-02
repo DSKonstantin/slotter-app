@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { StyleSheet } from "react-native";
 import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
 import { BaseField } from "./BaseField";
 import { FieldError } from "react-hook-form";
@@ -15,6 +16,7 @@ type SelectFieldProps = {
 
   items: ItemType<string>[];
   placeholder?: string;
+  emptyText?: string;
 };
 
 export function DropDown({
@@ -25,9 +27,21 @@ export function DropDown({
   onChange,
   items,
   placeholder = "Выберите",
+  emptyText = "Нет вариантов",
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
-  const [innerItems, setInnerItems] = useState(items);
+  const [innerItems, setInnerItems] = useState<ItemType<string>[]>(() => items);
+
+  const translation = useMemo(
+    () => ({ NOTHING_TO_SHOW: emptyText }),
+    [emptyText],
+  );
+
+  useEffect(() => {
+    setInnerItems((current) =>
+      areItemsEqual(current, items) ? current : items,
+    );
+  }, [items]);
 
   return (
     <BaseField
@@ -60,6 +74,7 @@ export function DropDown({
           }}
           setItems={setInnerItems}
           placeholder={placeholder}
+          translation={translation}
           onOpen={() => setFocused(true)}
           onClose={() => setFocused(false)}
           disabled={disabled}
@@ -105,9 +120,26 @@ export function DropDown({
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   text: {
     fontFamily: "Inter_400Regular",
     fontSize: 16,
   },
-};
+});
+
+function areItemsEqual(current: ItemType<string>[], next: ItemType<string>[]) {
+  if (current === next) return true;
+  if (current.length !== next.length) return false;
+
+  return current.every((item, index) => {
+    const nextItem = next[index];
+
+    return (
+      item.value === nextItem?.value &&
+      item.label === nextItem?.label &&
+      item.disabled === nextItem?.disabled &&
+      item.parent === nextItem?.parent &&
+      item.selectable === nextItem?.selectable
+    );
+  });
+}
