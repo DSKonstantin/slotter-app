@@ -23,7 +23,7 @@ interface SlotCardProps {
 const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
   const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
   const statusConfig = APPOINTMENT_STATUS_CONFIG[slot.status] ?? null;
-  const clientName = slot.customer.name;
+  const clientName = slot.customer?.name ?? "";
   const serviceNames = slot.services.map((s) => s.name).join(", ");
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -74,9 +74,8 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
         weight="medium"
         className="text-caption text-neutral-500 mb-1"
       >
-        {clientName}
-        {slot.price_cents > 0 &&
-          ` | ${formatRublesFromCents(slot.price_cents)}`}
+        {clientName && `${clientName} | `}
+        {slot.price_cents > 0 && `${formatRublesFromCents(slot.price_cents)}`}
       </Typography>
 
       {serviceNames && (

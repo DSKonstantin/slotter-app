@@ -21,13 +21,18 @@ import {
   useGetCustomerTagsQuery,
 } from "@/src/store/redux/services/api/customersApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import type { Customer } from "@/src/store/redux/services/api-types";
 import { colors } from "@/src/styles/colors";
 import ContactPickerModal, {
   type PickedContact,
 } from "@/src/components/app/clients/clientCreate/contactPickerModal";
 import CreateTagModal from "@/src/components/app/clients/clientCreate/createTagModal";
 
-const ClientCreate = () => {
+type ClientCreateProps = {
+  onCreated?: (customer: Customer) => void;
+};
+
+const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   const auth = useRequiredAuth();
   const [pickerVisible, setPickerVisible] = useState(false);
   const [createTagVisible, setCreateTagVisible] = useState(false);
@@ -50,12 +55,13 @@ const ClientCreate = () => {
   const onSubmit = useCallback(
     async (values: ClientCreateFormValues) => {
       try {
-        await createCustomer({
+        const { customer } = await createCustomer({
           name: values.name.trim(),
           phone: values.phone?.trim() || undefined,
           note: values.comment?.trim() || undefined,
           customer_tag_id: values.customer_tag?.id ?? undefined,
         }).unwrap();
+        onCreated?.(customer);
         reset();
         router.back();
       } catch (error) {

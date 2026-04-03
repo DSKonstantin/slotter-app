@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import debounce from "lodash/debounce";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -20,6 +21,15 @@ import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
 import type { Customer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import {
+  selectClientsSearch,
+  selectClientsTagId,
+  setSearch,
+  setTagId,
+} from "@/src/store/redux/slices/clientsSlice";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 const ClientRow = React.memo(function ClientRow({ item }: { item: Customer }) {
   return (
@@ -46,10 +56,17 @@ type ClientsContentProps = {
 
 const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
   const auth = useRequiredAuth();
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | undefined>(
-    undefined,
-  );
+  const dispatch = useAppDispatch();
+
+  const search = useAppSelector(selectClientsSearch);
+  const tagId = useAppSelector(selectClientsTagId);
+
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  const debouncedSetSearch = useRef(
+    debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
+  ).current;
+
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: tagsData } = useGetCustomerTagsQuery(
@@ -61,7 +78,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
       { label: "Все", value: undefined },
       ...(tagsData?.customer_tags ?? []).map((t) => ({
         label: t.name,
-        value: String(t.id),
+        value: t.id,
       })),
     ],
     [tagsData?.customer_tags],
@@ -69,17 +86,35 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   useToolbarSearch({
     placeholder: "Имя или телефон",
-    onChange: setSearch,
+    onChange: (value) => {
+      dispatch(setSearch(value));
+      debouncedSetSearch(value);
+    },
+    onClose: () => {
+      debouncedSetSearch.cancel();
+      dispatch(setSearch(""));
+      setDebouncedSearch("");
+    },
   });
 
-  const { data, isLoading, isError, refetch, isFetching } =
-    useGetCustomersQuery();
+  const queryParams = useMemo(
+    () => ({
+      query: debouncedSearch || undefined,
+    }),
+    [debouncedSearch],
+  );
 
-  const customers = useMemo(() => data?.customers ?? [], [data?.customers]);
+  const { data, isLoading, isError, refetch, isFetching } =
+    useGetCustomersQuery(queryParams);
+
+  const customers = useMemo(() => {
+    const all = data?.customers ?? [];
+    if (!tagId) return all;
+    return all.filter((c) => c.customer_tag?.id === tagId);
+  }, [data?.customers, tagId]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-
     try {
       await refetch();
     } finally {
@@ -94,8 +129,8 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           <Badge
             key={f.label}
             title={f.label}
-            variant={activeFilter === f.value ? "accent" : "secondary"}
-            onPress={() => setActiveFilter(f.value)}
+            variant={tagId === f.value ? "accent" : "secondary"}
+            onPress={() => dispatch(setTagId(f.value))}
           />
         ))}
       </View>
@@ -104,12 +139,22 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
         <Button
           title="Статистика"
           buttonClassName="flex-1"
+          rightIcon={
+            <StSvg name="Pipe_fill" size={24} color={colors.neutral[0]} />
+          }
           onPress={() => {}}
         />
         <Button
           title="Рассылка"
           variant="clear"
           buttonClassName="flex-1"
+          rightIcon={
+            <StSvg
+              name="Message_alt_fill"
+              size={24}
+              color={colors.neutral[900]}
+            />
+          }
           onPress={() => {}}
         />
       </View>
@@ -146,18 +191,11 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           refreshing={refreshing}
           renderItem={({ item }) => <ClientRow item={item} />}
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center pt-20 gap-4">
-              <StSvg name="User_fill" size={48} color={colors.neutral[300]} />
+            <View className="flex-1 items-center justify-center gap-4">
+              <StSvg name="Chat_search" size={60} color={colors.neutral[400]} />
               <Typography className="text-body text-neutral-500 text-center">
-                {search ? "Клиентов не найдено" : "Список клиентов пуст"}
+                И близко ничего не нашли
               </Typography>
-              {!search && (
-                <Button
-                  title="Добавить клиента"
-                  variant="secondary"
-                  onPress={() => router.push(Routers.app.clients.create)}
-                />
-              )}
             </View>
           }
         />

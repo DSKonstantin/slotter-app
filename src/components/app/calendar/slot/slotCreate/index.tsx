@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
@@ -24,6 +24,9 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
+import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
+import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -31,6 +34,7 @@ import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   clearSlotDraft,
   setSlotDraft,
+  clearCreatedCustomer,
 } from "@/src/store/redux/slices/slotDraftSlice";
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -60,7 +64,7 @@ const SlotCreate: React.FC = () => {
     resolver: yupResolver(SlotCreateSchema) as any,
     defaultValues: {
       services: initialServices,
-      clientName: "",
+      customerId: undefined,
       date: draft.date ?? "",
       time: draft.time ?? "",
       duration: initialServices.reduce((sum, s) => sum + s.duration, 0) || 60,
@@ -74,6 +78,32 @@ const SlotCreate: React.FC = () => {
   const watchedServices = watch("services");
   const paymentMethod = watch("paymentMethod");
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
+
+  const { data: customersData } = useGetCustomersQuery();
+  const customerItems: AutocompleteItem[] = useMemo(
+    () =>
+      (customersData?.customers ?? []).map((c) => ({
+        id: String(c.id),
+        title: c.name,
+      })),
+    [customersData],
+  );
+
+  const [forcedCustomer, setForcedCustomer] = useState<AutocompleteItem | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (draft.createdCustomer) {
+      const item: AutocompleteItem = {
+        id: String(draft.createdCustomer.id),
+        title: draft.createdCustomer.name,
+      };
+      setValue("customerId", Number(item.id));
+      setForcedCustomer(item);
+      dispatch(clearCreatedCustomer());
+    }
+  }, [dispatch, draft.createdCustomer, setValue]);
 
   const { fields, remove } = useFieldArray({
     control: methods.control,
@@ -125,7 +155,7 @@ const SlotCreate: React.FC = () => {
             ...(draft.additionalServices.length > 0 && {
               additional_service_ids: draft.additionalServices.map((s) => s.id),
             }),
-            customer_id: 2,
+            customer_id: values.customerId,
             duration: values.duration,
             payment_method:
               values.paymentMethod === "online"
@@ -256,19 +286,23 @@ const SlotCreate: React.FC = () => {
             )}
 
             <View className="mt-5 gap-2">
-              <RhfTextField
-                name="clientName"
+              <RHFAutocomplete
+                key={forcedCustomer?.id ?? "customer"}
+                name="customerId"
                 label="Клиент"
                 placeholder="Поиск по имени или телефону"
-                hideErrorText
                 startAdornment={
                   <StSvg name="Search" size={24} color={colors.neutral[900]} />
                 }
+                dataSet={customerItems}
+                initialItem={forcedCustomer ?? undefined}
               />
               <Button
                 title=" Создать нового клиента"
                 variant="clear"
-                onPress={() => router.push(Routers.app.clients.create)}
+                onPress={() =>
+                  router.push(Routers.app.calendar.slotClientCreate)
+                }
                 rightIcon={
                   <StSvg
                     name="Add_round_fill"

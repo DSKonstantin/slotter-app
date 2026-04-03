@@ -71,6 +71,7 @@ export const Routers = {
         ({
           pathname: "/(app)/calendar/slot/create",
         }) as const,
+      slotClientCreate: "/(app)/calendar/slot/create-client" as const,
     },
     chat: "/(app)/chat",
     clients: {

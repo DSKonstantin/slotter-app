@@ -16,6 +16,8 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector, useAppDispatch } from "@/src/store/redux/store";
 import { logout } from "@/src/store/redux/slices/authSlice";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { refreshTokenStorage } from "@/src/utils/tokenStorage/refreshTokenStorage";
 
 type NavItem = {
   title: string;
@@ -84,7 +86,11 @@ const AccountScreen = () => {
     setRefreshing(false);
   }, [triggerGetMe]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    await Promise.all([
+      accessTokenStorage.remove(),
+      refreshTokenStorage.remove(),
+    ]);
     dispatch(logout());
     router.replace(Routers.auth.root);
   }, [dispatch]);
