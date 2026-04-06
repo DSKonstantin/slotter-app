@@ -9,6 +9,7 @@ interface SlotDraftState {
   time?: string;
   services: Service[];
   additionalServices: AdditionalService[];
+  createdCustomer?: { id: number; name: string };
 }
 
 const initialState: SlotDraftState = {
@@ -16,6 +17,7 @@ const initialState: SlotDraftState = {
   time: undefined,
   services: [],
   additionalServices: [],
+  createdCustomer: undefined,
 };
 
 const slotDraftSlice = createSlice({
@@ -41,9 +43,24 @@ const slotDraftSlice = createSlice({
       state.time = undefined;
       state.services = [];
       state.additionalServices = [];
+      state.createdCustomer = undefined;
+    },
+    setCreatedCustomer(
+      state,
+      action: PayloadAction<{ id: number; name: string }>,
+    ) {
+      state.createdCustomer = action.payload;
+    },
+    clearCreatedCustomer(state) {
+      state.createdCustomer = undefined;
     },
   },
 });
 
-export const { setSlotDraft, clearSlotDraft } = slotDraftSlice.actions;
+export const {
+  setSlotDraft,
+  clearSlotDraft,
+  setCreatedCustomer,
+  clearCreatedCustomer,
+} = slotDraftSlice.actions;
 export default slotDraftSlice.reducer;

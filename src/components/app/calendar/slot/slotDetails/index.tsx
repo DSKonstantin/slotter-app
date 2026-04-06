@@ -197,11 +197,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               >
                 <View className="px-screen">
                   <Card
-                    title={slot.customer.name ?? "—"}
-                    subtitle={slot.customer.phone ?? undefined}
+                    title={slot.customer?.name ?? "—"}
+                    subtitle={slot.customer?.phone ?? undefined}
                     left={
                       <Avatar
-                        name={slot.customer.name ?? undefined}
+                        name={slot.customer?.name ?? undefined}
                         size="sm"
                       />
                     }

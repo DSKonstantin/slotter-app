@@ -13,7 +13,7 @@ export type AutocompleteItem = {
   title: string;
 };
 
-type AutocompleteProps = {
+export type AutocompleteProps = {
   value: string;
   label?: string;
   error?: FieldError;
@@ -24,6 +24,7 @@ type AutocompleteProps = {
   endAdornment?: ReactNode;
 
   dataSet?: AutocompleteItem[];
+  initialItem?: AutocompleteItem;
   onSelectItem?: (a: any) => void;
   onChangeText?: (text: string) => void;
   placeholder?: string;
@@ -39,6 +40,8 @@ export function Autocomplete({
   hideErrorText,
   onSelectItem,
   onChangeText,
+  startAdornment,
+  initialItem,
   placeholder = "Введите",
   emptyText = "Ничего не найдено",
 }: AutocompleteProps) {
@@ -52,7 +55,9 @@ export function Autocomplete({
       disabled={disabled}
       renderControl={({ setFocused }) => (
         <AutocompleteDropdown
-          initialValue={value ? { id: value, title: value } : undefined}
+          initialValue={
+            initialItem ?? (value ? { id: value, title: value } : undefined)
+          }
           controller={(controller) => {
             dropdownController.current = controller;
           }}
@@ -61,6 +66,13 @@ export function Autocomplete({
           closeOnSubmit={false}
           showChevron={false}
           showClear={false}
+          LeftComponent={
+            startAdornment ? (
+              <View style={{ justifyContent: "center", paddingLeft: 8 }}>
+                {startAdornment}
+              </View>
+            ) : undefined
+          }
           onChangeText={(text) => {
             if (!text?.trim()) {
               dropdownController.current?.setItem?.({ id: "" });

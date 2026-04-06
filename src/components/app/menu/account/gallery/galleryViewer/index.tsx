@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Modal } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,18 +30,38 @@ export function GalleryViewer({
   const [cropVisible, setCropVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const current = photos[currentIndex];
+  const lastPhotoIndex = photos.length - 1;
+  const safeCurrentIndex =
+    lastPhotoIndex >= 0
+      ? Math.min(Math.max(currentIndex, 0), lastPhotoIndex)
+      : -1;
+  const current = safeCurrentIndex >= 0 ? photos[safeCurrentIndex] : null;
+
+  useEffect(() => {
+    if (photos.length === 0) {
+      onClose();
+      return;
+    }
+
+    if (safeCurrentIndex !== currentIndex) {
+      setCurrentIndex(safeCurrentIndex);
+    }
+  }, [currentIndex, onClose, photos.length, safeCurrentIndex]);
 
   const handleCropDone = (cropData: CropData) => {
     setCropVisible(false);
+    if (!current) return;
     onCropDone(current.id, cropData);
   };
 
-  const renderItem = useCallback((item: GalleryPhoto, index: number) => {
-    return (
+  const renderItem = useCallback(
+    (item: GalleryPhoto, index: number) => (
       <GalleryImage uri={item.croppedUrl ?? item.photoUrl} index={index} />
-    );
-  }, []);
+    ),
+    [],
+  );
+
+  if (!current) return null;
 
   return (
     <Modal
@@ -61,7 +81,7 @@ export function GalleryViewer({
         ) : (
           <View className="flex-1 bg-black">
             <ViewerHeader
-              currentIndex={currentIndex}
+              currentIndex={safeCurrentIndex}
               total={photos.length}
               topInset={insets.top}
               onClose={onClose}
@@ -70,7 +90,7 @@ export function GalleryViewer({
             <Gallery
               data={photos}
               keyExtractor={(item) => item.id}
-              initialIndex={currentIndex}
+              initialIndex={safeCurrentIndex}
               renderItem={renderItem}
               onIndexChange={setCurrentIndex}
             />

@@ -9,7 +9,7 @@ export const ServiceItemSchema = Yup.object({
 
 export const SlotCreateSchema = Yup.object({
   services: Yup.array(ServiceItemSchema).required(),
-  clientName: Yup.string(),
+  customerId: Yup.number().required("Выберите клиента"),
   date: Yup.string().required("Укажите дату"),
   time: Yup.string().required("Укажите время"),
   duration: Yup.number()

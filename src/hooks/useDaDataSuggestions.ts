@@ -1,38 +1,35 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 
 const DADATA_URL =
   "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address";
 const API_KEY = process.env.EXPO_PUBLIC_DADATA_API_KEY ?? "";
-const DEBOUNCE_MS = 300;
 
 export function useDaDataSuggestions(query: string) {
   const [suggestions, setSuggestions] = useState<AutocompleteItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-
     if (!query.trim()) {
       setSuggestions([]);
       return;
     }
 
-    timerRef.current = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(DADATA_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Token ${API_KEY}`,
-          },
-          body: JSON.stringify({ query, count: 5 }),
-        });
+    let cancelled = false;
+    setIsLoading(true);
 
-        const data = await response.json();
+    fetch(DADATA_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Token ${API_KEY}`,
+      },
+      body: JSON.stringify({ query, count: 5 }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
         const items: AutocompleteItem[] = (data.suggestions ?? []).map(
           (s: { value: string }) => ({
             id: s.value,
@@ -40,15 +37,17 @@ export function useDaDataSuggestions(query: string) {
           }),
         );
         setSuggestions(items);
-      } catch {
-        setSuggestions([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, DEBOUNCE_MS);
+      })
+      .catch(() => {
+        if (!cancelled) setSuggestions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      cancelled = true;
+      setIsLoading(false);
     };
   }, [query]);
 
