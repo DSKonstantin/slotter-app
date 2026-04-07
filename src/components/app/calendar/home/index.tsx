@@ -2,6 +2,9 @@ import React, { useCallback, useEffect } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconButton, SegmentedControl, StSvg } from "@/src/components/ui";
+import { parseISO } from "date-fns";
+import { formatMonthYear } from "@/src/utils/date/formatDate";
+import { capitalize } from "@/src/utils/changeСase";
 import DayCalendarView from "@/src/components/app/calendar/home/day";
 import MonthCalendarView from "@/src/components/app/calendar/home/month";
 import CalendarFilterModal from "@/src/components/app/calendar/home/calendarFilterModal";
@@ -48,10 +51,15 @@ const CalendarHome = () => {
     }
   }, [mode, date, dispatch]);
 
+  const title =
+    mode === "day" && selectedDay
+      ? capitalize(formatMonthYear(parseISO(selectedDay)))
+      : "Календарь";
+
   return (
     <>
       <ScreenWithToolbar
-        title="Календарь"
+        title={title}
         rightButton={
           mode === "day" && (
             <IconButton

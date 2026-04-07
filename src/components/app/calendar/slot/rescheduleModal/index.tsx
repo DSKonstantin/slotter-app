@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { StModal, Button, Typography, Card, StSvg } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import {
   useRescheduleAppointmentMutation,
   useGetAvailableSlotsQuery,
@@ -22,6 +23,8 @@ import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useAppDispatch } from "@/src/store/redux/store";
+import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
 
 type Props = {
   visible: boolean;
@@ -37,6 +40,7 @@ const RescheduleModal = ({
   onClose,
 }: Props) => {
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
 
   const methods = useForm({
     resolver: yupResolver(RescheduleSchema),
@@ -85,8 +89,8 @@ const RescheduleModal = ({
         reason: "",
         send_notification: true,
       });
+      dispatch(setHighlightSlotId(appointmentId));
       onClose();
-      toast.success("Запись перенесена");
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось перенести запись"));
@@ -111,11 +115,15 @@ const RescheduleModal = ({
         </Typography>
 
         <View>
-          <RhfTextField
+          <RhfCalendarDatePicker
             name="date"
             label="Новая дата"
-            placeholder="YYYY-MM-DD"
+            placeholder="дд.мм"
             hideErrorText={true}
+            displayFormat={(iso) => formatDayMonthLong(parseISO(iso))}
+            endAdornment={
+              <StSvg name="Date_today" size={24} color={colors.neutral[500]} />
+            }
           />
 
           {isFetchingSlots && (

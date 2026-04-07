@@ -1,8 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   TouchableOpacity,
   View,
   Animated,
+  StyleSheet,
   type StyleProp,
   type ViewStyle,
   Pressable,
@@ -18,9 +19,15 @@ interface SlotCardProps {
   slot: Appointment;
   onPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
+  highlighted?: boolean;
 }
 
-const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
+const SlotCard = ({
+  slot,
+  onPress,
+  containerStyle,
+  highlighted = false,
+}: SlotCardProps) => {
   const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
   const statusConfig = APPOINTMENT_STATUS_CONFIG[slot.status] ?? null;
   const clientName = slot.customer?.name ?? "";
@@ -28,6 +35,17 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const rotation = useRef(new Animated.Value(0)).current;
+  const highlightOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!highlighted) return;
+    highlightOpacity.setValue(1);
+    Animated.timing(highlightOpacity, {
+      toValue: 0,
+      duration: 3000,
+      useNativeDriver: true,
+    }).start();
+  }, [highlighted, highlightOpacity]);
 
   const toggleExpand = () => {
     const toValue = isExpanded ? 0 : 1;
@@ -106,6 +124,14 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
           { zIndex: isExpanded ? 10 : 1, elevation: isExpanded ? 10 : 1 },
         ]}
       >
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            styles.highlight,
+            { opacity: highlightOpacity },
+          ]}
+        />
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={toggleExpand}
@@ -163,9 +189,25 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
       className="rounded-base overflow-hidden bg-background-surface"
       style={containerStyle}
     >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          styles.highlight,
+          { opacity: highlightOpacity },
+        ]}
+      />
       {detailContent(false)}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  highlight: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 14,
+    zIndex: 1,
+  },
+});
 
 export default SlotCard;

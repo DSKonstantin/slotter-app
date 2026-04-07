@@ -75,11 +75,6 @@ const TabMenu = () => {
           bottom,
           left: leftInset + 20,
           right: rightInset + 94,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 8,
         }}
       >
         <View className="mb-2 items-end">
@@ -94,7 +89,16 @@ const TabMenu = () => {
             }
           />
         </View>
-        <View className="bg-white rounded-[30px] py-2">
+        <View
+          className="bg-white rounded-[30px] py-2"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          }}
+        >
           {MENU_ITEMS.map((item) => (
             <Pressable
               key={item.label}

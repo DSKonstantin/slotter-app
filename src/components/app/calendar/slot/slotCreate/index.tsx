@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { parseISO } from "date-fns";
@@ -7,7 +7,12 @@ import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import { formatTime } from "@/src/utils/date/formatTime";
-import { useForm, FormProvider, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  FormProvider,
+  useFieldArray,
+  Controller,
+} from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "@backpackapp-io/react-native-toast";
 import {
@@ -20,11 +25,13 @@ import {
   Button,
   Card,
   IconButton,
+  Input,
+  StModal,
   StSvg,
   Typography,
 } from "@/src/components/ui";
+import { BaseField } from "@/src/components/ui/fields/BaseField";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -37,6 +44,7 @@ import {
   clearCreatedCustomer,
 } from "@/src/store/redux/slices/slotDraftSlice";
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
+import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
@@ -78,6 +86,10 @@ const SlotCreate: React.FC = () => {
   const watchedServices = watch("services");
   const paymentMethod = watch("paymentMethod");
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
+  const [customerModalVisible, setCustomerModalVisible] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<AutocompleteItem | null>(null);
 
   const { data: customersData } = useGetCustomersQuery();
   const customerItems: AutocompleteItem[] = useMemo(
@@ -87,6 +99,14 @@ const SlotCreate: React.FC = () => {
         title: c.name,
       })),
     [customersData],
+  );
+
+  const filteredCustomers = useMemo(
+    () =>
+      customerItems.filter((c) =>
+        c.title.toLowerCase().includes(customerSearch.toLowerCase()),
+      ),
+    [customerItems, customerSearch],
   );
 
   const [forcedCustomer, setForcedCustomer] = useState<AutocompleteItem | null>(
@@ -101,6 +121,7 @@ const SlotCreate: React.FC = () => {
       };
       setValue("customerId", Number(item.id));
       setForcedCustomer(item);
+      setSelectedCustomer(item);
       dispatch(clearCreatedCustomer());
     }
   }, [dispatch, draft.createdCustomer, setValue]);
@@ -144,7 +165,7 @@ const SlotCreate: React.FC = () => {
     async (values: SlotCreateFormValues) => {
       if (!auth) return;
       try {
-        await createAppointment({
+        const result = await createAppointment({
           userId: auth.userId,
           body: {
             date: values.date,
@@ -166,6 +187,7 @@ const SlotCreate: React.FC = () => {
           },
         }).unwrap();
         dispatch(clearSlotDraft());
+        dispatch(setHighlightSlotId(result.id));
         router.dismissAll();
         router.navigate(Routers.app.calendar.root(values.date));
       } catch (error) {
@@ -173,6 +195,21 @@ const SlotCreate: React.FC = () => {
       }
     },
     [auth, draft.additionalServices, createAppointment, dispatch],
+  );
+
+  const handleCloseCustomerModal = useCallback(() => {
+    setCustomerModalVisible(false);
+    setCustomerSearch("");
+  }, []);
+
+  const handleSelectCustomer = useCallback(
+    (item: AutocompleteItem) => {
+      setSelectedCustomer(item);
+      setValue("customerId", Number(item.id));
+      setCustomerModalVisible(false);
+      setCustomerSearch("");
+    },
+    [setValue],
   );
 
   return (
@@ -286,16 +323,41 @@ const SlotCreate: React.FC = () => {
             )}
 
             <View className="mt-5 gap-2">
-              <RHFAutocomplete
-                key={forcedCustomer?.id ?? "customer"}
+              <Controller
+                control={methods.control}
                 name="customerId"
-                label="Клиент"
-                placeholder="Поиск по имени или телефону"
-                startAdornment={
-                  <StSvg name="Search" size={24} color={colors.neutral[900]} />
-                }
-                dataSet={customerItems}
-                initialItem={forcedCustomer ?? undefined}
+                render={({ fieldState: { error } }) => (
+                  <BaseField
+                    label="Клиент"
+                    error={error}
+                    hideErrorText
+                    startAdornment={
+                      <StSvg
+                        name="Search"
+                        size={24}
+                        color={colors.neutral[900]}
+                      />
+                    }
+                    renderControl={() => (
+                      <Pressable
+                        className="flex-1 justify-center"
+                        onPress={() => setCustomerModalVisible(true)}
+                      >
+                        <Text
+                          className="font-inter-regular text-[16px] px-4"
+                          style={{
+                            color: selectedCustomer
+                              ? colors.neutral[900]
+                              : colors.neutral[300],
+                          }}
+                        >
+                          {selectedCustomer?.title ??
+                            "Поиск по имени или телефону"}
+                        </Text>
+                      </Pressable>
+                    )}
+                  />
+                )}
               />
               <Button
                 title=" Создать нового клиента"
@@ -419,6 +481,46 @@ const SlotCreate: React.FC = () => {
           </ScrollView>
         )}
       </ScreenWithToolbar>
+
+      <StModal
+        visible={customerModalVisible}
+        onClose={handleCloseCustomerModal}
+        keyboardAware
+      >
+        <Typography weight="semibold" className="text-display text-center mb-4">
+          Выбрать клиента
+        </Typography>
+        <Input
+          value={customerSearch}
+          onChangeText={setCustomerSearch}
+          placeholder="Поиск по имени или телефону"
+          autoFocus
+          startAdornment={
+            <StSvg name="Search" size={24} color={colors.neutral[500]} />
+          }
+        />
+        <View className="mt-2">
+          {filteredCustomers.length === 0 ? (
+            <Typography className="text-body text-neutral-400 text-center py-4">
+              Ничего не найдено
+            </Typography>
+          ) : (
+            filteredCustomers.map((item, index) => (
+              <View key={item.id}>
+                {index > 0 && <View className="h-px bg-neutral-100" />}
+                <Pressable
+                  className="py-3 px-2 active:opacity-70"
+                  onPress={() => handleSelectCustomer(item)}
+                >
+                  <Typography className="text-body text-neutral-900">
+                    {item.title}
+                  </Typography>
+                </Pressable>
+              </View>
+            ))
+          )}
+        </View>
+      </StModal>
 
       <ComingSoonModal
         visible={comingSoonVisible}

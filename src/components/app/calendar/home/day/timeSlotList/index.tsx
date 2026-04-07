@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import type {
   Appointment,
   AppointmentStatus,
@@ -22,8 +22,11 @@ import {
 } from "./constants";
 import { parseTime, formatTime } from "./utils";
 import { Routers } from "@/src/constants/routers";
-import { useAppSelector } from "@/src/store/redux/store";
-import { selectActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import {
+  clearHighlightSlotId,
+  selectActiveStatuses,
+} from "@/src/store/redux/slices/calendarSlice";
 
 interface TimeLabelsProps {
   segStart: number;
@@ -266,7 +269,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   onRefresh,
 }) => {
   const { bottom } = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
+  const highlightSlotId = useAppSelector((state) => state.calendar.highlightSlotId);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const pendingScrollY = useRef<number | null>(null);
 
   const handleSlotPress = useCallback((id: number) => {
     router.push(Routers.app.calendar.slot(id));
@@ -292,6 +299,19 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     return buildSegments(timePoints, parsedBreaks, parsedAppointments);
   }, [appointment, visibleStatuses, breaks, startAt, endAt]);
 
+  useEffect(() => {
+    if (!highlightSlotId || !startAt) return;
+    const slot = appointment.find((a) => a.id === highlightSlotId);
+    if (slot) {
+      pendingScrollY.current = Math.max(
+        0,
+        (parseTime(slot.start_time) - parseTime(startAt)) * MINUTE_HEIGHT - 50,
+      );
+    }
+    const timer = setTimeout(() => dispatch(clearHighlightSlotId()), 3000);
+    return () => clearTimeout(timer);
+  }, [highlightSlotId, appointment, startAt, dispatch]);
+
   if (isLoading) {
     return <TimeSlotListSkeleton />;
   }
@@ -311,8 +331,18 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       showsVerticalScrollIndicator={false}
       className="flex-1 pt-4 px-screen"
+      onContentSizeChange={() => {
+        if (pendingScrollY.current !== null) {
+          scrollViewRef.current?.scrollTo({
+            y: pendingScrollY.current,
+            animated: true,
+          });
+          pendingScrollY.current = null;
+        }
+      }}
       contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 80 }}
       refreshControl={
         onRefresh ? (
@@ -342,6 +372,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                     key={slot.id}
                     slot={slot}
                     onPress={() => handleSlotPress(slot.id)}
+                    highlighted={slot.id === highlightSlotId}
                     containerStyle={{
                       ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
                       minHeight: getSlotMinHeight(slot),

@@ -2,13 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
 import React, { useRef } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import {
-  FormProvider,
-  Resolver,
-  useForm,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
 
@@ -72,7 +66,7 @@ const DayScheduleEdit = ({
     },
   });
 
-  const { handleSubmit, control } = methods;
+  const { handleSubmit, control, formState } = methods;
   const isActive = useWatch({ control, name: "isActive" });
 
   const onSubmit = async (data: DayScheduleFormValues) => {

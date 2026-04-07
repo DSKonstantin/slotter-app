@@ -26,6 +26,7 @@ interface CalendarState {
   filters: CalendarFilters;
   scheduleIntent: ScheduleIntent;
   isFilterModalOpen: boolean;
+  highlightSlotId: number | null;
 }
 
 const initialState: CalendarState = {
@@ -33,6 +34,7 @@ const initialState: CalendarState = {
   selectedDay: format(new Date(), "yyyy-MM-dd"),
   scheduleIntent: null,
   isFilterModalOpen: false,
+  highlightSlotId: 341,
   filters: {
     showPending: true,
     showConfirmed: true,
@@ -72,6 +74,14 @@ const calendarSlice = createSlice({
     setFilterModalOpen(state, action: PayloadAction<boolean>) {
       state.isFilterModalOpen = action.payload;
     },
+
+    setHighlightSlotId(state, action: PayloadAction<number>) {
+      state.highlightSlotId = action.payload;
+    },
+
+    clearHighlightSlotId(state) {
+      state.highlightSlotId = null;
+    },
   },
 });
 
@@ -82,6 +92,8 @@ export const {
   setFilters,
   setScheduleIntent,
   setFilterModalOpen,
+  setHighlightSlotId,
+  clearHighlightSlotId,
 } = calendarSlice.actions;
 
 export const selectActiveStatuses = createSelector(
