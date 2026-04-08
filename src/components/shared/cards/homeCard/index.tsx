@@ -6,21 +6,17 @@ import { twMerge } from "tailwind-merge";
 type HomeCardProps = {
   title?: string;
   startAdornment?: React.ReactNode;
-  endAdornment?: React.ReactNode;
   onPress?: () => void;
   disabled?: boolean;
   className?: string;
-  children?: React.ReactNode;
 };
 
 const HomeCard = ({
   title,
   startAdornment,
-  endAdornment,
   onPress,
   disabled = false,
   className,
-  children,
 }: HomeCardProps) => {
   return (
     <TouchableOpacity
@@ -37,10 +33,9 @@ const HomeCard = ({
     >
       <View className="flex-row justify-between items-center">
         {startAdornment && startAdornment}
-        {endAdornment && endAdornment}
       </View>
 
-      <View className="mt-14">
+      <View className="mt-3">
         <Typography weight="semibold" className="text-body">
           {title}
         </Typography>

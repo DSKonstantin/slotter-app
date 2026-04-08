@@ -7,6 +7,7 @@ export default function ClientDetailLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="statistics" />
       <Stack.Screen name="balance" />
+      <Stack.Screen name="history" />
     </Stack>
   );
 }

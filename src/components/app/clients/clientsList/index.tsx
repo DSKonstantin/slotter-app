@@ -60,7 +60,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   const search = useAppSelector(selectClientsSearch);
   const tagId = useAppSelector(selectClientsTagId);
-
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
   const debouncedSetSearch = useRef(
@@ -84,7 +83,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     [tagsData?.customer_tags],
   );
 
-  useToolbarSearch({
+  const { searchMode } = useToolbarSearch({
     placeholder: "Имя или телефон",
     onChange: (value) => {
       dispatch(setSearch(value));
@@ -124,40 +123,44 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   return (
     <View className="flex-1" style={{ paddingTop: topInset }}>
-      <View className="flex-row px-screen pb-3 gap-2">
-        {filters.map((f) => (
-          <Badge
-            key={f.label}
-            title={f.label}
-            variant={tagId === f.value ? "accent" : "secondary"}
-            onPress={() => dispatch(setTagId(f.value))}
-          />
-        ))}
-      </View>
+      {!searchMode && (
+        <>
+          <View className="flex-row px-screen pb-3 gap-2">
+            {filters.map((f) => (
+              <Badge
+                key={f.label}
+                title={f.label}
+                variant={tagId === f.value ? "accent" : "secondary"}
+                onPress={() => dispatch(setTagId(f.value))}
+              />
+            ))}
+          </View>
 
-      <View className="flex-row gap-2.5 px-screen mb-5">
-        <Button
-          title="Статистика"
-          buttonClassName="flex-1"
-          rightIcon={
-            <StSvg name="Pipe_fill" size={24} color={colors.neutral[0]} />
-          }
-          onPress={() => {}}
-        />
-        <Button
-          title="Рассылка"
-          variant="clear"
-          buttonClassName="flex-1"
-          rightIcon={
-            <StSvg
-              name="Message_alt_fill"
-              size={24}
-              color={colors.neutral[900]}
+          <View className="flex-row gap-2.5 px-screen mb-5">
+            <Button
+              title="Статистика"
+              buttonClassName="flex-1"
+              rightIcon={
+                <StSvg name="Pipe_fill" size={24} color={colors.neutral[0]} />
+              }
+              onPress={() => router.push(Routers.app.clients.statistics)}
             />
-          }
-          onPress={() => {}}
-        />
-      </View>
+            <Button
+              title="Рассылка"
+              variant="clear"
+              buttonClassName="flex-1"
+              rightIcon={
+                <StSvg
+                  name="Message_alt_fill"
+                  size={24}
+                  color={colors.neutral[900]}
+                />
+              }
+              onPress={() => {}}
+            />
+          </View>
+        </>
+      )}
 
       {isLoading && !data ? (
         <View className="flex-1 items-center justify-center">

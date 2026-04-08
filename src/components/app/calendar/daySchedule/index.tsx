@@ -59,7 +59,7 @@ const DayScheduleEdit = ({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
       isActive: workingDay.is_active,
-      date: formatFullDateWithDay(new Date(workingDay.day)),
+      // date: formatFullDateWithDay(new Date(workingDay.day)),
       scheduleStart: formatTimeFromISO(workingDay.start_at),
       scheduleEnd: formatTimeFromISO(workingDay.end_at),
       breaks,

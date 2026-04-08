@@ -1,15 +1,12 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import React, { memo, useCallback, useEffect, useMemo } from "react";
 import type {
   Appointment,
   AppointmentStatus,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router } from "expo-router";
 import { Typography } from "@/src/components/ui";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import TimeSlotListSkeleton from "./TimeSlotListSkeleton";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
 import FreeSlotBlock from "./FreeSlotBlock";
@@ -39,10 +36,7 @@ type TimeSlotListProps = {
   startAt?: string;
   endAt?: string;
   date?: string;
-  workingDayId?: number;
-  isLoading?: boolean;
-  refreshing?: boolean;
-  onRefresh?: () => void;
+  onHighlightScroll?: (y: number) => void;
 };
 
 type ParsedBreak = {
@@ -264,16 +258,13 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   startAt,
   endAt,
   date,
-  isLoading,
-  refreshing = false,
-  onRefresh,
+  onHighlightScroll,
 }) => {
-  const { bottom } = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
-  const highlightSlotId = useAppSelector((state) => state.calendar.highlightSlotId);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const pendingScrollY = useRef<number | null>(null);
+  const highlightSlotId = useAppSelector(
+    (state) => state.calendar.highlightSlotId,
+  );
 
   const handleSlotPress = useCallback((id: number) => {
     router.push(Routers.app.calendar.slot(id));
@@ -303,53 +294,22 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     if (!highlightSlotId || !startAt) return;
     const slot = appointment.find((a) => a.id === highlightSlotId);
     if (slot) {
-      pendingScrollY.current = Math.max(
-        0,
-        (parseTime(slot.start_time) - parseTime(startAt)) * MINUTE_HEIGHT - 50,
+      onHighlightScroll?.(
+        Math.max(
+          0,
+          (parseTime(slot.start_time) - parseTime(startAt)) * MINUTE_HEIGHT -
+            50,
+        ),
       );
     }
     const timer = setTimeout(() => dispatch(clearHighlightSlotId()), 3000);
     return () => clearTimeout(timer);
-  }, [highlightSlotId, appointment, startAt, dispatch]);
+  }, [highlightSlotId, appointment, startAt, dispatch, onHighlightScroll]);
 
-  if (isLoading) {
-    return <TimeSlotListSkeleton />;
-  }
-
-  if (!segments) {
-    return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={{ marginBottom: TAB_BAR_HEIGHT + bottom + 80 }}
-      >
-        <Typography className="text-body text-neutral-400">
-          На этот день записей нет
-        </Typography>
-      </View>
-    );
-  }
+  if (!segments) return null;
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      showsVerticalScrollIndicator={false}
-      className="flex-1 pt-4 px-screen"
-      onContentSizeChange={() => {
-        if (pendingScrollY.current !== null) {
-          scrollViewRef.current?.scrollTo({
-            y: pendingScrollY.current,
-            animated: true,
-          });
-          pendingScrollY.current = null;
-        }
-      }}
-      contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 80 }}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        ) : undefined
-      }
-    >
+    <View className="flex-1 pt-4 px-screen">
       {segments.map(({ segStart, segEnd, content }) => (
         <View
           key={segStart}
@@ -393,7 +353,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
           </View>
         </View>
       ))}
-    </ScrollView>
+    </View>
   );
 };
 

@@ -109,10 +109,6 @@ const SlotCreate: React.FC = () => {
     [customerItems, customerSearch],
   );
 
-  const [forcedCustomer, setForcedCustomer] = useState<AutocompleteItem | null>(
-    null,
-  );
-
   useEffect(() => {
     if (draft.createdCustomer) {
       const item: AutocompleteItem = {
@@ -120,7 +116,6 @@ const SlotCreate: React.FC = () => {
         title: draft.createdCustomer.name,
       };
       setValue("customerId", Number(item.id));
-      setForcedCustomer(item);
       setSelectedCustomer(item);
       dispatch(clearCreatedCustomer());
     }

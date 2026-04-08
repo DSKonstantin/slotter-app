@@ -7,6 +7,7 @@ type TagVariant =
   | "success"
   | "warning"
   | "default"
+  | "mint"
   | "error";
 
 type TagSize = "sm" | "md";
@@ -54,9 +55,10 @@ const styles = {
     info: "bg-primary-blue-100",
     accent: "bg-primary-blue-500",
     success: "bg-primary-green-500",
+    mint: "bg-primary-green-100",
     warning: "bg-accent-yellow-500",
     default: "bg-background",
-    error: "bg-accent-red-500",
+    error: "bg-accent-red-100",
   },
 
   text: {
@@ -71,6 +73,7 @@ const styles = {
       info: "text-primary-blue-500",
       accent: "text-accent-azure-500",
       success: "text-primary-green-700",
+      mint: "text-primary-green-700",
       warning: "text-accent-yellow-700",
       default: "text-neutral-500",
       error: "text-accent-red-500",

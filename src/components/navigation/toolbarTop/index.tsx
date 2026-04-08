@@ -72,6 +72,8 @@ const ToolbarTop = ({
                 className="flex-1 font-inter-regular text-[15px] text-neutral-900"
               />
               <IconButton
+                size="xs"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 icon={
                   <StSvg
                     name="Close_round"
