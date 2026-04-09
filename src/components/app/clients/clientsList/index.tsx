@@ -21,6 +21,7 @@ import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
 import type { Customer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
+import ClientsToolbarButton from "./ClientsToolbarButton";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   selectClientsSearch,
@@ -147,6 +148,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
             />
             <Button
               title="Рассылка"
+              disabled
               variant="clear"
               buttonClassName="flex-1"
               rightIcon={
@@ -213,7 +215,10 @@ const ClientsList = () => {
   if (!auth) return null;
 
   return (
-    <ScreenWithToolbar title="Клиенты">
+    <ScreenWithToolbar
+      title="Клиенты"
+      rightButton={(toolbar) => <ClientsToolbarButton toolbar={toolbar} />}
+    >
       {({ topInset, bottomInset }) => (
         <ClientsContent topInset={topInset} bottomInset={bottomInset} />
       )}

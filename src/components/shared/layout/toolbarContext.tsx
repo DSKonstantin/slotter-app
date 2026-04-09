@@ -13,7 +13,7 @@ type SearchConfig = {
   onClose?: () => void;
 };
 
-type ToolbarContextValue = {
+export type ToolbarContextValue = {
   searchMode: boolean;
   searchValue: string;
   searchPlaceholder: string;

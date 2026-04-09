@@ -140,14 +140,14 @@ const DayCalendarView = () => {
   const content = useMemo(() => {
     if (hasError)
       return (
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           <CalendarError isLoading={isRetrying} onRetry={handleRetry} />
         </View>
       );
     if (isLoading) return <TimeSlotListSkeleton />;
     if (isEmpty)
       return (
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           <EmptySlots onPress={handleEmptyPress} />
         </View>
       );

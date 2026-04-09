@@ -1,22 +1,62 @@
-import React, { useState } from "react";
-import { View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import BirthdayBadge from "@/src/components/app/clients/shared/birthdayBadge";
-import { Card, Divider, Input, StSvg, Typography } from "@/src/components/ui";
+import {
+  Button,
+  Card,
+  Divider,
+  Input,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import ClientInfoCard from "./clientInfoCard";
 import { colors } from "@/src/styles/colors";
 import HomeCard from "@/src/components/shared/cards/homeCard";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import {
+  useGetCustomerQuery,
+  useUpdateCustomerMutation,
+} from "@/src/store/redux/services/api/customersApi";
 
 type Props = { customerId: number };
 
 const ClientDetail = ({ customerId }: Props) => {
-  const [note, setNote] = useState("");
+  const { data: customerData, isLoading: customerLoading } =
+    useGetCustomerQuery({ customerId });
+
+  const [updateCustomer, { isLoading: isSaving }] = useUpdateCustomerMutation();
+
+  const customer = customerData?.customer;
+
+  const [note, setNote] = useState(customer?.note ?? "");
+  const isDirty = note !== (customer?.note ?? "");
+
+  useEffect(() => {
+    setNote(customer?.note ?? "");
+  }, [customer?.note]);
+
+  const handleSaveNote = async () => {
+    if (!isDirty) return;
+    await updateCustomer({ customerId, body: { note } });
+  };
+
+  if (customerLoading || !customer) {
+    return (
+      <ScreenWithToolbar title="Карточка клиента">
+        {() => (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator />
+          </View>
+        )}
+      </ScreenWithToolbar>
+    );
+  }
 
   return (
-    <ScreenWithToolbar title="Карточка клиента">
+    <ScreenWithToolbar title={customer.name}>
       {({ topInset, bottomInset }) => (
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
@@ -30,11 +70,11 @@ const ClientDetail = ({ customerId }: Props) => {
 
           <View className="gap-2 mt-2">
             <ClientInfoCard
-              name="Анна Петрова"
-              phone="+7 999 999 99 99"
-              visitsCount={15}
-              totalSpent="52 500 ₽"
-              tag={{ name: "Постоянный" }}
+              name={customer.name}
+              phone={customer.phone || undefined}
+              visitsCount={0}
+              totalSpent="0 ₽"
+              tag={customer.customer_tag ?? undefined}
             />
 
             <Card
@@ -68,7 +108,7 @@ const ClientDetail = ({ customerId }: Props) => {
 
           <View className="flex-row gap-2 mb-2">
             <HomeCard
-              title="История  посещений"
+              title="История  посещений"
               startAdornment={
                 <StSvg name="Date_fill" size={26} color={colors.neutral[900]} />
               }
@@ -77,7 +117,7 @@ const ClientDetail = ({ customerId }: Props) => {
               }
             />
             <HomeCard
-              title="Доход  по клиенту"
+              title="Доход  по клиенту"
               startAdornment={
                 <StSvg
                   name="Wallet_fill"
@@ -90,14 +130,14 @@ const ClientDetail = ({ customerId }: Props) => {
 
           <View className="flex-row gap-2">
             <HomeCard
-              title="Изменить  категорию"
+              title="Изменить  категорию"
               startAdornment={
                 <StSvg name="Edit_fill" size={26} color={colors.neutral[900]} />
               }
             />
             <HomeCard
               disabled
-              title="Сделать  подарок"
+              title="Сделать  подарок"
               startAdornment={
                 <StSvg
                   name="gift_alt_fill"
@@ -123,6 +163,15 @@ const ClientDetail = ({ customerId }: Props) => {
               value={note}
               onChangeText={setNote}
             />
+            {isDirty && (
+              <Button
+                title="Сохранить"
+                onPress={handleSaveNote}
+                loading={isSaving}
+                disabled={isSaving}
+                buttonClassName="w-full"
+              />
+            )}
           </View>
         </KeyboardAwareScrollView>
       )}

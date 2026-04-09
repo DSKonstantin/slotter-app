@@ -28,7 +28,7 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "Bell_fill",
     route: Routers.app.menu.notifications,
   },
-  { label: "Финансы", icon: "Wallet_fill", route: Routers.app.menu.finances },
+  { label: "Финансы", icon: "Wallet_fill", route: Routers.app.menu.finances.root },
   {
     label: "Услуги",
     icon: "Desk_alt_fill",

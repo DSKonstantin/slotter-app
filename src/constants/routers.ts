@@ -83,11 +83,6 @@ export const Routers = {
           pathname: "/(app)/clients/[id]",
           params: { id: String(id) },
         }) as const,
-      balance: (id: string | number) =>
-        ({
-          pathname: "/(app)/clients/[id]/balance",
-          params: { id: String(id) },
-        }) as const,
       history: (id: string | number) =>
         ({
           pathname: "/(app)/clients/[id]/history",
@@ -97,7 +92,10 @@ export const Routers = {
     menu: {
       schedule: "/(app)/(menu)/schedule",
       notifications: "/(app)/(menu)/notifications",
-      finances: "/(app)/(menu)/finances",
+      finances: {
+        root: "/(app)/(menu)/finances",
+        income: "/(app)/(menu)/finances/income",
+      } as const,
       services: {
         root: "/(app)/(menu)/services",
         create: (categoryId?: string | number) =>

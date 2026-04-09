@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { Divider, Typography } from "@/src/components/ui";
+import map from "lodash/map";
 
 type IncomeItem = {
   label: string;
@@ -8,16 +9,17 @@ type IncomeItem = {
 };
 
 type Props = {
+  label?: string;
   totalIncome: string;
   items: IncomeItem[];
 };
 
-const IncomeCard = ({ totalIncome, items }: Props) => {
+const IncomeCard = ({ label = "Общий доход", totalIncome, items }: Props) => {
   return (
     <View className="bg-background-surface rounded-base p-4 gap-3">
       <View className="items-center justify-between gap-2">
         <Typography className="text-caption text-neutral-500">
-          Общий доход
+          {label}
         </Typography>
         <Typography weight="semibold" className="text-display text-neutral-900">
           {totalIncome}
@@ -27,7 +29,7 @@ const IncomeCard = ({ totalIncome, items }: Props) => {
       <Divider className="my-4" />
 
       <View className="flex-row justify-between gap-2">
-        {items.map((item, index) => (
+        {map(items, (item, index) => (
           <View className="items-center justify-between gap-1" key={index}>
             <Typography className="text-caption text-neutral-500">
               {item.label}

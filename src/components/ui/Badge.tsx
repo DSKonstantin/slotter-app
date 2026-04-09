@@ -10,6 +10,7 @@ type BadgeVariant =
   | "info"
   | "success"
   | "warning"
+  | "neutral"
   | "error";
 type BadgeSize = "sm" | "md";
 
@@ -84,6 +85,7 @@ const styles = {
   variants: {
     primary: "bg-background-black",
     secondary: "bg-background",
+    neutral: "bg-neutral-400",
     tertiary: "bg-background-surface",
     accent: "bg-primary-blue-500",
     info: "bg-primary-blue-100",
@@ -103,6 +105,7 @@ const styles = {
     variants: {
       primary: "text-neutral-200",
       secondary: "text-neutral-500",
+      neutral: "text-neutral-0",
       tertiary: "text-primary-blue-500",
       accent: "text-accent-azure-500",
       info: "text-primary-blue-500",

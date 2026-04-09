@@ -26,6 +26,8 @@ export const api = createApi({
     "CustomerTags",
     "GalleryPhotos",
     "User",
+    "ExpenseCategories",
+    "Expenses",
   ],
   endpoints: () => ({}),
 });

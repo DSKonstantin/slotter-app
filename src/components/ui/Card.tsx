@@ -43,8 +43,9 @@ export const Card = ({
     <CardRootComponent
       {...(pressCard ? { onPress } : {})}
       className={twMerge(
-        "flex-row items-center rounded-base bg-background-surface p-4 border border-transparent",
+        "flex-row items-center rounded-base bg-background-surface p-4 border border-transparent ",
         active && "border-neutral-200",
+        pressCard && "active:opacity-70",
         className,
       )}
     >
