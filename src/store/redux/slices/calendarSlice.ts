@@ -34,7 +34,7 @@ const initialState: CalendarState = {
   selectedDay: format(new Date(), "yyyy-MM-dd"),
   scheduleIntent: null,
   isFilterModalOpen: false,
-  highlightSlotId: 341,
+  highlightSlotId: 361,
   filters: {
     showPending: true,
     showConfirmed: true,

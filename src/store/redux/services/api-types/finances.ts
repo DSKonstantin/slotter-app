@@ -41,33 +41,39 @@ export type UpdateExpensePayload = Partial<CreateExpensePayload>;
 
 export interface ExpenseCategoryBreakdown {
   category_name: string;
-  amount: number;
+  amount_cents: number;
 }
 
 export interface FinancesSummary {
-  income: number;
+  income_cents: number;
   appointments_count: number;
-  average_check: number;
-  income_growth_percent: number | null;
-  expenses: number;
-  net_profit: number;
-  expenses_by_category: ExpenseCategoryBreakdown[];
+  average_check_cents: number;
+  growth_percent: number | null;
+  total_expenses_cents: number;
+  recurring_expenses_cents: number;
+  net_profit_cents: number;
+  expenses: ExpenseCategoryBreakdown[];
+  currency: string;
 }
 
 export interface FinancesIncomePoint {
-  period: string;
-  amount: number;
+  month: string;
+  amount_cents: number;
 }
 
 export interface FinancesIncomeItem {
+  service_id?: number;
+  customer_id?: number;
   name: string;
-  amount: number;
+  total_cents: number;
   appointments_count?: number;
+  is_new?: boolean;
 }
 
 export interface FinancesIncome {
-  total: number;
+  total_cents: number;
   new_clients_percent: number;
   chart: FinancesIncomePoint[];
   breakdown: FinancesIncomeItem[];
+  currency: string;
 }

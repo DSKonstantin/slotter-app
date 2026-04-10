@@ -205,7 +205,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   />
                 }
               >
-                <View className="px-screen">
+                <View className="px-screen gap-5">
                   <Card
                     title={slot.customer?.name ?? "—"}
                     subtitle={slot.customer?.phone ?? undefined}
@@ -220,6 +220,32 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                         name="Expand_right_light"
                         size={24}
                         color={colors.neutral[900]}
+                      />
+                    }
+                  />
+
+                  <Card
+                    title="Написать"
+                    titleProps={{
+                      style: {
+                        color: colors.primary.blue[500],
+                      },
+                    }}
+                    subtitle="Перейти в чат"
+                    left={
+                      <View className="mb-[18px]">
+                        <StSvg
+                          name="Chat_plus_fill"
+                          size={24}
+                          color={colors.primary.blue[500]}
+                        />
+                      </View>
+                    }
+                    right={
+                      <StSvg
+                        name="Expand_right_light"
+                        size={24}
+                        color={colors.neutral[500]}
                       />
                     }
                   />

@@ -4,8 +4,9 @@ import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { format } from "date-fns";
-import { StModal, Button, Typography } from "@/src/components/ui";
+import { StModal, Button, Typography, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import {
   ExpenseCreateSchema,
   type ExpenseCreateFormValues,
@@ -13,6 +14,7 @@ import {
 import { useCreateExpenseMutation } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { colors } from "@/src/styles/colors";
 
 type Props = {
   visible: boolean;
@@ -26,9 +28,10 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
   const methods = useForm({
     resolver: yupResolver(ExpenseCreateSchema),
     defaultValues: {
+      name: "",
       amount: undefined,
-      description: "",
-      date: format(new Date(), "yyyy-MM-dd"),
+      date: "",
+      comment: "",
     },
   });
 
@@ -42,9 +45,8 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
           userId: auth.userId,
           body: {
             amount: values.amount,
-            description: values.description || undefined,
+            description: values.comment || values.name,
             date: values.date,
-            is_recurring: values.is_recurring,
           },
         }).unwrap();
         reset();
@@ -59,32 +61,52 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
   return (
     <StModal visible={visible} onClose={onClose} keyboardAware>
       <FormProvider {...methods}>
-        <View className="gap-4 pt-2">
-          <Typography weight="semibold" className="text-body text-neutral-900">
-            Новый расход
+        <View className="gap-1">
+          <Typography weight="semibold" className="text-display text-center">
+            Добавить расход
           </Typography>
+
+          <RhfTextField
+            name="name"
+            label="Название"
+            placeholder="Например: Аренда помещения"
+          />
 
           <RhfTextField
             name="amount"
             label="Сумма, ₽"
-            placeholder="0"
+            placeholder="₽"
             keyboardType="numeric"
           />
 
-          <RhfTextField
-            name="description"
-            label="Описание"
-            placeholder="Например: закупка красок"
+          <RhfCalendarDatePicker
+            name="date"
+            label="Дата"
+            endAdornment={
+              <StSvg
+                name="Date_today_light"
+                size={24}
+                color={colors.neutral[500]}
+              />
+            }
           />
 
-          <RhfTextField name="date" label="Дата" placeholder="2026-04-09" />
+          <RhfTextField
+            name="comment"
+            label="Комментарий"
+            placeholder="Дополнительная информация"
+            multiline
+          />
 
           <Button
-            title="Сохранить"
+            title="Добавить"
             onPress={handleSubmit(onSubmit)}
             loading={isLoading}
             disabled={isLoading}
             buttonClassName="w-full"
+            rightIcon={
+              <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
+            }
           />
         </View>
       </FormProvider>

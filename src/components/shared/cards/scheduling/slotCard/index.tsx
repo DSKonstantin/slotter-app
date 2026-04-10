@@ -37,16 +37,6 @@ const SlotCard = ({
   const rotation = useRef(new Animated.Value(0)).current;
   const highlightOpacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (!highlighted) return;
-    highlightOpacity.setValue(1);
-    Animated.timing(highlightOpacity, {
-      toValue: 0,
-      duration: 3000,
-      useNativeDriver: true,
-    }).start();
-  }, [highlighted, highlightOpacity]);
-
   const toggleExpand = () => {
     const toValue = isExpanded ? 0 : 1;
     setIsExpanded(!isExpanded);
@@ -62,9 +52,19 @@ const SlotCard = ({
     outputRange: ["0deg", "180deg"],
   });
 
+  useEffect(() => {
+    if (!highlighted) return;
+    highlightOpacity.setValue(1);
+    Animated.timing(highlightOpacity, {
+      toValue: 0,
+      duration: 3000,
+      useNativeDriver: true,
+    }).start();
+  }, [highlighted, highlightOpacity]);
+
   const detailContent = (isShort: boolean) => (
     <Pressable
-      className={`flex-1 ${isShort ? "pt-5" : "py-5"} px-4 justify-center`}
+      className={`flex-1 ${isShort ? "pt-5" : "py-5"} px-4 justify-center active:opacity-70`}
       onPress={isShort ? toggleExpand : onPress}
     >
       <View className="flex-row items-center justify-between">
@@ -132,10 +132,9 @@ const SlotCard = ({
             { opacity: highlightOpacity },
           ]}
         />
-        <TouchableOpacity
-          activeOpacity={0.7}
+        <Pressable
           onPress={toggleExpand}
-          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1"
+          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1 active:opacity-70"
         >
           <View className="flex-row flex-1 items-center justify-between">
             <Typography className="text-body text-neutral-900">
@@ -162,7 +161,7 @@ const SlotCard = ({
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         {isExpanded && (
           <View
@@ -186,7 +185,15 @@ const SlotCard = ({
 
   return (
     <View
-      className="rounded-base overflow-hidden bg-background-surface"
+      className={`rounded-base overflow-hidden 
+      ${
+        slot?.status === "pending"
+          ? "bg-accent-yellow-100"
+          : slot?.status === "confirmed"
+            ? "bg-accent-lime-500"
+            : "bg-background-surface"
+      }
+      `}
       style={containerStyle}
     >
       <Animated.View

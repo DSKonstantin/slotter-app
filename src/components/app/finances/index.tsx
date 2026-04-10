@@ -1,10 +1,13 @@
-import React, { useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { useGetExpenseCategoriesQuery } from "@/src/store/redux/services/api/financesApi";
+import {
+  useGetExpenseCategoriesQuery,
+  useGetFinancesSummaryQuery,
+} from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
   Card,
@@ -17,17 +20,80 @@ import { colors } from "@/src/styles/colors";
 import IncomeCard from "@/src/components/shared/cards/incomeCard";
 import StatCard from "@/src/components/shared/cards/statСard";
 import CreateExpenseModal from "./createExpenseModal";
-import map from "lodash/map";
+import ExpenseCategoriesList from "./ExpenseCategoriesList";
+import FinancesSkeleton from "./FinancesSkeleton";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+
+const now = new Date();
+const CURRENT_MONTH = now.getMonth() + 1;
+const CURRENT_YEAR = now.getFullYear();
+
+const MONTH_NAMES = [
+  "январь",
+  "февраль",
+  "март",
+  "апрель",
+  "май",
+  "июнь",
+  "июль",
+  "август",
+  "сентябрь",
+  "октябрь",
+  "ноябрь",
+  "декабрь",
+];
 
 const FinancesScreen = () => {
   const auth = useRequiredAuth();
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
-  const { data, isLoading } = useGetExpenseCategoriesQuery(
-    auth ? { userId: auth.userId } : skipToken,
+  const {
+    data,
+    isLoading,
+    refetch: refetchCategories,
+  } = useGetExpenseCategoriesQuery(auth ? { userId: auth.userId } : skipToken);
+
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    refetch: refetchSummary,
+  } = useGetFinancesSummaryQuery(
+    auth
+      ? { userId: auth.userId, month: CURRENT_MONTH, year: CURRENT_YEAR }
+      : skipToken,
   );
 
-  const categories = data?.expense_categories ?? [];
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([refetchSummary(), refetchCategories()]);
+    setIsRefreshing(false);
+  };
+
+  const expenseByCategory = useMemo(
+    () =>
+      Object.fromEntries(
+        (summary?.expenses ?? []).map((e) => [e.category_name, e.amount_cents]),
+      ),
+    [summary],
+  );
+
+  const growth = summary?.growth_percent;
+  const growthValue =
+    growth != null ? `${growth > 0 ? "+" : ""}${growth}%` : "—";
+
+  if (!auth) {
+    return null;
+  }
+
+  if (isSummaryLoading) {
+    return (
+      <ScreenWithToolbar title="Финансы">
+        {({ topInset }) => <FinancesSkeleton topInset={topInset} />}
+      </ScreenWithToolbar>
+    );
+  }
 
   return (
     <ScreenWithToolbar title="Финансы">
@@ -40,14 +106,27 @@ const FinancesScreen = () => {
             paddingHorizontal: 20,
             gap: 20,
           }}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+          }
         >
           <IncomeCard
-            label="Доходы за октябрь"
-            totalIncome="87 500 ₽"
+            label={`Доходы за ${MONTH_NAMES[CURRENT_MONTH - 1]}`}
+            totalIncome={
+              summary ? formatRublesFromCents(summary.income_cents) : "—"
+            }
             items={[
-              { label: "Визитов", value: "18" },
-              { label: "Средний чек", value: "4 861 ₽" },
-              { label: "Рост", value: "+12%" },
+              {
+                label: "Визитов",
+                value: summary ? String(summary.appointments_count) : "—",
+              },
+              {
+                label: "Средний чек",
+                value: summary
+                  ? formatRublesFromCents(summary.average_check_cents)
+                  : "—",
+              },
+              { label: "Рост", value: growthValue },
             ]}
           />
 
@@ -96,30 +175,21 @@ const FinancesScreen = () => {
 
             <Divider />
 
-            {isLoading ? (
-              <ActivityIndicator />
-            ) : (
-              map(categories, (category, index) => (
-                <View key={category.id}>
-                  {index > 0 && <Divider className="mb-4" />}
-                  <View className="flex-row justify-between items-center">
-                    <Typography className="text-body text-neutral-900">
-                      {category.name}
-                    </Typography>
-
-                    <Typography weight="regular" className="text-body">
-                      0
-                    </Typography>
-                  </View>
-                </View>
-              ))
-            )}
+            <ExpenseCategoriesList
+              categories={data?.expense_categories ?? []}
+              expenseByCategory={expenseByCategory}
+              isLoading={isLoading}
+            />
 
             <Divider />
 
             <View className="flex-row justify-between items-center">
               <Typography className="text-body">Итого расходов</Typography>
-              <Typography className="text-body">18 500 ₽</Typography>
+              <Typography className="text-body">
+                {summary
+                  ? formatRublesFromCents(summary.total_expenses_cents)
+                  : "—"}
+              </Typography>
             </View>
           </View>
 
@@ -131,9 +201,15 @@ const FinancesScreen = () => {
             />
 
             <StatCard
-              value={"84 000 ₽"}
+              value={
+                summary ? formatRublesFromCents(summary.net_profit_cents) : "—"
+              }
               label="Чистая прибыль"
-              tag={{ title: "+ 43%", size: "sm", variant: "mint" }}
+              tag={{
+                title: growthValue,
+                size: "sm",
+                variant: growth != null && growth < 0 ? "error" : "mint",
+              }}
             />
           </View>
 

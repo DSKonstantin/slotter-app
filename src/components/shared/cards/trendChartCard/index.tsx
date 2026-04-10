@@ -3,7 +3,10 @@ import { View, TouchableOpacity, useWindowDimensions } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { formatRublesWithSymbol } from "@/src/utils/price/formatPrice";
+import {
+  centsToRubles,
+  formatRublesWithSymbol,
+} from "@/src/utils/price/formatPrice";
 
 type DataPoint = {
   value: number;
@@ -19,56 +22,57 @@ type Props = {
   title?: string;
   data?: DataPoint[];
   periods?: Period[];
+  onPeriodChange?: (period: Period) => void;
 };
-
-const MOCK_DATA: DataPoint[] = [
-  { value: 120000, label: "Апр" },
-  { value: 95000, label: "Май" },
-  { value: 140000, label: "Июн" },
-  { value: 130000, label: "Июл" },
-  { value: 155000, label: "Авг" },
-  { value: 105000, label: "Сен" },
-  { value: 60000, label: "Окт" },
-];
-
-const MOCK_PERIODS: Period[] = [
-  { label: "Апр-Окт", value: "apr-oct" },
-  { label: "Янв-Июн", value: "jan-jun" },
-  { label: "За год", value: "year" },
-];
 
 const TrendChartCard = ({
   title = "Динамика",
-  data = MOCK_DATA,
-  periods = MOCK_PERIODS,
+  data = [],
+  periods = [],
+  onPeriodChange,
 }: Props) => {
   const [selectedPeriod, setSelectedPeriod] = useState(periods[0]);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { width: screenWidth } = useWindowDimensions();
   // 20px screen padding * 2 + 16px card padding * 2 + 60px y-axis label width
-  const chartWidth = screenWidth - 40 - 32 - 60;
+  const chartWidth = screenWidth - 40 - 32 - 80;
 
-  const maxValue = Math.max(...data.map((d) => d.value));
+  const maxRubles =
+    data.length > 0 ? Math.max(...data.map((d) => centsToRubles(d.value))) : 0;
   const noOfSections = 3;
 
-  const formatValue = (v: number) => formatRublesWithSymbol(v);
+  // Convert cents → rubles for chart rendering
+  const rubleData = data.map((item) => ({
+    ...item,
+    value: centsToRubles(item.value),
+  }));
 
-  const chartData = data.map((item, index) => ({
+  const chartData = rubleData.map((item, index) => ({
     ...item,
     frontColor:
-      selectedIndex === index ? colors.primary.blue[500] : colors.neutral[200],
+      selectedIndex === index ? colors.neutral[900] : colors.neutral[200],
+    topLabelContainerStyle: {
+      justifyContent: "center" as const,
+      width: 80,
+      top: -15,
+      backgroundColor: colors.neutral[900],
+      right: -82,
+      borderTopRightRadius: 8,
+      borderTopLeftRadius: 8,
+      borderBottomLeftRadius: 2,
+      borderBottomRightRadius: 8,
+    },
     topLabelComponent:
-      selectedIndex === index
+      selectedIndex === index && item.value !== 0
         ? () => (
-            <View className="bg-neutral-900 rounded-lg px-2 py-1 mb-1 items-center">
-              <Typography
-                weight="semibold"
-                className="text-caption text-neutral-0"
-              >
-                {formatValue(item.value)}
-              </Typography>
-            </View>
+            <Typography
+              weight="semibold"
+              className="text-caption text-neutral-0"
+              numberOfLines={1}
+            >
+              {formatRublesWithSymbol(item.value)}
+            </Typography>
           )
         : undefined,
     onPress: () => setSelectedIndex((prev) => (prev === index ? null : index)),
@@ -79,86 +83,104 @@ const TrendChartCard = ({
       <View className="flex-row items-center justify-between">
         <Typography className="text-body text-neutral-900">{title}</Typography>
 
-        <View className="relative">
-          <TouchableOpacity
-            activeOpacity={0.7}
-            className="flex-row items-center gap-1"
-            onPress={() => setPeriodMenuVisible((v) => !v)}
-          >
-            <Typography weight="regular" className="text-body text-neutral-500">
-              {selectedPeriod.label}
-            </Typography>
-            <StSvg
-              name="Expand_down_light"
-              size={16}
-              color={colors.neutral[500]}
-            />
-          </TouchableOpacity>
+        {periods.length > 0 && selectedPeriod && (
+          <View className="relative">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              className="flex-row items-center gap-1"
+              onPress={() => setPeriodMenuVisible((v) => !v)}
+            >
+              <Typography
+                weight="regular"
+                className="text-body text-neutral-500"
+              >
+                {selectedPeriod.label}
+              </Typography>
+              <StSvg
+                name="Expand_down_light"
+                size={16}
+                color={colors.neutral[500]}
+              />
+            </TouchableOpacity>
 
-          {periodMenuVisible && (
-            <View className="absolute right-0 top-7 bg-background-surface rounded-small border border-neutral-100 z-10 min-w-[120px]">
-              {periods.map((p) => (
-                <TouchableOpacity
-                  key={p.value}
-                  activeOpacity={0.7}
-                  className="px-3 py-2"
-                  onPress={() => {
-                    setSelectedPeriod(p);
-                    setPeriodMenuVisible(false);
-                  }}
-                >
-                  <Typography
-                    weight={
-                      selectedPeriod.value === p.value ? "semibold" : "regular"
-                    }
-                    className={
-                      selectedPeriod.value === p.value
-                        ? "text-body text-primary-blue-500"
-                        : "text-body text-neutral-700"
-                    }
+            {periodMenuVisible && (
+              <View className="absolute right-0 top-7 bg-background-surface rounded-small border border-neutral-100 z-10 min-w-[120px]">
+                {periods.map((p) => (
+                  <TouchableOpacity
+                    key={p.value}
+                    activeOpacity={0.7}
+                    className="px-3 py-2"
+                    onPress={() => {
+                      setSelectedPeriod(p);
+                      setPeriodMenuVisible(false);
+                      onPeriodChange?.(p);
+                    }}
                   >
-                    {p.label}
-                  </Typography>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+                    <Typography
+                      weight={
+                        selectedPeriod.value === p.value
+                          ? "semibold"
+                          : "regular"
+                      }
+                      className={
+                        selectedPeriod.value === p.value
+                          ? "text-body text-primary-blue-500"
+                          : "text-body text-neutral-700"
+                      }
+                    >
+                      {p.label}
+                    </Typography>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       <View className="flex-1 min-h-[184px]">
-        <BarChart
-          data={chartData}
-          width={chartWidth}
-          yAxisLabelWidth={60}
-          height={150}
-          barWidth={30}
-          barBorderRadius={8}
-          barBorderBottomLeftRadius={0}
-          barBorderBottomRightRadius={0}
-          noOfSections={noOfSections}
-          maxValue={Math.ceil(maxValue / 50000) * 50000}
-          rulesType="dashed"
-          rulesColor={colors.neutral[200]}
-          dashWidth={4}
-          dashGap={4}
-          yAxisSide={1}
-          yAxisTextStyle={{
-            color: colors.neutral[400],
-            fontSize: 13,
-            fontFamily: "Inter_400Regular",
-          }}
-          xAxisLabelTextStyle={{
-            color: colors.neutral[400],
-            fontSize: 13,
-            fontFamily: "Inter_400Regular",
-          }}
-          hideAxesAndRules={false}
-          yAxisThickness={0}
-          xAxisThickness={0}
-          initialSpacing={8}
-          spacing={12}
-        />
+        {data.length === 0 ? (
+          <View className="flex-1 items-center justify-center min-h-[150px]">
+            <Typography className="text-body text-neutral-400">
+              Нет данных
+            </Typography>
+          </View>
+        ) : (
+          <BarChart
+            data={chartData}
+            width={chartWidth}
+            yAxisLabelWidth={60}
+            height={150}
+            overflowTop={48}
+            barWidth={30}
+            barBorderRadius={8}
+            barBorderBottomLeftRadius={0}
+            barBorderBottomRightRadius={0}
+            noOfSections={noOfSections}
+            maxValue={Math.ceil(maxRubles / 5000) * 5000}
+            formatYLabel={(v) => formatRublesWithSymbol(Number(v))}
+            rulesType="dashed"
+            rulesColor={colors.neutral[200]}
+            dashWidth={4}
+            dashGap={4}
+            yAxisSide={1}
+            yAxisTextStyle={{
+              color: colors.neutral[400],
+              fontSize: 13,
+              fontFamily: "Inter_400Regular",
+            }}
+            xAxisLabelTextStyle={{
+              color: colors.neutral[400],
+              fontSize: 13,
+              fontFamily: "Inter_400Regular",
+            }}
+            hideAxesAndRules={false}
+            yAxisThickness={0}
+            xAxisThickness={0}
+            initialSpacing={8}
+            spacing={12}
+          />
+        )}
       </View>
     </View>
   );
