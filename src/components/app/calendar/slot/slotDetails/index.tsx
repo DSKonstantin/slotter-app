@@ -42,7 +42,7 @@ import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
 
-type EditingField = "duration" | "price" | null;
+type EditingField = "duration" | "price" | "comment" | null;
 
 interface Props {
   slotId: string;
@@ -100,13 +100,23 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       }
     }
 
+    if (editingField === "comment") {
+      const comment = methods.getValues("comment");
+      if (comment === (slot.comment ?? "")) {
+        setEditingField(null);
+        return;
+      }
+    }
+
     try {
       await updateAppointment({
         id,
         body:
           editingField === "duration"
             ? { duration }
-            : { price_cents: rublesToCents(price) },
+            : editingField === "price"
+              ? { price_cents: rublesToCents(price) }
+              : { comment: methods.getValues("comment") },
       }).unwrap();
       toast.success("Сохранено");
       setEditingField(null);
@@ -195,7 +205,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   />
                 }
               >
-                <View className="px-screen">
+                <View className="px-screen gap-5">
                   <Card
                     title={slot.customer?.name ?? "—"}
                     subtitle={slot.customer?.phone ?? undefined}
@@ -210,6 +220,32 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                         name="Expand_right_light"
                         size={24}
                         color={colors.neutral[900]}
+                      />
+                    }
+                  />
+
+                  <Card
+                    title="Написать"
+                    titleProps={{
+                      style: {
+                        color: colors.primary.blue[500],
+                      },
+                    }}
+                    subtitle="Перейти в чат"
+                    left={
+                      <View className="mb-[18px]">
+                        <StSvg
+                          name="Chat_plus_fill"
+                          size={24}
+                          color={colors.primary.blue[500]}
+                        />
+                      </View>
+                    }
+                    right={
+                      <StSvg
+                        name="Expand_right_light"
+                        size={24}
+                        color={colors.neutral[500]}
                       />
                     }
                   />
@@ -345,13 +381,50 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   />
                 </View>
 
-                <View className="px-screen mt-5">
+                <View className="px-screen my-5">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Typography className="text-caption text-neutral-500">
+                      Комментарий к записи
+                    </Typography>
+                    {canEdit && (
+                      <IconButton
+                        size="xs"
+                        loading={editingField === "comment" && isUpdating}
+                        onPress={
+                          editingField === "comment"
+                            ? handleSave
+                            : () => setEditingField("comment")
+                        }
+                        icon={
+                          <StSvg
+                            name={
+                              editingField === "comment"
+                                ? "Check_round_fill"
+                                : "Edit_light"
+                            }
+                            size={20}
+                            color={
+                              editingField === "comment"
+                                ? colors.primary.blue[500]
+                                : colors.neutral[500]
+                            }
+                          />
+                        }
+                      />
+                    )}
+                  </View>
                   <RhfTextField
                     name="comment"
-                    label="Комментарий к записи"
-                    placeholder="Комментарий к записи"
+                    placeholder="Оставьте комментарий"
                     multiline={true}
-                    disabled={true}
+                    disabled={editingField !== "comment"}
+                    hideErrorText
+                    onBlur={() => {
+                      const comment = methods.getValues("comment");
+                      if (comment === (slot.comment ?? "")) {
+                        setEditingField(null);
+                      }
+                    }}
                   />
                 </View>
 

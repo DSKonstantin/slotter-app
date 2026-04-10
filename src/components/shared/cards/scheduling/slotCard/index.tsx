@@ -1,8 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   TouchableOpacity,
   View,
   Animated,
+  StyleSheet,
   type StyleProp,
   type ViewStyle,
   Pressable,
@@ -18,9 +19,15 @@ interface SlotCardProps {
   slot: Appointment;
   onPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
+  highlighted?: boolean;
 }
 
-const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
+const SlotCard = ({
+  slot,
+  onPress,
+  containerStyle,
+  highlighted = false,
+}: SlotCardProps) => {
   const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
   const statusConfig = APPOINTMENT_STATUS_CONFIG[slot.status] ?? null;
   const clientName = slot.customer?.name ?? "";
@@ -28,6 +35,7 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const rotation = useRef(new Animated.Value(0)).current;
+  const highlightOpacity = useRef(new Animated.Value(0)).current;
 
   const toggleExpand = () => {
     const toValue = isExpanded ? 0 : 1;
@@ -44,9 +52,19 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
     outputRange: ["0deg", "180deg"],
   });
 
+  useEffect(() => {
+    if (!highlighted) return;
+    highlightOpacity.setValue(1);
+    Animated.timing(highlightOpacity, {
+      toValue: 0,
+      duration: 3000,
+      useNativeDriver: true,
+    }).start();
+  }, [highlighted, highlightOpacity]);
+
   const detailContent = (isShort: boolean) => (
     <Pressable
-      className={`flex-1 ${isShort ? "pt-5" : "py-5"} px-4 justify-center`}
+      className={`flex-1 ${isShort ? "pt-5" : "py-5"} px-4 justify-center active:opacity-70`}
       onPress={isShort ? toggleExpand : onPress}
     >
       <View className="flex-row items-center justify-between">
@@ -106,10 +124,17 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
           { zIndex: isExpanded ? 10 : 1, elevation: isExpanded ? 10 : 1 },
         ]}
       >
-        <TouchableOpacity
-          activeOpacity={0.7}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            styles.highlight,
+            { opacity: highlightOpacity },
+          ]}
+        />
+        <Pressable
           onPress={toggleExpand}
-          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1"
+          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1 active:opacity-70"
         >
           <View className="flex-row flex-1 items-center justify-between">
             <Typography className="text-body text-neutral-900">
@@ -136,7 +161,7 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         {isExpanded && (
           <View
@@ -160,12 +185,36 @@ const SlotCard = ({ slot, onPress, containerStyle }: SlotCardProps) => {
 
   return (
     <View
-      className="rounded-base overflow-hidden bg-background-surface"
+      className={`rounded-base overflow-hidden 
+      ${
+        slot?.status === "pending"
+          ? "bg-accent-yellow-100"
+          : slot?.status === "confirmed"
+            ? "bg-accent-lime-500"
+            : "bg-background-surface"
+      }
+      `}
       style={containerStyle}
     >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          styles.highlight,
+          { opacity: highlightOpacity },
+        ]}
+      />
       {detailContent(false)}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  highlight: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 14,
+    zIndex: 1,
+  },
+});
 
 export default SlotCard;

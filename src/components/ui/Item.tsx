@@ -9,6 +9,7 @@ type ItemProps = {
   right?: React.ReactNode;
   onPress?: () => void;
   disabled?: boolean;
+  active?: boolean;
   className?: string;
   titleClassName?: string;
 };
@@ -20,6 +21,7 @@ export function Item({
   right,
   onPress,
   disabled,
+  active,
   className,
   titleClassName,
 }: ItemProps) {
@@ -37,7 +39,11 @@ export function Item({
 
       <View className="flex-1 flex-row items-center gap-1.5">
         <Text
-          className={twMerge("font-inter-regular text-body", titleClassName)}
+          className={twMerge(
+            "font-inter-regular text-body",
+            active && "font-inter-semibold text-body text-primary-blue-500",
+            titleClassName,
+          )}
         >
           {title}
         </Text>

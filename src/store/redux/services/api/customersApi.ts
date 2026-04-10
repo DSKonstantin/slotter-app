@@ -2,8 +2,6 @@ import { api } from "../api";
 import type {
   Customer,
   CustomerTag,
-  CustomerStatsResponse,
-  CustomerBalanceResponse,
   GetCustomersParams,
   GetCustomersResponse,
   CreateCustomerPayload,
@@ -34,28 +32,6 @@ const customersApi = api.injectEndpoints({
         method: "GET",
       }),
       providesTags: ["Customers"],
-    }),
-
-    getCustomerStats: builder.query<
-      CustomerStatsResponse,
-      { userId: number; customerId: number; period?: string }
-    >({
-      query: ({ userId, customerId, period }) => ({
-        url: `/users/${userId}/customers/${customerId}/stats`,
-        method: "GET",
-        params: period ? { period } : undefined,
-      }),
-    }),
-
-    getCustomerBalance: builder.query<
-      CustomerBalanceResponse,
-      { userId: number; customerId: number; period?: string }
-    >({
-      query: ({ userId, customerId, period }) => ({
-        url: `/users/${userId}/customers/${customerId}/balance`,
-        method: "GET",
-        params: period ? { period } : undefined,
-      }),
     }),
 
     createCustomer: builder.mutation<
@@ -113,7 +89,6 @@ const customersApi = api.injectEndpoints({
       invalidatesTags: ["Customers"],
     }),
 
-    // Customer Tags
     getCustomerTags: builder.query<
       { customer_tags: CustomerTag[] },
       { userId: number }
@@ -165,8 +140,6 @@ const customersApi = api.injectEndpoints({
 export const {
   useGetCustomersQuery,
   useGetCustomerQuery,
-  useGetCustomerStatsQuery,
-  useGetCustomerBalanceQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,

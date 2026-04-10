@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
-import { RefreshControl, ScrollView } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
@@ -17,12 +18,18 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import EmptySlots from "@/src/components/app/calendar/home/day/timeSlotList/EmptySlots";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const DayCalendarView = () => {
   const router = useRouter();
   const auth = useRequiredAuth();
+  const { bottom } = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const pendingScrollY = useRef<number | null>(null);
+  const dateSelectorHeightRef = useRef(0);
+
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
@@ -106,7 +113,6 @@ const DayCalendarView = () => {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-
     try {
       await refetchAll();
     } finally {
@@ -116,7 +122,6 @@ const DayCalendarView = () => {
 
   const handleRetry = useCallback(async () => {
     setIsRetrying(true);
-
     try {
       await refetchAll();
     } finally {
@@ -128,33 +133,23 @@ const DayCalendarView = () => {
     router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
   }, [router, selectedDay]);
 
+  const handleHighlightScroll = useCallback((y: number) => {
+    pendingScrollY.current = y + dateSelectorHeightRef.current;
+  }, []);
+
   const content = useMemo(() => {
     if (hasError)
       return (
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-        >
+        <View className="flex-1">
           <CalendarError isLoading={isRetrying} onRetry={handleRetry} />
-        </ScrollView>
+        </View>
       );
     if (isLoading) return <TimeSlotListSkeleton />;
     if (isEmpty)
       return (
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-        >
+        <View className="flex-1">
           <EmptySlots onPress={handleEmptyPress} />
-        </ScrollView>
+        </View>
       );
     return (
       <TimeSlotList
@@ -163,35 +158,60 @@ const DayCalendarView = () => {
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
         date={selectedDay}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+        onHighlightScroll={handleHighlightScroll}
       />
     );
   }, [
     hasError,
     isLoading,
     isEmpty,
-    refreshing,
-    handleRefresh,
     isRetrying,
     handleRetry,
     handleEmptyPress,
     appointments,
     selectedWorkingDay,
     selectedDay,
+    handleHighlightScroll,
   ]);
 
   if (!auth) return null;
 
   return (
     <>
-      <DateSelector
-        selectedDate={selectedDate}
-        onSelectDate={handleSelectDate}
-        workingDaysData={workingDaysData ?? undefined}
-        isLoading={isDayLoading}
-      />
-      {content}
+      <ScrollView
+        ref={scrollViewRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: TAB_BAR_HEIGHT + bottom + 80,
+        }}
+        onContentSizeChange={() => {
+          if (pendingScrollY.current !== null) {
+            scrollViewRef.current?.scrollTo({
+              y: pendingScrollY.current,
+              animated: true,
+            });
+            pendingScrollY.current = null;
+          }
+        }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
+        <View
+          onLayout={(e) => {
+            dateSelectorHeightRef.current = e.nativeEvent.layout.height;
+          }}
+        >
+          <DateSelector
+            selectedDate={selectedDate}
+            onSelectDate={handleSelectDate}
+            workingDaysData={workingDaysData ?? undefined}
+            isLoading={isDayLoading}
+          />
+        </View>
+        {content}
+      </ScrollView>
       {!hasError && !isLoading && !isEmpty && (
         <CalendarActionButton
           onPress={handlePress}

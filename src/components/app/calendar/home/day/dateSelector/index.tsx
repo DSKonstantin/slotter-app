@@ -8,14 +8,14 @@ import React, {
 } from "react";
 import { FlatList, TouchableOpacity, View } from "react-native";
 import { format, addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
-import { ru } from "date-fns/locale";
-import { Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
 import DateSelectorModal from "@/src/components/app/calendar/home/day/dateSelector/DateSelectorModal";
+import { Typography } from "@/src/components/ui";
+import { formatShortDayName } from "@/src/utils/date/formatDate";
 
 const ITEM_WIDTH = 44;
 const ITEM_GAP = 12;
@@ -44,7 +44,7 @@ const DateItem = memo<DateItemProps>(
           isSelected ? "text-neutral-0" : "text-neutral-500"
         }`}
       >
-        {format(item, "EEEEEE", { locale: ru })}
+        {formatShortDayName(item)}
       </Typography>
 
       <View
@@ -162,34 +162,25 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
   return (
     <>
-      <View className="gap-2">
-        <Typography
-          weight="semibold"
-          className="text-caption px-screen capitalize text-center"
-        >
-          {format(selectedDate, "LLLL yyyy", { locale: ru })}
-        </Typography>
-
-        <FlatList
-          ref={listRef}
-          horizontal
-          data={dates}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.toISOString()}
-          showsHorizontalScrollIndicator={false}
-          initialScrollIndex={selectedDateIndex}
-          getItemLayout={(_, index) => ({
-            length: ITEM_WIDTH,
-            offset: index * (ITEM_WIDTH + ITEM_GAP),
-            index,
-          })}
-          contentContainerStyle={{
-            gap: ITEM_GAP,
-            paddingHorizontal: HORIZONTAL_PADDING,
-          }}
-          style={{ flexGrow: 0 }}
-        />
-      </View>
+      <FlatList
+        ref={listRef}
+        horizontal
+        data={dates}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.toISOString()}
+        showsHorizontalScrollIndicator={false}
+        initialScrollIndex={selectedDateIndex}
+        getItemLayout={(_, index) => ({
+          length: ITEM_WIDTH,
+          offset: index * (ITEM_WIDTH + ITEM_GAP),
+          index,
+        })}
+        contentContainerStyle={{
+          gap: ITEM_GAP,
+          paddingHorizontal: HORIZONTAL_PADDING,
+        }}
+        style={{ flexGrow: 0 }}
+      />
 
       <DateSelectorModal
         modalDate={modalDate}

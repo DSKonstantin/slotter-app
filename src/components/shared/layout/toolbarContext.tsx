@@ -13,7 +13,7 @@ type SearchConfig = {
   onClose?: () => void;
 };
 
-type ToolbarContextValue = {
+export type ToolbarContextValue = {
   searchMode: boolean;
   searchValue: string;
   searchPlaceholder: string;
@@ -88,7 +88,7 @@ export function useToolbarContext() {
 }
 
 export function useToolbarSearch(config: SearchConfig) {
-  const { registerSearch, unregisterSearch } = useToolbarContext();
+  const { registerSearch, unregisterSearch, searchMode } = useToolbarContext();
 
   const configRef = useRef(config);
   configRef.current = config;
@@ -97,4 +97,6 @@ export function useToolbarSearch(config: SearchConfig) {
     registerSearch(configRef.current);
     return () => unregisterSearch();
   }, [registerSearch, unregisterSearch]);
+
+  return { searchMode };
 }

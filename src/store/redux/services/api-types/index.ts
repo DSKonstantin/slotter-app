@@ -67,6 +67,20 @@ export type {
   WorkingDayBreaksResponse,
 } from "./workingDay";
 export type {
+  ExpenseCategory,
+  Expense,
+  GetExpensesParams,
+  CreateExpenseCategoryPayload,
+  UpdateExpenseCategoryPayload,
+  CreateExpensePayload,
+  UpdateExpensePayload,
+  ExpenseCategoryBreakdown,
+  FinancesSummary,
+  FinancesIncomePoint,
+  FinancesIncomeItem,
+  FinancesIncome,
+} from "./finances";
+export type {
   GalleryPhoto,
   GalleryPhotosResponse,
   GalleryPhotoCropData,

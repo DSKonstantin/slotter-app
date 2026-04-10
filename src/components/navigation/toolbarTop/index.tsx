@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 
 import { TextInput, View } from "react-native";
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
+import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
@@ -71,17 +71,30 @@ const ToolbarTop = ({
                 returnKeyType="search"
                 className="flex-1 font-inter-regular text-[15px] text-neutral-900"
               />
-              <IconButton
-                icon={
-                  <StSvg
-                    name="Close_round"
-                    size={20}
-                    color={colors.neutral[500]}
-                  />
-                }
-                onPress={toolbar?.handleSearchClose}
-              />
+              {toolbar?.searchValue !== "" && (
+                <IconButton
+                  size="xs"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  icon={
+                    <StSvg
+                      name="Close_round"
+                      size={20}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                  onPress={() => toolbar?.handleSearchChange("")}
+                />
+              )}
             </View>
+            <Button
+              title="Отмена"
+              variant="clear"
+              buttonClassName="p-0 rounded-none"
+              textClassName="text-[13px]"
+              onPress={() => {
+                toolbar?.handleSearchClose();
+              }}
+            />
           </>
         ) : (
           <>
@@ -113,19 +126,7 @@ const ToolbarTop = ({
               </View>
             </View>
 
-            {toolbar?.hasSearch ? (
-              <IconButton
-                icon={
-                  <StSvg name="Search" size={28} color={colors.neutral[900]} />
-                }
-                onPress={toolbar.openSearch}
-                accessibilityLabel="Поиск"
-              />
-            ) : rightButton ? (
-              rightButton
-            ) : (
-              <View className="w-[48px]" />
-            )}
+            {rightButton ?? <View className="w-[48px]" />}
           </>
         )}
       </View>

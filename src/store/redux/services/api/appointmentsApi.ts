@@ -54,7 +54,7 @@ const appointmentsApi = api.injectEndpoints({
     }),
 
     createAppointment: builder.mutation<
-      { appointment: Appointment },
+      Appointment,
       { userId: number; body: CreateAppointmentPayload }
     >({
       query: ({ userId, body }) => ({
