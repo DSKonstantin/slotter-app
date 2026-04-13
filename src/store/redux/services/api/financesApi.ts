@@ -1,10 +1,7 @@
 import { api } from "../api";
 import type {
-  ExpenseCategory,
   Expense,
   GetExpensesParams,
-  CreateExpenseCategoryPayload,
-  UpdateExpenseCategoryPayload,
   CreateExpensePayload,
   UpdateExpensePayload,
   FinancesSummary,
@@ -14,49 +11,6 @@ import type {
 const financesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
-    getExpenseCategories: builder.query<
-      { expense_categories: ExpenseCategory[] },
-      { userId: number }
-    >({
-      query: ({ userId }) => ({
-        url: `/users/${userId}/expense_categories`,
-        method: "GET",
-      }),
-      providesTags: ["ExpenseCategories"],
-    }),
-
-    createExpenseCategory: builder.mutation<
-      { expense_category: ExpenseCategory },
-      { userId: number; body: CreateExpenseCategoryPayload }
-    >({
-      query: ({ userId, body }) => ({
-        url: `/users/${userId}/expense_categories`,
-        method: "POST",
-        data: { expense_category: body },
-      }),
-      invalidatesTags: ["ExpenseCategories"],
-    }),
-
-    updateExpenseCategory: builder.mutation<
-      { expense_category: ExpenseCategory },
-      { categoryId: number; body: UpdateExpenseCategoryPayload }
-    >({
-      query: ({ categoryId, body }) => ({
-        url: `/expense_categories/${categoryId}`,
-        method: "PATCH",
-        data: { expense_category: body },
-      }),
-      invalidatesTags: ["ExpenseCategories"],
-    }),
-
-    deleteExpenseCategory: builder.mutation<void, { categoryId: number }>({
-      query: ({ categoryId }) => ({
-        url: `/expense_categories/${categoryId}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["ExpenseCategories"],
-    }),
-
     // Expenses
     getExpenses: builder.query<
       { expenses: Expense[] },
@@ -79,7 +33,7 @@ const financesApi = api.injectEndpoints({
         method: "POST",
         data: { expense: body },
       }),
-      invalidatesTags: ["Expenses"],
+      invalidatesTags: ["FinancesSummary"],
     }),
 
     updateExpense: builder.mutation<
@@ -91,7 +45,7 @@ const financesApi = api.injectEndpoints({
         method: "PATCH",
         data: { expense: body },
       }),
-      invalidatesTags: ["Expenses"],
+      invalidatesTags: ["FinancesSummary"],
     }),
 
     deleteExpense: builder.mutation<void, { expenseId: number }>({
@@ -99,7 +53,7 @@ const financesApi = api.injectEndpoints({
         url: `/expenses/${expenseId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Expenses"],
+      invalidatesTags: ["FinancesSummary"],
     }),
 
     // Analytics
@@ -112,6 +66,7 @@ const financesApi = api.injectEndpoints({
         method: "GET",
         params: { month, year },
       }),
+      providesTags: ["FinancesSummary"],
     }),
 
     getFinancesIncome: builder.query<
@@ -133,10 +88,6 @@ const financesApi = api.injectEndpoints({
 });
 
 export const {
-  useGetExpenseCategoriesQuery,
-  useCreateExpenseCategoryMutation,
-  useUpdateExpenseCategoryMutation,
-  useDeleteExpenseCategoryMutation,
   useGetExpensesQuery,
   useCreateExpenseMutation,
   useUpdateExpenseMutation,

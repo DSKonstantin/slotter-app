@@ -14,7 +14,7 @@ export type RightButtonProp =
   | ((toolbar: ToolbarContextValue | null) => ReactNode);
 
 type ScreenWithToolbarProps = {
-  title: string;
+  title: string | React.ReactNode;
   rightButton?: RightButtonProp;
   children:
     | ReactNode

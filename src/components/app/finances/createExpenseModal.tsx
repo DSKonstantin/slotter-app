@@ -44,9 +44,10 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
         await createExpense({
           userId: auth.userId,
           body: {
+            name: values.name,
             amount: values.amount,
-            description: values.comment || values.name,
             date: values.date,
+            comment: values.comment || undefined,
           },
         }).unwrap();
         reset();

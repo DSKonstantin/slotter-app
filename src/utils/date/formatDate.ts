@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { ru } from "date-fns/locale";
 
 export const formatApiDate = (date: Date) => format(date, "yyyy-MM-dd");
@@ -22,3 +22,16 @@ export const formatDayMonthLong = (date: Date) =>
 
 export const formatDayMonthYearLong = (date: Date) =>
   format(date, "d MMMM yyyy", { locale: ru });
+
+export const formatMessageTime = (isoDate: string): string => {
+  const date = new Date(isoDate);
+  if (isToday(date)) return format(date, "HH:mm");
+  if (isYesterday(date)) return "Вчера";
+  return format(date, "d MMM", { locale: ru });
+};
+
+export const subMonths = (date: Date, months: number): Date => {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() - months);
+  return d;
+};

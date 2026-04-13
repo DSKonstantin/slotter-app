@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
-  useGetExpenseCategoriesQuery,
   useGetFinancesSummaryQuery,
 } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -17,6 +16,7 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { MONTH_NAMES } from "@/src/constants/finances";
 import IncomeCard from "@/src/components/shared/cards/incomeCard";
 import StatCard from "@/src/components/shared/cards/statСard";
 import CreateExpenseModal from "./createExpenseModal";
@@ -28,30 +28,10 @@ const now = new Date();
 const CURRENT_MONTH = now.getMonth() + 1;
 const CURRENT_YEAR = now.getFullYear();
 
-const MONTH_NAMES = [
-  "январь",
-  "февраль",
-  "март",
-  "апрель",
-  "май",
-  "июнь",
-  "июль",
-  "август",
-  "сентябрь",
-  "октябрь",
-  "ноябрь",
-  "декабрь",
-];
 
 const FinancesScreen = () => {
   const auth = useRequiredAuth();
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
-
-  const {
-    data,
-    isLoading,
-    refetch: refetchCategories,
-  } = useGetExpenseCategoriesQuery(auth ? { userId: auth.userId } : skipToken);
 
   const {
     data: summary,
@@ -67,17 +47,9 @@ const FinancesScreen = () => {
 
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchSummary(), refetchCategories()]);
+    await refetchSummary();
     setIsRefreshing(false);
   };
-
-  const expenseByCategory = useMemo(
-    () =>
-      Object.fromEntries(
-        (summary?.expenses ?? []).map((e) => [e.category_name, e.amount_cents]),
-      ),
-    [summary],
-  );
 
   const growth = summary?.growth_percent;
   const growthValue =
@@ -176,9 +148,8 @@ const FinancesScreen = () => {
             <Divider />
 
             <ExpenseCategoriesList
-              categories={data?.expense_categories ?? []}
-              expenseByCategory={expenseByCategory}
-              isLoading={isLoading}
+              expenses={summary?.expenses ?? []}
+              isLoading={isSummaryLoading}
             />
 
             <Divider />
