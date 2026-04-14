@@ -1,50 +1,66 @@
-# Welcome to your Expo app 👋
+# slotter-app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Environments
 
-## Get started
+The app now supports three environment presets:
 
-1. Install dependencies
+- `development`
+- `staging`
+- `production`
 
-   ```bash
-   npm install
-   ```
+Environment files live in:
 
-2. Start the app
+- `.env.development`
+- `.env.staging`
+- `.env.production`
 
-   ```bash
-   npx expo start
-   ```
+For local machine overrides, create one of:
 
-In the output, you'll find options to open the app in a
+- `.env.local`
+- `.env.development.local`
+- `.env.staging.local`
+- `.env.production.local`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Local override files are ignored by git.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Commands
 
-## Get a fresh project
-
-When you're ready, run:
+Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Start by environment:
 
-## Learn more
+```bash
+npm run start:dev
+npm run start:staging
+npm run start:prod
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Run native builds by environment:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run ios:dev
+npm run ios:staging
+npm run ios:prod
 
-## Join the community
+npm run android:dev
+npm run android:staging
+npm run android:prod
+```
 
-Join our community of developers creating universal apps.
+Web:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm run web:dev
+npm run web:staging
+npm run web:prod
+```
+
+## Notes
+
+- `app.config.js` changes app name and native application id/package depending on the selected environment.
+- `development` defaults to `http://localhost:3000/api/v1/`.
+- If you run on a physical device or Android emulator, override development API URL in `.env.development.local`.

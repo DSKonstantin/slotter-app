@@ -12,6 +12,7 @@ type Props = {
 
 const ChatRoomItem = ({ room, onPress }: Props) => {
   const { other_member, last_message, unread_count } = room;
+  if (!other_member) return null;
   const hasUnread = unread_count > 0;
 
   return (

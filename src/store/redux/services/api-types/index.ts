@@ -85,6 +85,11 @@ export type {
   ChatRoom,
   GetChatRoomsParams,
   GetChatRoomsResponse,
+  ChatMessageUser,
+  ChatMessageFileUrl,
+  ChatMessage,
+  GetChatMessagesResponse,
+  CreateChatMessagePayload,
 } from "./chat";
 export type {
   GalleryPhoto,
