@@ -4,9 +4,7 @@ import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import {
-  useGetFinancesSummaryQuery,
-} from "@/src/store/redux/services/api/financesApi";
+import { useGetFinancesSummaryQuery } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
   Card,
@@ -27,7 +25,6 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 const now = new Date();
 const CURRENT_MONTH = now.getMonth() + 1;
 const CURRENT_YEAR = now.getFullYear();
-
 
 const FinancesScreen = () => {
   const auth = useRequiredAuth();

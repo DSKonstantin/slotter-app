@@ -1,7 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Typography } from "@/src/components/ui";
-import { Routers } from "@/src/constants/routers";
 
 type Props = {
   title: string;

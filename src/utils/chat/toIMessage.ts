@@ -10,7 +10,7 @@ export const toIMessage = (msg: ChatMessage): ChatIMessage => ({
     name: msg.user.name,
     avatar: msg.user.avatar_url ?? undefined,
   },
-  image: msg.file_urls?.[0]?.url,
+  image: msg.image_urls?.[0]?.url,
   system: msg.type_of === "system",
   sent: true,
   pending: false,
@@ -18,6 +18,7 @@ export const toIMessage = (msg: ChatMessage): ChatIMessage => ({
   reply_to: msg.reply_to ? toIMessage(msg.reply_to) : null,
   chatRoomId: msg.chat_room_id,
   type_of: msg.type_of,
-  file_urls: msg.file_urls,
+  image_urls: msg.image_urls,
+  appointment: msg.appointment ?? null,
   status: msg.status,
 });

@@ -5,13 +5,8 @@ import { colors } from "@/src/styles/colors";
 
 const ChatScrollBottomButton = () => (
   <View
+    className="w-9 h-9 rounded-full bg-background-surface items-center justify-center"
     style={{
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: colors.background.surface,
-      alignItems: "center",
-      justifyContent: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.12,

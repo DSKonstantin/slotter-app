@@ -65,7 +65,7 @@ const CustomerRow = React.memo(function CustomerRow({
       {isCreating ? (
         <ActivityIndicator size="small" color={colors.primary.blue[500]} />
       ) : item.existingRoom ? (
-        <StSvg name="Chat_alt_2" size={18} color={colors.neutral[400]} />
+        <StSvg name="Chat_alt_2_fill" size={24} color={colors.neutral[900]} />
       ) : null}
     </Pressable>
   );

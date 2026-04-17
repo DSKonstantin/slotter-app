@@ -10,35 +10,17 @@ type Props = {
 };
 
 const ChatReplyFooter = ({ message, onCancel }: Props) => (
-  <View
-    style={{
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.background.surface,
-      borderTopWidth: 1,
-      borderTopColor: colors.neutral[100],
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      gap: 10,
-    }}
-  >
+  <View className="flex-row items-center bg-background-surface border-t border-neutral-100 px-4 py-2 gap-2.5">
     <StSvg name="Chat_plus_fill" size={18} color={colors.primary.blue[500]} />
 
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       <Typography
         weight="semibold"
-        style={{
-          fontSize: 12,
-          color: colors.primary.blue[500],
-          marginBottom: 1,
-        }}
+        className="text-[12px] text-primary-blue-500 mb-px"
       >
         {message.user?.name ?? ""}
       </Typography>
-      <Typography
-        style={{ fontSize: 13, color: colors.neutral[600] }}
-        numberOfLines={1}
-      >
+      <Typography className="text-[13px] text-neutral-600" numberOfLines={1}>
         {message.text || "Изображение"}
       </Typography>
     </View>

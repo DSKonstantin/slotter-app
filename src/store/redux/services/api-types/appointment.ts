@@ -1,5 +1,3 @@
-import type { Service, AdditionalService } from "./service";
-
 export type AppointmentStatus =
   | "pending"
   | "confirmed"

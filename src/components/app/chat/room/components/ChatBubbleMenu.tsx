@@ -58,7 +58,7 @@ const ChatBubbleMenu = ({
           onPress={handleCopy}
         >
           <StSvg name="Copy_alt" size={20} color={colors.neutral[700]} />
-          <Typography className="text-[15px]">Копировать</Typography>
+          <Typography className="text-body">Копировать</Typography>
         </Pressable>
 
         {isOwnMessage && (

@@ -83,13 +83,14 @@ export type {
   ChatRoomMember,
   ChatLastMessage,
   ChatRoom,
+  PaginationMeta,
   GetChatRoomsParams,
   GetChatRoomsResponse,
   ChatMessageUser,
-  ChatMessageFileUrl,
+  ChatMessageImageUrl,
+  ChatMessageWidgetAppointment,
   ChatMessage,
   GetChatMessagesResponse,
-  CreateChatMessagePayload,
 } from "./chat";
 export type {
   GalleryPhoto,

@@ -108,7 +108,7 @@ const ClientDetail = ({ customerId }: Props) => {
 
           <View className="flex-row gap-2 mb-2">
             <HomeCard
-              title="История  посещений"
+              title={"История\nпосещений"}
               startAdornment={
                 <StSvg name="Date_fill" size={26} color={colors.neutral[900]} />
               }
@@ -117,7 +117,7 @@ const ClientDetail = ({ customerId }: Props) => {
               }
             />
             <HomeCard
-              title="Доход  по клиенту"
+              title={"Доход\nпо клиенту"}
               startAdornment={
                 <StSvg
                   name="Wallet_fill"
@@ -130,14 +130,14 @@ const ClientDetail = ({ customerId }: Props) => {
 
           <View className="flex-row gap-2">
             <HomeCard
-              title="Изменить  категорию"
+              title={"Изменить\nкатегорию"}
               startAdornment={
                 <StSvg name="Edit_fill" size={26} color={colors.neutral[900]} />
               }
             />
             <HomeCard
               disabled
-              title="Сделать  подарок"
+              title={"Сделать\nподарок"}
               startAdornment={
                 <StSvg
                   name="gift_alt_fill"

@@ -3,7 +3,6 @@ import { View, Pressable } from "react-native";
 import {
   Button,
   Avatar,
-  Divider,
   StModal,
   StSvg,
   Switch,

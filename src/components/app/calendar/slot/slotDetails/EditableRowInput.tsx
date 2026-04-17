@@ -1,7 +1,6 @@
 import React from "react";
-import { TextInput, TextInputProps, View } from "react-native";
+import { TextInput, TextInputProps } from "react-native";
 import { Controller, FieldError, useFormContext } from "react-hook-form";
-import { twMerge } from "tailwind-merge";
 import { colors } from "@/src/styles/colors";
 
 type EditableRowInputProps = {

@@ -26,7 +26,10 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
   return (
     <ScrollView
       scrollEnabled={false}
-      contentContainerStyle={{ paddingHorizontal: H_PAD, paddingTop: topInset + 12 }}
+      contentContainerStyle={{
+        paddingHorizontal: H_PAD,
+        paddingTop: topInset + 12,
+      }}
     >
       {/* Filter tabs skeleton */}
       <ContentLoader
@@ -58,11 +61,32 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
             <React.Fragment key={i}>
               <Circle cx={AVATAR / 2} cy={cy} r={AVATAR / 2} />
               {/* Name */}
-              <Rect x={textX} y={cy - 18} rx={RADIUS} ry={RADIUS} width={120 + (i % 2) * 30} height={14} />
+              <Rect
+                x={textX}
+                y={cy - 18}
+                rx={RADIUS}
+                ry={RADIUS}
+                width={120 + (i % 2) * 30}
+                height={14}
+              />
               {/* Last message */}
-              <Rect x={textX} y={cy + 2} rx={RADIUS} ry={RADIUS} width={textW - 60} height={12} />
+              <Rect
+                x={textX}
+                y={cy + 2}
+                rx={RADIUS}
+                ry={RADIUS}
+                width={textW - 60}
+                height={12}
+              />
               {/* Time */}
-              <Rect x={w - 36} y={cy - 18} rx={4} ry={4} width={36} height={12} />
+              <Rect
+                x={w - 36}
+                y={cy - 18}
+                rx={4}
+                ry={4}
+                width={36}
+                height={12}
+              />
             </React.Fragment>
           );
         })}

@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
-import { Avatar, Typography } from "@/src/components/ui";
+import { Avatar, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatMessageTime } from "@/src/utils/date/formatDate";
 import type { ChatRoom } from "@/src/store/redux/services/api-types";
@@ -21,7 +21,11 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
       activeOpacity={0.7}
       className="flex-row items-center gap-2 p-4 bg-background-surface rounded-base"
     >
-      <Avatar name={other_member.name} size="md" />
+      <Avatar
+        name={other_member.name}
+        uri={other_member.avatar_url ?? undefined}
+        size="md"
+      />
 
       <View className="flex-1 gap-0.5">
         <View className="flex-row justify-between items-center">
@@ -43,7 +47,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
           )}
         </View>
 
-        <View className="flex-row justify-between items-center">
+        <View className="flex-row justify-between items-center h-[20px]">
           <Typography
             weight="regular"
             className="text-neutral-500 text-caption"
@@ -52,7 +56,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
             {last_message?.body ?? "Нет сообщений"}
           </Typography>
 
-          {hasUnread && (
+          {hasUnread ? (
             <View
               className="min-w-[20px] w-[20px] h-[20px] rounded-full items-center justify-center"
               style={{ backgroundColor: colors.neutral[900] }}
@@ -64,6 +68,17 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
                 {unread_count > 99 ? "99+" : String(unread_count)}
               </Typography>
             </View>
+          ) : (
+            last_message?.is_mine &&
+            (last_message.status === "read" ? (
+              <StSvg
+                name="Done_all_round"
+                size={20}
+                color={colors.primary.blue[500]}
+              />
+            ) : (
+              <StSvg name="Done_round" size={20} color={colors.neutral[400]} />
+            ))
           )}
         </View>
       </View>

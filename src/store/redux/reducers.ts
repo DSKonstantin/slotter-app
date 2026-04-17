@@ -5,7 +5,6 @@ import servicesSlice from "@/src/store/redux/slices/servicesSlice";
 import uiReducer from "@/src/store/redux/slices/uiSlice";
 import slotDraftReducer from "@/src/store/redux/slices/slotDraftSlice";
 import clientsReducer from "@/src/store/redux/slices/clientsSlice";
-import chatReducer from "@/src/store/redux/slices/chatSlice";
 import { api } from "@/src/store/redux/services/api";
 
 const rootReducer = combineReducers({
@@ -15,7 +14,6 @@ const rootReducer = combineReducers({
   services: servicesSlice,
   slotDraft: slotDraftReducer,
   clients: clientsReducer,
-  chat: chatReducer,
   [api.reducerPath]: api.reducer,
 });
 

@@ -3,7 +3,6 @@ import { View } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { format } from "date-fns";
 import { StModal, Button, Typography, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";

@@ -12,7 +12,6 @@ import ErrorScreen from "@/src/components/shared/errorScreen";
 import {
   Avatar,
   Badge,
-  Button,
   Card,
   IconButton,
   StSvg,

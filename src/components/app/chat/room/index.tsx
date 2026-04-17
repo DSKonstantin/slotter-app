@@ -1,140 +1,119 @@
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import { Clipboard, View } from "react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { Alert, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { GiftedChat } from "react-native-gifted-chat";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { shallowEqual } from "react-redux";
+import type { ImagePickerAsset } from "expo-image-picker";
+import type { DocumentPickerAsset } from "expo-document-picker";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
-import { chatActions } from "@/src/store/redux/slices/chatSlice";
-import { useChatRoomChannel } from "@/src/hooks/useChatRoomChannel";
-import { useGetChatRoomQuery } from "@/src/store/redux/services/api/chatRoomsApi";
+import { useAppSelector } from "@/src/store/redux/store";
+import { useGetChatRoomsQuery } from "@/src/store/redux/services/api/chatRoomsApi";
 import {
   useGetChatMessagesQuery,
-  useLazyGetChatMessagesQuery,
   useCreateChatMessageMutation,
   useDeleteChatMessageMutation,
+  type ChatMessagesCache,
 } from "@/src/store/redux/services/api/chatMessagesApi";
-import { toIMessage } from "@/src/utils/chat/toIMessage";
 import type { ChatIMessage } from "@/src/utils/chat/types";
-import type { ChatMessage } from "@/src/store/redux/services/api-types";
+import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import ChatBubble from "./components/ChatBubble";
-import ChatInputToolbar from "./components/ChatInputToolbar";
+import ChatMessageImages from "./components/ChatMessageImages";
+import ChatInputBar from "./components/ChatInputBar";
 import ChatSendButton from "./components/ChatSendButton";
 import ChatRoomMenu from "./components/ChatRoomMenu";
 import ChatBubbleMenu from "./components/ChatBubbleMenu";
-import ChatReplyFooter from "./components/ChatReplyFooter";
 import ChatSystemMessage from "./components/ChatSystemMessage";
 import ChatScrollBottomButton from "./components/ChatScrollBottomButton";
 import ChatEmptyState from "./components/ChatEmptyState";
+import ChatMessage from "./components/ChatMessage";
+import ChatAppointmentWidget from "./components/ChatAppointmentWidget";
+import AttachServiceSheet from "./components/AttachServiceSheet";
+import type { Service } from "@/src/store/redux/services/api-types";
 
 type Props = { roomId: string };
 
-const PAGE_SIZE = 30;
+const MAX_IMAGES = 10;
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const EMPTY_MESSAGES: ChatIMessage[] = [];
 
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
-  useChatRoomChannel(id);
-  const dispatch = useAppDispatch();
-  const currentUser = useAppSelector((state) => state.auth.user);
-  const resourceType = useAppSelector((state) => state.auth.resourceType);
+
+  // ── Local UI State ─────────────────────────────────────────────────────
+  const [page, setPage] = useState(1);
+  const [menuMessage, setMenuMessage] = useState<ChatIMessage | null>(null);
+  const [roomMenuVisible, setRoomMenuVisible] = useState(false);
+  const [attachServiceVisible, setAttachServiceVisible] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
+  const loadingMoreRef = useRef(false);
+
+  // ── Auth ──────────────────────────────────────────────────────────────
+  const { currentUser, resourceType } = useAppSelector(
+    (s) => ({ currentUser: s.auth.user, resourceType: s.auth.resourceType }),
+    shallowEqual,
+  );
   const currentGiftedId =
     resourceType && currentUser ? `${resourceType}_${currentUser.id}` : null;
 
-  // ── Room info ────────────────────────────────────────────────────────────
-  const { data: roomData } = useGetChatRoomQuery({ chatRoomId: id });
-  const otherMember = roomData?.chat_room?.other_member;
-
-  // ── Slice state ──────────────────────────────────────────────────────────
-  const messages = useAppSelector((s) => s.chat.rooms[id]?.messages) ?? [];
-  const hasMore = useAppSelector((s) => s.chat.rooms[id]?.hasMore) ?? true;
-  const isTyping = useAppSelector((s) => s.chat.typing[id]) ?? false;
-  const replyingTo = useAppSelector((s) => s.chat.replyingTo[id]) as
-    | ChatIMessage
-    | null
-    | undefined;
-  const nextPage = (useAppSelector((s) => s.chat.rooms[id]?.page) ?? 1) + 1;
-
-  // ── Initial load ─────────────────────────────────────────────────────────
-  const { data: initialData } = useGetChatMessagesQuery(
-    { chatRoomId: id, page: 1 },
-    { skip: !id },
+  const userName = useMemo(
+    () =>
+      currentUser
+        ? [currentUser.first_name, currentUser.last_name]
+            .filter(Boolean)
+            .join(" ") || String(currentUser.id)
+        : "",
+    [currentUser],
   );
 
-  useEffect(() => {
-    if (!initialData) return;
-    dispatch(chatActions.initRoom({ roomId: id }));
-    dispatch(
-      chatActions.setMessages({
-        roomId: id,
-        messages: initialData.chat_messages.map(toIMessage),
-        page: 1,
-        hasMore: initialData.chat_messages.length === PAGE_SIZE,
-      }),
-    );
-  }, [initialData, id, dispatch]);
+  const makeUser = useCallback(
+    () => ({
+      _id: currentGiftedId ?? currentUser?.id ?? 0,
+      name: userName,
+      avatar: currentUser?.avatar_url ?? undefined,
+    }),
+    [currentGiftedId, currentUser, userName],
+  );
 
-  // ── Pagination ───────────────────────────────────────────────────────────
-  const [fetchMessages] = useLazyGetChatMessagesQuery();
-  const [loadingMore, setLoadingMore] = useState(false);
+  // ── Queries ───────────────────────────────────────────────────────────
+  const { otherMember } = useGetChatRoomsQuery(undefined, {
+    selectFromResult: ({ data }) => ({
+      otherMember:
+        data?.chat_rooms?.find((r) => r.id === id)?.other_member ?? null,
+    }),
+  });
 
-  const handleLoadEarlier = useCallback(async () => {
-    if (!hasMore || loadingMore) return;
-    setLoadingMore(true);
-    try {
-      const result = await fetchMessages({
-        chatRoomId: id,
-        page: nextPage,
-      }).unwrap();
-      dispatch(
-        chatActions.setMessages({
-          roomId: id,
-          messages: result.chat_messages.map(toIMessage),
-          page: nextPage,
-          hasMore: result.chat_messages.length === PAGE_SIZE,
-        }),
-      );
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [hasMore, loadingMore, fetchMessages, id, nextPage, dispatch]);
+  const { data: chatData, isFetching } = useGetChatMessagesQuery(
+    { chatRoomId: id, page },
+    { skip: !id, refetchOnMountOrArgChange: true },
+  );
 
-  // ── Send ─────────────────────────────────────────────────────────────────
+  const messages = chatData?.messages ?? EMPTY_MESSAGES;
+  const hasMore = chatData?.hasMore ?? false;
+  const isTyping =
+    (chatData as (ChatMessagesCache & { _typing?: boolean }) | undefined)
+      ?._typing ?? false;
+
+  // ── Mutations ─────────────────────────────────────────────────────────
   const [createMessage] = useCreateChatMessageMutation();
+  const [deleteChatMessage] = useDeleteChatMessageMutation();
 
+  // ── Pagination ────────────────────────────────────────────────────────
+  const handleLoadEarlier = useCallback(() => {
+    if (!hasMore || isFetching || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setPage((p) => p + 1);
+  }, [hasMore, isFetching]);
+
+  if (!isFetching) loadingMoreRef.current = false;
+
+  // ── Send handlers ─────────────────────────────────────────────────────
   const onSend = useCallback(
-    async (newMessages: ChatIMessage[] = []) => {
+    (newMessages: ChatIMessage[] = []) => {
       const msg = newMessages[0];
       if (!msg || !currentUser) return;
-
-      const tempId = `temp_${Date.now()}`;
-      const optimistic: ChatIMessage = {
-        ...msg,
-        _id: tempId,
-        createdAt: Date.now(),
-        pending: true,
-        sent: false,
-        reply_to: replyingTo ?? null,
-        user: {
-          _id: currentGiftedId ?? currentUser.id,
-          name:
-            [currentUser.first_name, currentUser.last_name]
-              .filter(Boolean)
-              .join(" ") || String(currentUser.id),
-          avatar: currentUser.avatar_url ?? undefined,
-        },
-      };
-
-      dispatch(chatActions.pushMessage({ roomId: id, message: optimistic }));
-
-      // Clear reply state before sending
-      if (replyingTo) {
-        dispatch(chatActions.setReplyingTo({ roomId: id, message: null }));
-      }
 
       const formData = new FormData();
       if (msg.text) formData.append("body", msg.text.trim());
@@ -142,79 +121,159 @@ export default function ChatRoom({ roomId }: Props) {
         formData.append("replied_to_id", String(replyingTo._id));
       }
 
-      try {
-        const { chat_message } = await createMessage({
-          chatRoomId: id,
-          data: formData,
-        }).unwrap();
-        dispatch(
-          chatActions.updateMessage({
-            roomId: id,
-            tempId,
-            message: toIMessage(chat_message),
-          }),
-        );
-      } catch {
-        dispatch(chatActions.removeMessage({ roomId: id, messageId: tempId }));
-      }
+      createMessage({
+        chatRoomId: id,
+        data: formData,
+        optimistic: {
+          ...msg,
+          _id: `temp_${Date.now()}`,
+          createdAt: Date.now(),
+          pending: true,
+          sent: false,
+          reply_to: replyingTo ?? null,
+          user: makeUser(),
+        },
+      });
+
+      if (replyingTo) setReplyingTo(null);
     },
-    [id, currentUser, currentGiftedId, createMessage, dispatch, replyingTo],
+    [id, currentUser, createMessage, replyingTo, makeUser],
   );
 
-  // ── Delete ───────────────────────────────────────────────────────────────
-  const [deleteChatMessage] = useDeleteChatMessageMutation();
+  const handleAttach = useCallback(
+    (assets: PickedAssets) => {
+      if (!currentUser || !assets.length) return;
+
+      if (assets.length > MAX_IMAGES) {
+        Alert.alert(
+          "Ошибка",
+          `Можно прикрепить не больше ${MAX_IMAGES} изображений`,
+        );
+        return;
+      }
+
+      const oversized = assets.some((a) => {
+        const asset = a as ImagePickerAsset & DocumentPickerAsset;
+        const size = asset.fileSize ?? asset.size;
+        return size !== undefined && size > MAX_IMAGE_SIZE;
+      });
+
+      if (oversized) {
+        Alert.alert(
+          "Ошибка",
+          "Размер каждого изображения не должен превышать 10 МБ",
+        );
+        return;
+      }
+
+      const firstAsset = assets[0] as ImagePickerAsset & DocumentPickerAsset;
+      const firstMime = firstAsset.mimeType ?? "application/octet-stream";
+
+      const formData = new FormData();
+      for (const a of assets) {
+        const asset = a as ImagePickerAsset & DocumentPickerAsset;
+        formData.append("images[]", {
+          uri: asset.uri,
+          name: asset.fileName ?? asset.name ?? "image",
+          type: asset.mimeType ?? "image/jpeg",
+        } as unknown as Blob);
+      }
+
+      createMessage({
+        chatRoomId: id,
+        data: formData,
+        optimistic: {
+          _id: `temp_${Date.now()}`,
+          text: "",
+          createdAt: Date.now(),
+          pending: true,
+          sent: false,
+          image: firstMime.startsWith("image/") ? firstAsset.uri : undefined,
+          reply_to: null,
+          user: makeUser(),
+        },
+      });
+    },
+    [id, currentUser, createMessage, makeUser],
+  );
+
+  const handleAttachWidget = useCallback(
+    (service: Service) => {
+      if (!currentUser) return;
+
+      // TODO: working_day_id и start_time — моки, заменить на реальный выбор
+      createMessage({
+        chatRoomId: id,
+        data: {
+          service_id: service.id,
+          working_day_id: 1,
+          start_time: "10:00",
+        },
+        optimistic: {
+          _id: `temp_${Date.now()}`,
+          text: "",
+          createdAt: Date.now(),
+          pending: true,
+          sent: false,
+          reply_to: null,
+          appointment: {
+            id: -1,
+            type: "Appointment",
+            status: "offered",
+            start_time: "10:00",
+            end_time: "",
+            date: "",
+            customer_confirmed_at: null,
+          },
+          user: makeUser(),
+        },
+      });
+    },
+    [id, currentUser, createMessage, makeUser],
+  );
 
   const handleDelete = useCallback(
-    async (message: ChatIMessage) => {
-      if (typeof message._id === "string") return; // temp message
-      dispatch(
-        chatActions.removeMessage({ roomId: id, messageId: message._id }),
-      );
-      try {
-        await deleteChatMessage({
-          chatRoomId: id,
-          messageId: message._id as number,
-        }).unwrap();
-      } catch {
-        // Re-add on failure
-        dispatch(chatActions.pushMessage({ roomId: id, message }));
-      }
+    (message: ChatIMessage) => {
+      if (typeof message._id === "string") return;
+      deleteChatMessage({
+        chatRoomId: id,
+        messageId: message._id as number,
+      });
     },
-    [id, deleteChatMessage, dispatch],
+    [id, deleteChatMessage],
   );
 
-  // ── Bubble menu (long-press) ─────────────────────────────────────────────
-  const [menuMessage, setMenuMessage] = useState<ChatIMessage | null>(null);
+  // ── Message actions ───────────────────────────────────────────────────
+  const handleReply = useCallback((message: ChatIMessage) => {
+    setReplyingTo(message);
+  }, []);
+
+  const handleCopy = useCallback((message: ChatIMessage) => {
+    if (message.text) void Clipboard.setStringAsync(message.text);
+  }, []);
 
   const onLongPressMessage = useCallback(
-    (_context: unknown, message: ChatIMessage) => {
-      setMenuMessage(message);
-    },
+    (_context: unknown, message: ChatIMessage) => setMenuMessage(message),
     [],
   );
 
-  const handleReply = useCallback(
-    (message: ChatIMessage) => {
-      dispatch(chatActions.setReplyingTo({ roomId: id, message }));
-    },
-    [id, dispatch],
+  // ── Render ────────────────────────────────────────────────────────────
+  const titleNode = useMemo(
+    () =>
+      otherMember ? (
+        <View className="flex-row items-center gap-2">
+          <Avatar
+            name={otherMember.name}
+            uri={otherMember.avatar_url ?? undefined}
+            size="xs"
+          />
+          <Typography weight="semibold" className="text-[17px] leading-[22px]">
+            {otherMember.name}
+          </Typography>
+        </View>
+      ) : undefined,
+    [otherMember],
   );
-
-  const handleCopy = useCallback((message: ChatIMessage) => {
-    if (message.text) Clipboard.setString(message.text);
-  }, []);
-
-  // ── UI ───────────────────────────────────────────────────────────────────
-  const [roomMenuVisible, setRoomMenuVisible] = useState(false);
-
-  const titleNode = otherMember ? (
-    <View className="flex-row items-center gap-2">
-      <Avatar name={otherMember.name} size="xs" />
-      <Typography weight="semibold" className="text-[17px] leading-[22px]">
-        {otherMember.name}
-      </Typography>
-    </View>
-  ) : undefined;
 
   return (
     <>
@@ -240,34 +299,49 @@ export default function ChatRoom({ roomId }: Props) {
               onSend={onSend}
               user={{ _id: currentGiftedId ?? 0 }}
               locale="ru"
+              timeFormat="HH:mm"
+              dateFormatCalendar={{
+                sameDay: "[Сегодня]",
+                lastDay: "[Вчера]",
+                lastWeek: "D MMMM",
+                sameElse: "D MMMM YYYY",
+              }}
               isSendButtonAlwaysVisible
               isTyping={isTyping}
               textInputProps={{ placeholder: "Сообщение..." }}
               onLongPressMessage={onLongPressMessage}
               loadEarlierMessagesProps={{
                 isAvailable: hasMore,
-                isLoading: loadingMore,
+                isLoading: isFetching && page > 1,
                 onPress: handleLoadEarlier,
+                label: "Загрузить ранее",
               }}
               scrollToBottomComponent={() => <ChatScrollBottomButton />}
-              renderBubble={(props) => <ChatBubble {...props} />}
-              renderInputToolbar={(props) => (
-                <View>
-                  {replyingTo && (
-                    <ChatReplyFooter
-                      message={replyingTo}
-                      onCancel={() =>
-                        dispatch(
-                          chatActions.setReplyingTo({
-                            roomId: id,
-                            message: null,
-                          }),
-                        )
-                      }
+              renderAvatar={null}
+              renderMessage={(props) => <ChatMessage {...props} />}
+              renderBubble={(props) => {
+                const msg = props.currentMessage as ChatIMessage | undefined;
+                if (msg?.appointment) {
+                  return (
+                    <ChatAppointmentWidget
+                      appointment={msg.appointment}
+                      isOwnMessage={msg.user._id === (currentGiftedId ?? 0)}
+                      onLongPress={() => setMenuMessage(msg)}
                     />
-                  )}
-                  <ChatInputToolbar {...props} />
-                </View>
+                  );
+                }
+                return <ChatBubble {...props} />;
+              }}
+              renderMessageImage={(props) => <ChatMessageImages {...props} />}
+              renderInputToolbar={(props) => (
+                <ChatInputBar
+                  {...props}
+                  replyingTo={replyingTo}
+                  onCancelReply={() => setReplyingTo(null)}
+                  onAttach={handleAttach}
+                  isUser={resourceType === "user"}
+                  onAttachService={() => setAttachServiceVisible(true)}
+                />
               )}
               renderSend={(props) => <ChatSendButton {...props} />}
               renderSystemMessage={(props) => <ChatSystemMessage {...props} />}
@@ -276,7 +350,10 @@ export default function ChatRoom({ roomId }: Props) {
                 backgroundColor: colors.background.DEFAULT,
               }}
               listProps={{
-                contentContainerStyle: { paddingBottom: topInset },
+                contentContainerStyle: {
+                  paddingBottom: topInset,
+                  flexGrow: 1,
+                },
                 onEndReached: handleLoadEarlier,
                 onEndReachedThreshold: 0.2,
               }}
@@ -290,9 +367,14 @@ export default function ChatRoom({ roomId }: Props) {
           visible={roomMenuVisible}
           onClose={() => setRoomMenuVisible(false)}
           name={otherMember.name}
-          phone={otherMember.phone}
         />
       )}
+
+      <AttachServiceSheet
+        visible={attachServiceVisible}
+        onClose={() => setAttachServiceVisible(false)}
+        onSelect={handleAttachWidget}
+      />
 
       <ChatBubbleMenu
         visible={!!menuMessage}

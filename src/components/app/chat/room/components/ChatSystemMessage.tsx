@@ -2,35 +2,17 @@ import React from "react";
 import { View } from "react-native";
 import { SystemMessageProps } from "react-native-gifted-chat";
 import { Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
 import type { ChatIMessage } from "@/src/utils/chat/types";
 
-const ChatSystemMessage = ({ currentMessage }: SystemMessageProps<ChatIMessage>) => {
+const ChatSystemMessage = ({
+  currentMessage,
+}: SystemMessageProps<ChatIMessage>) => {
   if (!currentMessage?.text) return null;
 
   return (
-    <View
-      style={{
-        alignItems: "center",
-        marginVertical: 8,
-        paddingHorizontal: 24,
-      }}
-    >
-      <View
-        style={{
-          backgroundColor: colors.neutral[200],
-          borderRadius: 12,
-          paddingHorizontal: 12,
-          paddingVertical: 5,
-        }}
-      >
-        <Typography
-          style={{
-            fontSize: 12,
-            color: colors.neutral[600],
-            textAlign: "center",
-          }}
-        >
+    <View className="items-center my-2 px-6">
+      <View className="bg-neutral-200 rounded-xl px-3 py-[5px]">
+        <Typography className="text-xs text-neutral-600 text-center">
           {currentMessage.text}
         </Typography>
       </View>

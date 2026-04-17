@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -8,19 +7,12 @@ import { Badge, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { useGetChatRoomsQuery } from "@/src/store/redux/services/api/chatRoomsApi";
-import type {
-  ChatRoom,
-  ChatRoomTag,
-} from "@/src/store/redux/services/api-types";
+import type { ChatRoomTag } from "@/src/store/redux/services/api-types";
 import ChatRoomItem from "./ChatRoomItem";
 import ChatRoomsSkeleton from "./ChatRoomsSkeleton";
 import { NewChatSheet } from "./NewChatSheet";
 
-export default function ChatRoomsScreen() {
-  return <ChatRoomsList />;
-}
-
-// ─── Inner list ──────────────────────────────────────────────────────────────
+const RoomSeparator = () => <View className="h-2" />;
 
 const ALL_TAB: ChatRoomTag = {
   id: 0,
@@ -28,43 +20,48 @@ const ALL_TAB: ChatRoomTag = {
   color: colors.primary.blue[500],
 };
 
-function ChatRoomsList() {
+export default function ChatRoomsScreen() {
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [newChatVisible, setNewChatVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data, isLoading, isFetching, refetch } =
-    useGetChatRoomsQuery(undefined);
+  const { data, isLoading, refetch } = useGetChatRoomsQuery(undefined);
 
-  const rooms = (data?.chat_rooms ?? []).filter((r) => r.other_member != null);
+  const rooms = useMemo(
+    () => (data?.chat_rooms ?? []).filter((r) => r.other_member != null),
+    [data],
+  );
 
-  const filteredRooms =
-    selectedTagId === null
-      ? rooms
-      : rooms.filter((r) => r.other_member?.tag?.id === selectedTagId);
-
-  // Collect unique tags from loaded rooms
   const tags = useMemo<ChatRoomTag[]>(() => {
     const seen = new Set<number>();
-    const result: ChatRoomTag[] = [];
-    rooms.forEach((r) => {
+    return rooms.reduce<ChatRoomTag[]>((acc, r) => {
       const tag = r.other_member?.tag;
       if (tag && !seen.has(tag.id)) {
         seen.add(tag.id);
-        result.push(tag);
+        acc.push(tag);
       }
-    });
-    return result;
+      return acc;
+    }, []);
   }, [rooms]);
 
-  const tabs = [ALL_TAB, ...tags];
+  const filteredRooms = useMemo(
+    () =>
+      selectedTagId === null
+        ? rooms
+        : rooms.filter((r) => r.other_member?.tag?.id === selectedTagId),
+    [rooms, selectedTagId],
+  );
 
-  const onRoomPress = useCallback((room: ChatRoom) => {
-    router.push(Routers.app.chat.room(room.id));
-  }, []);
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
 
-  if (isLoading) {
-    return <ChatRoomsSkeleton />;
-  }
+  if (isLoading) return <ChatRoomsSkeleton />;
 
   return (
     <>
@@ -80,9 +77,8 @@ function ChatRoomsList() {
         }
       >
         {({ topInset, bottomInset }) => (
-          <SafeAreaView className="flex-1 px-screen" edges={["left", "right"]}>
-            {/* Filter tabs */}
-            <View className="mb-5">
+          <View className="flex-1">
+            <View className="mb-2 px-screen">
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -92,7 +88,7 @@ function ChatRoomsList() {
                   gap: 8,
                 }}
               >
-                {tabs.map((tag) => {
+                {[ALL_TAB, ...tags].map((tag) => {
                   const isActive =
                     tag.id === 0
                       ? selectedTagId === null
@@ -120,13 +116,10 @@ function ChatRoomsList() {
               </ScrollView>
             </View>
 
-            {/* Chat list */}
             {filteredRooms.length === 0 ? (
               <View
                 className="flex-1 items-center justify-center gap-2"
-                style={{
-                  paddingBottom: bottomInset + 96,
-                }}
+                style={{ paddingBottom: bottomInset + 96 }}
               >
                 <Typography
                   weight="semibold"
@@ -143,19 +136,25 @@ function ChatRoomsList() {
                 data={filteredRooms}
                 keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => (
-                  <ChatRoomItem room={item} onPress={onRoomPress} />
+                  <ChatRoomItem
+                    room={item}
+                    onPress={() => router.push(Routers.app.chat.room(item.id))}
+                  />
                 )}
-                contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
+                contentContainerStyle={{
+                  paddingBottom: bottomInset + 16,
+                  paddingHorizontal: 20,
+                }}
                 refreshControl={
                   <RefreshControl
-                    refreshing={isFetching && !isLoading}
-                    onRefresh={refetch}
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
                   />
                 }
-                ItemSeparatorComponent={() => <View className="h-2" />}
+                ItemSeparatorComponent={RoomSeparator}
               />
             )}
-          </SafeAreaView>
+          </View>
         )}
       </ScreenWithToolbar>
 

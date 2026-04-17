@@ -1,5 +1,5 @@
 import React from "react";
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
 import { colors } from "@/src/styles/colors";
 

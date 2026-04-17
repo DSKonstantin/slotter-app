@@ -7,7 +7,7 @@ const m = (
   id: number,
   text: string,
   minutesAgo: number,
-  user: typeof MOCK_USER | typeof MOCK_OTHER
+  user: typeof MOCK_USER | typeof MOCK_OTHER,
 ): IMessage => ({
   _id: id,
   text,

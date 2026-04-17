@@ -102,16 +102,16 @@ export function Badge({
 
 const sizes = {
   container: {
-    sm: "h-[22px] px-2.5",
-    md: "h-8 px-3",
+    sm: "h-[26px] px-2.5",
+    md: "h-[36px] px-3",
   },
   text: {
-    sm: "text-[11px] leading-[14px]",
-    md: "text-[13px] leading-[18px]",
+    sm: "text-caption leading-[18px]",
+    md: "text-body leading-[24px]",
   },
   icon: {
-    sm: "h-3.5 w-3.5",
-    md: "h-4 w-4",
+    sm: "h-[22px]",
+    md: "h-[36px]",
   },
 };
 
@@ -131,7 +131,7 @@ const variants: Record<BadgeVariant, { container: string; text: string }> = {
     text: "text-primary-green-800",
   },
   warning: {
-    container: "bg-accent-yellow-100",
+    container: "bg-accent-yellow-500",
     text: "text-accent-yellow-700",
   },
   error: { container: "bg-accent-red-100", text: "text-accent-red-500" },

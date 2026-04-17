@@ -22,7 +22,6 @@ import {
   PersonalInformationSchema,
   type PersonalInformationFormValues,
 } from "@/src/validation/schemas/onboardingPersonalInformation.schema";
-import type { UploadFile } from "@/src/types/upload";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";

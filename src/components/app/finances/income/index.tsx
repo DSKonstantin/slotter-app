@@ -10,7 +10,10 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
 import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
-import { INCOME_GROUP_OPTIONS, MONTH_NAMES_SHORT } from "@/src/constants/finances";
+import {
+  INCOME_GROUP_OPTIONS,
+  MONTH_NAMES_SHORT,
+} from "@/src/constants/finances";
 import FinancesIncomeSkeleton from "./FinancesIncomeSkeleton";
 import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
 import IncomeBreakdownServices from "./IncomeBreakdownServices";

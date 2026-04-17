@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { Routers } from "@/src/constants/routers";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
@@ -28,7 +27,11 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "Bell_fill",
     route: Routers.app.menu.notifications,
   },
-  { label: "Финансы", icon: "Wallet_fill", route: Routers.app.menu.finances.root },
+  {
+    label: "Финансы",
+    icon: "Wallet_fill",
+    route: Routers.app.menu.finances.root,
+  },
   {
     label: "Услуги",
     icon: "Desk_alt_fill",

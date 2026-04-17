@@ -5,19 +5,15 @@ import type { DocumentPickerAsset } from "expo-document-picker";
 import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 
-type PickedAssets = ImagePickerAsset[] | DocumentPickerAsset[];
+export type PickedAssets = ImagePickerAsset[] | DocumentPickerAsset[];
 
-type ImagePickerTriggerProps = {
+type Props = {
   children: React.ReactNode;
-
   title?: string;
   message?: string;
-
   options?: ImagePickerOptions;
   includeFiles?: boolean;
-
   disabled?: boolean;
-
   onPick: (assets: PickedAssets) => void;
 };
 
@@ -29,51 +25,52 @@ const ImagePickerTrigger = ({
   includeFiles,
   disabled,
   onPick,
-}: ImagePickerTriggerProps) => {
+}: Props) => {
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
   const [visible, setVisible] = useState(false);
 
-  const close = useCallback(() => setVisible(false), []);
-
   const open = useCallback(() => {
-    if (disabled) return;
-    setVisible(true);
+    if (!disabled) setVisible(true);
   }, [disabled]);
 
-  const handlePick = useCallback(
-    async (
-      pick: (
-        opts?: ImagePickerOptions,
-      ) => Promise<ImagePickerAsset[] | DocumentPickerAsset[] | null>,
-    ) => {
-      try {
-        const assets = await pick(options);
-        if (assets?.length) {
-          onPick(assets);
-        }
-      } finally {
-        close();
-      }
-    },
-    [close, onPick, options],
-  );
+  const close = useCallback(() => setVisible(false), []);
 
-  const handleCamera = useCallback(
-    () => handlePick(pickFromCamera),
-    [handlePick, pickFromCamera],
-  );
-  const handleGallery = useCallback(
-    () => handlePick(pickFromGallery),
-    [handlePick, pickFromGallery],
-  );
-  const handleFiles = useCallback(
-    () => handlePick(pickFromFiles),
-    [handlePick, pickFromFiles],
-  );
+  const handleCamera = useCallback(async () => {
+    try {
+      const assets = await pickFromCamera(options);
+      if (assets?.length) onPick(assets);
+    } catch (e) {
+      console.warn("Camera pick failed", e);
+    } finally {
+      close();
+    }
+  }, [pickFromCamera, options, onPick, close]);
+
+  const handleGallery = useCallback(async () => {
+    try {
+      const assets = await pickFromGallery(options);
+      if (assets?.length) onPick(assets);
+    } catch (e) {
+      console.warn("Gallery pick failed", e);
+    } finally {
+      close();
+    }
+  }, [pickFromGallery, options, onPick, close]);
+
+  const handleFiles = useCallback(async () => {
+    try {
+      const assets = await pickFromFiles(options);
+      if (assets?.length) onPick(assets);
+    } catch (e) {
+      console.warn("File pick failed", e);
+    } finally {
+      close();
+    }
+  }, [pickFromFiles, options, onPick, close]);
 
   return (
     <>
-      <Pressable disabled={disabled} onPress={open}>
+      <Pressable onPress={open} disabled={disabled}>
         {children}
       </Pressable>
 

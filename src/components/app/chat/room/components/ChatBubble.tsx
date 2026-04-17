@@ -2,27 +2,43 @@ import React from "react";
 import { View } from "react-native";
 import { Bubble, BubbleProps } from "react-native-gifted-chat";
 import { colors } from "@/src/styles/colors";
-import { Typography } from "@/src/components/ui";
+import { StSvg, Typography } from "@/src/components/ui";
 import type { ChatIMessage } from "@/src/utils/chat/types";
-
 const ChatBubble = (props: BubbleProps<ChatIMessage>) => {
   const { currentMessage, position } = props;
   const isRight = position === "right";
+  const isRead = isRight && currentMessage?.status === "read";
 
   return (
     <Bubble
       {...props}
       wrapperStyle={{
         right: { backgroundColor: colors.primary.blue[500] },
-        left: { backgroundColor: colors.neutral[100] },
+        left: { backgroundColor: colors.neutral[0] },
       }}
       textStyle={{
-        right: { color: colors.neutral[0] },
-        left: { color: colors.neutral[900] },
+        right: {
+          color: colors.neutral[0],
+          fontSize: 16,
+          fontFamily: "Inter_400Regular",
+        },
+        left: {
+          color: colors.neutral[900],
+          fontSize: 16,
+          fontFamily: "Inter_400Regular",
+        },
       }}
-      tickStyle={{ color: isRight ? colors.neutral[0] : colors.neutral[500] }}
-      // Показываем две галочки если статус read, одну если unread
-      received={currentMessage?.status === "read"}
+      renderTicks={() =>
+        isRight ? (
+          <View style={{ paddingLeft: 4 }}>
+            <StSvg
+              name={isRead ? "Done_all_round" : "Done_round"}
+              size={14}
+              color={colors.neutral[0]}
+            />
+          </View>
+        ) : null
+      }
       renderCustomView={() => {
         const reply = currentMessage?.reply_to;
         if (!reply) return null;

@@ -34,8 +34,16 @@ export type GetChatRoomsParams = {
   tag_id?: number;
 };
 
+export interface PaginationMeta {
+  current_page: number;
+  per_page: number;
+  total_pages: number;
+  total_count: number;
+}
+
 export interface GetChatRoomsResponse {
   chat_rooms: ChatRoom[];
+  pagination: PaginationMeta;
   total_unread_count: number;
 }
 
@@ -48,11 +56,49 @@ export interface ChatMessageUser {
   avatar_url: string | null;
 }
 
-export interface ChatMessageFileUrl {
+export interface ChatMessageImageUrl {
   id: string;
   url: string;
   content_type: string;
   filename: string;
+}
+
+export interface ChatWidgetAppointmentService {
+  id: number;
+  name: string;
+  duration: number;
+  price_cents: number;
+}
+
+export interface ChatMessageWidgetAppointment {
+  id: number;
+  type: "Appointment";
+  status: string;
+  start_time: string;
+  end_time: string;
+  date: string;
+  duration: number;
+  price_cents: number;
+  price_currency: string;
+  payment_method: string;
+  comment: string | null;
+  cancel_reason: string | null;
+  send_notification: boolean;
+  public_token: string;
+  customer_confirmed_at: string | null;
+  customer: {
+    id: number;
+    name: string;
+    avatar_url: string | null;
+  } | null;
+  services: ChatWidgetAppointmentService[];
+  additional_services: ChatWidgetAppointmentService[];
+  user?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    avatar_url: string | null;
+  };
 }
 
 export interface ChatMessage {
@@ -65,7 +111,8 @@ export interface ChatMessage {
   chat_room_id: number;
   replied_to_id: number | null;
   reply_to: ChatMessage | null;
-  file_urls: ChatMessageFileUrl[];
+  image_urls: ChatMessageImageUrl[];
+  appointment?: ChatMessageWidgetAppointment | null;
   created_at: string;
   updated_at: string;
 }
@@ -74,9 +121,4 @@ export interface GetChatMessagesResponse {
   chat_messages: ChatMessage[];
   total_count: number;
   unread_messages_count: number;
-}
-
-export interface CreateChatMessagePayload {
-  body?: string;
-  replied_to_id?: number;
 }

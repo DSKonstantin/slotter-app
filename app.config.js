@@ -38,7 +38,7 @@ module.exports = {
       appVariant: variant,
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || "",
       cableUrl: process.env.EXPO_PUBLIC_CABLE_URL || "",
-eas: {
+      eas: {
         ...((baseConfig.extra && baseConfig.extra.eas) || {}),
         projectId:
           process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||
