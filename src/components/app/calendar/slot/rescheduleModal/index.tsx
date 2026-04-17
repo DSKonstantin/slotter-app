@@ -10,10 +10,7 @@ import {
   useRescheduleAppointmentMutation,
   useGetAvailableSlotsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
-import {
-  RescheduleSchema,
-  type RescheduleFormValues,
-} from "@/src/validation/schemas/slotReschedule.schema";
+import { RescheduleSchema } from "@/src/validation/schemas/slotReschedule.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";

@@ -33,7 +33,10 @@ const FinancesIncomeSkeleton = ({ topInset = 0 }: Props) => {
     <ScrollView
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: H_PAD, paddingTop: topInset + GAP }}
+      contentContainerStyle={{
+        paddingHorizontal: H_PAD,
+        paddingTop: topInset + GAP,
+      }}
     >
       <ContentLoader
         speed={SPEED}
@@ -46,10 +49,24 @@ const FinancesIncomeSkeleton = ({ topInset = 0 }: Props) => {
         <Rect x={0} y={y0} rx={RADIUS} ry={RADIUS} width={w} height={chartH} />
 
         {/* Итого card */}
-        <Rect x={0} y={y1} rx={RADIUS} ry={RADIUS} width={w} height={totalCardH} />
+        <Rect
+          x={0}
+          y={y1}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w}
+          height={totalCardH}
+        />
 
         {/* SegmentedControl */}
-        <Rect x={0} y={y2} rx={RADIUS} ry={RADIUS} width={w} height={segmentH} />
+        <Rect
+          x={0}
+          y={y2}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w}
+          height={segmentH}
+        />
 
         {/* Breakdown items */}
         {Array.from({ length: itemCount }).map((_, i) => (

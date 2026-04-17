@@ -6,7 +6,7 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
 
-import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
 import ErrorScreen from "@/src/components/shared/errorScreen";
 
 import { colors } from "@/src/styles/colors";

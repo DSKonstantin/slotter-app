@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -147,12 +147,5 @@ const ServiceFormBody = ({
     </KeyboardAwareScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  textarea: {
-    paddingTop: 10,
-    minHeight: 110,
-  },
-});
 
 export default ServiceFormBody;

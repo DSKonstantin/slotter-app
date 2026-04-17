@@ -27,6 +27,7 @@ import ContactPickerModal, {
   type PickedContact,
 } from "@/src/components/app/clients/clientCreate/contactPickerModal";
 import CreateTagModal from "@/src/components/app/clients/clientCreate/createTagModal";
+import { unMask } from "react-native-mask-text";
 
 type ClientCreateProps = {
   onCreated?: (customer: Customer) => void;
@@ -57,7 +58,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
       try {
         const { customer } = await createCustomer({
           name: values.name.trim(),
-          phone: values.phone?.trim() || undefined,
+          phone: `+${unMask(values?.phone ?? "")}`,
           note: values.comment?.trim() || undefined,
           customer_tag_id: values.customer_tag?.id ?? undefined,
         }).unwrap();
@@ -68,7 +69,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
         toast.error(getApiErrorMessage(error, "Не удалось создать клиента"));
       }
     },
-    [createCustomer, reset],
+    [createCustomer, onCreated, reset],
   );
 
   const handleContactsPress = useCallback(async () => {

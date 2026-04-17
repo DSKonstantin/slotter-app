@@ -3,35 +3,30 @@ import { ActivityIndicator, View } from "react-native";
 import map from "lodash/map";
 import { Divider, Typography } from "@/src/components/ui";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import type { ExpenseCategory } from "@/src/store/redux/services/api-types";
+import type { SummaryExpense } from "@/src/store/redux/services/api-types";
 
 type Props = {
-  categories: ExpenseCategory[];
-  expenseByCategory: Record<string, number>;
+  expenses: SummaryExpense[];
   isLoading: boolean;
 };
 
-const ExpenseCategoriesList = ({
-  categories,
-  expenseByCategory,
-  isLoading,
-}: Props) => {
+const ExpenseCategoriesList = ({ expenses, isLoading }: Props) => {
   if (isLoading) {
     return <ActivityIndicator />;
   }
 
   return (
     <>
-      {map(categories, (category, index) => (
-        <View key={category.id}>
+      {map(expenses, (expense, index) => (
+        <View key={expense.id}>
           {index > 0 && <Divider className="mb-4" />}
           <View className="flex-row justify-between items-center">
             <Typography className="text-body text-neutral-900">
-              {category.name}
+              {expense.name}
             </Typography>
 
             <Typography weight="regular" className="text-body">
-              {formatRublesFromCents(expenseByCategory[category.name] ?? 0)}
+              {formatRublesFromCents(expense.amount_cents)}
             </Typography>
           </View>
         </View>

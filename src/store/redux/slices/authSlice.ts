@@ -7,12 +7,14 @@ type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 interface AuthState {
   token: string | null;
   user: User | null;
+  resourceType: "user" | "customer" | null;
   status: AuthStatus;
 }
 
 const initialState: AuthState = {
   token: null,
   user: null,
+  resourceType: null,
   status: "idle",
 };
 
@@ -61,6 +63,7 @@ const authSlice = createSlice({
     logout(state) {
       state.token = null;
       state.user = null;
+      state.resourceType = null;
       state.status = "unauthenticated";
     },
   },
@@ -76,6 +79,9 @@ const authSlice = createSlice({
           const user = extractUser(payload);
           state.user = user;
           state.status = user ? "authenticated" : "unauthenticated";
+          if ("resource_type" in payload && payload.resource_type) {
+            state.resourceType = payload.resource_type as "user" | "customer";
+          }
         },
       )
       .addMatcher(authApi.endpoints.getMe.matchRejected, (state) => {
@@ -86,6 +92,9 @@ const authSlice = createSlice({
         authApi.endpoints.login.matchFulfilled,
         (state, { payload }) => {
           setAuthenticatedUser(state, payload);
+          if ("resource_type" in payload && payload.resource_type) {
+            state.resourceType = payload.resource_type as "user" | "customer";
+          }
         },
       )
       .addMatcher(

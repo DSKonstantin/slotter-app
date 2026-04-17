@@ -8,7 +8,7 @@ import {
 } from "@/src/validation/schemas/accountLinks.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
+import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
 

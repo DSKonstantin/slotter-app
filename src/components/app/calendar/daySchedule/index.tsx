@@ -17,7 +17,7 @@ import { formatTimeFromISO } from "@/src/utils/date/formatTime";
 import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
+import { Button, Divider, StSvg } from "@/src/components/ui";
 import {
   DayScheduleSchema,
   type DayScheduleFormValues,
@@ -66,7 +66,7 @@ const DayScheduleEdit = ({
     },
   });
 
-  const { handleSubmit, control, formState } = methods;
+  const { handleSubmit, control } = methods;
   const isActive = useWatch({ control, name: "isActive" });
 
   const onSubmit = async (data: DayScheduleFormValues) => {

@@ -34,7 +34,10 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
     <ScrollView
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: H_PAD, paddingTop: topInset + GAP }}
+      contentContainerStyle={{
+        paddingHorizontal: H_PAD,
+        paddingTop: topInset + GAP,
+      }}
     >
       <ContentLoader
         speed={SPEED}
@@ -44,17 +47,52 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
         foregroundColor={FG}
       >
         {/* IncomeCard */}
-        <Rect x={0} y={y0} rx={RADIUS} ry={RADIUS} width={w} height={incomeCardH} />
+        <Rect
+          x={0}
+          y={y0}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w}
+          height={incomeCardH}
+        />
 
         {/* Period card */}
-        <Rect x={0} y={y1} rx={RADIUS} ry={RADIUS} width={w} height={periodCardH} />
+        <Rect
+          x={0}
+          y={y1}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w}
+          height={periodCardH}
+        />
 
         {/* Expenses block */}
-        <Rect x={0} y={y2} rx={RADIUS} ry={RADIUS} width={w} height={expensesH} />
+        <Rect
+          x={0}
+          y={y2}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w}
+          height={expensesH}
+        />
 
         {/* Stat cards row */}
-        <Rect x={0} y={y3} rx={RADIUS} ry={RADIUS} width={halfW} height={statCardsH} />
-        <Rect x={halfW + 10} y={y3} rx={RADIUS} ry={RADIUS} width={halfW} height={statCardsH} />
+        <Rect
+          x={0}
+          y={y3}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={halfW}
+          height={statCardsH}
+        />
+        <Rect
+          x={halfW + 10}
+          y={y3}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={halfW}
+          height={statCardsH}
+        />
       </ContentLoader>
     </ScrollView>
   );

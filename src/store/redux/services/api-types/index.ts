@@ -67,19 +67,31 @@ export type {
   WorkingDayBreaksResponse,
 } from "./workingDay";
 export type {
-  ExpenseCategory,
   Expense,
   GetExpensesParams,
-  CreateExpenseCategoryPayload,
-  UpdateExpenseCategoryPayload,
   CreateExpensePayload,
   UpdateExpensePayload,
-  ExpenseCategoryBreakdown,
+  SummaryExpense,
   FinancesSummary,
   FinancesIncomePoint,
+  FinancesIncomeItemTag,
   FinancesIncomeItem,
   FinancesIncome,
 } from "./finances";
+export type {
+  ChatRoomTag,
+  ChatRoomMember,
+  ChatLastMessage,
+  ChatRoom,
+  PaginationMeta,
+  GetChatRoomsParams,
+  GetChatRoomsResponse,
+  ChatMessageUser,
+  ChatMessageImageUrl,
+  ChatMessageWidgetAppointment,
+  ChatMessage,
+  GetChatMessagesResponse,
+} from "./chat";
 export type {
   GalleryPhoto,
   GalleryPhotosResponse,

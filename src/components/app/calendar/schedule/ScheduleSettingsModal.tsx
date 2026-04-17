@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { FormProvider, useFormContext, useWatch } from "react-hook-form";
 import { BlurView } from "expo-blur";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BottomSheetModal,
   BottomSheetScrollView,

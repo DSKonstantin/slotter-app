@@ -7,7 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
-import { usePathname } from "expo-router";
+import { usePathname, useSegments } from "expo-router";
 import { CommonActions } from "@react-navigation/native";
 
 const HIDDEN_TAB_BAR_ROUTES = ["/account/preview"];
@@ -21,8 +21,12 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const activeRoute = state.routes[state.index]?.name;
   const pathname = usePathname();
+  const segments = useSegments();
 
-  if (HIDDEN_TAB_BAR_ROUTES.some((route) => pathname.endsWith(route))) {
+  if (
+    HIDDEN_TAB_BAR_ROUTES.some((route) => pathname.endsWith(route)) ||
+    (segments[1] === "chat" && segments[2] !== undefined)
+  ) {
     return null;
   }
 

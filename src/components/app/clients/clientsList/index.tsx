@@ -99,9 +99,10 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   const queryParams = useMemo(
     () => ({
+      userId: auth!.userId,
       query: debouncedSearch || undefined,
     }),
-    [debouncedSearch],
+    [auth, debouncedSearch],
   );
 
   const { data, isLoading, isError, refetch, isFetching } =

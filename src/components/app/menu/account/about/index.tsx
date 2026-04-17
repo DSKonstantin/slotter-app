@@ -13,7 +13,6 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { Button, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
-import RHFTagInput from "@/src/components/app/menu/account/about/tagInput";
 import { AddressField } from "@/src/components/shared/addressField";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";

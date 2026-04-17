@@ -1,7 +1,8 @@
 import React from "react";
+import ChatRoomsScreen from "@/src/components/app/chat/rooms";
 
-const Chat = () => {
-  return <></>;
+const ChatRooms = () => {
+  return <ChatRoomsScreen />;
 };
 
-export default Chat;
+export default ChatRooms;

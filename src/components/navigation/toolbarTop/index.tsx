@@ -10,7 +10,7 @@ import { useRouter } from "expo-router";
 import { ToolbarContext } from "@/src/components/shared/layout/toolbarContext";
 
 type ToolbarTopProps = {
-  title: string;
+  title: string | React.ReactNode;
   showBack?: boolean;
   rightButton?: React.ReactNode;
 };
@@ -114,15 +114,19 @@ const ToolbarTop = ({
             )}
 
             <View className="flex-1 items-center justify-center">
-              <View className="rounded-full h-[48px] px-5 items-center justify-center bg-background-surface max-w-[100%]">
-                <Typography
-                  weight="semibold"
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  className="text-[17px] leading-[22px]"
-                >
-                  {title}
-                </Typography>
+              <View className="rounded-full h-[48px] px-4 items-center justify-center bg-background-surface max-w-[100%]">
+                {typeof title === "string" ? (
+                  <Typography
+                    weight="semibold"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    className="text-[17px] leading-[22px]"
+                  >
+                    {title}
+                  </Typography>
+                ) : (
+                  title
+                )}
               </View>
             </View>
 

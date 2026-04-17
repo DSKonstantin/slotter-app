@@ -1,5 +1,11 @@
 import { ReactNode } from "react";
-import { TouchableOpacity, View, Text } from "react-native";
+import {
+  TouchableOpacity,
+  View,
+  Text,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 import { twMerge } from "tailwind-merge";
 
 type BadgeVariant =
@@ -8,10 +14,12 @@ type BadgeVariant =
   | "tertiary"
   | "accent"
   | "info"
+  | "mint"
   | "success"
   | "warning"
   | "neutral"
   | "error";
+
 type BadgeSize = "sm" | "md";
 
 type BadgeProps = {
@@ -20,6 +28,8 @@ type BadgeProps = {
   size?: BadgeSize;
   icon?: ReactNode;
   className?: string;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
   onPress?: () => void;
   disabled?: boolean;
   activeOpacity?: number;
@@ -31,27 +41,38 @@ export function Badge({
   size = "md",
   icon,
   className,
+  style,
+  textStyle,
   onPress,
   disabled = false,
   activeOpacity = 0.7,
 }: BadgeProps) {
-  const badgeClassName = twMerge(
-    styles.base,
-    styles.sizes[size],
-    styles.variants[variant],
-    disabled ? "opacity-50" : undefined,
+  const containerClass = twMerge(
+    "flex-row items-center justify-center rounded-full self-start",
+    sizes.container[size],
+    variants[variant].container,
+    disabled && "opacity-40",
     className,
+  );
+
+  const textClass = twMerge(
+    "font-inter-semibold tracking-wide",
+    sizes.text[size],
+    variants[variant].text,
   );
 
   const content = (
     <>
-      <Text
-        className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}
-      >
+      <Text className={textClass} style={textStyle} numberOfLines={1}>
         {title}
       </Text>
       {icon && (
-        <View className={`${styles.icon.base} ${styles.icon.sizes[size]}`}>
+        <View
+          className={twMerge(
+            "items-center justify-center ml-1",
+            sizes.icon[size],
+          )}
+        >
           {icon}
         </View>
       )}
@@ -64,63 +85,54 @@ export function Badge({
         onPress={onPress}
         disabled={disabled}
         activeOpacity={activeOpacity}
-        className={badgeClassName}
+        className={containerClass}
+        style={style}
       >
         {content}
       </TouchableOpacity>
     );
   }
 
-  return <View className={badgeClassName}>{content}</View>;
+  return (
+    <View className={containerClass} style={style}>
+      {content}
+    </View>
+  );
 }
 
-const styles = {
-  base: "flex-row items-center justify-center rounded-full self-start",
-
-  sizes: {
-    sm: "h-[26px] px-[10px]",
-    md: "h-9 px-3",
+const sizes = {
+  container: {
+    sm: "h-[26px] px-2.5",
+    md: "h-[36px] px-3",
   },
-
-  variants: {
-    primary: "bg-background-black",
-    secondary: "bg-background",
-    neutral: "bg-neutral-400",
-    tertiary: "bg-background-surface",
-    accent: "bg-primary-blue-500",
-    info: "bg-primary-blue-100",
-    success: "bg-primary-green-500",
-    warning: "bg-accent-yellow-500",
-    error: "bg-accent-red-100",
-  },
-
   text: {
-    base: "font-inter-medium",
-
-    sizes: {
-      sm: "text-caption",
-      md: "text-body",
-    },
-
-    variants: {
-      primary: "text-neutral-200",
-      secondary: "text-neutral-500",
-      neutral: "text-neutral-0",
-      tertiary: "text-primary-blue-500",
-      accent: "text-accent-azure-500",
-      info: "text-primary-blue-500",
-      success: "text-primary-green-700",
-      warning: "text-accent-yellow-700",
-      error: "text-accent-red-500",
-    },
+    sm: "text-caption leading-[18px]",
+    md: "text-body leading-[24px]",
   },
-
   icon: {
-    base: "ml-1 items-center justify-center",
-
-    sizes: {
-      sm: "h-4 w-4",
-      md: "h-5 w-5",
-    },
+    sm: "h-[22px]",
+    md: "h-[36px]",
   },
+};
+
+const variants: Record<BadgeVariant, { container: string; text: string }> = {
+  primary: { container: "bg-neutral-900", text: "text-neutral-0" },
+  secondary: { container: "bg-neutral-100", text: "text-neutral-700" },
+  neutral: { container: "bg-neutral-400", text: "text-neutral-0" },
+  tertiary: {
+    container: "bg-background-surface border border-neutral-200",
+    text: "text-neutral-800",
+  },
+  accent: { container: "bg-primary-blue-500", text: "text-neutral-0" },
+  info: { container: "bg-primary-blue-100", text: "text-primary-blue-500" },
+  mint: { container: "bg-primary-green-100", text: "text-primary-green-700" },
+  success: {
+    container: "bg-primary-green-500",
+    text: "text-primary-green-800",
+  },
+  warning: {
+    container: "bg-accent-yellow-500",
+    text: "text-accent-yellow-700",
+  },
+  error: { container: "bg-accent-red-100", text: "text-accent-red-500" },
 };

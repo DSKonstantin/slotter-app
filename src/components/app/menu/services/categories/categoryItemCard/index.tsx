@@ -1,6 +1,5 @@
 import React from "react";
 import { View, Pressable } from "react-native";
-import { RenderItemParams } from "react-native-draggable-flatlist";
 
 import { Card, StSvg, Switch } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";

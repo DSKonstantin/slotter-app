@@ -48,7 +48,7 @@ export interface CustomerBalanceResponse {
 
 export type GetCustomersParams = {
   page?: number;
-  per_page?: number;
+  items?: number;
   query?: string;
   tag_id?: number;
 };

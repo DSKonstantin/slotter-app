@@ -1,5 +1,6 @@
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
+import "dayjs/locale/ru";
 import { useEffect } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";

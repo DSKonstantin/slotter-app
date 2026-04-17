@@ -27,7 +27,7 @@ const HomeCard = ({
         ...(disabled && { opacity: 0.4 }),
       }}
       className={twMerge(
-        "flex-1 p-4 rounded-medium bg-background-surface",
+        "justify-between flex-1 p-4 rounded-medium bg-background-surface min-h-[122px]",
         className,
       )}
     >

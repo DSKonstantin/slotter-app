@@ -16,12 +16,12 @@ const customersApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getCustomers: builder.query<
       GetCustomersResponse,
-      GetCustomersParams | void
+      { userId: number } & GetCustomersParams
     >({
-      query: (params) => ({
-        url: "/customers",
+      query: ({ userId, ...params }) => ({
+        url: `/users/${userId}/customers`,
         method: "GET",
-        params: params ?? undefined,
+        params,
       }),
       providesTags: ["Customers"],
     }),

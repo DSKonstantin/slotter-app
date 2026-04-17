@@ -3,83 +3,59 @@ import { RefreshControl, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import TrendChartCard from "@/src/components/shared/cards/trendChartCard";
-import {
-  Card,
-  Divider,
-  SegmentedControl,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Card, Divider, SegmentedControl, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetFinancesIncomeQuery } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
+import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
+import {
+  INCOME_GROUP_OPTIONS,
+  MONTH_NAMES_SHORT,
+} from "@/src/constants/finances";
 import FinancesIncomeSkeleton from "./FinancesIncomeSkeleton";
-
-const GROUP_OPTIONS = [
-  { label: "По услугам", value: "services" as const },
-  { label: "По клиентам", value: "clients" as const },
-];
-
-const SHORT_MONTHS = [
-  "Янв",
-  "Фев",
-  "Мар",
-  "Апр",
-  "Май",
-  "Июн",
-  "Июл",
-  "Авг",
-  "Сен",
-  "Окт",
-  "Ноя",
-  "Дек",
-];
-
-const formatDate = (d: Date) => d.toISOString().split("T")[0];
+import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
+import IncomeBreakdownServices from "./IncomeBreakdownServices";
+import IncomeBreakdownClients from "./IncomeBreakdownClients";
 
 const today = new Date();
-const monthsAgo = (n: number) => {
-  const d = new Date(today);
-  d.setMonth(d.getMonth() - n);
-  return d;
-};
 
 const PERIODS = [
   {
     label: "3 месяца",
     value: "3m",
-    date_from: formatDate(monthsAgo(3)),
-    date_to: formatDate(today),
+    date_from: formatApiDate(subMonths(today, 3)),
+    date_to: formatApiDate(today),
   },
   {
     label: "6 месяцев",
     value: "6m",
-    date_from: formatDate(monthsAgo(6)),
-    date_to: formatDate(today),
+    date_from: formatApiDate(subMonths(today, 6)),
+    date_to: formatApiDate(today),
   },
   {
     label: "За год",
     value: "1y",
-    date_from: formatDate(new Date(today.getFullYear(), 0, 1)),
-    date_to: formatDate(today),
+    date_from: formatApiDate(new Date(today.getFullYear(), 0, 1)),
+    date_to: formatApiDate(today),
   },
 ];
 
 const formatPeriodLabel = (period: string) => {
   const monthIndex = parseInt(period.split("-")[1], 10) - 1;
-  return SHORT_MONTHS[monthIndex] ?? period;
+  return MONTH_NAMES_SHORT[monthIndex] ?? period;
 };
 
 const FinancesIncomeScreen = () => {
   const auth = useRequiredAuth();
-  const [groupBy, setGroupBy] = useState(GROUP_OPTIONS[0].value);
+  const [groupBy, setGroupBy] = useState(INCOME_GROUP_OPTIONS[0].value);
   const [selectedPeriod, setSelectedPeriod] = useState(PERIODS[0]);
 
   const {
     data,
     isLoading: isIncomeLoading,
+    isFetching,
     refetch,
   } = useGetFinancesIncomeQuery(
     auth
@@ -120,6 +96,16 @@ const FinancesIncomeScreen = () => {
     );
   }
 
+  const renderBreakdown = () => {
+    if (isFetching) {
+      return <IncomeBreakdownSkeleton />;
+    }
+    if (groupBy === "services") {
+      return <IncomeBreakdownServices items={data?.breakdown ?? []} />;
+    }
+    return <IncomeBreakdownClients items={data?.breakdown ?? []} />;
+  };
+
   return (
     <ScreenWithToolbar title="Доходы по периоду">
       {({ topInset, bottomInset }) => (
@@ -157,40 +143,10 @@ const FinancesIncomeScreen = () => {
           <SegmentedControl
             value={groupBy}
             onChange={(v) => setGroupBy(v as typeof groupBy)}
-            options={GROUP_OPTIONS}
+            options={INCOME_GROUP_OPTIONS}
           />
-          <View className="gap-3">
-            {(data?.breakdown ?? []).map((item) => (
-              <Card
-                key={item.service_id ?? item.customer_id ?? item.name}
-                title={item.name}
-                subtitle={
-                  groupBy === "clients"
-                    ? [
-                        formatRublesFromCents(item.total_cents),
-                        item.appointments_count != null
-                          ? `${item.appointments_count} визитов`
-                          : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" | ")
-                    : item.appointments_count != null
-                      ? `${item.appointments_count} продаж`
-                      : undefined
-                }
-                right={
-                  groupBy === "services" ? (
-                    <Typography
-                      weight="medium"
-                      className="text-body  text-neutral-900"
-                    >
-                      {formatRublesFromCents(item.total_cents)}
-                    </Typography>
-                  ) : null
-                }
-              />
-            ))}
-          </View>
+
+          <View className="gap-3">{renderBreakdown()}</View>
 
           <Divider />
 

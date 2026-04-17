@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
@@ -91,7 +92,9 @@ const SlotCreate: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] =
     useState<AutocompleteItem | null>(null);
 
-  const { data: customersData } = useGetCustomersQuery();
+  const { data: customersData } = useGetCustomersQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
   const customerItems: AutocompleteItem[] = useMemo(
     () =>
       (customersData?.customers ?? []).map((c) => ({
@@ -108,18 +111,6 @@ const SlotCreate: React.FC = () => {
       ),
     [customerItems, customerSearch],
   );
-
-  useEffect(() => {
-    if (draft.createdCustomer) {
-      const item: AutocompleteItem = {
-        id: String(draft.createdCustomer.id),
-        title: draft.createdCustomer.name,
-      };
-      setValue("customerId", Number(item.id));
-      setSelectedCustomer(item);
-      dispatch(clearCreatedCustomer());
-    }
-  }, [dispatch, draft.createdCustomer, setValue]);
 
   const { fields, remove } = useFieldArray({
     control: methods.control,
@@ -206,6 +197,18 @@ const SlotCreate: React.FC = () => {
     },
     [setValue],
   );
+
+  useEffect(() => {
+    if (draft.createdCustomer) {
+      const item: AutocompleteItem = {
+        id: String(draft.createdCustomer.id),
+        title: draft.createdCustomer.name,
+      };
+      setValue("customerId", Number(item.id));
+      setSelectedCustomer(item);
+      dispatch(clearCreatedCustomer());
+    }
+  }, [dispatch, draft.createdCustomer, setValue]);
 
   return (
     <FormProvider {...methods}>

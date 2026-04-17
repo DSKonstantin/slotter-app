@@ -6,7 +6,6 @@ import CreateActionCard from "@/src/components/shared/cards/createActionCard";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { formatApiDate, formatMonthName } from "@/src/utils/date/formatDate";
-import { subMonths } from "date-fns";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { setScheduleIntent } from "@/src/store/redux/slices/calendarSlice";
 
