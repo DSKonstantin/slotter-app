@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
-import { Alert, FlatList, ScrollView, View } from "react-native";
+import { Alert, FlatList, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { maskPhone } from "@/src/utils/mask/maskPhone";
@@ -28,6 +29,7 @@ import ContactPickerModal, {
 } from "@/src/components/app/clients/clientCreate/contactPickerModal";
 import CreateTagModal from "@/src/components/app/clients/clientCreate/createTagModal";
 import { unMask } from "react-native-mask-text";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type ClientCreateProps = {
   onCreated?: (customer: Customer) => void;
@@ -106,8 +108,9 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
       <ScreenWithToolbar title="Новый клиент">
         {({ topInset, bottomInset }) => (
           <>
-            <ScrollView
+            <KeyboardAwareScrollView
               showsVerticalScrollIndicator={false}
+              bottomOffset={BOTTOM_OFFSET}
               contentContainerStyle={{
                 paddingBottom: 16,
                 paddingHorizontal: 20,
@@ -196,7 +199,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                   multiline
                 />
               </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             <View
               className="px-screen bg-background"

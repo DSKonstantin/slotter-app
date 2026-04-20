@@ -11,6 +11,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
+import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 
 const Links = () => {
   const methods = useForm<AccountLinksFormValues>({
@@ -39,6 +40,7 @@ const Links = () => {
           <>
             <KeyboardAwareScrollView
               showsVerticalScrollIndicator={false}
+              bottomOffset={BOTTOM_OFFSET_SMALL}
               contentContainerStyle={{
                 paddingTop: topInset + 16,
                 paddingBottom: 16,

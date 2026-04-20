@@ -1,5 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
@@ -49,6 +56,7 @@ import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "cash", label: "Наличные" },
@@ -91,6 +99,7 @@ const SlotCreate: React.FC = () => {
   const [customerSearch, setCustomerSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] =
     useState<AutocompleteItem | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   const { data: customersData } = useGetCustomersQuery(
     auth ? { userId: auth.userId } : skipToken,
@@ -183,6 +192,10 @@ const SlotCreate: React.FC = () => {
     [auth, draft.additionalServices, createAppointment, dispatch],
   );
 
+  const onValidationError = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+
   const handleCloseCustomerModal = useCallback(() => {
     setCustomerModalVisible(false);
     setCustomerSearch("");
@@ -214,9 +227,11 @@ const SlotCreate: React.FC = () => {
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Создать слот">
         {({ topInset, bottomInset }) => (
-          <ScrollView
+          <KeyboardAwareScrollView
+            ref={scrollRef}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            bottomOffset={BOTTOM_OFFSET}
             contentContainerStyle={{
               paddingBottom: bottomInset + 16,
               paddingHorizontal: 20,
@@ -466,7 +481,7 @@ const SlotCreate: React.FC = () => {
               <Button
                 title="Создать запись"
                 loading={isLoading}
-                onPress={handleSubmit(onSubmit)}
+                onPress={handleSubmit(onSubmit, onValidationError)}
                 rightIcon={
                   <StSvg
                     name="Add_round_fill"
@@ -476,7 +491,7 @@ const SlotCreate: React.FC = () => {
                 }
               />
             </View>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         )}
       </ScreenWithToolbar>
 

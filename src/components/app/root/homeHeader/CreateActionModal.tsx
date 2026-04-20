@@ -38,7 +38,7 @@ const CreateActionModal = ({ visible, onClose }: Props) => {
     },
     {
       icon: "link_alt",
-      title: "Поделится свободными слотами",
+      title: "Поделиться свободными слотами",
       subtitle: "Удобно добавить в Stories или переслать",
       disabled: true,
       onPress: () => {

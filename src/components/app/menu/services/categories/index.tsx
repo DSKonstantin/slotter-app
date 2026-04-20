@@ -151,7 +151,6 @@ const AppServicesCategories = () => {
               <ErrorScreen
                 title="Не удалось загрузить категории"
                 isLoading={isFetching}
-                withTabBar={false}
                 onRetry={handleRefresh}
               />
             );

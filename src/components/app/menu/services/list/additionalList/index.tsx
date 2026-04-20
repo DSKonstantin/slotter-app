@@ -214,7 +214,7 @@ const AdditionalList = () => {
         ListEmptyComponent={
           <View className="py-6">
             <Typography className="text-neutral-500 text-center">
-              No additional services yet
+              Дополнительные услуги пока отсутствуют.
             </Typography>
           </View>
         }

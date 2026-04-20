@@ -6,6 +6,7 @@ import { Button, Item, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import DurationField from "@/src/components/app/menu/services/shared/durationField";
+import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 
 type AdditionalServiceFormBodyProps = {
   onSubmit: () => void;
@@ -25,6 +26,7 @@ const AdditionalServicesForm = ({
   return (
     <>
       <KeyboardAwareScrollView
+        bottomOffset={BOTTOM_OFFSET_SMALL}
         contentContainerStyle={{
           paddingTop: insets.topInset,
         }}
