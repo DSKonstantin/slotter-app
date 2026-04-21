@@ -1,11 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import {
-  ScrollView,
-  View,
-  ActivityIndicator,
-  RefreshControl,
-} from "react-native";
+import { View, ActivityIndicator, RefreshControl } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import ErrorScreen from "@/src/components/shared/errorScreen";
@@ -40,6 +36,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type EditingField = "duration" | "price" | "comment" | null;
 
@@ -193,8 +190,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
           return (
             <>
-              <ScrollView
+              <KeyboardAwareScrollView
                 showsVerticalScrollIndicator={false}
+                bottomOffset={BOTTOM_OFFSET}
                 contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
                 style={{ marginTop: topInset }}
                 refreshControl={
@@ -433,7 +431,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   onReschedule={() => setRescheduleVisible(true)}
                   onCancel={() => setCancelVisible(true)}
                 />
-              </ScrollView>
+              </KeyboardAwareScrollView>
 
               <CancelModal
                 visible={cancelVisible}

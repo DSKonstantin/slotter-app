@@ -20,6 +20,7 @@ import {
   useGetCustomerQuery,
   useUpdateCustomerMutation,
 } from "@/src/store/redux/services/api/customersApi";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type Props = { customerId: number };
 
@@ -60,6 +61,7 @@ const ClientDetail = ({ customerId }: Props) => {
       {({ topInset, bottomInset }) => (
         <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
+          bottomOffset={BOTTOM_OFFSET}
           contentContainerStyle={{
             paddingTop: topInset,
             paddingBottom: bottomInset + 16,

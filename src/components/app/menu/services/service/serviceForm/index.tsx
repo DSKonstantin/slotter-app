@@ -1,5 +1,5 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useRef } from "react";
+import { ScrollView, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -14,6 +14,7 @@ import { colors } from "@/src/styles/colors";
 import ServiceCategorySelect from "@/src/components/app/menu/services/service/serviceForm/serviceCategorySelect";
 import CreateAdditionalService from "@/src/components/app/menu/services/service/createAdditionalService";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 export const defaultServicePhotos: ServicePhotosValue = {
   ...createDefaultServicePhotos(),
@@ -34,7 +35,11 @@ const ServiceFormBody = ({
   loading,
   insets,
 }: ServiceFormBodyProps) => {
-  const { control } = useFormContext();
+  const { control, handleSubmit } = useFormContext();
+  const scrollRef = useRef<ScrollView>(null);
+
+  const scrollToTop = () =>
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
 
   const {
     field: { value: photos, onChange: setPhotos },
@@ -52,7 +57,9 @@ const ServiceFormBody = ({
 
   return (
     <KeyboardAwareScrollView
+      ref={scrollRef}
       className="flex-1"
+      bottomOffset={BOTTOM_OFFSET}
       contentContainerStyle={{
         paddingTop: insets.topInset,
         paddingBottom: insets.bottomInset + 16,
@@ -110,7 +117,7 @@ const ServiceFormBody = ({
           buttonClassName="mt-4"
           disabled={loading}
           loading={loading}
-          onPress={onSubmit}
+          onPress={handleSubmit(onSubmit, scrollToTop)}
           rightIcon={
             <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
           }
