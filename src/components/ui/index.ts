@@ -21,3 +21,4 @@ export { PaginationDots } from "./PaginationDots";
 export { BottomSheetHandle } from "./BottomSheetHandle";
 export { SegmentedControl } from "./segmentedControl";
 export { FadeOverlay } from "./FadeOverlay";
+export { FloatingFooter } from "./FloatingFooter";

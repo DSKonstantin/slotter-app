@@ -18,16 +18,13 @@ import {
 } from "@/src/validation/schemas/daySchedule.schema";
 import { DayScheduleForm } from "./DayScheduleForm";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { ScrollView, View } from "react-native";
-import { Button, StSvg } from "@/src/components/ui";
+import { ScrollView } from "react-native";
+import { Button, FloatingFooter, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
-  const { left, right } = useSafeAreaInsets();
   const auth = useRequiredAuth();
   const [createWorkingDay, { isLoading }] = useCreateWorkingDayMutation();
 
@@ -87,16 +84,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                 <DayScheduleForm />
               </ScrollView>
             </SafeAreaView>
-            <View
-              className="absolute flex-1 w-full"
-              style={{
-                zIndex: 100,
-                bottom: bottomInset + 16,
-                right: 0,
-                paddingRight: left + 20,
-                paddingLeft: right + 20,
-              }}
-            >
+            <FloatingFooter offset={TAB_BAR_HEIGHT + 16}>
               <Button
                 title="Сохранить изменения"
                 loading={isLoading}
@@ -106,7 +94,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                 }
                 onPress={handleSubmit(onSubmit)}
               />
-            </View>
+            </FloatingFooter>
           </>
         )}
       </ScreenWithToolbar>

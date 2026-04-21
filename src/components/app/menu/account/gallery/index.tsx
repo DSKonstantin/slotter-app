@@ -16,6 +16,7 @@ import { useImagePicker } from "@/src/hooks/useImagePicker";
 import {
   Badge,
   Button,
+  FloatingFooter,
   IconButton,
   StSvg,
   Typography,
@@ -41,6 +42,7 @@ import {
   MAX_PHOTOS,
 } from "./constants";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const toUiPhoto = (p: ApiGalleryPhoto): GalleryPhoto => ({
   id: String(p.id),
@@ -210,7 +212,10 @@ const Gallery = () => {
             setSelectedIds(null);
             for (const id of toDelete) {
               try {
-                await deleteGalleryPhoto({ userId, id: parseInt(id, 10) || 0 }).unwrap();
+                await deleteGalleryPhoto({
+                  userId,
+                  id: parseInt(id, 10) || 0,
+                }).unwrap();
               } catch (error) {
                 toast.error(
                   getApiErrorMessage(error, "Не удалось удалить фото"),
@@ -382,17 +387,14 @@ const Gallery = () => {
                 />
 
                 {selectedIds !== null && selectedIds.size > 0 && (
-                  <View
-                    className="absolute left-4 right-4"
-                    style={{ bottom: bottomInset + 16 }}
-                  >
+                  <FloatingFooter offset={TAB_BAR_HEIGHT + 16}>
                     <Button
                       buttonClassName="bg-background-surface"
                       title={`Удалить (${selectedIds.size})`}
                       variant="destructive"
                       onPress={handleDeleteSelected}
                     />
-                  </View>
+                  </FloatingFooter>
                 )}
               </>
             )}
