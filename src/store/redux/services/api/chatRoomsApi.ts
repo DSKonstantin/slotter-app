@@ -32,7 +32,7 @@ export const chatRoomsApi = api.injectEndpoints({
         const cable = getCable(token);
         if (!cable) return;
 
-        const subscription = cable.subscribeTo("Chat::RoomsIndexChannel");
+        const subscription = cable.subscribeTo("Chat::RoomsChannel");
 
         try {
           await cacheDataLoaded;
@@ -99,6 +99,18 @@ export const chatRoomsApi = api.injectEndpoints({
         url: `/chat_rooms/${chatRoomId}`,
         method: "DELETE",
       }),
+      async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
+            draft.chat_rooms = draft.chat_rooms.filter((r) => r.id !== chatRoomId);
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
     }),
 
     typingInRoom: builder.mutation<void, { chatRoomId: number }>({
@@ -106,6 +118,70 @@ export const chatRoomsApi = api.injectEndpoints({
         url: `/chat_rooms/${chatRoomId}/typing`,
         method: "POST",
       }),
+    }),
+
+    blockChatRoom: builder.mutation<void, { chatRoomId: number }>({
+      query: ({ chatRoomId }) => ({
+        url: `/chat_rooms/${chatRoomId}/block`,
+        method: "POST",
+      }),
+      async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
+            const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
+            if (room) room.blocked_by_me = true;
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
+
+    unblockChatRoom: builder.mutation<void, { chatRoomId: number }>({
+      query: ({ chatRoomId }) => ({
+        url: `/chat_rooms/${chatRoomId}/unblock`,
+        method: "DELETE",
+      }),
+      async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
+            const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
+            if (room) room.blocked_by_me = false;
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
+
+    muteChatRoom: builder.mutation<
+      void,
+      { chatRoomId: number; muted: boolean }
+    >({
+      query: ({ chatRoomId, muted }) => ({
+        url: `/chat_rooms/${chatRoomId}/mute`,
+        method: "POST",
+        data: { muted },
+      }),
+      async onQueryStarted({ chatRoomId, muted }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
+            const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
+            if (room) room.muted_by_me = muted;
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
     }),
   }),
 });
@@ -116,4 +192,7 @@ export const {
   useCreateChatRoomMutation,
   useDeleteChatRoomMutation,
   useTypingInRoomMutation,
+  useBlockChatRoomMutation,
+  useUnblockChatRoomMutation,
+  useMuteChatRoomMutation,
 } = chatRoomsApi;

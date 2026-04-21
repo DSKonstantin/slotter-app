@@ -24,6 +24,9 @@ export interface ChatRoom {
   other_member: ChatRoomMember;
   last_message: ChatLastMessage | null;
   unread_count: number;
+  blocked_by_me: boolean;
+  i_am_blocked: boolean;
+  muted_by_me: boolean;
   created_at: string;
 }
 

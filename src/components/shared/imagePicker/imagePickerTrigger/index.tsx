@@ -70,7 +70,11 @@ const ImagePickerTrigger = ({
 
   return (
     <>
-      <Pressable onPress={open} disabled={disabled}>
+      <Pressable
+        onPress={open}
+        disabled={disabled}
+        className="active:opacity-70"
+      >
         {children}
       </Pressable>
 

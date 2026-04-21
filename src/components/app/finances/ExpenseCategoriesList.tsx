@@ -15,6 +15,14 @@ const ExpenseCategoriesList = ({ expenses, isLoading }: Props) => {
     return <ActivityIndicator />;
   }
 
+  if (!expenses.length) {
+    return (
+      <Typography className="text-body text-neutral-400 text-center py-2">
+        Нет записей о расходах
+      </Typography>
+    );
+  }
+
   return (
     <>
       {map(expenses, (expense, index) => (

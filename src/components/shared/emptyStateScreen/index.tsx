@@ -29,7 +29,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   const { bottom } = useSafeAreaInsets();
 
   return (
-    <>
+    <View className="flex-1">
       <View className="flex-1 items-center justify-center gap-4 px-screen pb-24">
         <Image
           source={image}
@@ -65,7 +65,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
           }
         />
       </View>
-    </>
+    </View>
   );
 };
 

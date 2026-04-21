@@ -16,7 +16,7 @@ import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDa
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { Appointment } from "@/src/store/redux/services/api-types";
-import EmptySlots from "@/src/components/app/calendar/home/day/timeSlotList/EmptySlots";
+import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
@@ -148,7 +148,14 @@ const DayCalendarView = () => {
     if (isEmpty)
       return (
         <View className="flex-1">
-          <EmptySlots onPress={handleEmptyPress} />
+          <EmptyStateScreen
+            image={require("@/assets/images/empty-slots.png")}
+            title="На этот день записей нет"
+            subtitle="Добавьте первую запись или настройте рабочее время"
+            buttonTitle="Добавить запись"
+            buttonIcon="Add_round_fill"
+            onPress={handleEmptyPress}
+          />
         </View>
       );
     return (
@@ -183,7 +190,7 @@ const DayCalendarView = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 80,
+          paddingBottom: isEmpty ? 0 : TAB_BAR_HEIGHT + bottom + 80,
         }}
         onContentSizeChange={() => {
           if (pendingScrollY.current !== null) {

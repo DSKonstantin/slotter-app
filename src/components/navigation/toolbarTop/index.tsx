@@ -5,7 +5,7 @@ import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
-import { LinearGradient } from "expo-linear-gradient";
+import { FadeOverlay } from "@/src/components/ui";
 import { useRouter } from "expo-router";
 import { ToolbarContext } from "@/src/components/shared/layout/toolbarContext";
 
@@ -38,19 +38,7 @@ const ToolbarTop = ({
         backgroundColor: "transparent",
       }}
     >
-      <LinearGradient
-        colors={["#F2F2F6", "rgba(242, 242, 246, 0)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: TOOLBAR_HEIGHT + insets.top + 8,
-        }}
-        pointerEvents="none"
-      />
+      <FadeOverlay position="top" height={TOOLBAR_HEIGHT + insets.top + 8} />
       <View
         className="mx-screen flex-row items-center justify-between gap-2"
         style={{

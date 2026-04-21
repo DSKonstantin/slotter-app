@@ -2,15 +2,27 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat } from "react-native-gifted-chat";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { shallowEqual } from "react-redux";
 import type { ImagePickerAsset } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
+import {
+  Avatar,
+  Button,
+  IconButton,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useAppSelector } from "@/src/store/redux/store";
-import { useGetChatRoomsQuery } from "@/src/store/redux/services/api/chatRoomsApi";
+import {
+  useGetChatRoomsQuery,
+  useUnblockChatRoomMutation,
+} from "@/src/store/redux/services/api/chatRoomsApi";
 import {
   useGetChatMessagesQuery,
   useCreateChatMessageMutation,
@@ -41,6 +53,7 @@ const EMPTY_MESSAGES: ChatIMessage[] = [];
 
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
+  const { bottom: bottomInset } = useSafeAreaInsets();
 
   // ── Local UI State ─────────────────────────────────────────────────────
   const [page, setPage] = useState(1);
@@ -78,12 +91,20 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Queries ───────────────────────────────────────────────────────────
-  const { otherMember } = useGetChatRoomsQuery(undefined, {
-    selectFromResult: ({ data }) => ({
-      otherMember:
-        data?.chat_rooms?.find((r) => r.id === id)?.other_member ?? null,
-    }),
-  });
+  const { otherMember, blockedByMe, iAmBlocked, mutedByMe } =
+    useGetChatRoomsQuery(undefined, {
+      selectFromResult: ({ data }) => {
+        const room = data?.chat_rooms?.find((r) => r.id === id);
+        return {
+          otherMember: room?.other_member ?? null,
+          blockedByMe: room?.blocked_by_me ?? false,
+          iAmBlocked: room?.i_am_blocked ?? false,
+          mutedByMe: room?.muted_by_me ?? false,
+        };
+      },
+    });
+
+  const [unblockChatRoom] = useUnblockChatRoomMutation();
 
   const { data: chatData, isFetching } = useGetChatMessagesQuery(
     { chatRoomId: id, page },
@@ -223,7 +244,18 @@ export default function ChatRoom({ roomId }: Props) {
             start_time: "10:00",
             end_time: "",
             date: "",
+            duration: 0,
+            price_cents: 0,
+            price_currency: "",
+            payment_method: "",
+            comment: null,
+            cancel_reason: null,
+            send_notification: false,
+            public_token: "",
             customer_confirmed_at: null,
+            customer: null,
+            services: [],
+            additional_services: [],
           },
           user: makeUser(),
         },
@@ -261,13 +293,17 @@ export default function ChatRoom({ roomId }: Props) {
   const titleNode = useMemo(
     () =>
       otherMember ? (
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-2 max-w-full">
           <Avatar
             name={otherMember.name}
             uri={otherMember.avatar_url ?? undefined}
             size="xs"
           />
-          <Typography weight="semibold" className="text-[17px] leading-[22px]">
+          <Typography
+            weight="semibold"
+            className="shrink text-[17px] leading-[22px]"
+            numberOfLines={2}
+          >
             {otherMember.name}
           </Typography>
         </View>
@@ -293,7 +329,7 @@ export default function ChatRoom({ roomId }: Props) {
         }
       >
         {({ topInset }) => (
-          <SafeAreaView className="flex-1" edges={["left", "right", "bottom"]}>
+          <SafeAreaView className="flex-1" edges={["left", "right"]}>
             <GiftedChat<ChatIMessage>
               messages={messages}
               onSend={onSend}
@@ -307,8 +343,27 @@ export default function ChatRoom({ roomId }: Props) {
                 sameElse: "D MMMM YYYY",
               }}
               isSendButtonAlwaysVisible
+              minInputToolbarHeight={0}
+              keyboardAvoidingViewProps={{
+                keyboardVerticalOffset: -bottomInset + 8,
+              }}
               isTyping={isTyping}
-              textInputProps={{ placeholder: "Сообщение..." }}
+              textInputProps={{
+                placeholder: "Сообщение...",
+                maxLength: undefined,
+                multiline: true,
+                numberOfLines: 5,
+                style: {
+                  backgroundColor: colors.background.surface,
+                  borderRadius: 20,
+                  paddingHorizontal: 16,
+                  paddingTop: 12,
+                  paddingBottom: 12,
+                  marginHorizontal: 4,
+                  flex: 1,
+                  maxHeight: 120,
+                },
+              }}
               onLongPressMessage={onLongPressMessage}
               loadEarlierMessagesProps={{
                 isAvailable: hasMore,
@@ -333,16 +388,35 @@ export default function ChatRoom({ roomId }: Props) {
                 return <ChatBubble {...props} />;
               }}
               renderMessageImage={(props) => <ChatMessageImages {...props} />}
-              renderInputToolbar={(props) => (
-                <ChatInputBar
-                  {...props}
-                  replyingTo={replyingTo}
-                  onCancelReply={() => setReplyingTo(null)}
-                  onAttach={handleAttach}
-                  isUser={resourceType === "user"}
-                  onAttachService={() => setAttachServiceVisible(true)}
-                />
-              )}
+              renderInputToolbar={(props) =>
+                blockedByMe || iAmBlocked ? (
+                  <View className="absolute bottom-0 left-0 right-0 items-center justify-center py-4 px-6 bg-background-surface gap-2">
+                    <Typography className="text-caption text-neutral-500 text-center">
+                      {blockedByMe
+                        ? "Вы заблокировали пользователя"
+                        : "Пользователь ограничил переписку"}
+                    </Typography>
+                    {blockedByMe && (
+                      <Button
+                        title="Разблокировать"
+                        variant="clear"
+                        size="sm"
+                        textClassName="text-accent-red-500"
+                        onPress={() => unblockChatRoom({ chatRoomId: id })}
+                      />
+                    )}
+                  </View>
+                ) : (
+                  <ChatInputBar
+                    {...props}
+                    replyingTo={replyingTo}
+                    onCancelReply={() => setReplyingTo(null)}
+                    onAttach={handleAttach}
+                    isUser={resourceType === "user"}
+                    onAttachService={() => setAttachServiceVisible(true)}
+                  />
+                )
+              }
               renderSend={(props) => <ChatSendButton {...props} />}
               renderSystemMessage={(props) => <ChatSystemMessage {...props} />}
               renderChatEmpty={() => <ChatEmptyState />}
@@ -351,6 +425,7 @@ export default function ChatRoom({ roomId }: Props) {
               }}
               listProps={{
                 contentContainerStyle: {
+                  paddingTop: 70 + bottomInset,
                   paddingBottom: topInset,
                   flexGrow: 1,
                 },
@@ -366,7 +441,11 @@ export default function ChatRoom({ roomId }: Props) {
         <ChatRoomMenu
           visible={roomMenuVisible}
           onClose={() => setRoomMenuVisible(false)}
+          roomId={id}
           name={otherMember.name}
+          blockedByMe={blockedByMe}
+          iAmBlocked={iAmBlocked}
+          mutedByMe={mutedByMe}
         />
       )}
 

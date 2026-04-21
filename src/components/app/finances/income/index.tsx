@@ -10,6 +10,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
 import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
+import { Typography } from "@/src/components/ui";
 import {
   INCOME_GROUP_OPTIONS,
   MONTH_NAMES_SHORT,
@@ -100,10 +101,19 @@ const FinancesIncomeScreen = () => {
     if (isFetching) {
       return <IncomeBreakdownSkeleton />;
     }
-    if (groupBy === "services") {
-      return <IncomeBreakdownServices items={data?.breakdown ?? []} />;
+    if (!data?.breakdown?.length) {
+      return (
+        <Typography className="text-body text-neutral-400 text-center py-2">
+          {groupBy === "services"
+            ? "Нет данных по услугам за период"
+            : "Нет данных по клиентам за период"}
+        </Typography>
+      );
     }
-    return <IncomeBreakdownClients items={data?.breakdown ?? []} />;
+    if (groupBy === "services") {
+      return <IncomeBreakdownServices items={data.breakdown} />;
+    }
+    return <IncomeBreakdownClients items={data.breakdown} />;
   };
 
   return (
