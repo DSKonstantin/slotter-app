@@ -70,15 +70,19 @@ const SlotCreate: React.FC = () => {
   const draft = useAppSelector((s) => s.slotDraft);
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
 
-  const initialServices = draft.services.map((s) => ({
-    id: String(s.id),
-    name: s.name,
-    duration: s.duration,
-    priceCents: s.price_cents,
-  }));
+  const initialServices = useMemo(
+    () =>
+      draft.services.map((s) => ({
+        id: String(s.id),
+        name: s.name,
+        duration: s.duration,
+        priceCents: s.price_cents,
+      })),
+    [draft.services],
+  );
 
   const methods = useForm<SlotCreateFormValues>({
-    resolver: yupResolver(SlotCreateSchema) as any,
+    resolver: yupResolver(SlotCreateSchema),
     defaultValues: {
       services: initialServices,
       customerId: undefined,
@@ -204,7 +208,7 @@ const SlotCreate: React.FC = () => {
   const handleSelectCustomer = useCallback(
     (item: AutocompleteItem) => {
       setSelectedCustomer(item);
-      setValue("customerId", Number(item.id));
+      setValue("customerId", parseInt(item.id, 10) || 0);
       setCustomerModalVisible(false);
       setCustomerSearch("");
     },
@@ -217,7 +221,7 @@ const SlotCreate: React.FC = () => {
         id: String(draft.createdCustomer.id),
         title: draft.createdCustomer.name,
       };
-      setValue("customerId", Number(item.id));
+      setValue("customerId", parseInt(item.id, 10) || 0);
       setSelectedCustomer(item);
       dispatch(clearCreatedCustomer());
     }

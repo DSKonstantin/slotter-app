@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
-import CalendarError from "@/src/components/app/calendar/home/day/CalendarError";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
@@ -19,12 +19,12 @@ import type { Appointment } from "@/src/store/redux/services/api-types";
 import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 const DayCalendarView = () => {
   const router = useRouter();
   const auth = useRequiredAuth();
   const { bottom } = useSafeAreaInsets();
-  const [refreshing, setRefreshing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const pendingScrollY = useRef<number | null>(null);
@@ -111,14 +111,7 @@ const DayCalendarView = () => {
     await Promise.all([refetchWorkingDays(), refetchAppointments()]);
   }, [refetchAppointments, refetchWorkingDays]);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refetchAll();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetchAll]);
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   const handleRetry = useCallback(async () => {
     setIsRetrying(true);
@@ -141,7 +134,11 @@ const DayCalendarView = () => {
     if (hasError)
       return (
         <View className="flex-1">
-          <CalendarError isLoading={isRetrying} onRetry={handleRetry} />
+          <ErrorScreen
+            title="Не удалось загрузить календарь"
+            isLoading={isRetrying}
+            onRetry={handleRetry}
+          />
         </View>
       );
     if (isLoading) return <TimeSlotListSkeleton />;
@@ -202,7 +199,7 @@ const DayCalendarView = () => {
           }
         }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
         <View

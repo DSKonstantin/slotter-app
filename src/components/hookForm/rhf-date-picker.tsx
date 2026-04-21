@@ -12,7 +12,7 @@ type DatePickerFieldsProps = {
 
   formatValue?: (date: Date) => string;
   parseValue?: (value: string) => Date | null;
-} & any;
+};
 
 export function RhfDatePicker({
   name,

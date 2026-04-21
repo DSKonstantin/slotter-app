@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import {
@@ -18,6 +18,7 @@ import { logout } from "@/src/store/redux/slices/authSlice";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { refreshTokenStorage } from "@/src/utils/tokenStorage/refreshTokenStorage";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 type NavItem = {
   title: string;
@@ -77,14 +78,8 @@ const AccountScreen = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const dispatch = useAppDispatch();
-  const [refreshing, setRefreshing] = useState(false);
   const [triggerGetMe] = useLazyGetMeQuery();
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await triggerGetMe();
-    setRefreshing(false);
-  }, [triggerGetMe]);
+  const { refreshing, onRefresh } = useRefresh(triggerGetMe);
 
   const handleLogout = useCallback(async () => {
     await Promise.all([
@@ -107,7 +102,7 @@ const AccountScreen = () => {
             paddingBottom: bottomInset + 16,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           <Card

@@ -97,15 +97,14 @@ const Verify = () => {
           expiresIn: result.expires_in,
           isModalVisible: true,
         });
-      } catch (error: any) {
-        if (error?.status === 422) {
+      } catch (error) {
+        if (error && typeof error === "object" && "status" in error && error.status === 422) {
           try {
             await telegramLogin({
               phone,
               type: UserType.USER,
             }).unwrap();
           } catch (loginError) {
-            console.log("LOGIN ERROR:", loginError);
           }
 
           router.push({
@@ -146,7 +145,7 @@ const Verify = () => {
       return;
     }
 
-    if ((error as any)?.status === 404) {
+    if (error && "status" in error && error.status === 404) {
       clearState();
       return;
     }

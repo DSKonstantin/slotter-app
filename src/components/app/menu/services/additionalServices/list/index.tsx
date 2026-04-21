@@ -1,4 +1,4 @@
-import React, { useCallback, memo, useMemo, useState } from "react";
+import React, { useCallback, memo, useMemo } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
@@ -25,9 +25,9 @@ import { Routers } from "@/src/constants/routers";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 const AdditionalServicesList = () => {
-  const [refreshing, setRefreshing] = useState(false);
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
   const [reorderAdditionalServices] = useReorderAdditionalServicesMutation();
   const auth = useRequiredAuth();
@@ -111,15 +111,15 @@ const AdditionalServicesList = () => {
     fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleRefresh = useCallback(() => {
-    if (isFetchingNextPage) return Promise.resolve();
+  const refetchServices = useCallback(
+    () =>
+      isFetchingNextPage
+        ? Promise.resolve()
+        : refetch({ refetchCachedPages: false }),
+    [isFetchingNextPage, refetch],
+  );
 
-    setRefreshing(true);
-
-    return refetch({ refetchCachedPages: false }).finally(() => {
-      setRefreshing(false);
-    });
-  }, [isFetchingNextPage, refetch]);
+  const { refreshing, onRefresh } = useRefresh(refetchServices);
 
   const handleServicePress = useCallback((serviceId: number) => {
     router.push(Routers.app.menu.services.additionalServices.edit(serviceId));
@@ -149,7 +149,7 @@ const AdditionalServicesList = () => {
               title="Не удалось загрузить услуги"
               isLoading={isFetching}
               withTabBar={false}
-              onRetry={handleRefresh}
+              onRetry={onRefresh}
             />
           );
         }
@@ -175,7 +175,7 @@ const AdditionalServicesList = () => {
               onDragEnd={handleDragEnd}
               onEndReached={handleEndReached}
               onEndReachedThreshold={listConfig.onEndReachedThreshold}
-              onRefresh={handleRefresh}
+              onRefresh={onRefresh}
               refreshing={refreshing}
               renderItem={({
                 item,

@@ -189,7 +189,7 @@ const Gallery = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteGalleryPhoto({ userId, id: Number(id) }).unwrap();
+      await deleteGalleryPhoto({ userId, id: parseInt(id, 10) || 0 }).unwrap();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось удалить фото"));
     }
@@ -210,7 +210,7 @@ const Gallery = () => {
             setSelectedIds(null);
             for (const id of toDelete) {
               try {
-                await deleteGalleryPhoto({ userId, id: Number(id) }).unwrap();
+                await deleteGalleryPhoto({ userId, id: parseInt(id, 10) || 0 }).unwrap();
               } catch (error) {
                 toast.error(
                   getApiErrorMessage(error, "Не удалось удалить фото"),
@@ -226,7 +226,7 @@ const Gallery = () => {
 
   const handleSetCover = async (id: string) => {
     const positions = [
-      { id: Number(id), position: 0 },
+      { id: parseInt(id, 10) || 0, position: 0 },
       ...photos
         .filter((p) => p.id !== id)
         .map((p, index) => ({ id: Number(p.id), position: index + 1 })),
@@ -243,7 +243,7 @@ const Gallery = () => {
     try {
       await updateGalleryPhoto({
         userId,
-        id: Number(id),
+        id: parseInt(id, 10) || 0,
         data: {
           crop_data: {
             x: cropData.originX,

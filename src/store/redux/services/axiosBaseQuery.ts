@@ -83,11 +83,11 @@ const normalizeRequestHeaders = (
     if (value == null) continue;
 
     if (METHOD_HEADER_KEYS.has(key)) {
-      headers.set(value as any);
+      headers.set(String(value));
       continue;
     }
 
-    headers.set(key, value as any);
+    headers.set(key, String(value));
   }
 
   return headers;

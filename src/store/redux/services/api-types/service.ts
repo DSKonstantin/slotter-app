@@ -63,8 +63,8 @@ export type CreateServicePayload = {
   is_available_online?: boolean;
   additional_service_ids?: number[];
   position?: number;
-  main_photo?: any;
-  additional_photos?: any[];
+  main_photo?: { uri: string; name: string; type: string };
+  additional_photos?: { uri: string; name: string; type: string }[];
 };
 
 export type UpdateServicePayload = Partial<{
@@ -77,8 +77,8 @@ export type UpdateServicePayload = Partial<{
   service_category_id: number;
   additional_service_ids: number[];
   position: number;
-  main_photo?: any;
-  additional_photos?: any[];
+  main_photo: { uri: string; name: string; type: string };
+  additional_photos: { uri: string; name: string; type: string }[];
 }>;
 
 export interface AdditionalService {

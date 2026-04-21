@@ -5,10 +5,11 @@ import { useAppSelector } from "@/src/store/redux/store";
 
 export function useRequiredAuth(): { userId: number } | null {
   const userId = useAppSelector((s) => s.auth.user?.id);
+  const status = useAppSelector((s) => s.auth.status);
 
   useEffect(() => {
-    if (userId == null) router.replace(Routers.auth.root);
-  }, [userId]);
+    if (status === "unauthenticated") router.replace(Routers.auth.root);
+  }, [status]);
 
   if (userId == null) return null;
   return { userId };

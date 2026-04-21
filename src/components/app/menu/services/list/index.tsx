@@ -27,6 +27,7 @@ import {
 } from "@/src/store/redux/services/api/servicesApi";
 import { toggleEditMode } from "@/src/store/redux/slices/servicesSlice";
 import ServiceList from "@/src/components/app/menu/services/list/serviceList";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 function ServicesToolbarActionsComponent() {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
@@ -58,7 +59,6 @@ const ServicesToolbarActions = memo(ServicesToolbarActionsComponent);
 
 const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const auth = useRequiredAuth();
 
   const {
@@ -105,17 +105,16 @@ const AppServices = () => {
     setCreateModalVisible(true);
   }, []);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
+  const refetchAll = useCallback(
+    () =>
+      Promise.all([
         refetchServiceCategories({ refetchCachedPages: false }),
         refetchAdditionalServices({ refetchCachedPages: false }),
-      ]);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetchAdditionalServices, refetchServiceCategories]);
+      ]),
+    [refetchAdditionalServices, refetchServiceCategories],
+  );
+
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   const handleCategoriesRefresh = useCallback(() => {
     refetchServiceCategories({ refetchCachedPages: false });
@@ -190,7 +189,7 @@ const AppServices = () => {
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
-                    onRefresh={handleRefresh}
+                    onRefresh={onRefresh}
                   />
                 }
               >

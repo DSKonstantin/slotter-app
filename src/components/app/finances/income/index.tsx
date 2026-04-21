@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -69,13 +70,7 @@ const FinancesIncomeScreen = () => {
       : skipToken,
   );
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const onRefresh = async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-  };
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const apiByMonth = Object.fromEntries(
     (data?.chart ?? []).map((p) => [p.month, p.amount_cents]),
@@ -128,7 +123,7 @@ const FinancesIncomeScreen = () => {
             gap: 20,
           }}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           <TrendChartCard

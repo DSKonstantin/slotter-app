@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { Pressable, View } from "react-native";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
@@ -58,7 +58,7 @@ const TabMenu = () => {
     (route?: string) => {
       if (!route) return;
       handleClose();
-      router.push(route as any);
+      router.push(route as Href);
     },
     [handleClose],
   );
@@ -110,7 +110,7 @@ const TabMenu = () => {
               className="flex-row items-center gap-3 px-5 py-3 active:opacity-60"
             >
               <StSvg
-                name={item.icon as any}
+                name={item.icon}
                 size={24}
                 color={
                   item.disabled ? colors.neutral[300] : colors.neutral[900]

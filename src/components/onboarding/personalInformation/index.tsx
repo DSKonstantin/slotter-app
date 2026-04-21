@@ -25,6 +25,7 @@ import {
 import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
@@ -53,27 +54,23 @@ const PersonalInformation = () => {
       if (!auth) return;
 
       try {
-        const formData = new FormData();
-
-        formData.append("user[first_name]", data.name);
-        formData.append("user[last_name]", data.surname);
-        formData.append("user[profession]", data.profession);
+        const formData = buildUserFormData({
+          ...data,
+          avatar: data.avatar
+            ? {
+                uri: data.avatar.uri,
+                name: data.avatar.name || `avatar_${Date.now()}.jpg`,
+                type: data.avatar.type || "image/jpeg",
+              }
+            : null,
+        });
 
         if (data.address) {
           formData.append("user[address]", data.address);
         }
-
         formData.append("user[is_home_work]", String(data.atHome));
         formData.append("user[is_online_work]", String(data.online));
         formData.append("user[is_out_call]", String(data.onRoad));
-
-        if (data.avatar !== null) {
-          formData.append("user[avatar]", {
-            uri: data.avatar.uri,
-            name: data.avatar.name || `avatar_${Date.now()}.jpg`,
-            type: data.avatar.type || "image/jpeg",
-          } as any);
-        }
 
         await updateUser({
           id: auth.userId,
@@ -82,7 +79,6 @@ const PersonalInformation = () => {
 
         router.push(Routers.onboarding.service);
       } catch (error) {
-        console.log("UPDATE USER ERROR:", error);
         toast.error(
           getApiErrorMessage(error, "Произошла ошибка при обновлении профиля."),
         );
