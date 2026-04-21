@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { View, ScrollView, useWindowDimensions } from "react-native";
+import { View, ScrollView } from "react-native";
 import {
   FormProvider,
   useForm,
@@ -87,7 +87,6 @@ type Props = {
 };
 
 export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
-  const { height } = useWindowDimensions();
   const { initialValues, save } = useScheduleTemplate();
 
   const methods = useForm<ScheduleTemplateFormValues>({
@@ -117,7 +116,7 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
   }, [initialValues, methods]);
 
   return (
-    <StModal visible={visible} onClose={onClose}>
+    <StModal visible={visible} onClose={onClose} fullHeight>
       <Typography weight="semibold" className="text-display text-center mb-2">
         Шаблон недели
       </Typography>
@@ -133,9 +132,7 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
         <ScrollView
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
-          style={{
-            maxHeight: Math.max(height * 0.55, 320),
-          }}
+          style={{ flex: 1 }}
         >
           <View className="gap-4">
             {days.map((_, index) => (

@@ -173,7 +173,6 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
             <ErrorScreen
               title="Не удалось загрузить данные дня"
               isLoading={isLoading}
-              withTabBar={false}
               onRetry={refetch}
             />
           );
