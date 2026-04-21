@@ -40,6 +40,7 @@ import {
 } from "@/src/components/ui";
 import { BaseField } from "@/src/components/ui/fields/BaseField";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import RHFPicker from "@/src/components/hookForm/rhf-picker";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -429,12 +430,11 @@ const SlotCreate: React.FC = () => {
             </View>
 
             <View className="mt-1">
-              <RhfTextField
+              <RHFPicker
                 name="duration"
                 label="Изменить продолжительность (мин)"
-                placeholder="60"
-                keyboardType="number-pad"
-                maxLength={4}
+                placeholder="Выберите длительность"
+                defaultValue={60}
               />
             </View>
 
