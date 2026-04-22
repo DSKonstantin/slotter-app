@@ -98,6 +98,7 @@ export const DatePicker = ({
               themeVariant="light"
               is24Hour
               display="spinner"
+              minuteInterval={5}
               onChange={onChangeAndroid}
             />
           )}
@@ -119,6 +120,7 @@ export const DatePicker = ({
                   is24Hour
                   themeVariant="light"
                   display="spinner"
+                  minuteInterval={5}
                   onChange={onChangeIOS}
                 />
               </View>

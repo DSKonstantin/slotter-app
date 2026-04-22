@@ -12,6 +12,7 @@ import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData"
 import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 type AppCreateServiceProps = {
   categoryId?: string;
@@ -26,7 +27,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
     defaultValues: {
       name: "",
       price: "",
-      duration: "",
+      duration: 0,
       categoryId: Number(categoryId),
       description: "",
       isAvailableOnline: false,
@@ -35,6 +36,8 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
       photos: defaultServicePhotos,
     },
   });
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {

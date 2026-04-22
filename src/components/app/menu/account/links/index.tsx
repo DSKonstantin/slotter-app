@@ -12,6 +12,7 @@ import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const Links = () => {
   const methods = useForm<AccountLinksFormValues>({
@@ -27,6 +28,8 @@ const Links = () => {
   });
 
   const watchedLinks = methods.watch("links");
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = (data: AccountLinksFormValues) => {
     // TODO: save links
