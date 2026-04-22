@@ -16,6 +16,7 @@ import { useImagePicker } from "@/src/hooks/useImagePicker";
 import {
   Badge,
   Button,
+  FloatingFooter,
   IconButton,
   StSvg,
   Typography,
@@ -41,6 +42,7 @@ import {
   MAX_PHOTOS,
 } from "./constants";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const toUiPhoto = (p: ApiGalleryPhoto): GalleryPhoto => ({
   id: String(p.id),
@@ -189,7 +191,7 @@ const Gallery = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteGalleryPhoto({ userId, id: Number(id) }).unwrap();
+      await deleteGalleryPhoto({ userId, id: parseInt(id, 10) || 0 }).unwrap();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось удалить фото"));
     }
@@ -210,7 +212,10 @@ const Gallery = () => {
             setSelectedIds(null);
             for (const id of toDelete) {
               try {
-                await deleteGalleryPhoto({ userId, id: Number(id) }).unwrap();
+                await deleteGalleryPhoto({
+                  userId,
+                  id: parseInt(id, 10) || 0,
+                }).unwrap();
               } catch (error) {
                 toast.error(
                   getApiErrorMessage(error, "Не удалось удалить фото"),
@@ -226,7 +231,7 @@ const Gallery = () => {
 
   const handleSetCover = async (id: string) => {
     const positions = [
-      { id: Number(id), position: 0 },
+      { id: parseInt(id, 10) || 0, position: 0 },
       ...photos
         .filter((p) => p.id !== id)
         .map((p, index) => ({ id: Number(p.id), position: index + 1 })),
@@ -243,7 +248,7 @@ const Gallery = () => {
     try {
       await updateGalleryPhoto({
         userId,
-        id: Number(id),
+        id: parseInt(id, 10) || 0,
         data: {
           crop_data: {
             x: cropData.originX,
@@ -382,17 +387,14 @@ const Gallery = () => {
                 />
 
                 {selectedIds !== null && selectedIds.size > 0 && (
-                  <View
-                    className="absolute left-4 right-4"
-                    style={{ bottom: bottomInset + 16 }}
-                  >
+                  <FloatingFooter offset={TAB_BAR_HEIGHT + 16}>
                     <Button
                       buttonClassName="bg-background-surface"
                       title={`Удалить (${selectedIds.size})`}
                       variant="destructive"
                       onPress={handleDeleteSelected}
                     />
-                  </View>
+                  </FloatingFooter>
                 )}
               </>
             )}

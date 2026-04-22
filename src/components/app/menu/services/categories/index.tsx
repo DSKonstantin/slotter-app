@@ -25,6 +25,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 type SelectedCategory = {
   id: number;
@@ -35,7 +36,6 @@ type SelectedCategory = {
 const AppServicesCategories = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<SelectedCategory | null>(null);
   const [updateServiceCategory] = useUpdateServiceCategoryMutation();
@@ -117,15 +117,15 @@ const AppServicesCategories = () => {
     fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleRefresh = useCallback(() => {
-    if (isFetchingNextPage) return Promise.resolve();
+  const refetchCategories = useCallback(
+    () =>
+      isFetchingNextPage
+        ? Promise.resolve()
+        : refetch({ refetchCachedPages: false }),
+    [isFetchingNextPage, refetch],
+  );
 
-    setRefreshing(true);
-
-    return refetch({ refetchCachedPages: false }).finally(() => {
-      setRefreshing(false);
-    });
-  }, [isFetchingNextPage, refetch]);
+  const { refreshing, onRefresh } = useRefresh(refetchCategories);
 
   if (!auth) {
     return null;
@@ -151,7 +151,7 @@ const AppServicesCategories = () => {
               <ErrorScreen
                 title="Не удалось загрузить категории"
                 isLoading={isFetching}
-                onRetry={handleRefresh}
+                onRetry={onRefresh}
               />
             );
           }
@@ -176,7 +176,7 @@ const AppServicesCategories = () => {
                 onDragEnd={handleDragEnd}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={listConfig.onEndReachedThreshold}
-                onRefresh={handleRefresh}
+                onRefresh={onRefresh}
                 refreshing={refreshing}
                 renderItem={({
                   item,

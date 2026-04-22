@@ -8,6 +8,7 @@ import ServiceFormBody, {
 } from "@/src/components/app/menu/services/service/serviceForm";
 import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
+import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -38,28 +39,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
       const nextCategoryId = Number(values.categoryId);
-      const additionalServiceIds =
-        values.additionalServices?.map((s) => s.serviceId) ?? [];
-
-      const formData = new FormData();
-      formData.append("service[name]", values.name.trim());
-      formData.append("service[price]", String(Number(values.price)));
-      formData.append("service[duration]", String(Number(values.duration)));
-      formData.append("service[description]", values.description.trim());
-      formData.append(
-        "service[is_available_online]",
-        String(values.isAvailableOnline),
-      );
-      formData.append("service[is_active]", String(values.isActive));
-
-      if (!additionalServiceIds.length) {
-        formData.append("service[additional_service_ids][]", "");
-      } else {
-        additionalServiceIds.forEach((id) => {
-          formData.append("service[additional_service_ids][]", String(id));
-        });
-      }
-
+      const formData = buildServiceFormData(values);
       appendPhotosToFormData(formData, values.photos);
 
       await createService({

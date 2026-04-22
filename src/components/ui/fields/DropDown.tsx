@@ -17,6 +17,8 @@ type SelectFieldProps = {
   items: ItemType<string>[];
   placeholder?: string;
   emptyText?: string;
+  endAdornment?: React.ReactNode;
+  onEndAdornmentPress?: () => void;
 };
 
 export function DropDown({
@@ -28,6 +30,8 @@ export function DropDown({
   items,
   placeholder = "Выберите",
   emptyText = "Нет вариантов",
+  endAdornment,
+  onEndAdornmentPress,
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
   const [innerItems, setInnerItems] = useState<ItemType<string>[]>(() => items);
@@ -48,6 +52,11 @@ export function DropDown({
       label={label}
       error={error}
       disabled={disabled}
+      endAdornment={endAdornment}
+      onEndAdornmentPress={
+        onEndAdornmentPress ??
+        (endAdornment ? () => setOpen((prev) => !prev) : undefined)
+      }
       renderControl={({ setFocused }) => (
         <DropDownPicker
           open={open}

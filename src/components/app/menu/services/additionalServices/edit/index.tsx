@@ -82,6 +82,7 @@ const AdditionalServiceEdit = () => {
         data: {
           name: values.name.trim(),
           duration: Number(values.duration),
+          description: values.description,
           price: Number(values.price),
           is_active: values.isActive,
         },
@@ -100,6 +101,7 @@ const AdditionalServiceEdit = () => {
       name: service.name,
       price: String(centsToRubles(service.price_cents)),
       duration: String(service.duration),
+      description: String(service.description),
       isActive: service.is_active,
     });
   }, [service, methods]);

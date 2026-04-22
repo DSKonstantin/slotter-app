@@ -1,9 +1,9 @@
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 import { InputToolbarProps } from "react-native-gifted-chat";
 import type { ImagePickerAsset } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
-import { StSvg } from "@/src/components/ui";
+import { FadeOverlay, IconButton, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import type { ChatIMessage } from "@/src/utils/chat/types";
@@ -27,7 +27,8 @@ const ChatInputBar = ({
   ...toolbarProps
 }: Props) => {
   return (
-    <View className="px-screen bg-transparent">
+    <View className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent">
+      <FadeOverlay position="bottom" height={80} />
       {replyingTo && (
         <ChatReplyFooter message={replyingTo} onCancel={onCancelReply} />
       )}
@@ -42,26 +43,26 @@ const ChatInputBar = ({
               options={{ allowsMultipleSelection: true, selectionLimit: 10 }}
               onPick={onAttach}
             >
-              <View className="justify-center items-center w-10 h-10">
+              <View className="justify-center items-center w-[48px] h-[48px] bg-background-surface rounded-full mr-1">
                 <StSvg
                   name="paper_clip"
-                  size={22}
-                  color={colors.neutral[500]}
+                  size={24}
+                  color={colors.neutral[900]}
                 />
               </View>
             </ImagePickerTrigger>
 
             {isUser && onAttachService && (
-              <TouchableOpacity
+              <IconButton
+                icon={
+                  <StSvg
+                    name="Meatballs_menu"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                }
                 onPress={onAttachService}
-                className="justify-center items-center w-10 h-10"
-              >
-                <StSvg
-                  name="Add_round_light"
-                  size={24}
-                  color={colors.neutral[500]}
-                />
-              </TouchableOpacity>
+              />
             )}
           </View>
         )}

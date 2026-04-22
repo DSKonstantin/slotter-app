@@ -3,10 +3,15 @@ import { View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 import { colors } from "@/src/styles/colors";
-
-const MOCK_LINK = "slotter.app/ivan.barber";
+import { useAppSelector } from "@/src/store/redux/store";
 
 const SpecialistHomeAssistant = () => {
+  const personalLink = useAppSelector(
+    (s) => s.auth.user?.personal_link ?? "",
+  );
+
+  if (!personalLink) return null;
+
   return (
     <View className="bg-background-card rounded-base">
       <View className="flex-row items-center gap-1">
@@ -20,7 +25,7 @@ const SpecialistHomeAssistant = () => {
         Поделитесь ссылкой, чтобы начать принимать записи
       </Typography>
 
-      <CopyLinkButton link={MOCK_LINK} />
+      <CopyLinkButton link={personalLink} />
     </View>
   );
 };

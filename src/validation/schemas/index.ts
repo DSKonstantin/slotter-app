@@ -16,5 +16,6 @@ export * from "./register.schema";
 export * from "./scheduleTemplate.schema";
 export * from "./serviceForm.schema";
 export * from "./slotCreate.schema";
+export * from "./slotDetails.schema";
 export * from "./slotReschedule.schema";
 export * from "./verify.schema";

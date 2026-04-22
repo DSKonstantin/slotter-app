@@ -12,7 +12,7 @@ import {
   useDeleteAdditionalServiceMutation,
   useGetAdditionalServicesInfiniteQuery,
   useReorderAdditionalServicesMutation,
-  useUpdateAdditionalServiceMutation,
+  useToggleAdditionalServiceActiveMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -35,7 +35,7 @@ const AdditionalList = () => {
   const auth = useRequiredAuth();
   const listConfig = useInfiniteListConfig();
 
-  const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
+  const [toggleActive] = useToggleAdditionalServiceActiveMutation();
   const [deleteAdditionalService] = useDeleteAdditionalServiceMutation();
   const [reorderAdditionalServices] = useReorderAdditionalServicesMutation();
 
@@ -73,23 +73,23 @@ const AdditionalList = () => {
 
   const handleToggleActive = useCallback(
     (id: number, nextValue: boolean) => {
-      if (!auth?.userId || isFetching) return;
+      if (!auth?.userId) return;
 
-      updateAdditionalService({
+      toggleActive({
         userId: auth.userId,
         id,
-        data: { is_active: nextValue },
+        is_active: nextValue,
       })
         .unwrap()
         .catch((error: any) => {
           toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
         });
     },
-    [auth?.userId, isFetching, updateAdditionalService],
+    [auth?.userId, toggleActive],
   );
 
   const handleDelete = useCallback(
-    (id: number, serviceName: string) => {
+    (id: number) => {
       Alert.alert("Удалить услугу?", "Это действие нельзя отменить", [
         { text: "Отмена", style: "cancel" },
         {

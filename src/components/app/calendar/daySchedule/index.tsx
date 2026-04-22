@@ -17,7 +17,7 @@ import { formatTimeFromISO } from "@/src/utils/date/formatTime";
 import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, Divider, StSvg } from "@/src/components/ui";
+import { Button, Divider, FloatingFooter, StSvg } from "@/src/components/ui";
 import {
   DayScheduleSchema,
   type DayScheduleFormValues,
@@ -25,11 +25,9 @@ import {
 import { DayScheduleForm } from "./DayScheduleForm";
 import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
 import ErrorScreen from "@/src/components/shared/errorScreen";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/src/styles/colors";
+import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 type DayScheduleEditProps = {
   workingDay: WorkingDay;
@@ -44,7 +42,6 @@ const DayScheduleEdit = ({
   topInset,
   bottomInset,
 }: DayScheduleEditProps) => {
-  const { left, right } = useSafeAreaInsets();
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
 
   const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
@@ -116,16 +113,7 @@ const DayScheduleEdit = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-      <View
-        className="absolute flex-1 w-full"
-        style={{
-          zIndex: 100,
-          bottom: bottomInset + 16,
-          right: 0,
-          paddingRight: left + 20,
-          paddingLeft: right + 20,
-        }}
-      >
+      <FloatingFooter offset={TAB_BAR_HEIGHT + 16}>
         <Button
           title="Сохранить изменения"
           loading={isLoading}
@@ -135,7 +123,7 @@ const DayScheduleEdit = ({
           }
           onPress={handleSubmit(onSubmit)}
         />
-      </View>
+      </FloatingFooter>
     </FormProvider>
   );
 };

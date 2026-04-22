@@ -1,7 +1,8 @@
 import * as Yup from "yup";
+import { titleField } from "@/src/validation/fields/title";
 
 export const customerTagSchema = Yup.object({
-  name: Yup.string().required("Введите название"),
+  name: titleField,
   color: Yup.string().nullable().optional(),
 });
 

@@ -32,7 +32,6 @@ const Service = () => {
   });
 
   const onSubmit = (data: object) => {
-    console.log("SUBMIT", data);
     router.push(Routers.onboarding.schedule);
   };
 

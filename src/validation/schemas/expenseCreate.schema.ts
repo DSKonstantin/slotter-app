@@ -1,7 +1,8 @@
 import * as Yup from "yup";
+import { titleField } from "@/src/validation/fields/title";
 
 export const ExpenseCreateSchema = Yup.object({
-  name: Yup.string().required("Введите название"),
+  name: titleField,
   amount: Yup.number()
     .typeError("Введите сумму")
     .positive("Сумма должна быть больше 0")

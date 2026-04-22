@@ -1,5 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  SlotDetailsSchema,
+  type SlotDetailsFormValues,
+} from "@/src/validation/schemas/slotDetails.schema";
 import { View, ActivityIndicator, RefreshControl } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
@@ -37,6 +42,7 @@ import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 type EditingField = "duration" | "price" | "comment" | null;
 
@@ -48,7 +54,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [editingField, setEditingField] = useState<EditingField>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
   const {
     data: slot,
@@ -59,18 +64,15 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     refetchOnMountOrArgChange: true,
   });
 
+  const { refreshing, onRefresh } = useRefresh(refetch);
+
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
-  const methods = useForm({
+  const methods = useForm<SlotDetailsFormValues>({
+    resolver: yupResolver(SlotDetailsSchema),
     defaultValues: { comment: "", duration: "", price: "" },
   });
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  }, [refetch]);
 
   const id = Number(slotId);
 
@@ -198,7 +200,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
-                    onRefresh={handleRefresh}
+                    onRefresh={onRefresh}
                   />
                 }
               >

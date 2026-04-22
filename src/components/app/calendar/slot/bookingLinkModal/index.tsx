@@ -20,11 +20,7 @@ type Props = {
   onClose: () => void;
 };
 
-const CHANNEL_OPTIONS = [
-  { label: "Чат Slotter", value: "slotter" },
-  { label: "WhatsApp", value: "whatsApp" },
-  { label: "Telegram", value: "telegram" },
-];
+const CHANNEL_OPTIONS = [{ label: "Чат Slotter", value: "slotter" }];
 
 const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
   const [channel, setChannel] = useState("slotter");

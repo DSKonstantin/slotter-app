@@ -11,11 +11,10 @@ const ChatInputToolbar = (props: InputToolbarProps<IMessage>) => {
     <InputToolbar
       {...props}
       containerStyle={{
-        backgroundColor: colors.background.surface,
-        borderTopColor: colors.neutral[100],
-        borderTopWidth: 1,
+        backgroundColor: "transparent",
+        borderTopWidth: 0,
       }}
-      primaryStyle={{ alignItems: "center" }}
+      primaryStyle={{ alignItems: "flex-end" }}
     />
   );
 };

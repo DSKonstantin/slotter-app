@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { Badge, Typography } from "@/src/components/ui";
 import { useGetCustomerBalanceQuery } from "@/src/store/redux/services/api/customersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 const PERIODS = [
   { label: "Неделя", value: "week" },
@@ -60,21 +61,12 @@ type Props = { customerId: number };
 const ClientBalance = ({ customerId }: Props) => {
   const auth = useRequiredAuth();
   const [period, setPeriod] = useState("all");
-  const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = useGetCustomerBalanceQuery(
     auth ? { userId: auth.userId, customerId, period } : skipToken,
   );
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   if (!auth) return null;
 
@@ -89,7 +81,7 @@ const ClientBalance = ({ customerId }: Props) => {
             gap: 16,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           {/* Total amount */}

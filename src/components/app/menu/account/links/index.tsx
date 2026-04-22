@@ -30,7 +30,6 @@ const Links = () => {
 
   const onSubmit = (data: AccountLinksFormValues) => {
     // TODO: save links
-    console.log(data);
   };
 
   return (

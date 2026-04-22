@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import debounce from "lodash/debounce";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
@@ -21,6 +21,7 @@ import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
 import type { Customer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import ClientsToolbarButton from "./ClientsToolbarButton";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
@@ -36,6 +37,9 @@ const ClientRow = React.memo(function ClientRow({ item }: { item: Customer }) {
   return (
     <Card
       title={item.name}
+      titleProps={{
+        numberOfLines: 2,
+      }}
       subtitle={item.phone || undefined}
       left={<Avatar name={item.name} size="md" />}
       right={
@@ -66,8 +70,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
   const debouncedSetSearch = useRef(
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
   ).current;
-
-  const [refreshing, setRefreshing] = useState(false);
 
   const { data: tagsData } = useGetCustomerTagsQuery(
     auth ? { userId: auth.userId } : skipToken,
@@ -108,20 +110,13 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
   const { data, isLoading, isError, refetch, isFetching } =
     useGetCustomersQuery(queryParams);
 
+  const { refreshing, onRefresh } = useRefresh(refetch);
+
   const customers = useMemo(() => {
     const all = data?.customers ?? [];
     if (!tagId) return all;
     return all.filter((c) => c.customer_tag?.id === tagId);
   }, [data?.customers, tagId]);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch]);
 
   return (
     <View className="flex-1" style={{ paddingTop: topInset }}>
@@ -176,7 +171,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           </Typography>
           <Button
             title="Повторить"
-            onPress={handleRefresh}
+            onPress={onRefresh}
             loading={isFetching}
             disabled={isFetching}
             buttonClassName="w-full"
@@ -193,7 +188,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
             flexGrow: customers.length === 0 ? 1 : undefined,
           }}
           showsVerticalScrollIndicator={false}
-          onRefresh={handleRefresh}
+          onRefresh={onRefresh}
           refreshing={refreshing}
           renderItem={({ item }) => <ClientRow item={item} />}
           ListEmptyComponent={

@@ -1,27 +1,9 @@
 import * as Yup from "yup";
+import { parseTimeToMinutes } from "@/src/validation/utils/parseTimeToMinutes";
 
 export const calendarScheduleModes = ["bulk", "perDay"] as const;
 
 export type CalendarScheduleMode = (typeof calendarScheduleModes)[number];
-
-const parseTimeToMinutes = (value?: string) => {
-  if (!value) return null;
-
-  const [hours, minutes] = value.split(":").map(Number);
-
-  if (
-    Number.isNaN(hours) ||
-    Number.isNaN(minutes) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59
-  ) {
-    return null;
-  }
-
-  return hours * 60 + minutes;
-};
 
 const hasValidTimeRange = (scheduleStart?: string, scheduleEnd?: string) => {
   if (!scheduleStart || !scheduleEnd) return true;

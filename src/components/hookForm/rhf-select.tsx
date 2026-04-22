@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { ItemType } from "react-native-dropdown-picker";
 import { DropDown } from "@/src/components/ui";
@@ -10,6 +10,8 @@ type RHFSelectFieldProps = {
   emptyText?: string;
   disabled?: boolean;
   items: ItemType<string>[];
+  endAdornment?: ReactNode;
+  onEndAdornmentPress?: () => void;
 };
 
 export function RHFSelect({
@@ -19,6 +21,8 @@ export function RHFSelect({
   placeholder,
   emptyText,
   disabled,
+  endAdornment,
+  onEndAdornmentPress,
 }: RHFSelectFieldProps) {
   const { control } = useFormContext();
 
@@ -36,6 +40,8 @@ export function RHFSelect({
           emptyText={emptyText}
           disabled={disabled}
           error={error}
+          endAdornment={endAdornment}
+          onEndAdornmentPress={onEndAdornmentPress}
         />
       )}
     />

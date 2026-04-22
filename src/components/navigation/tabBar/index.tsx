@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Typography, StSvg, IconButton } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { LinearGradient } from "expo-linear-gradient";
+import { FadeOverlay } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
@@ -44,19 +44,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         backgroundColor: "transparent",
       }}
     >
-      <LinearGradient
-        colors={["#F2F2F6", "rgba(242, 242, 246, 0)"]}
-        start={{ x: 0.5, y: 1 }}
-        end={{ x: 0.5, y: 0 }}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: TAB_BAR_HEIGHT + insets.bottom + 8,
-        }}
-        pointerEvents="none"
-      />
+      <FadeOverlay position="bottom" height={TAB_BAR_HEIGHT + insets.bottom + 8} />
       <View className="flex-row items-center justify-between px-5 bg-transparent">
         <View className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1">
           {TABS.map((tab) => {

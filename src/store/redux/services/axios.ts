@@ -1,6 +1,6 @@
 import AxiosClient from "axios";
 
-const API_BASE_URL: string = "https://staging.slotter.app/api/v1/";
+const API_BASE_URL: string = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
 const axios = AxiosClient.create({
   baseURL: API_BASE_URL,

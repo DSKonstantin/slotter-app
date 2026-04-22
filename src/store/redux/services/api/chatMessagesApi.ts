@@ -1,4 +1,5 @@
 import { api } from "../api";
+import { chatRoomsApi } from "./chatRoomsApi";
 import { getCable } from "@/src/services/cable";
 import { toIMessage } from "@/src/utils/chat/toIMessage";
 import type { ChatIMessage } from "@/src/utils/chat/types";
@@ -17,7 +18,9 @@ type RoomEvent =
   | { event: "message_updated"; chat_message: ChatMessage }
   | { event: "message_destroyed"; message_id: number; user: EventUser }
   | { event: "messages_read"; user: EventUser }
-  | { event: "typing"; user: EventUser };
+  | { event: "typing"; user: EventUser }
+  | { event: "blocked"; blocked_by: EventUser }
+  | { event: "unblocked"; unblocked_by: EventUser };
 
 function toUserId(u: EventUser): string {
   return `${u.resource_type}_${u.id}`;
@@ -175,6 +178,46 @@ const chatMessagesApi = api.injectEndpoints({
                     );
                   }, TYPING_TIMEOUT_MS);
                 }
+                break;
+              }
+              case "blocked": {
+                const blockedByMe = isMe(toUserId(data.blocked_by));
+                dispatch(
+                  chatRoomsApi.util.updateQueryData(
+                    "getChatRooms",
+                    undefined,
+                    (draft) => {
+                      const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
+                      if (room) {
+                        if (blockedByMe) {
+                          room.blocked_by_me = true;
+                        } else {
+                          room.i_am_blocked = true;
+                        }
+                      }
+                    },
+                  ),
+                );
+                break;
+              }
+              case "unblocked": {
+                const unblockedByMe = isMe(toUserId(data.unblocked_by));
+                dispatch(
+                  chatRoomsApi.util.updateQueryData(
+                    "getChatRooms",
+                    undefined,
+                    (draft) => {
+                      const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
+                      if (room) {
+                        if (unblockedByMe) {
+                          room.blocked_by_me = false;
+                        } else {
+                          room.i_am_blocked = false;
+                        }
+                      }
+                    },
+                  ),
+                );
                 break;
               }
             }

@@ -19,9 +19,8 @@ import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const EnterCode = () => {
-  const { phone } = useLocalSearchParams<{
-    phone: string;
-  }>();
+  const params = useLocalSearchParams<{ phone: string }>();
+  const phone = Array.isArray(params.phone) ? params.phone[0] : params.phone;
 
   const [code, setCode] = useState("");
   const [telegramLogin] = useTelegramLoginMutation();

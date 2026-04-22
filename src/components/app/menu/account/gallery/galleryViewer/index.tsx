@@ -96,7 +96,6 @@ export function GalleryViewer({
             />
 
             <ViewerToolbar
-              bottomInset={insets.bottom}
               onSetCover={() => {
                 onSetCover(current.id);
                 onClose();

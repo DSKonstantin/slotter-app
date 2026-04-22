@@ -25,7 +25,7 @@ export type AutocompleteProps = {
 
   dataSet?: AutocompleteItem[];
   initialItem?: AutocompleteItem;
-  onSelectItem?: (a: any) => void;
+  onSelectItem?: (item: AutocompleteItem | null) => void;
   onChangeText?: (text: string) => void;
   placeholder?: string;
   emptyText?: string;
