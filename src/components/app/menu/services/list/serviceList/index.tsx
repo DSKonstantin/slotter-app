@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { memo, useCallback } from "react";
 import { Text, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
 import {
@@ -165,4 +165,4 @@ const ServiceList = ({
   );
 };
 
-export default React.memo(ServiceList);
+export default memo(ServiceList);

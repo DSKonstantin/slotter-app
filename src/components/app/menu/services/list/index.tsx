@@ -142,7 +142,9 @@ const AppServices = () => {
     <>
       <ScreenWithToolbar
         title="Услуги"
-        rightButton={<ServicesToolbarActions />}
+        rightButton={
+          categories.length > 0 ? <ServicesToolbarActions /> : undefined
+        }
       >
         {({ topInset, bottomInset }) => {
           return (

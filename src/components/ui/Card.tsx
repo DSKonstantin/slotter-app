@@ -52,13 +52,13 @@ export const Card = ({
       {left ? <View className="mr-3">{left}</View> : null}
 
       <ContentComponent
-        className="flex-grow"
+        className="flex-1 min-w-0"
         {...(pressContent ? { onPress } : {})}
       >
         <View className="flex-row items-center gap-1">
           <Text
             {...titleProps}
-            className={`font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
+            className={`flex-shrink font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
           >
             {title}
           </Text>

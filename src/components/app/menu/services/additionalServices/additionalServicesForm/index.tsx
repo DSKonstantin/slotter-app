@@ -45,6 +45,7 @@ const AdditionalServicesForm = ({
             name="description"
             label="Краткое описание"
             placeholder="Содержание услуги"
+            multiline={true}
           />
           <RhfTextField
             name="price"

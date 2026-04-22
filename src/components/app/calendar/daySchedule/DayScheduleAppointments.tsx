@@ -41,7 +41,7 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
         <AppointmentCard
           key={appointment.id}
           time={`${formatTimeString(appointment.start_time)} - ${formatTimeString(appointment.end_time)}`}
-          name={appointment.customer.name}
+          name={appointment.customer?.name ?? ""}
           service={appointment.services.map((s) => s.name).join(", ")}
           onPress={() => router.push(Routers.app.calendar.slot(appointment.id))}
         />

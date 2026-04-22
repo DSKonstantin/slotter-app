@@ -37,6 +37,9 @@ const ClientRow = React.memo(function ClientRow({ item }: { item: Customer }) {
   return (
     <Card
       title={item.name}
+      titleProps={{
+        numberOfLines: 2,
+      }}
       subtitle={item.phone || undefined}
       left={<Avatar name={item.name} size="md" />}
       right={
