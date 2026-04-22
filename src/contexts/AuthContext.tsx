@@ -36,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (token: string) => {
       try {
-        await accessTokenStorage.set('eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyNCIsInNjcCI6InVzZXIiLCJhdWQiOm51bGwsImlhdCI6MTc3NjY5Njk1MSwiZXhwIjoxNzc4NTExMzUxLCJqdGkiOiJhNDZkMDIyZi0yZjRlLTRiOWQtYmZhZS04NTYxYzFmYzAwNzIifQ.mpaseAFbT3Csf9jRw54NoxWlPIPx58jWbgBMaATwSAo');
         dispatch(setToken(token));
       } catch {
         await accessTokenStorage.remove();
@@ -58,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkAuth = async () => {
       try {
         const token = await accessTokenStorage.get();
-        await accessTokenStorage.set('eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyNCIsInNjcCI6InVzZXIiLCJhdWQiOm51bGwsImlhdCI6MTc3NjY5Njk1MSwiZXhwIjoxNzc4NTExMzUxLCJqdGkiOiJhNDZkMDIyZi0yZjRlLTRiOWQtYmZhZS04NTYxYzFmYzAwNzIifQ.mpaseAFbT3Csf9jRw54NoxWlPIPx58jWbgBMaATwSAo');
 
         if (token) {
           dispatch(setToken(token));
