@@ -13,6 +13,7 @@ type StModalProps = {
   containerClassName?: string;
   horizontalPadding?: boolean;
   keyboardAware?: boolean;
+  fullHeight?: boolean;
   props?: ModalProps;
 };
 
@@ -22,6 +23,7 @@ export const StModal = ({
   children,
   horizontalPadding = true,
   keyboardAware = false,
+  fullHeight = false,
   ...props
 }: StModalProps) => {
   const { height } = useWindowDimensions();
@@ -30,14 +32,14 @@ export const StModal = ({
 
   const containerStyle = useMemo(
     () => ({
-      maxHeight: height - top,
+      ...(fullHeight ? { height: height - top } : { maxHeight: height - top }),
       paddingBottom: bottom + 8,
       ...(horizontalPadding && {
         paddingLeft: 20 + left,
         paddingRight: 20 + right,
       }),
     }),
-    [bottom, height, horizontalPadding, left, right, top],
+    [bottom, fullHeight, height, horizontalPadding, left, right, top],
   );
 
   return (

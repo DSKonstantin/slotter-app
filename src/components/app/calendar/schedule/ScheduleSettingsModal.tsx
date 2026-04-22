@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View, useWindowDimensions } from "react-native";
 import { FormProvider, useFormContext, useWatch } from "react-hook-form";
-import { BlurView } from "expo-blur";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BottomSheetModal,
   BottomSheetScrollView,
@@ -24,6 +24,7 @@ import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { parseISO } from "date-fns";
 import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
+import { BlurView } from "expo-blur";
 
 type Props = {
   visible: boolean;
@@ -32,11 +33,89 @@ type Props = {
   isLoading?: boolean;
 };
 
-const ScheduleSettingsModalContent = ({
+const ScheduleSettingsModalHeader = ({
+  totalCount,
+  canSave,
+  isLoading,
   onClose,
   onSave,
+}: {
+  totalCount: number;
+  canSave: boolean;
+  isLoading?: boolean;
+  onClose: () => void;
+  onSave: () => void;
+}) => (
+  <View className="flex-row items-center mb-4 px-5 pt-4">
+    <IconButton
+      size="sm"
+      buttonClassName="bg-transparent"
+      onPress={onClose}
+      icon={<StSvg name="Close_round" size={20} color={colors.neutral[900]} />}
+    />
+    <Typography weight="semibold" className="text-body text-center flex-1">
+      {totalCount} {pluralize(totalCount, ["день", "дня", "дней"])} выбрано
+    </Typography>
+    <IconButton
+      size="sm"
+      disabled={isLoading || !canSave}
+      onPress={onSave}
+      buttonClassName="bg-transparent"
+      icon={
+        <StSvg
+          name="Done_round"
+          size={20}
+          color={
+            canSave && !isLoading
+              ? colors.primary.blue[500]
+              : colors.neutral[500]
+          }
+        />
+      }
+    />
+  </View>
+);
+
+const ScheduleSettingsModalControls = ({
+  blockedDays,
+  selectedEditableDays,
+  mode,
+  onModeChange,
+}: {
+  blockedDays: any[];
+  selectedEditableDays: any[];
+  mode: string;
+  onModeChange: (nextMode: string) => void;
+}) => (
+  <>
+    {blockedDays.length > 0 && (
+      <View className="px-5 py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center mx-5">
+        <StSvg name="Alarm_fill" size={24} color={colors.accent.yellow[700]} />
+        <Typography className="text-caption text-accent-yellow-700">
+          Среди выбранных есть дни с записями
+        </Typography>
+      </View>
+    )}
+
+    {selectedEditableDays.length > 1 && (
+      <View className="mb-4 px-5">
+        <SegmentedControl
+          options={[
+            { label: "Одинаково", value: "bulk" },
+            { label: "По дням", value: "perDay" },
+          ]}
+          value={mode}
+          onChange={onModeChange}
+        />
+      </View>
+    )}
+  </>
+);
+
+const ScheduleSettingsModalContent = ({
+  onSave,
   isLoading,
-}: Omit<Props, "visible">) => {
+}: Omit<Props, "visible" | "onClose">) => {
   const { control, setValue } = useFormContext<CalendarScheduleFormValues>();
   const mode = useWatch({ control, name: "mode" }) ?? "bulk";
   const watchedCalendarDays = useWatch({ control, name: "calendarDays" });
@@ -50,10 +129,6 @@ const ScheduleSettingsModalContent = ({
       calendarDays
         .map((day, index) => ({ day, index }))
         .filter(({ day }) => day.isSelected && !day.isExisting),
-    [calendarDays],
-  );
-  const blockedDays = useMemo(
-    () => calendarDays.filter((day) => day.isSelected && day.isExisting),
     [calendarDays],
   );
   const canSave = selectedEditableDays.length > 0;
@@ -74,108 +149,8 @@ const ScheduleSettingsModalContent = ({
     [calendarDays, selectedEditableDays.length, setValue],
   );
 
-  const switchMode = useCallback(
-    (nextMode: string) => {
-      if (nextMode === mode) return;
-
-      if (nextMode === "perDay") {
-        selectedEditableDays.forEach(({ index }) => {
-          setValue(`calendarDays.${index}.scheduleStart`, "", {
-            shouldDirty: true,
-          });
-          setValue(`calendarDays.${index}.scheduleEnd`, "", {
-            shouldDirty: true,
-          });
-          setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
-        });
-        setValue("mode", "perDay", { shouldDirty: true });
-        return;
-      }
-
-      Alert.alert(
-        "Переключить режим?",
-        "Индивидуальные настройки дней будут сброшены.",
-        [
-          { text: "Отмена", style: "cancel" },
-          {
-            text: "Переключить",
-            style: "destructive",
-            onPress: () => {
-              setValue(
-                "commonDraft",
-                { scheduleStart: "", scheduleEnd: "", breaks: [] },
-                { shouldDirty: true },
-              );
-              setValue("mode", "bulk", { shouldDirty: true });
-            },
-          },
-        ],
-      );
-    },
-    [mode, selectedEditableDays, setValue],
-  );
-
-  const totalCount = selectedEditableDays.length + blockedDays.length;
-
   return (
-    <>
-      <View className="flex-row items-center mb-4">
-        <IconButton
-          size="sm"
-          buttonClassName="bg-transparent"
-          onPress={onClose}
-          icon={
-            <StSvg name="Close_round" size={20} color={colors.neutral[900]} />
-          }
-        />
-        <Typography weight="semibold" className="text-body text-center flex-1">
-          {totalCount} {pluralize(totalCount, ["день", "дня", "дней"])} выбрано
-        </Typography>
-        <IconButton
-          size="sm"
-          disabled={isLoading || !canSave}
-          onPress={onSave}
-          buttonClassName="bg-transparent"
-          icon={
-            <StSvg
-              name="Done_round"
-              size={20}
-              color={
-                canSave && !isLoading
-                  ? colors.primary.blue[500]
-                  : colors.neutral[500]
-              }
-            />
-          }
-        />
-      </View>
-
-      {blockedDays.length > 0 && (
-        <View className="px-4 py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center">
-          <StSvg
-            name="Alarm_fill"
-            size={24}
-            color={colors.accent.yellow[700]}
-          />
-          <Typography className="text-caption text-accent-yellow-700">
-            Среди выбранных есть дни с записями
-          </Typography>
-        </View>
-      )}
-
-      {selectedEditableDays.length > 1 && (
-        <View className="mb-4">
-          <SegmentedControl
-            options={[
-              { label: "Одинаково", value: "bulk" },
-              { label: "По дням", value: "perDay" },
-            ]}
-            value={mode}
-            onChange={switchMode}
-          />
-        </View>
-      )}
-
+    <View style={styles.content}>
       {canSave ? (
         mode === "bulk" ? (
           <>
@@ -237,7 +212,7 @@ const ScheduleSettingsModalContent = ({
         }
         onPress={onSave}
       />
-    </>
+    </View>
   );
 };
 
@@ -249,7 +224,72 @@ export const ScheduleSettingsModal = ({
 }: Props) => {
   const methods = useFormContext<CalendarScheduleFormValues>();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["20%", "45%", "85%"], []);
+  const { height } = useWindowDimensions();
+  const { top } = useSafeAreaInsets();
+  const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
+
+  const { control, setValue } = methods;
+  const mode = useWatch({ control, name: "mode" }) ?? "bulk";
+  const watchedCalendarDays = useWatch({ control, name: "calendarDays" });
+  const calendarDays = useMemo(
+    () => watchedCalendarDays ?? [],
+    [watchedCalendarDays],
+  );
+
+  const selectedEditableDays = useMemo(
+    () =>
+      calendarDays
+        .map((day, index) => ({ day, index }))
+        .filter(({ day }) => day.isSelected && !day.isExisting),
+    [calendarDays],
+  );
+  const blockedDays = useMemo(
+    () => calendarDays.filter((day) => day.isSelected && day.isExisting),
+    [calendarDays],
+  );
+  const totalCount = selectedEditableDays.length + blockedDays.length;
+  const canSave = selectedEditableDays.length > 0;
+
+  const switchMode = useCallback(
+    (nextMode: string) => {
+      if (nextMode === mode) return;
+
+      if (nextMode === "perDay") {
+        selectedEditableDays.forEach(({ index }) => {
+          setValue(`calendarDays.${index}.scheduleStart`, "", {
+            shouldDirty: true,
+          });
+          setValue(`calendarDays.${index}.scheduleEnd`, "", {
+            shouldDirty: true,
+          });
+          setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
+        });
+        setValue("mode", "perDay", { shouldDirty: true });
+        return;
+      }
+
+      Alert.alert(
+        "Переключить режим?",
+        "Индивидуальные настройки дней будут сброшены.",
+        [
+          { text: "Отмена", style: "cancel" },
+          {
+            text: "Переключить",
+            style: "destructive",
+            onPress: () => {
+              setValue(
+                "commonDraft",
+                { scheduleStart: "", scheduleEnd: "", breaks: [] },
+                { shouldDirty: true },
+              );
+              setValue("mode", "bulk", { shouldDirty: true });
+            },
+          },
+        ],
+      );
+    },
+    [mode, selectedEditableDays, setValue],
+  );
 
   const renderBackground = useCallback(
     ({ style }: BottomSheetBackgroundProps) => (
@@ -278,6 +318,7 @@ export const ScheduleSettingsModal = ({
       index={1}
       snapPoints={snapPoints}
       enablePanDownToClose={false}
+      enableOverDrag={false}
       detached
       style={styles.sheet}
       backgroundComponent={renderBackground}
@@ -285,15 +326,24 @@ export const ScheduleSettingsModal = ({
       backdropComponent={renderBackdrop}
       onDismiss={onClose}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.content}>
-        <FormProvider {...methods}>
-          <ScheduleSettingsModalContent
-            onClose={onClose}
-            onSave={onSave}
-            isLoading={isLoading}
-          />
-        </FormProvider>
-      </BottomSheetScrollView>
+      <ScheduleSettingsModalHeader
+        totalCount={totalCount}
+        canSave={canSave}
+        isLoading={isLoading}
+        onClose={onClose}
+        onSave={onSave}
+      />
+      <ScheduleSettingsModalControls
+        blockedDays={blockedDays}
+        selectedEditableDays={selectedEditableDays}
+        mode={mode}
+        onModeChange={switchMode}
+      />
+      <FormProvider {...methods}>
+        <BottomSheetScrollView contentContainerStyle={styles.content}>
+          <ScheduleSettingsModalContent onSave={onSave} isLoading={isLoading} />
+        </BottomSheetScrollView>
+      </FormProvider>
     </BottomSheetModal>
   );
 };
@@ -308,10 +358,14 @@ const styles = StyleSheet.create({
   },
   background: {
     borderRadius: 36,
+    backgroundColor: colors.background.card,
   },
   handle: {
     backgroundColor: colors.neutral[300],
     width: 40,
+  },
+  container: {
+    flex: 1,
   },
   content: {
     paddingHorizontal: 20,

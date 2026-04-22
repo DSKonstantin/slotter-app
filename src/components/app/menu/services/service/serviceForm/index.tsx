@@ -5,6 +5,7 @@ import { useController, useFormContext } from "react-hook-form";
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
+import RHFPicker from "@/src/components/hookForm/rhf-picker";
 import {
   createDefaultServicePhotos,
   ServiceImagesPicker,
@@ -79,11 +80,11 @@ const ServiceFormBody = ({
           placeholder="Например: 3500"
           keyboardType="numeric"
         />
-        <RhfTextField
+        <RHFPicker
           name="duration"
           label="Длительность (мин)"
-          placeholder="Например: 60"
-          keyboardType="numeric"
+          placeholder="Выберите длительность"
+          defaultValue={0}
         />
 
         <RhfTextField
