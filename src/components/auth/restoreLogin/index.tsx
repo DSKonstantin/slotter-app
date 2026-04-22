@@ -28,7 +28,6 @@ const RestoreLogin = () => {
 
   const onSubmit = (data: RestoreLoginFormValues) => {
     const { phone } = data;
-    console.log("SUBMIT", `+${unMask(phone)}`);
     router.push(Routers.auth.enterCode);
   };
 

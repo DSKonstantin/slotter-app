@@ -29,7 +29,7 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
     defaultValues: {
       name: "",
       amount: undefined,
-      date: "",
+      date: new Date().toISOString().split("T")[0],
       comment: "",
     },
   });
@@ -81,6 +81,7 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
 
           <RhfCalendarDatePicker
             name="date"
+            placeholder="Введите дату"
             label="Дата"
             endAdornment={
               <StSvg

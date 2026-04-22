@@ -81,7 +81,7 @@ export const useCalendarSchedule = (current: Date) => {
 
   const methods = useForm<CalendarScheduleFormValues>({
     resolver: (values, context, options) =>
-      (yupResolver(CalendarScheduleSchema) as any)(
+      yupResolver(CalendarScheduleSchema)(
         values,
         { ...context, mode: values.mode },
         options,

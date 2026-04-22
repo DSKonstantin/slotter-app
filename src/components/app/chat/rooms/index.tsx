@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
@@ -11,6 +11,7 @@ import type { ChatRoomTag } from "@/src/store/redux/services/api-types";
 import ChatRoomItem from "./ChatRoomItem";
 import ChatRoomsSkeleton from "./ChatRoomsSkeleton";
 import { NewChatSheet } from "./NewChatSheet";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 const RoomSeparator = () => <View className="h-2" />;
 
@@ -23,9 +24,10 @@ const ALL_TAB: ChatRoomTag = {
 export default function ChatRoomsScreen() {
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [newChatVisible, setNewChatVisible] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = useGetChatRoomsQuery(undefined);
+
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const rooms = useMemo(
     () => (data?.chat_rooms ?? []).filter((r) => r.other_member != null),
@@ -51,15 +53,6 @@ export default function ChatRoomsScreen() {
         : rooms.filter((r) => r.other_member?.tag?.id === selectedTagId),
     [rooms, selectedTagId],
   );
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
 
   if (isLoading) return <ChatRoomsSkeleton />;
 
@@ -147,8 +140,8 @@ export default function ChatRoomsScreen() {
                 }}
                 refreshControl={
                   <RefreshControl
-                    refreshing={isRefreshing}
-                    onRefresh={handleRefresh}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
                   />
                 }
                 ItemSeparatorComponent={RoomSeparator}

@@ -42,7 +42,7 @@ const ChatBubbleMenu = ({
 
   return (
     <StModal visible={visible} onClose={onClose}>
-      <View className="rounded-2xl bg-white border border-background overflow-hidden mb-4">
+      <View className="rounded-2xl bg-white border border-background overflow-hidden">
         <Pressable
           className="flex-row items-center gap-3 px-4 min-h-[56px] active:opacity-70"
           onPress={handleReply}

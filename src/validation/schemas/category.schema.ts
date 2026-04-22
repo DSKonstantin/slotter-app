@@ -1,7 +1,8 @@
 import * as Yup from "yup";
+import { titleField } from "@/src/validation/fields/title";
 
 export const categorySchema = Yup.object().shape({
-  name: Yup.string().required("Введите название категории"),
+  name: titleField,
   color: Yup.string().nullable().optional(),
 });
 

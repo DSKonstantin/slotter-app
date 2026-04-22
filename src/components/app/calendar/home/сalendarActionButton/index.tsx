@@ -1,9 +1,7 @@
 import React, { useCallback } from "react";
-import { View } from "react-native";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import { Button, StSvg } from "@/src/components/ui";
+import { Button, FloatingFooter, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   mode?: string;
@@ -12,23 +10,12 @@ interface Props {
 }
 
 const CalendarActionButton = ({ mode, title, onPress }: Props) => {
-  const { bottom, left, right } = useSafeAreaInsets();
-
   const handlePress = useCallback(() => {
     onPress();
   }, [onPress]);
 
   return (
-    <View
-      className="absolute"
-      style={{
-        zIndex: 100,
-        bottom: TAB_BAR_HEIGHT + bottom + 16,
-        right: 0,
-        paddingRight: right + 20,
-        paddingLeft: left + 20,
-      }}
-    >
+    <FloatingFooter className="left-auto" offset={TAB_BAR_HEIGHT + 16}>
       <Button
         onPress={handlePress}
         title={
@@ -39,7 +26,7 @@ const CalendarActionButton = ({ mode, title, onPress }: Props) => {
           <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />
         }
       />
-    </View>
+    </FloatingFooter>
   );
 };
 

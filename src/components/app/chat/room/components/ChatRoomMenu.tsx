@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { View, Pressable } from "react-native";
+import React from "react";
+import { Alert, View, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import {
   Button,
   Avatar,
@@ -9,30 +10,75 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import {
+  useDeleteChatRoomMutation,
+  useBlockChatRoomMutation,
+  useUnblockChatRoomMutation,
+  useMuteChatRoomMutation,
+} from "@/src/store/redux/services/api/chatRoomsApi";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
+  roomId: number;
   name: string;
   phone?: string;
+  blockedByMe: boolean;
+  iAmBlocked: boolean;
+  mutedByMe: boolean;
 };
 
-const ChatRoomMenu = ({ visible, onClose, name, phone }: Props) => {
-  const [notifications, setNotifications] = useState(true);
-  const [isBlocked, setIsBlocked] = useState(false);
+const ChatRoomMenu = ({
+  visible,
+  onClose,
+  roomId,
+  name,
+  phone,
+  blockedByMe,
+  iAmBlocked,
+  mutedByMe,
+}: Props) => {
+  const router = useRouter();
+
+  const [deleteChatRoom] = useDeleteChatRoomMutation();
+  const [blockChatRoom] = useBlockChatRoomMutation();
+  const [unblockChatRoom] = useUnblockChatRoomMutation();
+  const [muteChatRoom] = useMuteChatRoomMutation();
 
   const handleToggleBlock = async () => {
     try {
-      if (isBlocked) {
-        // await api.post(`/chat_rooms/${roomId}/unblock`);
+      if (blockedByMe) {
+        await unblockChatRoom({ chatRoomId: roomId }).unwrap();
       } else {
-        // await api.post(`/chat_rooms/${roomId}/block`);
+        await blockChatRoom({ chatRoomId: roomId }).unwrap();
       }
-
-      setIsBlocked((prev) => !prev);
+      onClose();
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Удалить переписку",
+      "Вы уверены? История сообщений будет скрыта.",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteChatRoom({ chatRoomId: roomId }).unwrap();
+              onClose();
+              router.back();
+            } catch (e) {
+              console.error(e);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -88,13 +134,18 @@ const ChatRoomMenu = ({ visible, onClose, name, phone }: Props) => {
       <View className="rounded-2xl bg-white border border-background overflow-hidden mb-4">
         <View className="flex-row items-center justify-between px-4 min-h-[56px]">
           <Typography className="text-body">Уведомления</Typography>
-          <Switch value={notifications} onChange={setNotifications} />
+          <Switch
+            value={!mutedByMe}
+            onChange={(enabled) => {
+              muteChatRoom({ chatRoomId: roomId, muted: !enabled });
+            }}
+          />
         </View>
       </View>
 
       <View className="gap-2">
         <Button
-          title={isBlocked ? "Разблокировать" : "Заблокировать"}
+          title={blockedByMe ? "Разблокировать" : "Заблокировать"}
           variant="clear"
           textClassName="text-accent-red-500"
           onPress={handleToggleBlock}
@@ -102,7 +153,7 @@ const ChatRoomMenu = ({ visible, onClose, name, phone }: Props) => {
             <StSvg
               name="Cancel"
               size={20}
-              color={isBlocked ? colors.neutral[500] : colors.accent.red[500]}
+              color={blockedByMe ? colors.neutral[500] : colors.accent.red[500]}
             />
           }
         />
@@ -110,7 +161,7 @@ const ChatRoomMenu = ({ visible, onClose, name, phone }: Props) => {
           title="Удалить переписку"
           variant="clear"
           textClassName="text-accent-red-500"
-          onPress={() => {}}
+          onPress={handleDelete}
           rightIcon={
             <StSvg name="Trash" size={20} color={colors.accent.red[500]} />
           }

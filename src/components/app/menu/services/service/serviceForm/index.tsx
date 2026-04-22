@@ -94,7 +94,6 @@ const ServiceFormBody = ({
           multiline
           numberOfLines={4}
           maxLength={40}
-          // style={styles.textarea}
           placeholder="Расскажите об услуге подробнее"
         />
       </View>

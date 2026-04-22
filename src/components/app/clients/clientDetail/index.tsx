@@ -20,6 +20,7 @@ import {
   useGetCustomerQuery,
   useUpdateCustomerMutation,
 } from "@/src/store/redux/services/api/customersApi";
+import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type Props = { customerId: number };
@@ -29,6 +30,7 @@ const ClientDetail = ({ customerId }: Props) => {
     useGetCustomerQuery({ customerId });
 
   const [updateCustomer, { isLoading: isSaving }] = useUpdateCustomerMutation();
+  const [createChatRoom] = useCreateChatRoomMutation();
 
   const customer = customerData?.customer;
 
@@ -42,6 +44,15 @@ const ClientDetail = ({ customerId }: Props) => {
   const handleSaveNote = async () => {
     if (!isDirty) return;
     await updateCustomer({ customerId, body: { note } });
+  };
+
+  const handleOpenChat = async () => {
+    try {
+      const { chat_room } = await createChatRoom({
+        memberId: customerId,
+      }).unwrap();
+      router.push(Routers.app.chat.room(chat_room.id));
+    } catch {}
   };
 
   if (customerLoading || !customer) {
@@ -80,6 +91,7 @@ const ClientDetail = ({ customerId }: Props) => {
             />
 
             <Card
+              onPress={handleOpenChat}
               title="Написать"
               titleProps={{
                 style: {

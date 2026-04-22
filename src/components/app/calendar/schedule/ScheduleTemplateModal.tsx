@@ -90,7 +90,7 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
   const { initialValues, save } = useScheduleTemplate();
 
   const methods = useForm<ScheduleTemplateFormValues>({
-    resolver: yupResolver(ScheduleTemplateSchema) as any,
+    resolver: yupResolver(ScheduleTemplateSchema),
     defaultValues: initialValues,
   });
 

@@ -48,7 +48,6 @@ const Schedule = () => {
   };
 
   const onSubmit = (data: OnboardingScheduleFormValues) => {
-    console.log("SUBMIT", data);
     router.push(Routers.onboarding.notification);
   };
 

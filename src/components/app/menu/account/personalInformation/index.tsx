@@ -15,6 +15,7 @@ import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
 import { AccountPersonalInformationSchema } from "@/src/validation/schemas/accountPersonalInformation.schema";
 import type { UploadFile } from "@/src/types/upload";
 import { colors } from "@/src/styles/colors";
@@ -60,17 +61,7 @@ const PersonalInformation = () => {
     async (data: FormValues) => {
       if (!auth) return;
       try {
-        const formData = new FormData();
-        formData.append("user[first_name]", data.name);
-        formData.append("user[last_name]", data.surname);
-        formData.append("user[profession]", data.profession);
-        if (data.avatar) {
-          formData.append("user[avatar]", {
-            uri: data.avatar.uri,
-            name: data.avatar.name,
-            type: data.avatar.type,
-          } as any);
-        }
+        const formData = buildUserFormData(data);
         await updateUser({ id: auth.userId, data: formData }).unwrap();
         router.back();
       } catch (error) {

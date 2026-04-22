@@ -24,7 +24,11 @@ import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
 
 const CalendarSchedule = () => {
   const { date } = useLocalSearchParams<{ date?: string }>();
-  const [current, setCurrent] = useState(date ? parseISO(date) : new Date());
+  const [current, setCurrent] = useState(() => {
+    if (!date) return new Date();
+    const parsed = parseISO(date);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  });
 
   const {
     methods,

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
-import CalendarError from "@/src/components/app/calendar/home/day/CalendarError";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
@@ -16,15 +16,15 @@ import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDa
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { Appointment } from "@/src/store/redux/services/api-types";
-import EmptySlots from "@/src/components/app/calendar/home/day/timeSlotList/EmptySlots";
+import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 const DayCalendarView = () => {
   const router = useRouter();
   const auth = useRequiredAuth();
   const { bottom } = useSafeAreaInsets();
-  const [refreshing, setRefreshing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const pendingScrollY = useRef<number | null>(null);
@@ -111,14 +111,7 @@ const DayCalendarView = () => {
     await Promise.all([refetchWorkingDays(), refetchAppointments()]);
   }, [refetchAppointments, refetchWorkingDays]);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refetchAll();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetchAll]);
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   const handleRetry = useCallback(async () => {
     setIsRetrying(true);
@@ -141,14 +134,25 @@ const DayCalendarView = () => {
     if (hasError)
       return (
         <View className="flex-1">
-          <CalendarError isLoading={isRetrying} onRetry={handleRetry} />
+          <ErrorScreen
+            title="Не удалось загрузить календарь"
+            isLoading={isRetrying}
+            onRetry={handleRetry}
+          />
         </View>
       );
     if (isLoading) return <TimeSlotListSkeleton />;
     if (isEmpty)
       return (
         <View className="flex-1">
-          <EmptySlots onPress={handleEmptyPress} />
+          <EmptyStateScreen
+            image={require("@/assets/images/empty-slots.png")}
+            title="На этот день записей нет"
+            subtitle="Добавьте первую запись или настройте рабочее время"
+            buttonTitle="Добавить запись"
+            buttonIcon="Add_round_fill"
+            onPress={handleEmptyPress}
+          />
         </View>
       );
     return (
@@ -183,7 +187,7 @@ const DayCalendarView = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 80,
+          paddingBottom: isEmpty ? 0 : TAB_BAR_HEIGHT + bottom + 80,
         }}
         onContentSizeChange={() => {
           if (pendingScrollY.current !== null) {
@@ -195,7 +199,7 @@ const DayCalendarView = () => {
           }
         }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
         <View

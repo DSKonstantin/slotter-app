@@ -12,6 +12,7 @@ type RHFTextFieldProps = {
   size?: FieldSize;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
+  onEndAdornmentPress?: () => void;
   maskFn?: (value: string) => string;
 } & TextInputProps;
 
@@ -20,6 +21,7 @@ export function RhfTextField({
   label,
   startAdornment,
   endAdornment,
+  onEndAdornmentPress,
   hideErrorText,
   size,
   maskFn,
@@ -43,6 +45,7 @@ export function RhfTextField({
           size={size}
           startAdornment={startAdornment}
           endAdornment={endAdornment}
+          onEndAdornmentPress={onEndAdornmentPress}
           {...other}
         />
       )}

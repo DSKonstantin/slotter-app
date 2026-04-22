@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -10,6 +11,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
 import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
+import { Typography } from "@/src/components/ui";
 import {
   INCOME_GROUP_OPTIONS,
   MONTH_NAMES_SHORT,
@@ -68,13 +70,7 @@ const FinancesIncomeScreen = () => {
       : skipToken,
   );
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const onRefresh = async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-  };
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const apiByMonth = Object.fromEntries(
     (data?.chart ?? []).map((p) => [p.month, p.amount_cents]),
@@ -100,10 +96,19 @@ const FinancesIncomeScreen = () => {
     if (isFetching) {
       return <IncomeBreakdownSkeleton />;
     }
-    if (groupBy === "services") {
-      return <IncomeBreakdownServices items={data?.breakdown ?? []} />;
+    if (!data?.breakdown?.length) {
+      return (
+        <Typography className="text-body text-neutral-400 text-center py-2">
+          {groupBy === "services"
+            ? "Нет данных по услугам за период"
+            : "Нет данных по клиентам за период"}
+        </Typography>
+      );
     }
-    return <IncomeBreakdownClients items={data?.breakdown ?? []} />;
+    if (groupBy === "services") {
+      return <IncomeBreakdownServices items={data.breakdown} />;
+    }
+    return <IncomeBreakdownClients items={data.breakdown} />;
   };
 
   return (
@@ -118,7 +123,7 @@ const FinancesIncomeScreen = () => {
             gap: 20,
           }}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           <TrendChartCard

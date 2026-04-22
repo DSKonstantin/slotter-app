@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -40,13 +41,7 @@ const FinancesScreen = () => {
       : skipToken,
   );
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const onRefresh = async () => {
-    setIsRefreshing(true);
-    await refetchSummary();
-    setIsRefreshing(false);
-  };
+  const { refreshing, onRefresh } = useRefresh(refetchSummary);
 
   const growth = summary?.growth_percent;
   const growthValue =
@@ -76,7 +71,7 @@ const FinancesScreen = () => {
             gap: 20,
           }}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           <IncomeCard

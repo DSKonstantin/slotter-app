@@ -13,6 +13,7 @@ type InputProps = {
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
+  onEndAdornmentPress?: () => void;
 } & TextInputProps;
 
 export function Input({
@@ -23,6 +24,7 @@ export function Input({
   size = "md",
   startAdornment,
   endAdornment,
+  onEndAdornmentPress,
   ...props
 }: InputProps) {
   return (
@@ -35,6 +37,7 @@ export function Input({
       multiline={props.multiline}
       startAdornment={startAdornment}
       endAdornment={endAdornment}
+      onEndAdornmentPress={onEndAdornmentPress}
       renderControl={({ setFocused }) => (
         <TextInput
           {...props}

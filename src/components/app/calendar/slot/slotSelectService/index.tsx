@@ -126,6 +126,14 @@ const SlotSelectService: React.FC<Props> = ({
     [data],
   );
 
+  const sections = useMemo(
+    () =>
+      categories
+        .map((cat) => ({ title: cat.name, data: cat.services ?? [] }))
+        .filter((section) => section.data.length > 0),
+    [categories],
+  );
+
   const preselectedIds = useMemo(
     () => (selectedServiceIds ? selectedServiceIds.split(",").map(Number) : []),
     [selectedServiceIds],
@@ -285,12 +293,7 @@ const SlotSelectService: React.FC<Props> = ({
             ) : (
               <>
                 <SectionList
-                  sections={categories
-                    .map((cat) => ({
-                      title: cat.name,
-                      data: cat.services ?? [],
-                    }))
-                    .filter((section) => section.data.length > 0)}
+                  sections={sections}
                   keyExtractor={(item) => String(item.id)}
                   renderSectionHeader={({ section: { title } }) => (
                     <View className="py-2 bg-background">

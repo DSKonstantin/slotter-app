@@ -7,3 +7,4 @@ export { phoneField } from "./phone";
 export { priceField } from "./price";
 export { professionField } from "./profession";
 export { surnameField } from "./surname";
+export { titleField } from "./title";

@@ -28,10 +28,10 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
       />
 
       <View className="flex-1 gap-0.5">
-        <View className="flex-row justify-between items-center">
+        <View className="flex-row justify-between items-center gap-2">
           <Typography
             weight="semibold"
-            className="text-neutral-900 text-body"
+            className="flex-1 text-neutral-900 text-body"
             numberOfLines={1}
           >
             {other_member.name}
@@ -40,7 +40,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
           {last_message && (
             <Typography
               weight="regular"
-              className="text-neutral-500 text-caption"
+              className="shrink-0 text-neutral-500 text-caption"
             >
               {formatMessageTime(last_message.created_at)}
             </Typography>

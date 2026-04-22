@@ -10,7 +10,7 @@ type Props = {
 };
 
 const ChatReplyFooter = ({ message, onCancel }: Props) => (
-  <View className="flex-row items-center bg-background-surface border-t border-neutral-100 px-4 py-2 gap-2.5">
+  <View className="flex-row items-center bg-background-surface px-4 py-2 gap-2.5 rounded-base mb-1">
     <StSvg name="Chat_plus_fill" size={18} color={colors.primary.blue[500]} />
 
     <View className="flex-1">

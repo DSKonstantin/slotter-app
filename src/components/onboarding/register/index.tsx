@@ -4,30 +4,20 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { Typography } from "@/src/components/ui";
-import * as Yup from "yup";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import { passwordField } from "@/src/validation/fields/password";
+import {
+  RegisterSchema,
+  type RegisterFormValues,
+} from "@/src/validation/schemas/register.schema";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-
-type RegisterFormValues = {
-  email: string;
-  password: string;
-};
-
-const RegisterSchema = Yup.object().shape({
-  password: passwordField,
-  email: Yup.string()
-    .email("Введите корректный email")
-    .required("Введите email"),
-});
 
 const Register = () => {
   const auth = useRequiredAuth();
@@ -59,7 +49,6 @@ const Register = () => {
 
         router.push(Routers.onboarding.experience);
       } catch (error) {
-        console.log("UPDATE USER ERROR:", error);
         toast.error(
           getApiErrorMessage(error, "Произошла ошибка при обновлении."),
         );

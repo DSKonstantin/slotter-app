@@ -466,6 +466,49 @@ const servicesApi = api.injectEndpoints({
       invalidatesTags: [{ type: "AdditionalServices", id: "LIST" }],
     }),
 
+    toggleAdditionalServiceActive: builder.mutation<
+      Service,
+      { userId: number; id: number; is_active: boolean }
+    >({
+      query: ({ userId, id, is_active }) => ({
+        url: `/users/${userId}/additional_services/${id}`,
+        method: "PATCH",
+        data: { additional_service: { is_active } },
+      }),
+      async onQueryStarted(
+        { id, is_active },
+        { dispatch, getState, queryFulfilled },
+      ) {
+        const patches = servicesApi.util
+          .selectInvalidatedBy(getState(), [
+            { type: "AdditionalServices", id: "LIST" },
+          ])
+          .filter(
+            (entry) =>
+              entry.endpointName === "getAdditionalServices" &&
+              isGetCategoriesArg(entry.originalArgs),
+          )
+          .map(({ originalArgs }) =>
+            dispatch(
+              servicesApi.util.updateQueryData(
+                "getAdditionalServices",
+                originalArgs,
+                (draft) => {
+                  for (const page of draft.pages) {
+                    const service = page.additional_services.find(
+                      (s) => s.id === id,
+                    );
+                    if (service) service.is_active = is_active;
+                  }
+                },
+              ),
+            ),
+          );
+
+        await applyWithRollback(patches, queryFulfilled);
+      },
+    }),
+
     updateAdditionalService: builder.mutation<
       Service,
       {
@@ -682,6 +725,7 @@ export const {
   useGetAdditionalServicesInfiniteQuery,
   useGetAdditionalServiceQuery,
   useCreateAdditionalServiceMutation,
+  useToggleAdditionalServiceActiveMutation,
   useUpdateAdditionalServiceMutation,
   useDeleteAdditionalServiceMutation,
 

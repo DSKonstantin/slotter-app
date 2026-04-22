@@ -1,5 +1,5 @@
 import React, { ReactNode, useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
 
@@ -15,6 +15,7 @@ type BaseFieldProps = {
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
+  onEndAdornmentPress?: () => void;
 
   renderControl: (params: {
     disabled?: boolean;
@@ -32,6 +33,7 @@ export function BaseField({
   startAdornment,
   hideErrorText = false,
   endAdornment,
+  onEndAdornmentPress,
   renderControl,
 }: BaseFieldProps) {
   const [focused, setFocused] = useState(false);
@@ -56,9 +58,17 @@ export function BaseField({
 
         {renderControl({ disabled, focused, setFocused })}
 
-        {endAdornment && (
-          <View className={styles.adornmentEnd}>{endAdornment}</View>
-        )}
+        {endAdornment &&
+          (onEndAdornmentPress ? (
+            <Pressable
+              onPress={onEndAdornmentPress}
+              className={styles.adornmentEnd}
+            >
+              {endAdornment}
+            </Pressable>
+          ) : (
+            <View className={styles.adornmentEnd}>{endAdornment}</View>
+          ))}
       </View>
 
       {!hideErrorText && (
