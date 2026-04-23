@@ -149,7 +149,7 @@ const ServiceList = ({
           <View style={{ gap: 24, paddingTop: 24 }}>
             {hasNextPage && (
               <Button
-                title="Загрузить ещё"
+                title="Показать ещё"
                 onPress={onLoadMore}
                 loading={isFetchingNextPage}
                 disabled={isFetchingNextPage}

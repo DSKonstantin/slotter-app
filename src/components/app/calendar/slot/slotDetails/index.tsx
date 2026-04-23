@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -123,6 +123,28 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     }
   };
 
+  const derived = useMemo(() => {
+    if (!slot) return null;
+    return {
+      canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
+      statusConfig: STATUS_CONFIG[slot.status] ?? null,
+      timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
+      serviceNames: slot.services.map((s) => s.name).join(", "),
+      additionalServiceNames: slot.additional_services
+        .map((s) => s.name)
+        .join(", "),
+      serviceSelectionParams: {
+        date: slot.date,
+        time: slot.start_time,
+        appointmentId: String(slot.id),
+        selectedServiceIds: slot.services.map((s) => s.id).join(","),
+        selectedAdditionalServiceIds: slot.additional_services
+          .map((s) => s.id)
+          .join(","),
+      },
+    };
+  }, [slot]);
+
   useEffect(() => {
     if (!slot) return;
     methods.reset({
@@ -152,7 +174,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <ErrorScreen
                 title="Не удалось загрузить запись"
                 isLoading={isLoading}
-                withTabBar={false}
                 onRetry={refetch}
               />
             );
@@ -170,25 +191,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               </View>
             );
           }
-
-          const canEdit = (EDITABLE_STATUSES as readonly string[]).includes(
-            slot.status,
-          );
-          const statusConfig = STATUS_CONFIG[slot.status] ?? null;
-          const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
-          const serviceNames = slot.services.map((s) => s.name).join(", ");
-          const additionalServiceNames = slot.additional_services
-            .map((s) => s.name)
-            .join(", ");
-          const serviceSelectionParams = {
-            date: slot.date,
-            time: slot.start_time,
-            appointmentId: String(slot.id),
-            selectedServiceIds: slot.services.map((s) => s.id).join(","),
-            selectedAdditionalServiceIds: slot.additional_services
-              .map((s) => s.id)
-              .join(","),
-          };
 
           return (
             <>
@@ -251,15 +253,15 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 </View>
 
                 <View className="mx-screen gap-2 mt-5 bg-background-surface rounded-base p-5">
-                  {statusConfig && (
+                  {derived!.statusConfig && (
                     <InfoRow
                       label="Статус"
                       right={
                         <Badge
                           size="sm"
-                          title={statusConfig.label}
-                          variant={statusConfig.variant}
-                          icon={statusConfig.icon}
+                          title={derived!.statusConfig.label}
+                          variant={derived!.statusConfig.variant}
+                          icon={derived!.statusConfig.icon}
                         />
                       }
                     />
@@ -268,20 +270,20 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <InfoRow
                     label="Услуга"
                     right={
-                      <View className="flex-row items-center gap-1 flex-1 justify-end">
+                      <View className="flex-row gap-1 flex-1 justify-end">
                         <Typography
                           weight="regular"
                           className="text-body text-neutral-900 flex-shrink text-right"
                         >
-                          {serviceNames || "—"}
+                          {derived!.serviceNames || "—"}
                         </Typography>
-                        {canEdit && (
+                        {derived!.canEdit && (
                           <IconButton
                             size="xs"
                             onPress={() =>
                               router.push(
                                 Routers.app.calendar.slotSelectService(
-                                  serviceSelectionParams,
+                                  derived!.serviceSelectionParams,
                                 ),
                               )
                             }
@@ -298,25 +300,26 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     }
                   />
 
-                  {(canEdit || slot.additional_services.length > 0) && (
+                  {(derived!.canEdit || slot.additional_services.length > 0) && (
                     <InfoRow
                       label="Доп. услуги"
                       right={
-                        <View className="flex-row items-center gap-1 flex-1 justify-end">
+                        <View className="flex-row gap-1 flex-1 justify-end">
                           <Typography
                             weight="regular"
                             className="text-body text-neutral-900 flex-shrink text-right"
                           >
-                            {additionalServiceNames || "—"}
+                            {derived!.additionalServiceNames || "—"}
                           </Typography>
-                          {canEdit && (
+                          {derived!.canEdit && (
                             <IconButton
                               size="xs"
                               onPress={() =>
                                 router.push(
-                                  Routers.app.calendar.slotSelectService(
-                                    serviceSelectionParams,
-                                  ),
+                                  Routers.app.calendar.slotSelectService({
+                                    ...derived!.serviceSelectionParams,
+                                    scrollTo: "additional",
+                                  }),
                                 )
                               }
                               icon={
@@ -340,7 +343,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                         weight="regular"
                         className="text-body text-neutral-900 flex-shrink text-right"
                       >
-                        {timeString}
+                        {derived!.timeString}
                       </Typography>
                     }
                   />
@@ -350,7 +353,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     displayValue={`${slot.duration} мин`}
                     fieldName="duration"
                     editing={editingField === "duration"}
-                    canEdit={canEdit}
+                    canEdit={derived!.canEdit}
                     isUpdating={isUpdating}
                     placeholder="мин"
                     onEdit={() => {
@@ -365,7 +368,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     displayValue={formatRublesFromCents(slot.price_cents)}
                     fieldName="price"
                     editing={editingField === "price"}
-                    canEdit={canEdit}
+                    canEdit={derived!.canEdit}
                     isUpdating={isUpdating}
                     placeholder="₽"
                     onEdit={() => {
@@ -385,7 +388,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     <Typography className="text-caption text-neutral-500">
                       Комментарий к записи
                     </Typography>
-                    {canEdit && (
+                    {derived!.canEdit && (
                       <IconButton
                         size="xs"
                         loading={editingField === "comment" && isUpdating}

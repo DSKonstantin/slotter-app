@@ -143,10 +143,7 @@ const AdditionalList = ({
 
   if (isError && !services.length) {
     return (
-      <AdditionalListErrorState
-        isFetching={isFetching}
-        onRetry={onRefresh}
-      />
+      <AdditionalListErrorState isFetching={isFetching} onRetry={onRefresh} />
     );
   }
 
@@ -168,7 +165,7 @@ const AdditionalList = ({
       ListFooterComponent={
         hasNextPage ? (
           <Button
-            title="Загрузить ещё"
+            title="Показать ещё"
             onPress={onLoadMore}
             loading={isFetchingNextPage}
             disabled={isFetchingNextPage}

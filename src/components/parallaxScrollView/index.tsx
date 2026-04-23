@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactElement } from "react";
+import type { RefreshControlProps } from "react-native";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   interpolate,
@@ -17,6 +18,7 @@ type Props = PropsWithChildren<{
   headerContent?: ReactElement;
   headerBackgroundColor: { dark: string; light: string };
   headerHeight?: number;
+  refreshControl?: ReactElement<RefreshControlProps>;
   contentInset?: {
     top?: number;
     left?: number;
@@ -31,6 +33,7 @@ export default function ParallaxScrollView({
   headerContent,
   headerBackgroundColor,
   headerHeight = 360,
+  refreshControl,
   contentInset = {},
 }: Props) {
   // const backgroundColor = useThemeColor({}, "background");
@@ -72,6 +75,7 @@ export default function ParallaxScrollView({
         backgroundColor: colors.background.DEFAULT,
       }}
       scrollEventThrottle={16}
+      refreshControl={refreshControl}
     >
       <View
         className="relative"
