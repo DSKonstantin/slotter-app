@@ -19,6 +19,8 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
+import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const AboutSpecialist = () => {
   const auth = useRequiredAuth();
@@ -37,6 +39,8 @@ const AboutSpecialist = () => {
       onRoad: user?.is_out_call ?? false,
     },
   });
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = useCallback(
     async (data: AccountAboutFormValues) => {
@@ -69,6 +73,7 @@ const AboutSpecialist = () => {
           <>
             <KeyboardAwareScrollView
               showsVerticalScrollIndicator={false}
+              bottomOffset={BOTTOM_OFFSET_SMALL}
               contentContainerStyle={{
                 paddingTop: topInset + 16,
                 paddingBottom: 16,

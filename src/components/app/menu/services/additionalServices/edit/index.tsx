@@ -17,6 +17,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const AdditionalServiceEdit = () => {
   const router = useRouter();
@@ -75,6 +76,8 @@ const AdditionalServiceEdit = () => {
     ]);
   };
 
+  useFormNavigationGuard(methods.formState.isDirty);
+
   const onSubmit = methods.handleSubmit(async (values) => {
     if (!auth?.userId) return;
 
@@ -104,7 +107,7 @@ const AdditionalServiceEdit = () => {
       name: service.name,
       price: String(centsToRubles(service.price_cents)),
       duration: String(service.duration),
-      description: String(service.description),
+      description: service.description ?? "",
       isActive: service.is_active,
     });
   }, [service, methods]);

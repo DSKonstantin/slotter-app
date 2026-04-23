@@ -41,6 +41,7 @@ import {
   ITEM_WIDTH,
   MAX_PHOTOS,
 } from "./constants";
+import { PlaceholderSlotter } from "@/src/components/ui/PlaceholderSlotter";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
@@ -270,6 +271,9 @@ const Gallery = () => {
 
     return (
       <View style={[styles.item, index % 2 === 0 && styles.itemLeftColumn]}>
+        <View className="absolute inset-0 items-center justify-center bg-neutral-100">
+          <PlaceholderSlotter size={60} />
+        </View>
         <Pressable
           className="active:opacity-70"
           onPress={() => {

@@ -22,6 +22,7 @@ import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type Props = {
   visible: boolean;
@@ -105,7 +106,12 @@ const RescheduleModal = ({
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose} keyboardAware>
+    <StModal
+      visible={visible}
+      onClose={handleClose}
+      keyboardAware
+      keyboardAwareBottomOffset={BOTTOM_OFFSET}
+    >
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-5">
           Перенести запись с {formatDayMonth(defaultDate)}

@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
+import { PlaceholderSlotter } from "@/src/components/ui/PlaceholderSlotter";
 import { colors } from "@/src/styles/colors";
 import type { Service } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
@@ -13,11 +14,17 @@ type PreviewServiceCardProps = {
 const PreviewServiceCard = ({ service }: PreviewServiceCardProps) => {
   return (
     <View className="overflow-hidden w-[187px]">
-      <View className="relative h-[187px] bg-neutral-500 rounded-base">
+      <View className="relative h-[187px] bg-neutral-100 rounded-base items-center justify-center">
+        <PlaceholderSlotter size={60} />
         {service.main_photo_url && (
           <Image
             source={{ uri: service.main_photo_url }}
-            style={{ width: "100%", height: "100%", borderRadius: 20 }}
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: 20,
+              position: "absolute",
+            }}
             contentFit="cover"
           />
         )}

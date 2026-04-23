@@ -17,6 +17,7 @@ import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useContactsPermission } from "@/src/hooks/useContactsPermission";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 import {
   useCreateCustomerMutation,
   useGetCustomerTagsQuery,
@@ -50,7 +51,14 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     defaultValues: { name: "", phone: "", comment: "", customer_tag: null },
   });
 
-  const { handleSubmit, setValue, reset, control } = methods;
+  const {
+    handleSubmit,
+    setValue,
+    reset,
+    control,
+    formState: { isDirty },
+  } = methods;
+  useFormNavigationGuard(isDirty);
   const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
 
   const [createCustomer, { isLoading }] = useCreateCustomerMutation();

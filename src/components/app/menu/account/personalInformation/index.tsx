@@ -19,6 +19,7 @@ import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
 import { AccountPersonalInformationSchema } from "@/src/validation/schemas/accountPersonalInformation.schema";
 import type { UploadFile } from "@/src/types/upload";
 import { colors } from "@/src/styles/colors";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 type FormValues = {
   name: string;
@@ -41,6 +42,8 @@ const PersonalInformation = () => {
       avatar: null,
     },
   });
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const avatar = methods.watch("avatar");
 
