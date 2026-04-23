@@ -1,15 +1,16 @@
 import React, { useEffect } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { ActivityIndicator, Alert, Text, View } from "react-native";
 import AdditionalServicesForm from "@/src/components/app/menu/services/additionalServices/additionalServicesForm";
 import { FormProvider, useForm } from "react-hook-form";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { Button } from "@/src/components/ui";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
   useDeleteAdditionalServiceMutation,
   useGetAdditionalServiceQuery,
   useUpdateAdditionalServiceMutation,
-} from "@/src/store/redux/services/api/servicesApi";
+} from "@/src/store/redux/services/api/additionalServicesApi";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -36,7 +37,9 @@ const AdditionalServiceEdit = () => {
   const {
     data: service,
     isLoading: isServiceLoading,
+    isFetching,
     isError,
+    refetch,
   } = useGetAdditionalServiceQuery(
     auth?.userId && id ? { userId: auth.userId, id: id } : skipToken,
   );
@@ -121,8 +124,15 @@ const AdditionalServiceEdit = () => {
   if (isError || !service) {
     return (
       <ScreenWithToolbar title="Редактировать доп. услугу">
-        <View className="flex-1 items-center justify-center">
-          <View>Ошибка загрузки</View>
+        <View className="flex-1 items-center justify-center gap-4 px-screen">
+          <Text className="text-body text-accent-red-500">Ошибка загрузки</Text>
+          <Button
+            title="Повторить"
+            onPress={refetch}
+            loading={isFetching}
+            disabled={isFetching}
+            buttonClassName="w-full"
+          />
         </View>
       </ScreenWithToolbar>
     );

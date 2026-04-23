@@ -15,7 +15,7 @@ import {
   useGetAdditionalServicesInfiniteQuery,
   useReorderAdditionalServicesMutation,
   useUpdateAdditionalServiceMutation,
-} from "@/src/store/redux/services/api/servicesApi";
+} from "@/src/store/redux/services/api/additionalServicesApi";
 import type { AdditionalService } from "@/src/store/redux/services/api-types";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";

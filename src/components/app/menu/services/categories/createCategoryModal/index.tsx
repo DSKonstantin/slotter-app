@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 
 import { StModal, Button, Typography, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import { useCreateServiceCategoryMutation } from "@/src/store/redux/services/api/servicesApi";
+import { useCreateServiceCategoryMutation } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import { colors } from "@/src/styles/colors";
 import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";

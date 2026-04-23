@@ -1,16 +1,11 @@
 import React from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 
 import { Button, Typography } from "@/src/components/ui";
-import { AdditionalListSkeleton } from "@/src/components/app/menu/services/list/listSkeletons";
 
 type AdditionalListErrorStateProps = {
   isFetching: boolean;
   onRetry: () => void;
-};
-
-export const AdditionalListLoadingState = () => {
-  return <AdditionalListSkeleton />;
 };
 
 export const AdditionalListErrorState = ({
@@ -33,29 +28,6 @@ export const AdditionalListErrorState = ({
         disabled={isFetching}
         buttonClassName="w-full"
       />
-    </View>
-  );
-};
-
-type AdditionalListFooterProps = {
-  isFetchingNextPage: boolean;
-};
-
-export const AdditionalListFooter = ({
-  isFetchingNextPage,
-}: AdditionalListFooterProps) => {
-  if (!isFetchingNextPage) return null;
-
-  return (
-    <View className="gap-2">
-      <View
-        className="items-center py-2"
-        accessible={true}
-        accessibilityRole="progressbar"
-        accessibilityLabel="Loading more services"
-      >
-        <ActivityIndicator />
-      </View>
     </View>
   );
 };

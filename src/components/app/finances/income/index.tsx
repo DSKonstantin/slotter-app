@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -68,6 +69,12 @@ const FinancesIncomeScreen = () => {
           group_by: groupBy,
         }
       : skipToken,
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
   );
 
   const { refreshing, onRefresh } = useRefresh(refetch);

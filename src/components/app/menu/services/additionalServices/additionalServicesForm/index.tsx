@@ -7,6 +7,7 @@ import { colors } from "@/src/styles/colors";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import DurationField from "@/src/components/app/menu/services/shared/durationField";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { isLoading } from "expo-font";
 
 type AdditionalServiceFormBodyProps = {
   onSubmit: () => void;
@@ -68,6 +69,8 @@ const AdditionalServicesForm = ({
       >
         <Button
           title={isEdit ? "Сохранить" : "Создать"}
+          disabled={loading}
+          loading={loading}
           onPress={onSubmit}
           rightIcon={
             <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />

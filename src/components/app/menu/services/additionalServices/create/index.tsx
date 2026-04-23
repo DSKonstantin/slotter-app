@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
-import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/servicesApi";
+import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/additionalServicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 

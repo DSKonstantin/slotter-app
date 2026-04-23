@@ -6,7 +6,7 @@ import AdditionalServicesForm from "@/src/components/app/menu/services/additiona
 import {
   useDeleteAdditionalServiceMutation,
   useUpdateAdditionalServiceMutation,
-} from "@/src/store/redux/services/api/servicesApi";
+} from "@/src/store/redux/services/api/additionalServicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";

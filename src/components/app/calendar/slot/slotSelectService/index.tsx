@@ -23,10 +23,8 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setSlotDraft } from "@/src/store/redux/slices/slotDraftSlice";
 import BookingLinkModal from "@/src/components/app/calendar/slot/bookingLinkModal";
-import {
-  useGetServiceCategoriesInfiniteQuery,
-  useGetAdditionalServicesInfiniteQuery,
-} from "@/src/store/redux/services/api/servicesApi";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
+import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
 import { useUpdateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type {
@@ -102,16 +100,22 @@ const SlotSelectService: React.FC<Props> = ({
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
-  const { data, isLoading } = useGetServiceCategoriesInfiniteQuery(
-    auth
-      ? { userId: auth.userId, params: { view: "public_profile" } }
-      : skipToken,
-  );
-
-  const { data: additionalData, isLoading: isLoadingAdditional } =
-    useGetAdditionalServicesInfiniteQuery(
-      auth ? { userId: auth.userId, params: {} } : skipToken,
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetServiceCategoriesInfiniteQuery(
+      auth
+        ? { userId: auth.userId, params: { view: "public_profile" } }
+        : skipToken,
     );
+
+  const {
+    data: additionalData,
+    isLoading: isLoadingAdditional,
+    fetchNextPage: fetchAdditionalNextPage,
+    hasNextPage: hasAdditionalNextPage,
+    isFetchingNextPage: isAdditionalFetchingNextPage,
+  } = useGetAdditionalServicesInfiniteQuery(
+    auth ? { userId: auth.userId, params: {} } : skipToken,
+  );
 
   const additionalServices = useMemo(
     () =>
@@ -319,60 +323,80 @@ const SlotSelectService: React.FC<Props> = ({
                   contentContainerStyle={{ paddingBottom: 24 }}
                   showsVerticalScrollIndicator={false}
                   ListFooterComponent={
-                    additionalServices.length > 0 ? (
-                      <View className="mt-4">
-                        <View className="flex-row justify-between items-center mb-2">
-                          <Typography
-                            weight="semibold"
-                            className="text-caption text-neutral-500 uppercase"
-                          >
-                            Дополнительные услуги
-                          </Typography>
-                          {selectedAdditional.length > 0 && (
-                            <Typography className="text-caption text-neutral-500">
-                              {selectedAdditional.length} / 10 выбрано
+                    <>
+                      {hasNextPage && (
+                        <Button
+                          title="Загрузить ещё"
+                          onPress={() => fetchNextPage()}
+                          loading={isFetchingNextPage}
+                          disabled={isFetchingNextPage}
+                          buttonClassName="mt-2"
+                        />
+                      )}
+                      {additionalServices.length > 0 && (
+                        <View className="mt-4">
+                          <View className="flex-row justify-between items-center mb-2">
+                            <Typography
+                              weight="semibold"
+                              className="text-caption text-neutral-500 uppercase"
+                            >
+                              Дополнительные услуги
                             </Typography>
-                          )}
+                            {selectedAdditional.length > 0 && (
+                              <Typography className="text-caption text-neutral-500">
+                                {selectedAdditional.length} / 10 выбрано
+                              </Typography>
+                            )}
+                          </View>
+                          <View className="gap-2">
+                            {isLoadingAdditional ? (
+                              <ActivityIndicator color={colors.neutral[400]} />
+                            ) : (
+                              additionalServices.map((service) => {
+                                const isSelected = selectedAdditional.some(
+                                  (s) => s.id === service.id,
+                                );
+                                return (
+                                  <Card
+                                    key={service.id}
+                                    title={service.name}
+                                    subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+                                    active={isSelected}
+                                    onPress={() =>
+                                      handleToggleAdditional(service)
+                                    }
+                                    right={
+                                      isSelected ? (
+                                        <StSvg
+                                          name="Check_round_fill"
+                                          size={24}
+                                          color={colors.primary.blue[500]}
+                                        />
+                                      ) : (
+                                        <StSvg
+                                          name="Expand_right_light"
+                                          size={24}
+                                          color={colors.neutral[500]}
+                                        />
+                                      )
+                                    }
+                                  />
+                                );
+                              })
+                            )}
+                            {hasAdditionalNextPage && (
+                              <Button
+                                title="Загрузить ещё"
+                                onPress={() => fetchAdditionalNextPage()}
+                                loading={isAdditionalFetchingNextPage}
+                                disabled={isAdditionalFetchingNextPage}
+                                buttonClassName="mt-2"
+                              />
+                            )}
+                          </View>
                         </View>
-                        <View className="gap-2">
-                          {isLoadingAdditional ? (
-                            <ActivityIndicator color={colors.neutral[400]} />
-                          ) : (
-                            additionalServices.map((service) => {
-                              const isSelected = selectedAdditional.some(
-                                (s) => s.id === service.id,
-                              );
-                              return (
-                                <Card
-                                  key={service.id}
-                                  title={service.name}
-                                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
-                                  active={isSelected}
-                                  onPress={() =>
-                                    handleToggleAdditional(service)
-                                  }
-                                  right={
-                                    isSelected ? (
-                                      <StSvg
-                                        name="Check_round_fill"
-                                        size={24}
-                                        color={colors.primary.blue[500]}
-                                      />
-                                    ) : (
-                                      <StSvg
-                                        name="Expand_right_light"
-                                        size={24}
-                                        color={colors.neutral[500]}
-                                      />
-                                    )
-                                  }
-                                />
-                              );
-                            })
-                          )}
-                        </View>
-                      </View>
-                    ) : null
+                      )}
+                    </>
                   }
                 />
 

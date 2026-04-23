@@ -11,7 +11,7 @@ import { ScrollView, View } from "react-native";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
+import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
 import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";

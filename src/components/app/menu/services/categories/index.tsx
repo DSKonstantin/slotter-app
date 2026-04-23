@@ -15,7 +15,7 @@ import {
   useGetServiceCategoriesInfiniteQuery,
   useReorderServiceCategoriesMutation,
   useUpdateServiceCategoryMutation,
-} from "@/src/store/redux/services/api/servicesApi";
+} from "@/src/store/redux/services/api/serviceCategoriesApi";
 import type { ServiceCategory } from "@/src/store/redux/services/api-types";
 
 import CreateCategoryModal from "@/src/components/app/menu/services/categories/createCategoryModal";

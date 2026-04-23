@@ -1,6 +1,9 @@
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
+import { LogBox } from "react-native";
+
+LogBox.ignoreLogs(["ref.measureLayout must be called"]);
 import { useEffect } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";

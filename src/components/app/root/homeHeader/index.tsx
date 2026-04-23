@@ -20,7 +20,7 @@ const HomeHeader = () => {
       <View className="flex-row items-center gap-3 flex-1 mr-3">
         <Avatar uri={user?.avatar_url ?? undefined} name={fullName} size="md" />
         <View className="flex-1">
-          <Typography weight="semibold" className="text-body">
+          <Typography weight="semibold" className="text-body" numberOfLines={1}>
             {fullName}
           </Typography>
           {profileLink && (
