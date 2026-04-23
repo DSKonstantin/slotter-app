@@ -21,6 +21,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 type EditServiceProps = {
   serviceId: number;
@@ -67,6 +68,8 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       photos: defaultServicePhotos,
     },
   });
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {

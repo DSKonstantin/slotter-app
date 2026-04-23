@@ -5,15 +5,12 @@ import {
   NestableDraggableFlatList,
   RenderItemParams,
 } from "react-native-draggable-flatlist";
-import { Button, Typography } from "@/src/components/ui";
+import { Button, Divider, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import {
-  useReorderServiceCategoriesMutation,
-  useReorderServicesMutation,
-} from "@/src/store/redux/services/api/servicesApi";
+import { useReorderServiceCategoriesMutation } from "@/src/store/redux/services/api/serviceCategoriesApi";
+import { useReorderServicesMutation } from "@/src/store/redux/services/api/servicesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { useAppSelector } from "@/src/store/redux/store";
 import { Service, ServiceCategory } from "@/src/store/redux/services/api-types";
 import ServiceCategoryItem from "@/src/components/app/menu/services/list/serviceList/serviceCategoryItem";
@@ -25,7 +22,10 @@ type ServiceListProps = {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   onRefresh: () => void;
+  onLoadMore: () => void;
 };
 
 const ServiceList = ({
@@ -33,13 +33,15 @@ const ServiceList = ({
   isLoading,
   isError,
   isFetching,
+  hasNextPage,
+  isFetchingNextPage,
   onRefresh,
+  onLoadMore,
 }: ServiceListProps) => {
   const auth = useRequiredAuth();
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const [reorderServices] = useReorderServicesMutation();
-  const listConfig = useInfiniteListConfig();
 
   const handleDragEnd = useCallback(
     async ({
@@ -130,21 +132,32 @@ const ServiceList = ({
   return (
     <NestableDraggableFlatList
       data={categories}
-      scrollEnabled={false}
       keyExtractor={(item) => String(item.id)}
       showsVerticalScrollIndicator={false}
-      onDragEnd={isEditMode ? handleDragEnd : undefined}
-      contentContainerStyle={{
-        paddingHorizontal: listConfig.contentContainerStyle.paddingHorizontal,
-      }}
+      onDragEnd={handleDragEnd}
       accessibilityRole="list"
-      ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
       ListEmptyComponent={
         <View className="pt-6">
           <Typography className="text-neutral-500">
             Категорий пока нет.
           </Typography>
         </View>
+      }
+      ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+      ListFooterComponent={
+        categories.length > 0 ? (
+          <View style={{ gap: 24, paddingTop: 24 }}>
+            {hasNextPage && (
+              <Button
+                title="Показать ещё"
+                onPress={onLoadMore}
+                loading={isFetchingNextPage}
+                disabled={isFetchingNextPage}
+              />
+            )}
+            <Divider />
+          </View>
+        ) : undefined
       }
       renderItem={({
         item: category,

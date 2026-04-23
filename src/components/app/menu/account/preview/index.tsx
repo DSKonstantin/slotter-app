@@ -1,7 +1,11 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useCallback } from "react";
+import { RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppSelector } from "@/src/store/redux/store";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import { colors } from "@/src/styles/colors";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import ParallaxScrollView from "@/src/components/parallaxScrollView";
@@ -17,7 +21,21 @@ import Footer from "@/src/components/app/menu/account/preview/footer";
 
 const AccountPreview = () => {
   const user = useAppSelector((s) => s.auth.user);
+  const auth = useRequiredAuth();
   const { bottom } = useSafeAreaInsets();
+
+  const { refetch } = useGetServiceCategoriesInfiniteQuery(
+    auth
+      ? { userId: auth.userId, params: { view: "public_profile" } }
+      : skipToken,
+  );
+
+  const handleRefetch = useCallback(() => {
+    return refetch({ refetchCachedPages: false });
+  }, [refetch]);
+
+  const { refreshing, onRefresh } = useRefresh(handleRefetch);
+
   if (!user) return null;
 
   return (
@@ -36,6 +54,9 @@ const AccountPreview = () => {
       <ParallaxScrollView
         headerImage={<PreviewHeaderImage uri={user.avatar_url ?? undefined} />}
         headerContent={<PreviewHeaderContent user={user} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         headerBackgroundColor={{
           light: colors.background.DEFAULT,
           dark: colors.background.DEFAULT,

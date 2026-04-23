@@ -58,6 +58,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "cash", label: "Наличные" },
@@ -95,6 +96,8 @@ const SlotCreate: React.FC = () => {
       sendNotification: true,
     },
   });
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const { handleSubmit, watch, setValue } = methods;
   const watchedServices = watch("services");
@@ -209,7 +212,7 @@ const SlotCreate: React.FC = () => {
   const handleSelectCustomer = useCallback(
     (item: AutocompleteItem) => {
       setSelectedCustomer(item);
-      setValue("customerId", parseInt(item.id, 10) || 0);
+      setValue("customerId", parseInt(item.id, 10) || 0, { shouldDirty: true });
       setCustomerModalVisible(false);
       setCustomerSearch("");
     },
@@ -222,7 +225,7 @@ const SlotCreate: React.FC = () => {
         id: String(draft.createdCustomer.id),
         title: draft.createdCustomer.name,
       };
-      setValue("customerId", parseInt(item.id, 10) || 0);
+      setValue("customerId", parseInt(item.id, 10) || 0, { shouldDirty: true });
       setSelectedCustomer(item);
       dispatch(clearCreatedCustomer());
     }

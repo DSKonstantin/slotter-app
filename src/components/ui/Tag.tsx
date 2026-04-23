@@ -31,6 +31,8 @@ export function Tag({
     >
       <Text
         className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}
+        numberOfLines={1}
+        ellipsizeMode="tail"
       >
         {title}
       </Text>

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
@@ -39,6 +40,12 @@ const FinancesScreen = () => {
     auth
       ? { userId: auth.userId, month: CURRENT_MONTH, year: CURRENT_YEAR }
       : skipToken,
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchSummary();
+    }, [refetchSummary]),
   );
 
   const { refreshing, onRefresh } = useRefresh(refetchSummary);

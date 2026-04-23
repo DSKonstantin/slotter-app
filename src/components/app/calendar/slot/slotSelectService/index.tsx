@@ -23,10 +23,8 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setSlotDraft } from "@/src/store/redux/slices/slotDraftSlice";
 import BookingLinkModal from "@/src/components/app/calendar/slot/bookingLinkModal";
-import {
-  useGetServiceCategoriesInfiniteQuery,
-  useGetAdditionalServicesInfiniteQuery,
-} from "@/src/store/redux/services/api/servicesApi";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
+import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
 import { useUpdateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type {
@@ -83,7 +81,16 @@ interface Props {
   appointmentId?: string;
   selectedServiceIds?: string;
   selectedAdditionalServiceIds?: string;
+  scrollTo?: string;
 }
+
+type SectionType = "category" | "additional";
+type SectionItem = Service | AdditionalService;
+type Section = {
+  title: string;
+  type: SectionType;
+  data: SectionItem[];
+};
 
 const SlotSelectService: React.FC<Props> = ({
   date,
@@ -91,7 +98,10 @@ const SlotSelectService: React.FC<Props> = ({
   appointmentId,
   selectedServiceIds,
   selectedAdditionalServiceIds,
+  scrollTo,
 }) => {
+  const sectionListRef = useRef<SectionList<SectionItem, Section>>(null);
+  const hasScrolledRef = useRef(false);
   const initializedServicesRef = useRef(false);
   const initializedAdditionalRef = useRef(false);
   const auth = useRequiredAuth();
@@ -102,16 +112,21 @@ const SlotSelectService: React.FC<Props> = ({
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
-  const { data, isLoading } = useGetServiceCategoriesInfiniteQuery(
-    auth
-      ? { userId: auth.userId, params: { view: "public_profile" } }
-      : skipToken,
-  );
-
-  const { data: additionalData, isLoading: isLoadingAdditional } =
-    useGetAdditionalServicesInfiniteQuery(
-      auth ? { userId: auth.userId, params: {} } : skipToken,
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetServiceCategoriesInfiniteQuery(
+      auth
+        ? { userId: auth.userId, params: { view: "public_profile" } }
+        : skipToken,
     );
+
+  const {
+    data: additionalData,
+    fetchNextPage: fetchAdditionalNextPage,
+    hasNextPage: hasAdditionalNextPage,
+    isFetchingNextPage: isAdditionalFetchingNextPage,
+  } = useGetAdditionalServicesInfiniteQuery(
+    auth ? { userId: auth.userId, params: {} } : skipToken,
+  );
 
   const additionalServices = useMemo(
     () =>
@@ -126,13 +141,25 @@ const SlotSelectService: React.FC<Props> = ({
     [data],
   );
 
-  const sections = useMemo(
-    () =>
-      categories
-        .map((cat) => ({ title: cat.name, data: cat.services ?? [] }))
-        .filter((section) => section.data.length > 0),
-    [categories],
-  );
+  const sections = useMemo<Section[]>(() => {
+    const categorySections: Section[] = categories
+      .map((cat) => ({
+        title: cat.name,
+        type: "category" as const,
+        data: (cat.services ?? []) as SectionItem[],
+      }))
+      .filter((section) => section.data.length > 0);
+
+    if (additionalServices.length > 0) {
+      categorySections.push({
+        title: "Дополнительные услуги",
+        type: "additional" as const,
+        data: additionalServices as SectionItem[],
+      });
+    }
+
+    return categorySections;
+  }, [categories, additionalServices]);
 
   const preselectedIds = useMemo(
     () => (selectedServiceIds ? selectedServiceIds.split(",").map(Number) : []),
@@ -250,6 +277,27 @@ const SlotSelectService: React.FC<Props> = ({
     }
   }, [additionalServices, preselectedAdditionalIds]);
 
+  useEffect(() => {
+    if (
+      scrollTo === "additional" &&
+      !hasScrolledRef.current &&
+      sections.length > 0 &&
+      sections.some((s) => s.type === "additional")
+    ) {
+      hasScrolledRef.current = true;
+      const sectionIndex = sections.findIndex((s) => s.type === "additional");
+      if (sectionIndex !== -1) {
+        setTimeout(() => {
+          sectionListRef.current?.scrollToLocation({
+            sectionIndex,
+            itemIndex: 0,
+            animated: true,
+          });
+        }, 300);
+      }
+    }
+  }, [scrollTo, sections]);
+
   if (!auth) return null;
 
   return (
@@ -292,88 +340,110 @@ const SlotSelectService: React.FC<Props> = ({
               </View>
             ) : (
               <>
-                <SectionList
+                <SectionList<SectionItem, Section>
+                  ref={sectionListRef}
                   sections={sections}
                   keyExtractor={(item) => String(item.id)}
-                  renderSectionHeader={({ section: { title } }) => (
-                    <View className="py-2 bg-background">
-                      <Typography
-                        weight="semibold"
-                        className="text-caption text-neutral-500 uppercase"
-                      >
-                        {title}
-                      </Typography>
-                    </View>
-                  )}
-                  renderItem={({ item }) => (
-                    <View className="mb-2">
-                      <ServiceRow
-                        service={item}
-                        isSelected={selectedServices.some(
-                          (s) => s.id === item.id,
-                        )}
-                        onPress={handleToggleService}
-                      />
-                    </View>
-                  )}
-                  contentContainerStyle={{ paddingBottom: 24 }}
-                  showsVerticalScrollIndicator={false}
-                  ListFooterComponent={
-                    additionalServices.length > 0 ? (
-                      <View className="mt-4">
-                        <View className="flex-row justify-between items-center mb-2">
+                  stickySectionHeadersEnabled={false}
+                  renderSectionHeader={() => null}
+                  renderSectionFooter={({ section }) => {
+                    const categorySections = sections.filter(
+                      (s) => s.type === "category",
+                    );
+                    const isLastCategory =
+                      section.type === "category" &&
+                      section === categorySections[categorySections.length - 1];
+
+                    if (isLastCategory && hasNextPage) {
+                      return (
+                        <Button
+                          title="Показать ещё"
+                          onPress={() => fetchNextPage()}
+                          loading={isFetchingNextPage}
+                          disabled={isFetchingNextPage}
+                          buttonClassName="mt-2"
+                        />
+                      );
+                    }
+                    if (
+                      section.type === "additional" &&
+                      hasAdditionalNextPage
+                    ) {
+                      return (
+                        <Button
+                          title="Показать ещё"
+                          onPress={() => fetchAdditionalNextPage()}
+                          loading={isAdditionalFetchingNextPage}
+                          disabled={isAdditionalFetchingNextPage}
+                          buttonClassName="mt-2"
+                        />
+                      );
+                    }
+                    return null;
+                  }}
+                  renderItem={({ item, index, section }) => (
+                    <View>
+                      {index === 0 && (
+                        <View
+                          className={`py-2 ${section.type === "additional" ? "flex-row justify-between items-center mt-4" : ""}`}
+                        >
                           <Typography
                             weight="semibold"
                             className="text-caption text-neutral-500 uppercase"
                           >
-                            Дополнительные услуги
+                            {section.title}
                           </Typography>
-                          {selectedAdditional.length > 0 && (
-                            <Typography className="text-caption text-neutral-500">
-                              {selectedAdditional.length} / 10 выбрано
-                            </Typography>
-                          )}
+                          {section.type === "additional" &&
+                            selectedAdditional.length > 0 && (
+                              <Typography className="text-caption text-neutral-500">
+                                {selectedAdditional.length} / 10 выбрано
+                              </Typography>
+                            )}
                         </View>
-                        <View className="gap-2">
-                          {isLoadingAdditional ? (
-                            <ActivityIndicator color={colors.neutral[400]} />
-                          ) : (
-                            additionalServices.map((service) => {
-                              const isSelected = selectedAdditional.some(
-                                (s) => s.id === service.id,
-                              );
-                              return (
-                                <Card
-                                  key={service.id}
-                                  title={service.name}
-                                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
-                                  active={isSelected}
-                                  onPress={() =>
-                                    handleToggleAdditional(service)
-                                  }
-                                  right={
-                                    isSelected ? (
-                                      <StSvg
-                                        name="Check_round_fill"
-                                        size={24}
-                                        color={colors.primary.blue[500]}
-                                      />
-                                    ) : (
-                                      <StSvg
-                                        name="Expand_right_light"
-                                        size={24}
-                                        color={colors.neutral[500]}
-                                      />
-                                    )
-                                  }
+                      )}
+                      <View className="mb-2">
+                        {section.type === "category" ? (
+                          <ServiceRow
+                            service={item as Service}
+                            isSelected={selectedServices.some(
+                              (s) => s.id === item.id,
+                            )}
+                            onPress={handleToggleService}
+                          />
+                        ) : (
+                          <Card
+                            title={item.name}
+                            subtitle={`${item.duration} мин | ${formatRublesFromCents(item.price_cents)}`}
+                            active={selectedAdditional.some(
+                              (s) => s.id === item.id,
+                            )}
+                            onPress={() =>
+                              handleToggleAdditional(item as AdditionalService)
+                            }
+                            right={
+                              selectedAdditional.some(
+                                (s) => s.id === item.id,
+                              ) ? (
+                                <StSvg
+                                  name="Check_round_fill"
+                                  size={24}
+                                  color={colors.primary.blue[500]}
                                 />
-                              );
-                            })
-                          )}
-                        </View>
+                              ) : (
+                                <StSvg
+                                  name="Expand_right_light"
+                                  size={24}
+                                  color={colors.neutral[500]}
+                                />
+                              )
+                            }
+                          />
+                        )}
                       </View>
-                    ) : null
-                  }
+                    </View>
+                  )}
+                  contentContainerStyle={{ paddingBottom: 24 }}
+                  showsVerticalScrollIndicator={false}
                 />
 
                 <View className="gap-2">

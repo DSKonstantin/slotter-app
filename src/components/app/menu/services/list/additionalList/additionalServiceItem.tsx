@@ -17,7 +17,7 @@ type AdditionalServiceItemProps = {
   item: AdditionalListItem;
   isEditMode: boolean;
   isDragActive: boolean;
-  onDrag: () => void;
+  onDrag?: () => void;
   onToggleActive: (id: number, nextValue: boolean) => void;
   onDelete?: (id: number, name: string) => void;
   onPress?: (id: number) => void;
@@ -59,8 +59,6 @@ const AdditionalServiceItem = ({
         isEditMode && (
           <Pressable
             onLongPress={onDrag}
-            delayLongPress={100}
-            hitSlop={8}
             accessibilityLabel="Reorder service"
             accessibilityRole="button"
           >

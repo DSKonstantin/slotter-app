@@ -6,7 +6,7 @@ import { Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import type { Service } from "@/src/store/redux/services/api-types";
 
 type Props = {

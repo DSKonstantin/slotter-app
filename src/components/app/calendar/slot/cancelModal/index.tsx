@@ -7,6 +7,7 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useCancelAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type Props = {
   visible: boolean;
@@ -39,7 +40,12 @@ const CancelModal = ({ visible, appointmentId, onClose }: Props) => {
   };
 
   return (
-    <StModal visible={visible} onClose={handleClose}>
+    <StModal
+      visible={visible}
+      onClose={handleClose}
+      keyboardAware
+      keyboardAwareBottomOffset={10}
+    >
       <FormProvider {...methods}>
         <Typography weight="semibold" className="text-display text-center mb-2">
           Отменить запись

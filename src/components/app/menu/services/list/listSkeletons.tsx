@@ -117,12 +117,12 @@ const SERVICE_CATEGORIES = [
 
 const ServiceListSkeletonComponent = () => {
   const { width } = useWindowDimensions();
-  const contentWidth = width - H_PAD * 2;
+  const contentWidth = width;
   const innerWidth = contentWidth - CARD_PAD * 2;
 
   return (
     <View
-      style={{ paddingHorizontal: H_PAD, gap: 24 }}
+      style={{ gap: 24 }}
       accessibilityLabel="Loading services"
       accessible={true}
     >
@@ -159,7 +159,7 @@ const AdditionalListSkeletonComponent = () => {
 
   return (
     <View
-      style={{ paddingHorizontal: H_PAD, gap: 8 }}
+      style={{ gap: 8 }}
       accessibilityLabel="Loading additional services"
       accessible={true}
     >

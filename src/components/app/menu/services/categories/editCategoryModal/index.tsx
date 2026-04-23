@@ -14,11 +14,11 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
 import RhfColorPicker from "@/src/components/hookForm/rhf-color-picker";
 import { CATEGORY_COLORS } from "@/src/constants/categoryColors";
+import { useDeleteServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 import {
-  useDeleteServiceMutation,
   useDeleteServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
-} from "@/src/store/redux/services/api/servicesApi";
+} from "@/src/store/redux/services/api/serviceCategoriesApi";
 import { useSafeAreaPadding } from "@/src/hooks/useSafeAreaPadding";
 import { toast } from "@backpackapp-io/react-native-toast";
 import map from "lodash/map";

@@ -13,6 +13,7 @@ type StModalProps = {
   containerClassName?: string;
   horizontalPadding?: boolean;
   keyboardAware?: boolean;
+  keyboardAwareBottomOffset?: number;
   fullHeight?: boolean;
   props?: ModalProps;
 };
@@ -23,6 +24,7 @@ export const StModal = ({
   children,
   horizontalPadding = true,
   keyboardAware = false,
+  keyboardAwareBottomOffset,
   fullHeight = false,
   ...props
 }: StModalProps) => {
@@ -65,6 +67,7 @@ export const StModal = ({
           <KeyboardAwareScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            bottomOffset={keyboardAwareBottomOffset}
           >
             {children}
           </KeyboardAwareScrollView>

@@ -6,9 +6,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
-import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/servicesApi";
+import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/additionalServicesApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const AdditionalServiceCreate = () => {
   const router = useRouter();
@@ -27,6 +28,8 @@ const AdditionalServiceCreate = () => {
       isActive: true,
     },
   });
+
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     if (!auth?.userId) return;

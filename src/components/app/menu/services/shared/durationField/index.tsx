@@ -48,8 +48,8 @@ const DurationField = ({
   };
 
   useEffect(() => {
-    if (currentValue.length > 0 && !presetValues.includes(currentValue)) {
-      setIsCustomSelected(true);
+    if (currentValue.length > 0) {
+      setIsCustomSelected(!presetValues.includes(currentValue));
     }
   }, [currentValue, presetValues]);
 

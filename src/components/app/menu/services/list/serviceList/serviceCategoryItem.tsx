@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { Alert, LayoutAnimation, Pressable, View } from "react-native";
 import {
   NestableDraggableFlatList,
@@ -93,41 +93,36 @@ const ServiceCategoryItem = ({
       {isExpanded && (
         <View className="gap-2">
           {services.length ? (
-            <NestableDraggableFlatList
-              data={services}
-              scrollEnabled={false}
-              keyExtractor={(service) => String(service.id)}
-              accessibilityRole="list"
-              onDragEnd={
-                isEditMode
-                  ? ({ data, from, to }) =>
-                      onServicesReorder(category.id, data, from, to)
-                  : undefined
-              }
-              ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-              renderItem={({
-                item: service,
-                drag,
-                isActive,
-              }: RenderItemParams<Service>) => (
-                <Card
-                  title={service.name}
-                  titleProps={{
-                    numberOfLines: 1,
-                    ellipsizeMode: "tail",
-                  }}
-                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
-                  titleAccessory={
-                    !service.is_active ? (
-                      <Tag title="скрыто" size="sm" />
-                    ) : undefined
-                  }
-                  active={isActive}
-                  left={
-                    isEditMode && (
+            isEditMode ? (
+              <NestableDraggableFlatList
+                data={services}
+                keyExtractor={(service) => String(service.id)}
+                accessibilityRole="list"
+                onDragEnd={({ data, from, to }) =>
+                  onServicesReorder(category.id, data, from, to)
+                }
+                ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                renderItem={({
+                  item: service,
+                  drag,
+                  isActive,
+                }: RenderItemParams<Service>) => (
+                  <Card
+                    title={service.name}
+                    titleProps={{
+                      numberOfLines: 1,
+                      ellipsizeMode: "tail",
+                    }}
+                    subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+                    titleAccessory={
+                      !service.is_active ? (
+                        <Tag title="скрыто" size="sm" />
+                      ) : undefined
+                    }
+                    active={isActive}
+                    left={
                       <Pressable
                         onLongPress={drag}
-                        delayLongPress={100}
                         hitSlop={8}
                         accessibilityLabel="Reorder service"
                         accessibilityRole="button"
@@ -138,10 +133,8 @@ const ServiceCategoryItem = ({
                           color={colors.neutral[900]}
                         />
                       </Pressable>
-                    )
-                  }
-                  right={
-                    isEditMode ? (
+                    }
+                    right={
                       <IconButton
                         size="xs"
                         disabled={isDeleting}
@@ -155,19 +148,41 @@ const ServiceCategoryItem = ({
                           />
                         }
                       />
-                    ) : (
+                    }
+                    pressArea="content"
+                    onPress={() => onServicePress(service.id, category.id)}
+                  />
+                )}
+              />
+            ) : (
+              <View style={{ gap: 8 }} accessibilityRole="list">
+                {services.map((service) => (
+                  <Card
+                    key={service.id}
+                    title={service.name}
+                    titleProps={{
+                      numberOfLines: 1,
+                      ellipsizeMode: "tail",
+                    }}
+                    subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+                    titleAccessory={
+                      !service.is_active ? (
+                        <Tag title="скрыто" size="sm" />
+                      ) : undefined
+                    }
+                    right={
                       <StSvg
                         name="Expand_right_light"
                         size={24}
                         color={colors.neutral[500]}
                       />
-                    )
-                  }
-                  pressArea={isEditMode ? "content" : "card"}
-                  onPress={() => onServicePress(service.id, category.id)}
-                />
-              )}
-            />
+                    }
+                    pressArea="card"
+                    onPress={() => onServicePress(service.id, category.id)}
+                  />
+                ))}
+              </View>
+            )
           ) : (
             <Button
               title="Создать услугу"
@@ -188,4 +203,4 @@ const ServiceCategoryItem = ({
   );
 };
 
-export default React.memo(ServiceCategoryItem);
+export default memo(ServiceCategoryItem);

@@ -1,30 +1,18 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  RefreshControl,
-  View,
-} from "react-native";
+import { RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { NestableScrollContainer } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
-import {
-  Button,
-  Divider,
-  IconButton,
-  StModal,
-  StSvg,
-} from "@/src/components/ui";
+import { Button, IconButton, StModal, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import AdditionalList from "@/src/components/app/menu/services/list/additionalList";
+import { AdditionalListItem } from "@/src/components/app/menu/services/list/additionalList/additionalServiceItem";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
-import {
-  useGetAdditionalServicesInfiniteQuery,
-  useGetServiceCategoriesInfiniteQuery,
-} from "@/src/store/redux/services/api/servicesApi";
+import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import { toggleEditMode } from "@/src/store/redux/slices/servicesSlice";
 import ServiceList from "@/src/components/app/menu/services/list/serviceList";
 import { useRefresh } from "@/src/hooks/useRefresh";
@@ -76,16 +64,38 @@ const AppServices = () => {
       : skipToken,
   );
 
-  const { refetch: refetchAdditionalServices } =
-    useGetAdditionalServicesInfiniteQuery(
-      auth ? { userId: auth.userId } : skipToken,
-    );
+  const {
+    data: additionalData,
+    isLoading: isAdditionalLoading,
+    isError: isAdditionalError,
+    isFetching: isAdditionalFetching,
+    refetch: refetchAdditionalServices,
+    fetchNextPage: fetchAdditionalNextPage,
+    hasNextPage: hasAdditionalNextPage,
+    isFetchingNextPage: isAdditionalFetchingNextPage,
+  } = useGetAdditionalServicesInfiniteQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
 
   const categories = useMemo(
     () =>
       categoriesData?.pages.flatMap((page) => page.service_categories) ?? [],
     [categoriesData],
   );
+
+  const additionalServices = useMemo<AdditionalListItem[]>(() => {
+    if (!additionalData?.pages) return [];
+
+    const unique = new Map<number, AdditionalListItem>();
+
+    additionalData.pages.forEach((page) => {
+      page.additional_services.forEach((service) => {
+        unique.set(service.id, service);
+      });
+    });
+
+    return [...unique.values()];
+  }, [additionalData?.pages]);
 
   const createServiceLink = useCallback(() => {
     setCreateModalVisible(false);
@@ -111,7 +121,7 @@ const AppServices = () => {
         refetchServiceCategories({ refetchCachedPages: false }),
         refetchAdditionalServices({ refetchCachedPages: false }),
       ]),
-    [refetchAdditionalServices, refetchServiceCategories],
+    [refetchServiceCategories, refetchAdditionalServices],
   );
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
@@ -120,19 +130,19 @@ const AppServices = () => {
     refetchServiceCategories({ refetchCachedPages: false });
   }, [refetchServiceCategories]);
 
-  const handleMomentumScrollEnd = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (!hasNextPage || isFetchingNextPage) return;
-      const { contentOffset, contentSize, layoutMeasurement } =
-        event.nativeEvent;
-      const distanceFromEnd =
-        contentSize.height - contentOffset.y - layoutMeasurement.height;
-      if (distanceFromEnd < 300) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage],
-  );
+  const handleAdditionalRefresh = useCallback(() => {
+    if (isAdditionalFetchingNextPage) return;
+    refetchAdditionalServices({ refetchCachedPages: false });
+  }, [isAdditionalFetchingNextPage, refetchAdditionalServices]);
+
+  const handleAdditionalLoadMore = useCallback(() => {
+    if (!hasAdditionalNextPage || isAdditionalFetchingNextPage) return;
+    fetchAdditionalNextPage();
+  }, [
+    fetchAdditionalNextPage,
+    hasAdditionalNextPage,
+    isAdditionalFetchingNextPage,
+  ]);
 
   if (!auth) {
     return null;
@@ -183,9 +193,9 @@ const AppServices = () => {
 
               <NestableScrollContainer
                 showsVerticalScrollIndicator={false}
-                onMomentumScrollEnd={handleMomentumScrollEnd}
                 contentContainerStyle={{
                   gap: 24,
+                  paddingHorizontal: 20,
                   paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={
@@ -200,13 +210,21 @@ const AppServices = () => {
                   isLoading={isCategoriesLoading}
                   isError={isCategoriesError}
                   isFetching={isCategoriesFetching}
+                  hasNextPage={hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
                   onRefresh={handleCategoriesRefresh}
+                  onLoadMore={fetchNextPage}
                 />
-
-                <View className="px-screen">
-                  <Divider />
-                </View>
-                <AdditionalList />
+                <AdditionalList
+                  services={additionalServices}
+                  isLoading={isAdditionalLoading}
+                  isError={isAdditionalError}
+                  isFetching={isAdditionalFetching}
+                  hasNextPage={hasAdditionalNextPage}
+                  isFetchingNextPage={isAdditionalFetchingNextPage}
+                  onRefresh={handleAdditionalRefresh}
+                  onLoadMore={handleAdditionalLoadMore}
+                />
               </NestableScrollContainer>
             </>
           );

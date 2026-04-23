@@ -3,7 +3,7 @@ import { FlatList, Pressable, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/servicesApi";
+import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import { colors } from "@/src/styles/colors";
 import type { Service } from "@/src/store/redux/services/api-types";
 import PreviewServiceCard from "@/src/components/app/menu/account/preview/services/PreviewServiceCard";
