@@ -12,6 +12,7 @@ import { GAP, HORIZONTAL_PADDING, ITEM_HEIGHT, ITEM_WIDTH } from "../constants";
 type Props = {
   photos: PendingPhoto[];
   isUploading: boolean;
+  errorMessage: string | null;
   onClose: () => void;
   onUpload: (photos: PendingPhoto[]) => void;
 };
@@ -19,6 +20,7 @@ type Props = {
 export function PhotoUploadPreview({
   photos: initialPhotos,
   isUploading,
+  errorMessage,
   onClose,
   onUpload,
 }: Props) {
@@ -153,6 +155,14 @@ export function PhotoUploadPreview({
             className="absolute left-4 right-4"
             style={{ bottom: insets.bottom + 16 }}
           >
+            {errorMessage && (
+              <Typography
+                className="text-caption text-center mb-2"
+                style={{ color: colors.accent.red[500] }}
+              >
+                {errorMessage}
+              </Typography>
+            )}
             <Button
               title={`Загрузить (${photos.length})`}
               loading={isUploading}

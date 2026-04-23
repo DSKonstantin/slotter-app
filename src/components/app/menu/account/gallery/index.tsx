@@ -26,6 +26,7 @@ import { GalleryViewer } from "./galleryViewer";
 import { PhotoUploadPreview } from "./photoUploadPreview";
 import type { CropData, GalleryPhoto, PendingPhoto } from "./types";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import {
   useBulkCreateGalleryPhotosMutation,
   useGetGalleryPhotosQuery,
@@ -72,12 +73,13 @@ const Gallery = () => {
   const {
     data: galleryResponse,
     isLoading: isGalleryLoading,
-    isFetching: isGalleryFetching,
     isError: isGalleryError,
     refetch,
   } = useGetGalleryPhotosQuery(auth ? { userId: auth.userId } : skipToken, {
     refetchOnMountOrArgChange: true,
   });
+
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const [bulkCreateGalleryPhotos, { isLoading: isUploading }] =
     useBulkCreateGalleryPhotosMutation();
@@ -94,6 +96,7 @@ const Gallery = () => {
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
     null,
   );
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
   const isEditMode = selectedIds !== null;
@@ -185,8 +188,9 @@ const Gallery = () => {
     try {
       await bulkCreateGalleryPhotos({ userId, data: formData }).unwrap();
       setPendingPhotos(null);
+      setUploadError(null);
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось загрузить фото"));
+      setUploadError(getApiErrorMessage(error, "Не удалось загрузить фото"));
     }
   };
 
@@ -384,8 +388,8 @@ const Gallery = () => {
                   renderItem={renderItem}
                   refreshControl={
                     <RefreshControl
-                      refreshing={isGalleryFetching && !isGalleryLoading}
-                      onRefresh={refetch}
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
                     />
                   }
                 />
@@ -421,7 +425,11 @@ const Gallery = () => {
         <PhotoUploadPreview
           photos={pendingPhotos}
           isUploading={isUploading}
-          onClose={() => setPendingPhotos(null)}
+          errorMessage={uploadError}
+          onClose={() => {
+            setPendingPhotos(null);
+            setUploadError(null);
+          }}
           onUpload={handleUploadAll}
         />
       )}
