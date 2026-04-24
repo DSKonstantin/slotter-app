@@ -6,16 +6,15 @@ const getRedirectPath = (user: User) => {
     return Routers.onboarding.register;
   }
 
-  switch (user.onboarding_step) {
-    case "personalInformation":
-      return Routers.onboarding.personalInformation;
-
-    case "completed":
-      return Routers.app.root;
-
-    default:
-      return Routers.auth.root;
+  if (!user.first_name) {
+    return Routers.onboarding.personalInformation;
   }
+
+  if (user.onboarding_step === "completed") {
+    return Routers.app.root;
+  }
+
+  return Routers.auth.root;
 };
 
 export default getRedirectPath;

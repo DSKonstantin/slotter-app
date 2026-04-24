@@ -14,14 +14,12 @@ import {
   type RegisterFormValues,
 } from "@/src/validation/schemas/register.schema";
 import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
-import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const Register = () => {
   const auth = useRequiredAuth();
-  const user = useAppSelector((s) => s.auth.user);
 
   const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
 
@@ -29,7 +27,7 @@ const Register = () => {
     resolver: yupResolver(RegisterSchema),
     defaultValues: {
       password: "",
-      email: user?.email ?? "",
+      email: "",
     },
   });
 
@@ -57,6 +55,8 @@ const Register = () => {
     },
     [auth, updateCredentials],
   );
+
+  if (!auth) return null;
 
   return (
     <FormProvider {...methods}>

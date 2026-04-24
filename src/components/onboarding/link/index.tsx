@@ -44,6 +44,8 @@ const Link = () => {
     }
   }, [updateUser, auth]);
 
+  if (!auth) return null;
+
   return (
     <AuthScreenLayout
       header={<AuthHeader />}
