@@ -22,7 +22,6 @@ export default function AuthHeader({
   const router = useRouter();
   const [supportVisible, setSupportVisible] = useState(false);
 
-  // вычисляется один раз за render
   const shouldShowBack = useMemo(
     () => showBack && router.canGoBack(),
     [showBack, router],

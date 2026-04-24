@@ -44,6 +44,15 @@ function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
 
   state.user = user;
   state.status = "authenticated";
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "resource_type" in payload &&
+    payload.resource_type
+  ) {
+    state.resourceType = payload.resource_type as "user" | "customer";
+  }
 }
 
 function setUserOnly(state: AuthState, payload: UserPayload) {
@@ -91,30 +100,15 @@ const authSlice = createSlice({
       })
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,
-        (state, { payload }) => {
-          setAuthenticatedUser(state, payload);
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
-        },
+        (state, { payload }) => setAuthenticatedUser(state, payload),
       )
       .addMatcher(
         authApi.endpoints.confirmCode.matchFulfilled,
-        (state, { payload }) => {
-          setAuthenticatedUser(state, payload);
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
-        },
+        (state, { payload }) => setAuthenticatedUser(state, payload),
       )
       .addMatcher(
         authApi.endpoints.resetPassword.matchFulfilled,
-        (state, { payload }) => {
-          setAuthenticatedUser(state, payload);
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
-        },
+        (state, { payload }) => setAuthenticatedUser(state, payload),
       )
       .addMatcher(
         usersApi.endpoints.updateUser.matchFulfilled,

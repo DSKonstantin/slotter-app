@@ -26,6 +26,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
+import { NicknameField } from "./NicknameField";
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
@@ -38,6 +39,7 @@ const PersonalInformation = () => {
       name: user?.first_name ?? "",
       surname: user?.last_name ?? "",
       profession: user?.profession ?? "",
+      personalLink: user?.personal_link ?? "",
       address: user?.address ?? "",
       hideAddress: false,
       atHome: user?.is_home_work ?? false,
@@ -65,6 +67,7 @@ const PersonalInformation = () => {
             : null,
         });
 
+        formData.append("user[personal_link]", data.personalLink);
         if (data.address) {
           formData.append("user[address]", data.address);
         }
@@ -152,13 +155,15 @@ const PersonalInformation = () => {
           </View>
         </View>
         <View className="gap-2">
-          <RhfTextField name="name" label="Имя" placeholder="Иван" />
-          <RhfTextField name="surname" label="Фамилия" placeholder="Иванов" />
           <RhfTextField
             name="profession"
             label="Профессия"
             placeholder="Барбер"
           />
+          <RhfTextField name="name" label="Имя" placeholder="Иван" />
+          <RhfTextField name="surname" label="Фамилия" placeholder="Иванов" />
+          <Divider />
+          <NicknameField />
         </View>
         <Divider />
         <Typography className="text-neutral-500 text-caption mt-5">

@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { TextInput, TextInputProps } from "react-native";
 import { FieldError } from "react-hook-form";
+import { twMerge } from "tailwind-merge";
 import { colors } from "@/src/styles/colors";
 import { BaseField, FieldSize } from "./BaseField";
 
@@ -10,6 +11,7 @@ type InputProps = {
   disabled?: boolean;
   hideErrorText?: boolean;
   size?: FieldSize;
+  inputClassName?: string;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -22,6 +24,7 @@ export function Input({
   hideErrorText,
   disabled,
   size = "md",
+  inputClassName,
   startAdornment,
   endAdornment,
   onEndAdornmentPress,
@@ -51,7 +54,7 @@ export function Input({
             setFocused(false);
             props.onBlur?.(e);
           }}
-          className={inputSizes[size]}
+          className={twMerge(inputSizes[size], inputClassName)}
           placeholderTextColor={colors.neutral[300]}
           textAlignVertical={props.multiline ? "top" : "center"}
           style={props.multiline ? styles.multilineStyle : undefined}

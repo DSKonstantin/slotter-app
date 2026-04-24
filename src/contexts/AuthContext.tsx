@@ -7,7 +7,10 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import {
+  useLazyGetMeQuery,
+  useLogoutSessionMutation,
+} from "@/src/store/redux/services/api/authApi";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/src/store/redux/store";
@@ -31,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = useAppSelector((s) => s.auth.user);
   const token = useAppSelector((s) => s.auth.token);
   const [getMe] = useLazyGetMeQuery();
+  const [logoutSession] = useLogoutSessionMutation();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const login = useCallback(
@@ -48,11 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await accessTokenStorage.remove();
+      await logoutSession().unwrap();
+    } catch {
     } finally {
+      await accessTokenStorage.remove();
       dispatch(logoutAction());
     }
-  }, [dispatch]);
+  }, [dispatch, logoutSession]);
 
   useEffect(() => {
     const checkAuth = async () => {

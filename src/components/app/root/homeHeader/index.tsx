@@ -12,7 +12,7 @@ const HomeHeader = () => {
     .filter(Boolean)
     .join(" ");
   const profileLink = user?.personal_link
-    ? `slotter.app/${user.personal_link}`
+    ? `${process.env.EXPO_PUBLIC_BOOKING_DISPLAY_URL}/${user.personal_link}`
     : null;
 
   return (

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import {
@@ -13,11 +13,10 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useAppSelector, useAppDispatch } from "@/src/store/redux/store";
-import { logout } from "@/src/store/redux/slices/authSlice";
+import { useAppSelector } from "@/src/store/redux/store";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useAuth } from "@/src/contexts/AuthContext";
 
 type NavItem = {
   title: string;
@@ -76,15 +75,9 @@ const NAV_GROUPS: NavItem[][] = [
 const AccountScreen = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
-  const dispatch = useAppDispatch();
+  const { logout } = useAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
   const { refreshing, onRefresh } = useRefresh(triggerGetMe);
-
-  const handleLogout = useCallback(async () => {
-    await accessTokenStorage.remove();
-    dispatch(logout());
-    router.replace(Routers.auth.root);
-  }, [dispatch]);
 
   if (!auth) return null;
 
@@ -169,7 +162,7 @@ const AccountScreen = () => {
             <Button
               title="Выйти"
               variant="clear"
-              onPress={handleLogout}
+              onPress={logout}
               textClassName="text-accent-red-500"
               rightIcon={
                 <StSvg

@@ -8,19 +8,22 @@ import { Share, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 
 const Link = () => {
   const auth = useRequiredAuth();
+  const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
-  const link = "slotter.app/ivan_barber";
+  const link = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${personalLink ?? ""}`;
+  const displayLink = `${process.env.EXPO_PUBLIC_BOOKING_DISPLAY_URL}/${personalLink ?? ""}`;
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: "slotter.app/ivan_barber",
+        message: link,
       });
     } catch (e) {
       console.log("Share error:", e);
@@ -76,7 +79,7 @@ const Link = () => {
         </Typography>
 
         <View className="mt-5 w-full">
-          <CopyLinkButton link={link} />
+          <CopyLinkButton link={link} displayLink={displayLink} />
         </View>
       </View>
     </AuthScreenLayout>

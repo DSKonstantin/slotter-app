@@ -2,6 +2,7 @@ import type { BaseQueryApi, BaseQueryFn } from "@reduxjs/toolkit/query";
 import type { AxiosRequestConfig } from "axios";
 import { AxiosHeaders, isAxiosError } from "axios";
 import axios from "./axios";
+import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 
 export interface AxiosBaseQueryError {
   status: number | "FETCH_ERROR" | "CUSTOM_ERROR";
@@ -157,7 +158,12 @@ const axiosBaseQuery = ({
     const preparedHeaders = prepareHeaders?.(headers, api) ?? headers;
 
     if (isFormData(requestConfig.data)) {
-      return fetchMultipart(requestConfig, preparedHeaders);
+      const result = await fetchMultipart(requestConfig, preparedHeaders);
+      if ("error" in result && result.error.status === 401) {
+        await accessTokenStorage.remove();
+        api.dispatch({ type: "auth/logout" });
+      }
+      return result;
     }
 
     try {
@@ -171,9 +177,12 @@ const axiosBaseQuery = ({
         data: result.data,
       };
     } catch (error) {
-      return {
-        error: getErrorPayload(error),
-      };
+      const errorPayload = getErrorPayload(error);
+      if (errorPayload.status === 401) {
+        await accessTokenStorage.remove();
+        api.dispatch({ type: "auth/logout" });
+      }
+      return { error: errorPayload };
     }
   };
 };

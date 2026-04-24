@@ -14,7 +14,7 @@ const getRedirectPath = (user: User) => {
     return Routers.app.root;
   }
 
-  return Routers.auth.root;
+  return Routers.onboarding.personalInformation;
 };
 
 export default getRedirectPath;
