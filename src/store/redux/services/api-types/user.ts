@@ -40,26 +40,28 @@ export interface User {
 }
 
 export interface AuthResponse {
+  status: string;
   token: string;
+  resource_type: "user" | "customer";
   resource: User;
 }
 
-export interface TelegramRegisterResponse {
-  uuid: string;
-  telegram_link: string;
+export interface SendCodeResponse {
+  status: "code_sent";
   expires_in: number;
 }
-
-export interface TelegramRegisterStatusResponse extends AuthResponse {
-  status: "pending" | "confirmed";
-}
-
-export interface TelegramLoginResponse extends AuthResponse {}
 
 export interface MeResponse {
   status: "authorized" | "unauthorized";
   resource_type: "user" | "customer";
   resource: User;
+}
+
+export interface UpdateCredentialsPayload {
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+  current_password?: string;
 }
 
 export type UpdateUserPayload = Partial<

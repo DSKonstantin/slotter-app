@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconButton, SegmentedControl, StSvg } from "@/src/components/ui";
 import { parseISO } from "date-fns";
 import { formatMonthYear } from "@/src/utils/date/formatDate";
-import { capitalize } from "@/src/utils/changeСase";
 import DayCalendarView from "@/src/components/app/calendar/home/day";
 import MonthCalendarView from "@/src/components/app/calendar/home/month";
 import CalendarFilterModal from "@/src/components/app/calendar/home/calendarFilterModal";
@@ -20,6 +19,7 @@ import {
 } from "@/src/constants/calendar";
 import { colors } from "@/src/styles/colors";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import capitalize from "lodash/capitalize";
 
 const CalendarHome = () => {
   const router = useRouter();

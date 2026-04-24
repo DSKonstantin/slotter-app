@@ -26,6 +26,29 @@ const customersApi = api.injectEndpoints({
       providesTags: ["Customers"],
     }),
 
+    getCustomersPaginated: builder.infiniteQuery<
+      GetCustomersResponse,
+      { userId: number } & Omit<GetCustomersParams, "page">,
+      number
+    >({
+      query: ({ queryArg, pageParam }) => {
+        const { userId, ...params } = queryArg;
+        return {
+          url: `/users/${userId}/customers`,
+          method: "GET",
+          params: { ...params, page: pageParam },
+        };
+      },
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+          const { current_page, total_pages } = lastPage.pagination;
+          return current_page < total_pages ? current_page + 1 : undefined;
+        },
+      },
+      providesTags: ["Customers"],
+    }),
+
     getCustomer: builder.query<{ customer: Customer }, { customerId: number }>({
       query: ({ customerId }) => ({
         url: `/customers/${customerId}`,
@@ -43,7 +66,48 @@ const customersApi = api.injectEndpoints({
         method: "POST",
         data: { customer: body },
       }),
-      invalidatesTags: ["Customers"],
+      async onQueryStarted(_, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data: result } = await queryFulfilled;
+          const newCustomer = result.customer;
+
+          // Insert into paginated cache (first page)
+          customersApi.util
+            .selectInvalidatedBy(getState(), [{ type: "Customers" }])
+            .filter((entry) => entry.endpointName === "getCustomersPaginated")
+            .forEach(({ originalArgs }) => {
+              dispatch(
+                customersApi.util.updateQueryData(
+                  "getCustomersPaginated",
+                  originalArgs,
+                  (draft) => {
+                    if (draft.pages.length > 0) {
+                      draft.pages[0].customers.unshift(newCustomer);
+                    }
+                  },
+                ),
+              );
+            });
+
+          // Insert into simple query cache
+          customersApi.util
+            .selectInvalidatedBy(getState(), [{ type: "Customers" }])
+            .filter((entry) => entry.endpointName === "getCustomers")
+            .forEach(({ originalArgs }) => {
+              dispatch(
+                customersApi.util.updateQueryData(
+                  "getCustomers",
+                  originalArgs,
+                  (draft) => {
+                    draft.customers.unshift(newCustomer);
+                  },
+                ),
+              );
+            });
+        } catch {
+          // mutation failed — nothing to update
+        }
+      },
     }),
 
     updateCustomer: builder.mutation<
@@ -139,6 +203,7 @@ const customersApi = api.injectEndpoints({
 
 export const {
   useGetCustomersQuery,
+  useGetCustomersPaginatedInfiniteQuery,
   useGetCustomerQuery,
   useCreateCustomerMutation,
   useUpdateCustomerMutation,

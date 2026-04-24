@@ -1,3 +1,5 @@
+import capitalize from "lodash/capitalize";
+
 type ApiErrorData = {
   error?: string | string[];
   errors?: Record<string, string[]> | string[];
@@ -19,14 +21,15 @@ export const getApiErrorMessage = (e: unknown, fallback: string): string => {
 
   if (errors) {
     if (Array.isArray(errors)) {
-      return errors.length > 0 ? errors.join(", ") : fallback;
+      return errors.length > 0 ? capitalize(errors.join(", ")) : fallback;
     }
     const messages = Object.entries(errors).flatMap(([, msgs]) => msgs);
-    return messages.length > 0 ? messages.join(", ") : fallback;
+    return messages.length > 0 ? capitalize(messages.join(", ")) : fallback;
   }
 
   if (error) {
-    return Array.isArray(error) ? error.join(", ") : error;
+    const msg = Array.isArray(error) ? error.join(", ") : error;
+    return capitalize(msg);
   }
 
   return fallback;

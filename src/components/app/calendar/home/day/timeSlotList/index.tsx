@@ -1,22 +1,16 @@
 import React, { memo, useCallback, useEffect, useMemo } from "react";
 import type {
   Appointment,
-  AppointmentStatus,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
 import { View } from "react-native";
 import { router } from "expo-router";
-import { Typography } from "@/src/components/ui";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
 import FreeSlotBlock from "./FreeSlotBlock";
 import FilteredSlotBlock from "./FilteredSlotBlock";
-import {
-  LONG_SLOT_MIN_HEIGHT,
-  MINUTE_HEIGHT,
-  SHORT_SLOT_MIN_HEIGHT,
-  SLOT_GAP,
-} from "./constants";
+import TimeLabels from "./TimeLabels";
+import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
 import { parseTime, formatTime } from "./utils";
 import { Routers } from "@/src/constants/routers";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -24,14 +18,15 @@ import {
   clearHighlightSlotId,
   selectActiveStatuses,
 } from "@/src/store/redux/slices/calendarSlice";
-
-interface TimeLabelsProps {
-  segStart: number;
-  segEnd: number;
-}
+import {
+  createSegments,
+  getSegmentHeight,
+  getSlotMinHeight,
+  slotOccupiesTime,
+} from "./segmentBuilder";
 
 type TimeSlotListProps = {
-  appointment: Appointment[];
+  appointments: Appointment[];
   breaks?: WorkingDayBreak[];
   startAt?: string;
   endAt?: string;
@@ -39,221 +34,8 @@ type TimeSlotListProps = {
   onHighlightScroll?: (y: number) => void;
 };
 
-type ParsedBreak = {
-  start: number;
-  end: number;
-  breakItem: WorkingDayBreak;
-};
-
-type ParsedAppointment = {
-  start: number;
-  end: number;
-  slot: Appointment;
-  blocksTime: boolean;
-  isVisible: boolean;
-};
-
-type SegmentContent =
-  | { kind: "break"; breakItem: WorkingDayBreak }
-  | {
-      kind: "slots";
-      slots: Appointment[];
-      showFreeSlotBlock: boolean;
-      showFilteredBlock: boolean;
-      filteredBlockMinHeight: number;
-    };
-
-const TimeLabels = ({ segStart, segEnd }: TimeLabelsProps) => {
-  const firstHour = Math.ceil(segStart / 60);
-  const lastHour = Math.floor(segEnd / 60);
-
-  return (
-    <>
-      {Array.from(
-        { length: lastHour - firstHour + 1 },
-        (_, i) => (firstHour + i) * 60,
-      )
-        .filter((hMin) => hMin >= segStart && hMin < segEnd)
-        .map((hMin) => (
-          <Typography
-            key={hMin}
-            className="text-caption text-gray-500 absolute"
-            style={{
-              top: (hMin - segStart) * MINUTE_HEIGHT,
-            }}
-          >
-            {formatTime(hMin)}
-          </Typography>
-        ))}
-    </>
-  );
-};
-
-const getSlotMinHeight = (slot: Appointment) =>
-  slot.duration > 29 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
-
-const slotOccupiesTime = (slot: Appointment) =>
-  slot.status !== "cancelled" && slot.duration > 0;
-
-const occupiesTime = ({ blocksTime, slot }: ParsedAppointment) =>
-  blocksTime && slot.duration > 0;
-
-const parseBreaks = (breaks: WorkingDayBreak[]): ParsedBreak[] =>
-  breaks.map((breakItem) => ({
-    start: parseTime(breakItem.start_at),
-    end: parseTime(breakItem.end_at),
-    breakItem,
-  }));
-
-const parseAppointments = (
-  appointments: Appointment[],
-  visibleStatuses: AppointmentStatus[],
-): ParsedAppointment[] => {
-  const visibleStatusesSet = new Set(visibleStatuses);
-
-  return appointments.map((slot) => {
-    const start = parseTime(slot.start_time);
-
-    return {
-      start,
-      end: start + slot.duration,
-      slot,
-      blocksTime: slot.status !== "cancelled",
-      isVisible: visibleStatusesSet.has(slot.status),
-    };
-  });
-};
-
-const collectTimePoints = (
-  dayStart: number,
-  dayEnd: number,
-  parsedBreaks: ParsedBreak[],
-  blockingAppointments: ParsedAppointment[],
-) => {
-  const timePoints = new Set<number>([dayStart, dayEnd]);
-  const startHour = Math.ceil(dayStart / 60);
-  const endHour = Math.floor(dayEnd / 60);
-
-  for (let hour = startHour; hour <= endHour; hour++) {
-    const hourMinute = hour * 60;
-    const insideBreak = parsedBreaks.some(
-      (breakItem) => breakItem.start < hourMinute && breakItem.end > hourMinute,
-    );
-    const insideAppointment = blockingAppointments.some(
-      ({ start, end, slot }) =>
-        slot.duration > 0 && start < hourMinute && end > hourMinute,
-    );
-
-    if (!insideBreak && !insideAppointment) {
-      timePoints.add(hourMinute);
-    }
-  }
-
-  parsedBreaks.forEach((breakItem) => {
-    timePoints.add(breakItem.start);
-    timePoints.add(breakItem.end);
-  });
-
-  blockingAppointments.forEach((appointment) => {
-    const isInsideLongerAppointment =
-      appointment.slot.duration === 0 &&
-      blockingAppointments.some(
-        (other) =>
-          other.slot.duration > 0 &&
-          other.start < appointment.start &&
-          other.end > appointment.start,
-      );
-
-    if (
-      !isInsideLongerAppointment &&
-      appointment.start >= dayStart &&
-      appointment.start <= dayEnd
-    ) {
-      timePoints.add(appointment.start);
-    }
-
-    if (appointment.end > dayStart && appointment.end <= dayEnd) {
-      timePoints.add(appointment.end);
-    }
-  });
-
-  return Array.from(timePoints).sort((a, b) => a - b);
-};
-
-const buildSegments = (
-  timePoints: number[],
-  parsedBreaks: ParsedBreak[],
-  parsedAppointments: ParsedAppointment[],
-) =>
-  timePoints.slice(0, -1).map((segStart, index) => {
-    const segEnd = timePoints[index + 1];
-    const breakItem = parsedBreaks.find(
-      (parsedBreak) =>
-        parsedBreak.start <= segStart && parsedBreak.end >= segEnd,
-    );
-
-    if (breakItem) {
-      return {
-        segStart,
-        segEnd,
-        content: { kind: "break", breakItem: breakItem.breakItem } as const,
-      };
-    }
-
-    const segmentAppointments = parsedAppointments
-      .filter(({ start }) => start >= segStart && start < segEnd)
-      .sort((a, b) => a.start - b.start);
-    const visibleAppointments = segmentAppointments.filter(
-      ({ isVisible }) => isVisible,
-    );
-    const hiddenOccupiedAppointments = segmentAppointments.filter(
-      (appointment) => !appointment.isVisible && occupiesTime(appointment),
-    );
-
-    return {
-      segStart,
-      segEnd,
-      content: {
-        kind: "slots",
-        slots: visibleAppointments.map(({ slot }) => slot),
-        showFreeSlotBlock: !segmentAppointments.some(occupiesTime),
-        showFilteredBlock:
-          hiddenOccupiedAppointments.length > 0 &&
-          visibleAppointments.length === 0,
-        filteredBlockMinHeight:
-          hiddenOccupiedAppointments.reduce(
-            (total, appointment) => total + getSlotMinHeight(appointment.slot),
-            0,
-          ) +
-          SLOT_GAP * Math.max(0, hiddenOccupiedAppointments.length - 1),
-      } as const,
-    };
-  });
-
-const getSegmentHeight = (
-  segStart: number,
-  segEnd: number,
-  content: SegmentContent,
-) => {
-  const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
-
-  if (content.kind === "break") return baseGridHeight;
-  const slotsMinHeight =
-    content.slots.reduce((total, slot) => total + getSlotMinHeight(slot), 0) +
-    SLOT_GAP * content.slots.length;
-  const freeSlotHeight = content.showFreeSlotBlock ? LONG_SLOT_MIN_HEIGHT : 0;
-  const filteredBlockHeight = content.showFilteredBlock
-    ? Math.max(SHORT_SLOT_MIN_HEIGHT, content.filteredBlockMinHeight)
-    : 0;
-
-  return Math.max(
-    baseGridHeight,
-    slotsMinHeight + freeSlotHeight + filteredBlockHeight,
-  );
-};
-
 const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
-  appointment,
+  appointments,
   breaks = [],
   startAt,
   endAt,
@@ -272,27 +54,12 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   const segments = useMemo(() => {
     if (!startAt || !endAt) return null;
-
-    const dayStart = parseTime(startAt);
-    const dayEnd = parseTime(endAt);
-    const parsedBreaks = parseBreaks(breaks);
-    const parsedAppointments = parseAppointments(appointment, visibleStatuses);
-    const blockingAppointments = parsedAppointments.filter(
-      ({ blocksTime }) => blocksTime,
-    );
-    const timePoints = collectTimePoints(
-      dayStart,
-      dayEnd,
-      parsedBreaks,
-      blockingAppointments,
-    );
-
-    return buildSegments(timePoints, parsedBreaks, parsedAppointments);
-  }, [appointment, visibleStatuses, breaks, startAt, endAt]);
+    return createSegments(startAt, endAt, breaks, appointments, visibleStatuses);
+  }, [appointments, visibleStatuses, breaks, startAt, endAt]);
 
   useEffect(() => {
     if (!highlightSlotId || !startAt) return;
-    const slot = appointment.find((a) => a.id === highlightSlotId);
+    const slot = appointments.find((a) => a.id === highlightSlotId);
     if (slot) {
       onHighlightScroll?.(
         Math.max(
@@ -304,7 +71,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     }
     const timer = setTimeout(() => dispatch(clearHighlightSlotId()), 3000);
     return () => clearTimeout(timer);
-  }, [highlightSlotId, appointment, startAt, dispatch, onHighlightScroll]);
+  }, [highlightSlotId, startAt, dispatch, onHighlightScroll, appointments]);
 
   if (!segments) return null;
 

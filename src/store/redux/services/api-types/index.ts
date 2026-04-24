@@ -5,11 +5,10 @@ export type {
   User,
   AppointmentStep,
   AuthResponse,
-  TelegramRegisterResponse,
-  TelegramRegisterStatusResponse,
-  TelegramLoginResponse,
+  SendCodeResponse,
   MeResponse,
   UpdateUserPayload,
+  UpdateCredentialsPayload,
 } from "./user";
 export type {
   ServiceCategory,

@@ -11,7 +11,7 @@ import { Item, StModal, StSvg, Typography } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useAppSelector } from "@/src/store/redux/store";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import type { AppointmentStep } from "@/src/store/redux/services/api-types";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";

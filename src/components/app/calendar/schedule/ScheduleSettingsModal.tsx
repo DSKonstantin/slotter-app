@@ -33,189 +33,6 @@ type Props = {
   isLoading?: boolean;
 };
 
-const ScheduleSettingsModalHeader = ({
-  totalCount,
-  canSave,
-  isLoading,
-  onClose,
-  onSave,
-}: {
-  totalCount: number;
-  canSave: boolean;
-  isLoading?: boolean;
-  onClose: () => void;
-  onSave: () => void;
-}) => (
-  <View className="flex-row items-center mb-4 px-5 pt-4">
-    <IconButton
-      size="sm"
-      buttonClassName="bg-transparent"
-      onPress={onClose}
-      icon={<StSvg name="Close_round" size={20} color={colors.neutral[900]} />}
-    />
-    <Typography weight="semibold" className="text-body text-center flex-1">
-      {totalCount} {pluralize(totalCount, ["день", "дня", "дней"])} выбрано
-    </Typography>
-    <IconButton
-      size="sm"
-      disabled={isLoading || !canSave}
-      onPress={onSave}
-      buttonClassName="bg-transparent"
-      icon={
-        <StSvg
-          name="Done_round"
-          size={20}
-          color={
-            canSave && !isLoading
-              ? colors.primary.blue[500]
-              : colors.neutral[500]
-          }
-        />
-      }
-    />
-  </View>
-);
-
-const ScheduleSettingsModalControls = ({
-  blockedDays,
-  selectedEditableDays,
-  mode,
-  onModeChange,
-}: {
-  blockedDays: any[];
-  selectedEditableDays: any[];
-  mode: string;
-  onModeChange: (nextMode: string) => void;
-}) => (
-  <>
-    {blockedDays.length > 0 && (
-      <View className="px-5 py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center mx-5">
-        <StSvg name="Alarm_fill" size={24} color={colors.accent.yellow[700]} />
-        <Typography className="text-caption text-accent-yellow-700">
-          Среди выбранных есть дни с записями
-        </Typography>
-      </View>
-    )}
-
-    {selectedEditableDays.length > 1 && (
-      <View className="mb-4 px-5">
-        <SegmentedControl
-          options={[
-            { label: "Одинаково", value: "bulk" },
-            { label: "По дням", value: "perDay" },
-          ]}
-          value={mode}
-          onChange={onModeChange}
-        />
-      </View>
-    )}
-  </>
-);
-
-const ScheduleSettingsModalContent = ({
-  onSave,
-  isLoading,
-}: Omit<Props, "visible" | "onClose">) => {
-  const { control, setValue } = useFormContext<CalendarScheduleFormValues>();
-  const mode = useWatch({ control, name: "mode" }) ?? "bulk";
-  const watchedCalendarDays = useWatch({ control, name: "calendarDays" });
-  const calendarDays = useMemo(
-    () => watchedCalendarDays ?? [],
-    [watchedCalendarDays],
-  );
-
-  const selectedEditableDays = useMemo(
-    () =>
-      calendarDays
-        .map((day, index) => ({ day, index }))
-        .filter(({ day }) => day.isSelected && !day.isExisting),
-    [calendarDays],
-  );
-  const canSave = selectedEditableDays.length > 0;
-
-  const removeDay = useCallback(
-    (index: number) => {
-      const currentDay = calendarDays[index];
-      if (!currentDay || currentDay.isExisting) return;
-
-      setValue(`calendarDays.${index}`, clearSelectedDay(currentDay), {
-        shouldDirty: true,
-      });
-
-      if (selectedEditableDays.length === 1) {
-        setValue("mode", "bulk");
-      }
-    },
-    [calendarDays, selectedEditableDays.length, setValue],
-  );
-
-  return (
-    <View style={styles.content}>
-      {canSave ? (
-        mode === "bulk" ? (
-          <>
-            <TimeFields
-              label="Рабочее время"
-              startName="commonDraft.scheduleStart"
-              endName="commonDraft.scheduleEnd"
-            />
-            <View className="mt-3 mb-4">
-              <BreaksFieldArray name="commonDraft.breaks" />
-            </View>
-          </>
-        ) : (
-          <View className="gap-4 mb-4">
-            {selectedEditableDays.map(({ day, index }, i) => (
-              <View key={day.date}>
-                {i > 0 && <Divider className="mb-4" />}
-                <View className="flex-row items-center justify-between mb-2">
-                  <Typography className="text-neutral-500 text-caption">
-                    {`Рабочее время · ${formatDayMonthLong(parseISO(day.date))}`}
-                  </Typography>
-                  <IconButton
-                    size="xs"
-                    buttonClassName="bg-accent-red-500"
-                    onPress={() => removeDay(index)}
-                    icon={
-                      <StSvg
-                        name="Close_square"
-                        size={20}
-                        color={colors.neutral[0]}
-                      />
-                    }
-                  />
-                </View>
-                <TimeFields
-                  startName={`calendarDays.${index}.scheduleStart`}
-                  endName={`calendarDays.${index}.scheduleEnd`}
-                />
-                <View className="mt-3">
-                  <BreaksFieldArray name={`calendarDays.${index}.breaks`} />
-                </View>
-              </View>
-            ))}
-          </View>
-        )
-      ) : (
-        <Typography className="text-caption text-neutral-400 mb-4">
-          Рабочее время для выбранных дат уже установлено. Перейдите к
-          редактированию соответствующих дней.
-        </Typography>
-      )}
-
-      <Button
-        title="Сохранить расписание"
-        loading={isLoading}
-        disabled={isLoading || !canSave}
-        rightIcon={
-          <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-        }
-        onPress={onSave}
-      />
-    </View>
-  );
-};
-
 export const ScheduleSettingsModal = ({
   visible,
   onClose,
@@ -291,6 +108,22 @@ export const ScheduleSettingsModal = ({
     [mode, selectedEditableDays, setValue],
   );
 
+  const removeDay = useCallback(
+    (index: number) => {
+      const currentDay = calendarDays[index];
+      if (!currentDay || currentDay.isExisting) return;
+
+      setValue(`calendarDays.${index}`, clearSelectedDay(currentDay), {
+        shouldDirty: true,
+      });
+
+      if (selectedEditableDays.length === 1) {
+        setValue("mode", "bulk");
+      }
+    },
+    [calendarDays, selectedEditableDays.length, setValue],
+  );
+
   const renderBackground = useCallback(
     ({ style }: BottomSheetBackgroundProps) => (
       <BlurView
@@ -305,18 +138,21 @@ export const ScheduleSettingsModal = ({
   const renderBackdrop = useCallback(() => null, []);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && totalCount === 0) {
+      onClose();
+    } else if (visible) {
       bottomSheetRef.current?.present();
     } else {
       bottomSheetRef.current?.dismiss();
     }
-  }, [visible]);
+  }, [onClose, totalCount, visible]);
 
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
       index={1}
       snapPoints={snapPoints}
+      topInset={top}
       enablePanDownToClose={false}
       enableOverDrag={false}
       detached
@@ -326,22 +162,127 @@ export const ScheduleSettingsModal = ({
       backdropComponent={renderBackdrop}
       onDismiss={onClose}
     >
-      <ScheduleSettingsModalHeader
-        totalCount={totalCount}
-        canSave={canSave}
-        isLoading={isLoading}
-        onClose={onClose}
-        onSave={onSave}
-      />
-      <ScheduleSettingsModalControls
-        blockedDays={blockedDays}
-        selectedEditableDays={selectedEditableDays}
-        mode={mode}
-        onModeChange={switchMode}
-      />
+      <View className="flex-row items-center mb-4 px-screen pt-4">
+        <IconButton
+          size="sm"
+          buttonClassName="bg-transparent"
+          onPress={onClose}
+          icon={
+            <StSvg name="Close_round" size={20} color={colors.neutral[900]} />
+          }
+        />
+        <Typography weight="semibold" className="text-body text-center flex-1">
+          {totalCount} {pluralize(totalCount, ["день", "дня", "дней"])} выбрано
+        </Typography>
+        <IconButton
+          size="sm"
+          disabled={isLoading || !canSave}
+          onPress={onSave}
+          buttonClassName="bg-transparent"
+          icon={
+            <StSvg
+              name="Done_round"
+              size={20}
+              color={
+                canSave && !isLoading
+                  ? colors.primary.blue[500]
+                  : colors.neutral[500]
+              }
+            />
+          }
+        />
+      </View>
+
+      {blockedDays.length > 0 && (
+        <View className="px-screen py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center mx-5">
+          <StSvg
+            name="Alarm_fill"
+            size={24}
+            color={colors.accent.yellow[700]}
+          />
+          <Typography className="text-caption text-accent-yellow-700">
+            Среди выбранных есть дни с записями
+          </Typography>
+        </View>
+      )}
+
+      {selectedEditableDays.length > 1 && (
+        <View className="mb-4 px-screen">
+          <SegmentedControl
+            options={[
+              { label: "Для всех", value: "bulk" },
+              { label: "По дням", value: "perDay" },
+            ]}
+            value={mode}
+            onChange={switchMode}
+          />
+        </View>
+      )}
+
+      {/* Content */}
       <FormProvider {...methods}>
         <BottomSheetScrollView contentContainerStyle={styles.content}>
-          <ScheduleSettingsModalContent onSave={onSave} isLoading={isLoading} />
+          {canSave ? (
+            mode === "bulk" ? (
+              <>
+                <TimeFields
+                  label="Рабочее время"
+                  startName="commonDraft.scheduleStart"
+                  endName="commonDraft.scheduleEnd"
+                />
+                <View className="mt-3 mb-4">
+                  <BreaksFieldArray name="commonDraft.breaks" />
+                </View>
+              </>
+            ) : (
+              <View className="gap-4 mb-4">
+                {selectedEditableDays.map(({ day, index }, i) => (
+                  <View key={day.date}>
+                    {i > 0 && <Divider className="mb-4" />}
+                    <View className="flex-row items-center justify-between mb-2">
+                      <Typography className="text-neutral-500 text-caption">
+                        {`Рабочее время · ${formatDayMonthLong(parseISO(day.date))}`}
+                      </Typography>
+                      <IconButton
+                        size="xs"
+                        buttonClassName="bg-accent-red-500"
+                        onPress={() => removeDay(index)}
+                        icon={
+                          <StSvg
+                            name="Close_square"
+                            size={20}
+                            color={colors.neutral[0]}
+                          />
+                        }
+                      />
+                    </View>
+                    <TimeFields
+                      startName={`calendarDays.${index}.scheduleStart`}
+                      endName={`calendarDays.${index}.scheduleEnd`}
+                    />
+                    <View className="mt-3">
+                      <BreaksFieldArray name={`calendarDays.${index}.breaks`} />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )
+          ) : (
+            <Typography className="text-caption text-neutral-400 mb-4">
+              Рабочее время для выбранных дат уже установлено. Перейдите к
+              редактированию соответствующих дней.
+            </Typography>
+          )}
+
+          <Button
+            title="Сохранить расписание"
+            loading={isLoading}
+            disabled={isLoading || !canSave}
+            rightIcon={
+              <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+            }
+            onPress={onSave}
+          />
         </BottomSheetScrollView>
       </FormProvider>
     </BottomSheetModal>
@@ -363,9 +304,6 @@ const styles = StyleSheet.create({
   handle: {
     backgroundColor: colors.neutral[300],
     width: 40,
-  },
-  container: {
-    flex: 1,
   },
   content: {
     paddingHorizontal: 20,

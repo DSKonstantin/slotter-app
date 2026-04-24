@@ -14,7 +14,7 @@ import { Button, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { AddressField } from "@/src/components/shared/addressField";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";

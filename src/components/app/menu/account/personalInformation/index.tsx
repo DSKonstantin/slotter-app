@@ -11,7 +11,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { Avatar, Button, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";

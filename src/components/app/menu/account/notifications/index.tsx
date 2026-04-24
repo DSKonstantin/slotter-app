@@ -10,7 +10,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { Item } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { useAppSelector } from "@/src/store/redux/store";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 

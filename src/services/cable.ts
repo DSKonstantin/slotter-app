@@ -1,9 +1,8 @@
 import { createCable } from "@anycable/web";
-import Constants from "expo-constants";
 
 export type Cable = ReturnType<typeof createCable>;
 
-const CABLE_URL = Constants.expoConfig?.extra?.cableUrl as string | undefined;
+const CABLE_URL = process.env.EXPO_PUBLIC_CABLE_URL;
 
 let currentCable: Cable | null = null;
 let currentToken: string | null = null;

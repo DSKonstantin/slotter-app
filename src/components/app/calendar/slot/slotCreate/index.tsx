@@ -30,6 +30,7 @@ import {
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
+  Avatar,
   Button,
   Card,
   IconButton,
@@ -192,7 +193,7 @@ const SlotCreate: React.FC = () => {
         dispatch(clearSlotDraft());
         dispatch(setHighlightSlotId(result.id));
         router.dismissAll();
-        router.navigate(Routers.app.calendar.root(values.date));
+        router.replace(Routers.app.calendar.root(values.date));
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
@@ -529,9 +530,10 @@ const SlotCreate: React.FC = () => {
               <View key={item.id}>
                 {index > 0 && <View className="h-px bg-neutral-100" />}
                 <Pressable
-                  className="py-3 px-2 active:opacity-70"
+                  className="flex-row items-center gap-3 py-3 px-2 active:opacity-70"
                   onPress={() => handleSelectCustomer(item)}
                 >
+                  <Avatar name={item.title} size="sm" />
                   <Typography className="text-body text-neutral-900">
                     {item.title}
                   </Typography>

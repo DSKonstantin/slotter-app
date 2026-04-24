@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -18,6 +17,7 @@ import {
   Button,
   FloatingFooter,
   IconButton,
+  StImage,
   StSvg,
   Typography,
 } from "@/src/components/ui";
@@ -42,7 +42,6 @@ import {
   ITEM_WIDTH,
   MAX_PHOTOS,
 } from "./constants";
-import { PlaceholderSlotter } from "@/src/components/ui/PlaceholderSlotter";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
@@ -275,9 +274,6 @@ const Gallery = () => {
 
     return (
       <View style={[styles.item, index % 2 === 0 && styles.itemLeftColumn]}>
-        <View className="absolute inset-0 items-center justify-center bg-neutral-100">
-          <PlaceholderSlotter size={60} />
-        </View>
         <Pressable
           className="active:opacity-70"
           onPress={() => {
@@ -289,10 +285,9 @@ const Gallery = () => {
           }}
           style={StyleSheet.absoluteFill}
         >
-          <Image
-            source={{ uri: item.thumbnailUrl }}
+          <StImage
+            uri={item.thumbnailUrl}
             style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
           />
           {index === 0 && !isEditMode && (
             <View className="absolute top-1.5 left-1.5">

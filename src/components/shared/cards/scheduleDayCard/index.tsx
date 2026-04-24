@@ -30,11 +30,13 @@ const ScheduleDayCard = ({
       disabled={!onPress}
       activeOpacity={0.7}
       className={`flex-1 mx-[1px] rounded-xl p-1.5 justify-between ${
-        isSelected
-          ? "bg-primary-green-500"
-          : !isWorking
-            ? "bg-neutral-100"
-            : "bg-white"
+        isSelected && isWorking
+          ? "bg-accent-yellow-500"
+          : isSelected
+            ? "bg-primary-green-500"
+            : !isWorking
+              ? "bg-neutral-100"
+              : "bg-white"
       }`}
     >
       <View className="flex-row justify-between items-start">
