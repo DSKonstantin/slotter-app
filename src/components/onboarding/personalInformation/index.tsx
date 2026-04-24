@@ -106,6 +106,8 @@ const PersonalInformation = () => {
     [methods],
   );
 
+  if (!auth) return null;
+
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
