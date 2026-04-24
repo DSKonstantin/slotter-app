@@ -194,6 +194,7 @@ const SlotCreate: React.FC = () => {
         dispatch(setHighlightSlotId(result.id));
         router.dismissAll();
         router.replace(Routers.app.calendar.root(values.date));
+        methods.reset(values);
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
