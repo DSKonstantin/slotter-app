@@ -91,6 +91,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
         id: serviceId,
         data: formData,
       }).unwrap();
+      methods.reset(values);
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
@@ -112,6 +113,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
               id: serviceId,
             }).unwrap();
 
+            methods.reset();
             router.back();
           } catch (error) {
             toast.error(getApiErrorMessage(error, "Не удалось удалить услугу"));

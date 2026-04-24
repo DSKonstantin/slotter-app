@@ -49,6 +49,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
         categoryId: nextCategoryId,
         data: formData,
       }).unwrap();
+      methods.reset(values);
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось создать услугу"));
