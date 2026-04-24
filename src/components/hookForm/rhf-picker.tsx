@@ -100,6 +100,7 @@ export default function RHFPicker({
                       key={item.value}
                       label={String(item.label)}
                       value={item.value}
+                      color="#000000"
                     />
                   ))}
                 </Picker>

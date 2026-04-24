@@ -56,7 +56,7 @@ export const useCalendarSchedule = (current: Date) => {
     );
 
     if (!templateConfigured) {
-      setModalTemplate(true);
+      // setModalTemplate(true);
       dispatch(setScheduleIntent(null));
       return;
     }
