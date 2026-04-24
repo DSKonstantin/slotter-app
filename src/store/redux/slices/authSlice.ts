@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "../services/api/authApi";
+import { usersApi } from "../services/api/usersApi";
 import { User } from "@/src/store/redux/services/api-types";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
@@ -98,25 +99,31 @@ const authSlice = createSlice({
         },
       )
       .addMatcher(
-        authApi.endpoints.confirmTelegramLogin.matchFulfilled,
+        authApi.endpoints.confirmCode.matchFulfilled,
         (state, { payload }) => {
           setAuthenticatedUser(state, payload);
+          if ("resource_type" in payload && payload.resource_type) {
+            state.resourceType = payload.resource_type as "user" | "customer";
+          }
         },
       )
       .addMatcher(
-        authApi.endpoints.telegramRegisterStatus.matchFulfilled,
+        authApi.endpoints.resetPassword.matchFulfilled,
         (state, { payload }) => {
           setAuthenticatedUser(state, payload);
+          if ("resource_type" in payload && payload.resource_type) {
+            state.resourceType = payload.resource_type as "user" | "customer";
+          }
         },
       )
       .addMatcher(
-        authApi.endpoints.updateUser.matchFulfilled,
+        usersApi.endpoints.updateUser.matchFulfilled,
         (state, { payload }) => {
           setUserOnly(state, payload);
         },
       )
       .addMatcher(
-        authApi.endpoints.updateCustomer.matchFulfilled,
+        usersApi.endpoints.updateCustomer.matchFulfilled,
         (state, { payload }) => {
           setUserOnly(state, payload);
         },

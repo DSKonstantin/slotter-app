@@ -8,7 +8,7 @@ import { Share, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 
 const Link = () => {

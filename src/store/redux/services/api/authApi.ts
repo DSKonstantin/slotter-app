@@ -2,65 +2,32 @@ import { api } from "../api";
 import type {
   AuthResponse,
   MeResponse,
-  TelegramLoginResponse,
-  TelegramRegisterResponse,
-  TelegramRegisterStatusResponse,
-  UpdateUserPayload,
+  SendCodeResponse,
+  UpdateCredentialsPayload,
   User,
   UserType,
 } from "@/src/store/redux/services/api-types";
 
-// NOTE: these are the _SAME_ API reference!
 export const authApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
-    // 🔹 Telegram Register
-    telegramRegister: builder.mutation<
-      TelegramRegisterResponse,
+    sendCode: builder.mutation<
+      SendCodeResponse,
       { phone: string; type: UserType }
     >({
       query: ({ phone, type }) => ({
-        url: "/auth/telegram/register",
+        url: "/auth/send_code",
         method: "POST",
         data: { phone, type },
       }),
     }),
 
-    getMe: builder.query<MeResponse, void>({
-      query: () => ({
-        url: "/auth/show",
-        method: "GET",
-      }),
-    }),
-
-    telegramRegisterStatus: builder.query<
-      TelegramRegisterStatusResponse,
-      { uuid: string }
-    >({
-      query: ({ uuid }) => ({
-        url: "/auth/telegram/register_status",
-        method: "POST",
-        data: { uuid },
-      }),
-    }),
-
-    telegramLogin: builder.mutation<
-      TelegramLoginResponse,
-      { phone: string; type: UserType }
-    >({
-      query: ({ phone, type }) => ({
-        url: "/auth/telegram/login",
-        method: "POST",
-        data: { phone, type },
-      }),
-    }),
-
-    confirmTelegramLogin: builder.mutation<
+    confirmCode: builder.mutation<
       AuthResponse,
       { phone: string; code: string }
     >({
       query: ({ phone, code }) => ({
-        url: "/auth/telegram/confirm_login",
+        url: "/auth/confirm_code",
         method: "POST",
         data: { phone, code },
       }),
@@ -69,8 +36,8 @@ export const authApi = api.injectEndpoints({
     login: builder.mutation<
       AuthResponse,
       {
-        email: string | null;
-        phone: string;
+        email?: string;
+        phone?: string;
         password: string;
         type: UserType;
       }
@@ -82,23 +49,50 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    updateUser: builder.mutation<
-      User,
-      { id: number; data: Partial<UpdateUserPayload> | FormData }
+    resetPassword: builder.mutation<
+      AuthResponse,
+      {
+        phone: string;
+        code: string;
+        password: string;
+        password_confirmation: string;
+        type: UserType;
+      }
     >({
-      query: ({ id, data }) => ({
-        url: `/users/${id}`,
-        method: "PATCH",
-        data,
+      query: (body) => ({
+        url: "/auth/reset_password",
+        method: "POST",
+        data: body,
       }),
     }),
 
-    updateCustomer: builder.mutation<
+    getMe: builder.query<MeResponse, void>({
+      query: () => ({
+        url: "/auth/show",
+        method: "GET",
+      }),
+    }),
+
+    logoutSession: builder.mutation<{ status: string }, void>({
+      query: () => ({
+        url: "/auth/logout",
+        method: "DELETE",
+      }),
+    }),
+
+    updateCredentials: builder.mutation<
       User,
-      { id: number; data: Partial<UpdateUserPayload> | FormData }
+      {
+        resourceType: "user" | "customer";
+        id: number;
+        data: UpdateCredentialsPayload;
+      }
     >({
-      query: ({ id, data }) => ({
-        url: `/customers/${id}`,
+      query: ({ resourceType, id, data }) => ({
+        url:
+          resourceType === "customer"
+            ? `/customers/${id}/credentials`
+            : `/users/${id}/credentials`,
         method: "PATCH",
         data,
       }),
@@ -107,13 +101,11 @@ export const authApi = api.injectEndpoints({
 });
 
 export const {
-  useTelegramRegisterMutation,
-  useTelegramRegisterStatusQuery,
-  useTelegramLoginMutation,
+  useSendCodeMutation,
+  useConfirmCodeMutation,
   useLoginMutation,
-  useConfirmTelegramLoginMutation,
+  useResetPasswordMutation,
   useLazyGetMeQuery,
-
-  useUpdateUserMutation,
-  useUpdateCustomerMutation,
+  useLogoutSessionMutation,
+  useUpdateCredentialsMutation,
 } = authApi;

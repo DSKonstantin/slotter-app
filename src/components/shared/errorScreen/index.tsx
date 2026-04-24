@@ -17,7 +17,7 @@ const ErrorScreen: React.FC<ErrorScreenProps> = ({
   onRetry,
 }) => (
   <EmptyStateScreen
-    image={require("@/assets/images/no-internet.png")}
+    image={require("@/assets/images/placeholders/no-internet.png")}
     title={title}
     subtitle={subtitle}
     buttonTitle="Повторить"

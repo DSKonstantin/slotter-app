@@ -17,7 +17,6 @@ import { useAppSelector, useAppDispatch } from "@/src/store/redux/store";
 import { logout } from "@/src/store/redux/slices/authSlice";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
-import { refreshTokenStorage } from "@/src/utils/tokenStorage/refreshTokenStorage";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
 type NavItem = {
@@ -82,10 +81,7 @@ const AccountScreen = () => {
   const { refreshing, onRefresh } = useRefresh(triggerGetMe);
 
   const handleLogout = useCallback(async () => {
-    await Promise.all([
-      accessTokenStorage.remove(),
-      refreshTokenStorage.remove(),
-    ]);
+    await accessTokenStorage.remove();
     dispatch(logout());
     router.replace(Routers.auth.root);
   }, [dispatch]);

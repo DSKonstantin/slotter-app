@@ -146,7 +146,7 @@ const DayCalendarView = () => {
       return (
         <View className="flex-1">
           <EmptyStateScreen
-            image={require("@/assets/images/empty-slots.png")}
+            image={require("@/assets/images/placeholders/empty-slots.png")}
             title="На этот день записей нет"
             subtitle="Добавьте первую запись или настройте рабочее время"
             buttonTitle="Добавить запись"
@@ -157,7 +157,7 @@ const DayCalendarView = () => {
       );
     return (
       <TimeSlotList
-        appointment={appointments}
+        appointments={appointments}
         breaks={selectedWorkingDay?.working_day_breaks}
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}

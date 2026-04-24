@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import debounce from "lodash/debounce";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@/src/components/ui";
 import {
-  useGetCustomersQuery,
+  useGetCustomersPaginatedInfiniteQuery,
   useGetCustomerTagsQuery,
 } from "@/src/store/redux/services/api/customersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -103,20 +103,41 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     () => ({
       userId: auth!.userId,
       query: debouncedSearch || undefined,
+      tag_id: tagId,
     }),
-    [auth, debouncedSearch],
+    [auth, debouncedSearch, tagId],
   );
 
-  const { data, isLoading, isError, refetch, isFetching } =
-    useGetCustomersQuery(queryParams);
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetch,
+  } = useGetCustomersPaginatedInfiniteQuery(queryParams);
 
-  const { refreshing, onRefresh } = useRefresh(refetch);
+  const handleRefresh = useCallback(() => {
+    return refetch({ refetchCachedPages: false });
+  }, [refetch]);
+
+  const { refreshing, onRefresh } = useRefresh(handleRefresh);
+
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const customers = useMemo(() => {
-    const all = data?.customers ?? [];
-    if (!tagId) return all;
-    return all.filter((c) => c.customer_tag?.id === tagId);
-  }, [data?.customers, tagId]);
+    if (!data?.pages) return [];
+    const unique = new Map<number, Customer>();
+    data.pages.forEach((page) => {
+      page.customers.forEach((c) => unique.set(c.id, c));
+    });
+    return [...unique.values()];
+  }, [data?.pages]);
 
   return (
     <View className="flex-1" style={{ paddingTop: topInset }}>
@@ -190,6 +211,8 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           showsVerticalScrollIndicator={false}
           onRefresh={onRefresh}
           refreshing={refreshing}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
           renderItem={({ item }) => <ClientRow item={item} />}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center gap-4">

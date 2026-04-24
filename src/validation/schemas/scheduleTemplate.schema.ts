@@ -1,42 +1,31 @@
 import * as Yup from "yup";
-import { parseTimeToMinutes } from "@/src/validation/utils/parseTimeToMinutes";
+import { isEndAfterStart, breaksField } from "@/src/validation/utils/timeRange";
 
-const dayTemplateSchema = Yup.object()
-  .shape({
-    isEnabled: Yup.boolean().required().default(false),
-    startAt: Yup.string()
-      .default("")
-      .when("isEnabled", {
-        is: true,
-        then: (schema) => schema.required("Укажите время начала"),
-      }),
-    endAt: Yup.string()
-      .default("")
-      .when("isEnabled", {
-        is: true,
-        then: (schema) => schema.required("Укажите время окончания"),
-      }),
-    breaks: Yup.array()
-      .of(
-        Yup.object().shape({
-          start: Yup.string().required(),
-          end: Yup.string().required(),
-        }),
-      )
-      .required()
-      .default([]),
-  })
-  .test(
-    "template-time-range",
-    "Время окончания должно быть позже времени начала",
-    (value) => {
-      if (!value?.isEnabled || !value?.startAt || !value?.endAt) return true;
-      const start = parseTimeToMinutes(value.startAt);
-      const end = parseTimeToMinutes(value.endAt);
-      if (start === null || end === null) return false;
-      return end > start;
-    },
-  );
+const dayTemplateSchema = Yup.object().shape({
+  isEnabled: Yup.boolean().required().default(false),
+  startAt: Yup.string()
+    .default("")
+    .when("isEnabled", {
+      is: true,
+      then: (schema) => schema.required("Укажите время начала"),
+    }),
+  endAt: Yup.string()
+    .default("")
+    .when("isEnabled", {
+      is: true,
+      then: (schema) => schema.required("Укажите время окончания"),
+    })
+    .when(["isEnabled", "startAt"], {
+      is: (isEnabled: boolean, startAt: string) => isEnabled && !!startAt,
+      then: (schema) =>
+        schema.test(
+          "end-after-start",
+          "Время окончания должно быть позже начала",
+          (endAt, context) => isEndAfterStart(context.parent.startAt, endAt),
+        ),
+    }),
+  breaks: breaksField("startAt", "endAt"),
+});
 
 export const ScheduleTemplateSchema = Yup.object().shape({
   days: Yup.array()

@@ -19,7 +19,7 @@ const ServiceCard = ({ service }: Props) => {
           source={
             service.main_photo_url
               ? { uri: service.main_photo_url }
-              : require("@/assets/images/placeholder-slotter.png")
+              : require("@/assets/images/placeholders/placeholder-slotter.png")
           }
           style={{ width: "100%", height: "100%", borderRadius: 20 }}
           contentFit="cover"

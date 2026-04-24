@@ -39,7 +39,6 @@ const CalendarSchedule = () => {
     modalTemplate,
     setModalTemplate,
     isSaving,
-    hasPendingEditableSelection,
     clearSelection,
     toggleDay,
     handleSave,
@@ -100,24 +99,8 @@ const CalendarSchedule = () => {
         if (!date || !dayData) return;
 
         if (dayData.isExisting && dayData.workingDayId) {
-          if (hasPendingEditableSelection) {
-            Alert.alert(
-              "Несохранённые изменения",
-              "У вас есть несохранённые дни. Если перейти к редактированию, выбор сбросится.",
-              [
-                { text: "Отмена", style: "cancel" },
-                {
-                  text: "Перейти",
-                  style: "destructive",
-                  onPress: () => {
-                    clearSelection();
-                    router.push(
-                      Routers.app.calendar.daySchedule(dayData.workingDayId!),
-                    );
-                  },
-                },
-              ],
-            );
+          if (dayData.isSelected) {
+            toggleDay(dayData.date);
             return;
           }
           router.push(Routers.app.calendar.daySchedule(dayData.workingDayId));
@@ -143,13 +126,7 @@ const CalendarSchedule = () => {
         </View>
       );
     },
-    [
-      calendarDaysMap,
-      appointmentDates,
-      hasPendingEditableSelection,
-      clearSelection,
-      toggleDay,
-    ],
+    [calendarDaysMap, appointmentDates, toggleDay],
   );
 
   return (
@@ -180,7 +157,6 @@ const CalendarSchedule = () => {
               initialDate={formatApiDate(current)}
               firstDay={1}
               hideArrows
-              // hideDayNames
               hideExtraDays={true}
               renderHeader={renderHeader}
               theme={scheduleCalendarTheme}

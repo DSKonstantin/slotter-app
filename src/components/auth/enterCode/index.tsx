@@ -8,12 +8,11 @@ import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { router, useLocalSearchParams } from "expo-router";
 import { colors } from "@/src/styles/colors";
 import {
-  useTelegramLoginMutation,
-  useConfirmTelegramLoginMutation,
+  useSendCodeMutation,
+  useConfirmCodeMutation,
 } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { useAuth } from "@/src/contexts/AuthContext";
-
 import { toast } from "@backpackapp-io/react-native-toast";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -23,29 +22,21 @@ const EnterCode = () => {
   const phone = Array.isArray(params.phone) ? params.phone[0] : params.phone;
 
   const [code, setCode] = useState("");
-  const [telegramLogin] = useTelegramLoginMutation();
-  const [confirmTelegramLogin, { isLoading }] =
-    useConfirmTelegramLoginMutation();
+  const [sendCode] = useSendCodeMutation();
+  const [confirmCode, { isLoading }] = useConfirmCodeMutation();
   const { login } = useAuth();
 
   const onSubmit = useCallback(async () => {
     if (!code || code.length < 6) return;
     try {
-      const result = await confirmTelegramLogin({
-        phone,
-        code,
-      }).unwrap();
+      const result = await confirmCode({ phone, code }).unwrap();
 
       await login(result.token);
       router.replace(getRedirectPath(result.resource));
     } catch (e) {
-      toast.error(getApiErrorMessage(e, "Ошибка входа"));
+      toast.error(getApiErrorMessage(e, "Неверный код"));
     }
-  }, [confirmTelegramLogin, phone, code, login]);
-
-  const handleComplete = useCallback(() => {
-    // This can be used to trigger submission automatically on complete
-  }, []);
+  }, [confirmCode, phone, code, login]);
 
   return (
     <AuthScreenLayout
@@ -71,25 +62,20 @@ const EnterCode = () => {
     >
       <View className="mt-14">
         <Typography weight="semibold" className="text-display mb-2">
-          Код из Telegram
+          Введите код
         </Typography>
         <Typography className="text-body text-neutral-500">
-          Мы отправили сообщение от сервисного бота
+          Мы отправили SMS на {phone}
         </Typography>
 
-        <View className="w-full items-center mt-5 mb-10">
-          <View className="w-[80px] h-[80px] items-center justify-center bg-background-surface rounded-full">
-            <StSvg name="SocialTelegram" size={52} color={"#37B5DB"} />
-          </View>
+        <View className="mt-8">
+          <OtpConfirm
+            onChange={setCode}
+            onResend={async () => {
+              await sendCode({ phone, type: UserType.USER });
+            }}
+          />
         </View>
-
-        <OtpConfirm
-          onChange={setCode}
-          onComplete={handleComplete}
-          telegramLogin={telegramLogin}
-          phone={phone}
-          userType={UserType.USER}
-        />
       </View>
     </AuthScreenLayout>
   );

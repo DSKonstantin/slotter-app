@@ -13,6 +13,7 @@ import { UserType } from "@/src/store/redux/services/api-types";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const Login = () => {
   const [login, { isLoading }] = useLoginMutation();
@@ -31,7 +32,7 @@ const Login = () => {
         const isEmail = data.identifier.includes("@");
 
         await login({
-          email: isEmail ? data.identifier : null,
+          email: isEmail ? data.identifier : undefined,
           phone: isEmail ? "" : data.identifier,
           password: data.password,
           type: UserType.USER,

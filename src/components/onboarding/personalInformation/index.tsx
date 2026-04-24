@@ -15,7 +15,7 @@ import { AddressField } from "@/src/components/shared/addressField";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { CameraType, ImagePickerAsset } from "expo-image-picker";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {

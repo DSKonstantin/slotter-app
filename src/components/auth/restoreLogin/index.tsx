@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { View } from "react-native";
@@ -13,12 +13,18 @@ import { VerifySchema } from "@/src/validation/schemas/verify.schema";
 import { maskPhone } from "@/src/utils/mask/maskPhone";
 import { unMask } from "react-native-mask-text";
 import { colors } from "@/src/styles/colors";
+import { UserType } from "@/src/store/redux/services/api-types";
+import { useSendCodeMutation } from "@/src/store/redux/services/api/authApi";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type RestoreLoginFormValues = {
   phone: string;
 };
 
 const RestoreLogin = () => {
+  const [sendCode, { isLoading }] = useSendCodeMutation();
+
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
     defaultValues: {
@@ -26,10 +32,23 @@ const RestoreLogin = () => {
     },
   });
 
-  const onSubmit = (data: RestoreLoginFormValues) => {
-    const { phone } = data;
-    router.push(Routers.auth.enterCode);
-  };
+  const onSubmit = useCallback(
+    async (data: RestoreLoginFormValues) => {
+      const phone = `+${unMask(data.phone)}`;
+
+      try {
+        await sendCode({ phone, type: UserType.USER }).unwrap();
+
+        router.push({
+          pathname: Routers.auth.enterCode,
+          params: { phone },
+        });
+      } catch (e) {
+        toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
+      }
+    },
+    [sendCode],
+  );
 
   return (
     <FormProvider {...methods}>
@@ -40,6 +59,8 @@ const RestoreLogin = () => {
           <AuthFooter
             primary={{
               title: "Получить код",
+              disabled: isLoading,
+              loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
           />
@@ -50,7 +71,7 @@ const RestoreLogin = () => {
             Восстановить доступ
           </Typography>
           <Typography className="text-body text-neutral-500">
-            Вернем доступ к аккаунту через Telegram
+            Вернём доступ к аккаунту по SMS
           </Typography>
 
           <View className="bg-primary-green-100 py-2.5 px-4 gap-2.5 rounded-2xl my-5">
@@ -70,7 +91,7 @@ const RestoreLogin = () => {
               className="text-body text-primary-green-700"
             >
               Если вы переустановили приложение или забыли данные для входа,
-              введите номер телефона. Мы найдем ваш профиль
+              введите номер телефона. Мы найдём ваш профиль
             </Typography>
           </View>
 
@@ -83,7 +104,7 @@ const RestoreLogin = () => {
             keyboardType="number-pad"
           />
           <Typography className="text-caption text-neutral-500 my-2">
-            Мы отправим код подтверждения в Telegram. Это бесплатно и безопасно
+            Мы отправим SMS с кодом подтверждения
           </Typography>
         </View>
       </AuthScreenLayout>

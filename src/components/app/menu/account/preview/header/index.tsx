@@ -1,14 +1,25 @@
 import type { User } from "@/src/store/redux/services/api-types/user";
-import React, { useCallback, useState } from "react";
-import { View, Image, StyleSheet, Text } from "react-native";
-import type { NativeSyntheticEvent, TextLayoutEventData } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  useWindowDimensions,
+} from "react-native";
+import type {
+  NativeSyntheticEvent,
+  TextLayoutEventData,
+  ViewToken,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Avatar } from "@/src/components/ui/Avatar";
 import { Tag } from "@/src/components/ui/Tag";
 import { Typography } from "@/src/components/ui/Typography";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { colors } from "@/src/styles/colors";
-import { Badge } from "@/src/components/ui";
+import { Badge, StImage, PlaceholderSlotter } from "@/src/components/ui";
+import type { GalleryPhoto } from "@/src/store/redux/services/api-types";
 
 type Props = { user: User };
 
@@ -55,30 +66,113 @@ const AboutMe = ({ text }: { text: string }) => {
   );
 };
 
-type PreviewHeaderImageProps = { uri?: string };
+type PreviewHeaderImageProps = { photos: GalleryPhoto[] };
 
-export const PreviewHeaderImage = ({ uri }: PreviewHeaderImageProps) => (
-  <>
-    {uri ? (
-      <Image source={{ uri }} className="absolute inset-0" resizeMode="cover" />
-    ) : (
-      <View className="absolute inset-0 bg-background-black" />
-    )}
-    <LinearGradient
-      colors={["rgba(0,0,0,0.14)", "rgba(0,0,0,0.7)"]}
-      locations={[0.5408, 1]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      style={StyleSheet.absoluteFill}
-    />
-  </>
+const GRADIENT_COLORS: [string, string] = [
+  "rgba(0,0,0,0.14)",
+  "rgba(0,0,0,0.7)",
+];
+const GRADIENT_LOCATIONS: [number, number] = [0.5408, 1];
+const GRADIENT_START = { x: 0, y: 0 };
+const GRADIENT_END = { x: 0, y: 1 };
+
+const HeaderGradient = () => (
+  <LinearGradient
+    colors={GRADIENT_COLORS}
+    locations={GRADIENT_LOCATIONS}
+    start={GRADIENT_START}
+    end={GRADIENT_END}
+    style={StyleSheet.absoluteFill}
+    pointerEvents="none"
+  />
 );
+
+export const PreviewHeaderImage = ({ photos }: PreviewHeaderImageProps) => {
+  const { width } = useWindowDimensions();
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index != null) {
+        setActiveIndex(viewableItems[0].index);
+      }
+    },
+  ).current;
+
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 50,
+  }).current;
+
+  if (photos.length === 0) {
+    return (
+      <>
+        <View className="absolute inset-0 bg-background-black items-center justify-center">
+          <PlaceholderSlotter size={80} />
+        </View>
+        <HeaderGradient />
+      </>
+    );
+  }
+
+  if (photos.length === 1) {
+    const photo = photos[0];
+    return (
+      <>
+        <StImage
+          uri={photo.cropped_photo_url ?? photo.photo_url}
+          blurhash={photo.blurhash}
+          style={StyleSheet.absoluteFill}
+        />
+        <HeaderGradient />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <FlatList
+        data={photos}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => String(item.id)}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        renderItem={({ item }) => (
+          <StImage
+            uri={item.cropped_photo_url ?? item.photo_url}
+            blurhash={item.blurhash}
+            style={{ width, height: "100%" }}
+          />
+        )}
+        style={StyleSheet.absoluteFill}
+      />
+      <HeaderGradient />
+      <View
+        className="absolute bottom-3 flex-row self-center gap-1.5"
+        pointerEvents="none"
+      >
+        {photos.map((photo, index) => (
+          <View
+            key={photo.id}
+            className={`w-2 h-2 rounded-full ${
+              index === activeIndex ? "bg-neutral-0" : "bg-neutral-0/40"
+            }`}
+          />
+        ))}
+      </View>
+    </>
+  );
+};
 
 export const PreviewHeaderContent = ({ user }: Props) => {
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
 
   return (
-    <View className="flex-1 justify-end px-screen gap-2 pb-6">
+    <View
+      className="flex-1 justify-end px-screen gap-2 pb-6"
+      pointerEvents="none"
+    >
       <View className="flex-row items-center gap-4">
         <Avatar uri={user.avatar_url ?? undefined} name={fullName} size="lg" />
         <View className="flex-1 gap-1">

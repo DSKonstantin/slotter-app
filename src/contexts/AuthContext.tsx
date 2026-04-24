@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (token: string) => {
       try {
+        await accessTokenStorage.set(token);
         dispatch(setToken(token));
       } catch {
         await accessTokenStorage.remove();

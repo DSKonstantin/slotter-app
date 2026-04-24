@@ -15,8 +15,7 @@ type StModalProps = {
   keyboardAware?: boolean;
   keyboardAwareBottomOffset?: number;
   fullHeight?: boolean;
-  props?: ModalProps;
-};
+} & Partial<ModalProps>;
 
 export const StModal = ({
   visible,

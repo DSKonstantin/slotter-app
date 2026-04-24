@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Button, StSvg, Typography } from "@/src/components/ui";
@@ -47,10 +47,10 @@ const Services = () => {
     refetch({ refetchCachedPages: false });
   }, [refetch]);
 
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage || isError) return;
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isError, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (!auth) return null;
 
@@ -118,6 +118,8 @@ const Services = () => {
         decelerationRate="fast"
         snapToAlignment="start"
         disableIntervalMomentum
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
         ItemSeparatorComponent={() => <View className="w-4" />}
         renderItem={({ item }) => <PreviewServiceCard service={item.service} />}
       />

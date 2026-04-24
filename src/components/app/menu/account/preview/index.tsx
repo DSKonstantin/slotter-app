@@ -52,7 +52,7 @@ const AccountPreview = () => {
         }
       />
       <ParallaxScrollView
-        headerImage={<PreviewHeaderImage uri={user.avatar_url ?? undefined} />}
+        headerImage={<PreviewHeaderImage photos={user.gallery_photos} />}
         headerContent={<PreviewHeaderContent user={user} />}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

@@ -13,7 +13,7 @@ import {
   RegisterSchema,
   type RegisterFormValues,
 } from "@/src/validation/schemas/register.schema";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -23,7 +23,7 @@ const Register = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
 
-  const [updateUser, { isLoading }] = useUpdateUserMutation();
+  const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
 
   const methods = useForm({
     resolver: yupResolver(RegisterSchema),
@@ -38,23 +38,24 @@ const Register = () => {
       if (!auth) return;
 
       try {
-        await updateUser({
+        await updateCredentials({
+          resourceType: "user",
           id: auth.userId,
           data: {
             email: data.email,
             password: data.password,
-            onboarding_step: "personalInformation",
+            password_confirmation: data.password,
           },
         }).unwrap();
 
-        router.push(Routers.onboarding.experience);
+        router.push(Routers.onboarding.personalInformation);
       } catch (error) {
         toast.error(
           getApiErrorMessage(error, "Произошла ошибка при обновлении."),
         );
       }
     },
-    [auth, updateUser],
+    [auth, updateCredentials],
   );
 
   return (
