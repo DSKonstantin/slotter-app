@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { View } from "react-native";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import debounce from "lodash/debounce";
@@ -13,6 +13,7 @@ export function AddressField() {
   const hideAddress = useWatch({ name: "hideAddress" });
   const [query, setQuery] = useState("");
   const { suggestions } = useDaDataSuggestions(query);
+  const justSelected = useRef(false);
 
   const debouncedSetQuery = useMemo(
     () => debounce((text: string) => setQuery(text), 500),
@@ -35,12 +36,17 @@ export function AddressField() {
             dataSet={suggestions}
             onChangeText={(text) => {
               onChange(text);
-              debouncedSetQuery(text);
+              if (justSelected.current) {
+                justSelected.current = false;
+              } else {
+                debouncedSetQuery(text);
+              }
             }}
             onSelectItem={(item) => {
               if (item) {
                 onChange(item.id);
-                setQuery(item.title ?? "");
+                debouncedSetQuery.cancel();
+                justSelected.current = true;
               }
             }}
           />

@@ -14,7 +14,7 @@ import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 
 const Link = () => {
   const auth = useRequiredAuth();
-  const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
+  const personalLink = useAppSelector((s) => s.auth.user?.nickname);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
   const link = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${personalLink ?? ""}`;

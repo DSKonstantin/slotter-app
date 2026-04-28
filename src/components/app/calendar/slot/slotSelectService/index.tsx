@@ -106,7 +106,7 @@ const SlotSelectService: React.FC<Props> = ({
   const initializedAdditionalRef = useRef(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
-  const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
+  const personalLink = useAppSelector((s) => s.auth.user?.nickname);
   const [bookingLinkVisible, setBookingLinkVisible] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [updateAppointment, { isLoading: isUpdating }] =

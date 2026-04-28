@@ -16,6 +16,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
+import { assetToFile } from "@/src/utils/files/assetToFile";
 import { AccountPersonalInformationSchema } from "@/src/validation/schemas/accountPersonalInformation.schema";
 import type { UploadFile } from "@/src/types/upload";
 import { colors } from "@/src/styles/colors";
@@ -51,11 +52,7 @@ const PersonalInformation = () => {
     (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => {
       const asset = assets[0];
       if (!asset || !("width" in asset)) return;
-      methods.setValue("avatar", {
-        uri: asset.uri,
-        name: asset.fileName || `avatar_${Date.now()}.jpg`,
-        type: asset.mimeType || "image/jpeg",
-      });
+      methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
   );

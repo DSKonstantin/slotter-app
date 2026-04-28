@@ -9,6 +9,7 @@ type BaseFieldProps = {
   label?: string;
   hideErrorText?: boolean;
   error?: FieldError;
+  success?: boolean;
   disabled?: boolean;
   size?: FieldSize;
   multiline?: boolean;
@@ -27,6 +28,7 @@ type BaseFieldProps = {
 export function BaseField({
   label,
   error,
+  success,
   disabled,
   size = "md",
   multiline,
@@ -48,6 +50,7 @@ export function BaseField({
           multiline ? styles.baseTop : styles.baseCenter,
           styles.sizes[size],
           focused && styles.focus,
+          success && styles.success,
           error && styles.error,
           disabled && styles.disabled,
         )}
@@ -92,6 +95,8 @@ const styles = {
   },
 
   focus: "border-primary-blue-500",
+
+  success: "border-primary-green-700",
 
   error: "border-accent-red-500",
 

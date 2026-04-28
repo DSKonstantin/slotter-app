@@ -22,6 +22,7 @@ import StatCard from "@/src/components/shared/cards/statСard";
 import CreateExpenseModal from "./createExpenseModal";
 import ExpenseCategoriesList from "./ExpenseCategoriesList";
 import FinancesSkeleton from "./FinancesSkeleton";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 
 const now = new Date();
@@ -35,6 +36,7 @@ const FinancesScreen = () => {
   const {
     data: summary,
     isLoading: isSummaryLoading,
+    isError: isSummaryError,
     refetch: refetchSummary,
   } = useGetFinancesSummaryQuery(
     auth
@@ -62,6 +64,19 @@ const FinancesScreen = () => {
     return (
       <ScreenWithToolbar title="Финансы">
         {({ topInset }) => <FinancesSkeleton topInset={topInset} />}
+      </ScreenWithToolbar>
+    );
+  }
+
+  if (isSummaryError) {
+    return (
+      <ScreenWithToolbar title="Финансы">
+        {() => (
+          <ErrorScreen
+            title="Не удалось загрузить финансы"
+            onRetry={refetchSummary}
+          />
+        )}
       </ScreenWithToolbar>
     );
   }

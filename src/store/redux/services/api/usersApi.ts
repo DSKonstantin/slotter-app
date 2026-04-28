@@ -18,28 +18,11 @@ export const usersApi = api.injectEndpoints({
       }),
     }),
 
-    // TODO: заменить мок на реальный эндпоинт
-    checkNickname: builder.query<
-      { available: boolean; suggestions?: string[] },
-      string
-    >({
-      queryFn: async (nickname) => {
-        await new Promise((r) => setTimeout(r, 500));
-        const taken = ["ivan", "barber", "admin", "test"];
-        const isAvailable = !taken.includes(nickname.toLowerCase());
-        return {
-          data: isAvailable
-            ? { available: true }
-            : {
-                available: false,
-                suggestions: [
-                  `${nickname}.pro`,
-                  `${nickname}_master`,
-                  `${nickname}.barber`,
-                ],
-              },
-        };
-      },
+    checkNickname: builder.query<{ available: boolean }, string>({
+      query: (nickname) => ({
+        url: `/users/nickname_availability`,
+        params: { nickname },
+      }),
     }),
 
     updateCustomer: builder.mutation<

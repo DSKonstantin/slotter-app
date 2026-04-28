@@ -3,14 +3,14 @@ import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 
 const DADATA_URL =
   "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address";
-const API_KEY = process.env.EXPO_PUBLIC_DADATA_API_KEY ?? "";
+const API_KEY = process.env.EXPO_PUBLIC_DADATA_API_KEY;
 
 export function useDaDataSuggestions(query: string) {
   const [suggestions, setSuggestions] = useState<AutocompleteItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!query.trim()) {
+    if (!query.trim() || !API_KEY) {
       setSuggestions([]);
       return;
     }
@@ -25,7 +25,7 @@ export function useDaDataSuggestions(query: string) {
         Accept: "application/json",
         Authorization: `Token ${API_KEY}`,
       },
-      body: JSON.stringify({ query, count: 5 }),
+      body: JSON.stringify({ query, count: 10 }),
     })
       .then((r) => r.json())
       .then((data) => {

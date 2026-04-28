@@ -12,14 +12,22 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
-import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
-import { days } from "@/src/constants/days";
-import { colors } from "@/src/styles/colors";
-import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { Button, Typography } from "@/src/components/ui";
+import { days, DAY_ID_BY_INDEX } from "@/src/constants/days";
 import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
+import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
+import { useBulkCreateWorkingDaysMutation } from "@/src/store/redux/services/api/workingDaysApi";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import { format } from "date-fns";
+import { getDatesUntilEndOfWeek } from "@/src/utils/schedule/getDatesUntilEndOfWeek";
 
 const Schedule = () => {
+  const auth = useRequiredAuth();
   const [activeDays, setActiveDays] = useState<string[]>([]);
+  const [bulkCreateWorkingDays, { isLoading }] =
+    useBulkCreateWorkingDaysMutation();
 
   const methods = useForm({
     resolver: yupResolver(OnboardingScheduleSchema),
@@ -47,8 +55,40 @@ const Schedule = () => {
     });
   };
 
-  const onSubmit = (data: OnboardingScheduleFormValues) => {
-    router.push(Routers.onboarding.notification);
+  const onSubmit = async (data: OnboardingScheduleFormValues) => {
+    if (!auth) return;
+
+    const working_days = getDatesUntilEndOfWeek()
+      .filter((d) =>
+        (data.workingDays as string[]).includes(DAY_ID_BY_INDEX[d.getDay()]),
+      )
+      .map((d) => ({
+        day: format(d, "yyyy-MM-dd"),
+        start_at: data.workingTimeFrom,
+        end_at: data.workingTimeTo,
+        ...(data.breaks?.length && {
+          working_day_breaks: data.breaks.map((b) => ({
+            start_at: b.start!,
+            end_at: b.end!,
+          })),
+        }),
+      }));
+
+    if (!working_days.length) {
+      router.push(Routers.onboarding.notification);
+      return;
+    }
+
+    try {
+      await bulkCreateWorkingDays({
+        userId: auth.userId,
+        working_days,
+      }).unwrap();
+
+      router.push(Routers.onboarding.notification);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось сохранить расписание"));
+    }
   };
 
   return (
@@ -61,11 +101,14 @@ const Schedule = () => {
             primary={{
               title: "Завершить",
               variant: "accent",
+              loading: isLoading,
+              disabled: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
             secondary={{
               title: "Пропустить",
               variant: "clear",
+              disabled: isLoading,
               onPress: () => {
                 router.push(Routers.onboarding.notification);
               },
@@ -103,36 +146,11 @@ const Schedule = () => {
             )}
           </View>
 
-          <Typography className="text-neutral-500 text-caption">
-            Время работы
-          </Typography>
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <RhfDatePicker
-                name="workingTimeFrom"
-                placeholder="9:00"
-                hideErrorText
-                endAdornment={
-                  <StSvg name="Time" size={24} color={colors.neutral[500]} />
-                }
-              />
-            </View>
-
-            <View className="w-5 items-center mt-[25px]">
-              <Divider />
-            </View>
-
-            <View className="flex-1">
-              <RhfDatePicker
-                name="workingTimeTo"
-                placeholder="18:00"
-                hideErrorText
-                endAdornment={
-                  <StSvg name="Time" size={24} color={colors.neutral[500]} />
-                }
-              />
-            </View>
-          </View>
+          <TimeFields
+            label="Время работы"
+            startName="workingTimeFrom"
+            endName="workingTimeTo"
+          />
 
           <Typography className="text-caption text-neutral-900">
             Свободный или сменный график (2/2) можно будет настроить в календаре

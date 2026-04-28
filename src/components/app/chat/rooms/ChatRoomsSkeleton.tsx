@@ -31,21 +31,6 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
         paddingTop: topInset + 12,
       }}
     >
-      {/* Filter tabs skeleton */}
-      <ContentLoader
-        speed={SPEED}
-        width={w}
-        height={40}
-        backgroundColor={BG}
-        foregroundColor={FG}
-        style={{ marginBottom: 16 }}
-      >
-        <Rect x={0} y={6} rx={16} ry={16} width={64} height={28} />
-        <Rect x={72} y={6} rx={16} ry={16} width={88} height={28} />
-        <Rect x={168} y={6} rx={16} ry={16} width={44} height={28} />
-        <Rect x={220} y={6} rx={16} ry={16} width={72} height={28} />
-      </ContentLoader>
-
       {/* Room items skeleton */}
       <ContentLoader
         speed={SPEED}

@@ -1,15 +1,17 @@
 import { api } from "../api";
-import { getCable } from "@/src/services/cable";
+import {
+  subscribeToResource,
+  subscribeToChatRoom,
+} from "@/src/services/chat/cableChannels";
 import type {
-  ChatRoom,
   GetChatRoomsParams,
   GetChatRoomsResponse,
+  ChatRoom,
+  RoomChannelEvent,
 } from "@/src/store/redux/services/api-types";
 import type { RootState } from "@/src/store/redux/store";
 
-type IndexEvent =
-  | { event: "room_created"; chat_room: ChatRoom }
-  | { event: "room_updated"; chat_room: ChatRoom };
+type RoomSub = ReturnType<typeof subscribeToChatRoom>;
 
 export const chatRoomsApi = api.injectEndpoints({
   overrideExisting: __DEV__,
@@ -19,91 +21,119 @@ export const chatRoomsApi = api.injectEndpoints({
       GetChatRoomsParams | void
     >({
       query: (params) => ({
-        url: "/chat_rooms",
+        url: "/chat/rooms",
         method: "GET",
         params: params ?? undefined,
       }),
-      keepUnusedDataFor: Infinity,
       async onCacheEntryAdded(
         _arg,
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState },
       ) {
         const token = (getState() as RootState).auth.token;
-        const cable = getCable(token);
-        if (!cable) return;
+        const resourceSub = subscribeToResource(token);
+        if (!resourceSub) return;
 
-        const subscription = cable.subscribeTo("Chat::RoomsChannel");
+        const roomSubs = new Map<number, RoomSub>();
+
+        const subscribeRoom = (room: ChatRoom) => {
+          if (roomSubs.has(room.id)) return;
+          const sub = subscribeToChatRoom(token, room.id);
+          roomSubs.set(room.id, sub);
+
+          sub?.on("message", (data: RoomChannelEvent) => {
+            if (data.type !== "message.created") return;
+
+            const { user: authUser, resourceType } = (getState() as RootState)
+              .auth;
+            const currentId =
+              authUser && resourceType
+                ? `${resourceType}_${authUser.id}`
+                : null;
+            const ownerId = `${data.payload.owner.type.toLowerCase()}_${data.payload.owner.id}`;
+            if (ownerId === currentId) return;
+
+            updateCachedData((draft) => {
+              const r = draft.rooms.find((r) => r.id === room.id);
+              if (!r) return;
+              r.unread_count += 1;
+              r.last_activity_at = data.payload.created_at;
+              draft.rooms.sort((a, b) =>
+                b.last_activity_at.localeCompare(a.last_activity_at),
+              );
+            });
+          });
+        };
 
         try {
-          await cacheDataLoaded;
+          const { data } = await cacheDataLoaded;
 
-          subscription.on("message", (raw: unknown) => {
-            const data = raw as IndexEvent;
-            if (
-              data.event === "room_created" ||
-              data.event === "room_updated"
-            ) {
-              updateCachedData((draft) => {
-                const idx = draft.chat_rooms.findIndex(
-                  (r) => r.id === data.chat_room.id,
-                );
-                if (idx !== -1) {
-                  draft.chat_rooms[idx] = data.chat_room;
-                } else {
-                  draft.chat_rooms.unshift(data.chat_room);
-                }
-                draft.chat_rooms.sort((a, b) => {
-                  const aDate = a.last_message?.created_at ?? a.created_at;
-                  const bDate = b.last_message?.created_at ?? b.created_at;
-                  return bDate.localeCompare(aDate);
-                });
-              });
-            }
+          for (const room of data.rooms) {
+            subscribeRoom(room);
+          }
+
+          resourceSub.on("message", (data) => {
+            if (data.type !== "chat_room.created") return;
+
+            updateCachedData((draft) => {
+              const idx = draft.rooms.findIndex(
+                (r) => r.id === data.payload.id,
+              );
+              if (idx !== -1) {
+                draft.rooms[idx] = data.payload;
+              } else {
+                draft.rooms.unshift(data.payload);
+              }
+              draft.rooms.sort((a, b) =>
+                b.last_activity_at.localeCompare(a.last_activity_at),
+              );
+            });
+
+            subscribeRoom(data.payload);
           });
         } catch {
-          // cacheEntryRemoved resolved before cacheDataLoaded
+          // no-op: cacheEntryRemoved resolved before cacheDataLoaded
         }
 
         await cacheEntryRemoved;
-        subscription.disconnect();
+        resourceSub.disconnect();
+        for (const sub of roomSubs.values()) sub?.disconnect();
+        roomSubs.clear();
       },
     }),
 
-    getChatRoom: builder.query<
-      {
-        chat_room: ChatRoom & {
-          other_member: ChatRoom["other_member"] & { phone?: string };
-        };
-      },
-      { chatRoomId: number }
-    >({
+    getChatRoom: builder.query<ChatRoom, { chatRoomId: number }>({
       query: ({ chatRoomId }) => ({
-        url: `/chat_rooms/${chatRoomId}`,
+        url: `/chat/rooms/${chatRoomId}`,
         method: "GET",
       }),
     }),
 
     createChatRoom: builder.mutation<
-      { chat_room: ChatRoom },
-      { memberId: number }
+      ChatRoom,
+      { userId: number; customerId: number }
     >({
-      query: ({ memberId }) => ({
-        url: "/chat_rooms",
+      query: ({ userId, customerId }) => ({
+        url: "/chat/rooms",
         method: "POST",
-        data: { member_id: memberId },
+        data: { user_id: userId, customer_id: customerId },
       }),
     }),
 
-    deleteChatRoom: builder.mutation<void, { chatRoomId: number }>({
+    markRoomRead: builder.mutation<void, { chatRoomId: number }>({
       query: ({ chatRoomId }) => ({
-        url: `/chat_rooms/${chatRoomId}`,
-        method: "DELETE",
+        url: `/chat/rooms/${chatRoomId}/read`,
+        method: "PATCH",
       }),
       async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
         const patch = dispatch(
-          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
-            draft.chat_rooms = draft.chat_rooms.filter((r) => r.id !== chatRoomId);
-          }),
+          chatRoomsApi.util.updateQueryData(
+            "getChatRooms",
+            undefined,
+            (draft) => {
+              const room = draft.rooms.find((r) => r.id === chatRoomId);
+              if (room) room.unread_count = 0;
+            },
+          ),
         );
         try {
           await queryFulfilled;
@@ -113,68 +143,28 @@ export const chatRoomsApi = api.injectEndpoints({
       },
     }),
 
-    typingInRoom: builder.mutation<void, { chatRoomId: number }>({
-      query: ({ chatRoomId }) => ({
-        url: `/chat_rooms/${chatRoomId}/typing`,
-        method: "POST",
-      }),
-    }),
-
-    blockChatRoom: builder.mutation<void, { chatRoomId: number }>({
-      query: ({ chatRoomId }) => ({
-        url: `/chat_rooms/${chatRoomId}/block`,
-        method: "POST",
-      }),
-      async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
-        const patch = dispatch(
-          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
-            const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
-            if (room) room.blocked_by_me = true;
-          }),
-        );
-        try {
-          await queryFulfilled;
-        } catch {
-          patch.undo();
-        }
-      },
-    }),
-
-    unblockChatRoom: builder.mutation<void, { chatRoomId: number }>({
-      query: ({ chatRoomId }) => ({
-        url: `/chat_rooms/${chatRoomId}/unblock`,
-        method: "DELETE",
-      }),
-      async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
-        const patch = dispatch(
-          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
-            const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
-            if (room) room.blocked_by_me = false;
-          }),
-        );
-        try {
-          await queryFulfilled;
-        } catch {
-          patch.undo();
-        }
-      },
-    }),
-
-    muteChatRoom: builder.mutation<
+    updateMembership: builder.mutation<
       void,
-      { chatRoomId: number; muted: boolean }
+      { chatRoomId: number; is_notify: boolean }
     >({
-      query: ({ chatRoomId, muted }) => ({
-        url: `/chat_rooms/${chatRoomId}/mute`,
-        method: "POST",
-        data: { muted },
+      query: ({ chatRoomId, is_notify }) => ({
+        url: `/chat/rooms/${chatRoomId}/membership`,
+        method: "PATCH",
+        data: { is_notify },
       }),
-      async onQueryStarted({ chatRoomId, muted }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { chatRoomId, is_notify },
+        { dispatch, queryFulfilled },
+      ) {
         const patch = dispatch(
-          chatRoomsApi.util.updateQueryData("getChatRooms", undefined, (draft) => {
-            const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
-            if (room) room.muted_by_me = muted;
-          }),
+          chatRoomsApi.util.updateQueryData(
+            "getChatRooms",
+            undefined,
+            (draft) => {
+              const room = draft.rooms.find((r) => r.id === chatRoomId);
+              if (room) room.is_notify = is_notify;
+            },
+          ),
         );
         try {
           await queryFulfilled;
@@ -190,9 +180,6 @@ export const {
   useGetChatRoomsQuery,
   useGetChatRoomQuery,
   useCreateChatRoomMutation,
-  useDeleteChatRoomMutation,
-  useTypingInRoomMutation,
-  useBlockChatRoomMutation,
-  useUnblockChatRoomMutation,
-  useMuteChatRoomMutation,
+  useMarkRoomReadMutation,
+  useUpdateMembershipMutation,
 } = chatRoomsApi;

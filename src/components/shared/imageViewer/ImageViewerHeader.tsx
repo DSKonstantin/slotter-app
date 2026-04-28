@@ -1,31 +1,25 @@
 import React from "react";
 import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
-type ViewerHeaderProps = {
+type Props = {
   currentIndex: number;
   total: number;
-  topInset: number;
   onClose: () => void;
 };
 
-export function ViewerHeader({
-  currentIndex,
-  total,
-  topInset,
-  onClose,
-}: ViewerHeaderProps) {
+const ImageViewerHeader = ({ currentIndex, total, onClose }: Props) => {
+  const insets = useSafeAreaInsets();
   return (
     <View
       className="absolute left-4 right-4 z-10 flex-row items-center justify-between"
-      style={{ top: topInset + 8 }}
+      style={{ top: insets.top + 8 }}
     >
       <IconButton
         onPress={onClose}
-        icon={
-          <StSvg name="Close_round" size={24} color={colors.neutral[900]} />
-        }
+        icon={<StSvg name="Close_round" size={24} color={colors.neutral[900]} />}
       />
       <Typography className="text-neutral-0 text-body">
         {currentIndex + 1} из {total}
@@ -33,4 +27,6 @@ export function ViewerHeader({
       <View className="w-10" />
     </View>
   );
-}
+};
+
+export default ImageViewerHeader;

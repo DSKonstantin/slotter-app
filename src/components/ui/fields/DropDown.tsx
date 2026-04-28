@@ -105,6 +105,7 @@ export function DropDown({
           dropDownContainerStyle={{
             borderRadius: 16,
             borderWidth: 0,
+            marginTop: 4,
           }}
           labelStyle={{
             ...styles.text,

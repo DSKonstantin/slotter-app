@@ -21,6 +21,7 @@ import FinancesIncomeSkeleton from "./FinancesIncomeSkeleton";
 import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
 import IncomeBreakdownServices from "./IncomeBreakdownServices";
 import IncomeBreakdownClients from "./IncomeBreakdownClients";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 const today = new Date();
 
@@ -58,6 +59,7 @@ const FinancesIncomeScreen = () => {
   const {
     data,
     isLoading: isIncomeLoading,
+    isError: isIncomeError,
     isFetching,
     refetch,
   } = useGetFinancesIncomeQuery(
@@ -95,6 +97,20 @@ const FinancesIncomeScreen = () => {
     return (
       <ScreenWithToolbar title="Доходы по периоду">
         {({ topInset }) => <FinancesIncomeSkeleton topInset={topInset} />}
+      </ScreenWithToolbar>
+    );
+  }
+
+  if (isIncomeError) {
+    return (
+      <ScreenWithToolbar title="Доходы по периоду">
+        {() => (
+          <ErrorScreen
+            title="Не удалось загрузить данные о доходах"
+            onRetry={refetch}
+            withTabBar={false}
+          />
+        )}
       </ScreenWithToolbar>
     );
   }

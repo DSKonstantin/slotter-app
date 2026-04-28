@@ -1,3 +1,6 @@
+if (__DEV__) {
+  require("@/src/services/reactotron");
+}
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";

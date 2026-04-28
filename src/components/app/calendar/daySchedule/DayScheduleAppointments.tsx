@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 
@@ -16,7 +16,7 @@ type Props = {
 };
 
 const DayScheduleAppointments = ({ userId, date }: Props) => {
-  const { data, isLoading } = useGetAppointmentsQuery(
+  const { data, isLoading, isError, refetch } = useGetAppointmentsQuery(
     userId ? { userId, params: { date } } : skipToken,
   );
 
@@ -26,6 +26,21 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
 
   if (isLoading) {
     return <ActivityIndicator />;
+  }
+
+  if (isError) {
+    return (
+      <View className="gap-1">
+        <Typography className="text-caption text-neutral-500">
+          Не удалось загрузить записи
+        </Typography>
+        <TouchableOpacity onPress={refetch}>
+          <Typography className="text-caption text-primary-blue-500">
+            Повторить
+          </Typography>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   if (appointments.length === 0) {

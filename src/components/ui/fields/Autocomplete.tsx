@@ -79,7 +79,11 @@ export function Autocomplete({
             }
             onChangeText?.(text ?? "");
           }}
-          onSelectItem={onSelectItem}
+          onSelectItem={(item) =>
+            onSelectItem?.(
+              item ? { id: item.id, title: item.title ?? "" } : null,
+            )
+          }
           dataSet={dataSet ?? []}
           emptyResultText={emptyText}
           containerStyle={{ flex: 1 }}

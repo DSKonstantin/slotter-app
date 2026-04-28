@@ -6,7 +6,7 @@ import type { User } from "@/src/store/redux/services/api-types/user";
 import { formatPhoneDisplay } from "@/src/utils/mask/maskPhone";
 
 type Props = {
-  user: Pick<User, "address" | "phone" | "personal_link">;
+  user: Pick<User, "address" | "phone" | "nickname">;
 };
 
 const ITEM_CLASS = "rounded-none bg-transparent border-transparent";
@@ -30,9 +30,9 @@ const PreviewLinks = ({ user }: Props) => {
       title: formatPhoneDisplay(user.phone),
       onPress: () => {},
     },
-    user.personal_link && {
+    user.nickname && {
       icon: <StSvg name="glob_fill" size={24} color={colors.neutral[900]} />,
-      title: user.personal_link,
+      title: user.nickname,
       onPress: () => {},
     },
   ].filter(Boolean) as {

@@ -26,6 +26,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
+import { assetToFile } from "@/src/utils/files/assetToFile";
 import { NicknameField } from "./NicknameField";
 
 const PersonalInformation = () => {
@@ -39,7 +40,7 @@ const PersonalInformation = () => {
       name: user?.first_name ?? "",
       surname: user?.last_name ?? "",
       profession: user?.profession ?? "",
-      personalLink: user?.personal_link ?? "",
+      nickname: user?.nickname ?? "",
       address: user?.address ?? "",
       hideAddress: false,
       atHome: user?.is_home_work ?? false,
@@ -56,18 +57,9 @@ const PersonalInformation = () => {
       if (!auth) return;
 
       try {
-        const formData = buildUserFormData({
-          ...data,
-          avatar: data.avatar
-            ? {
-                uri: data.avatar.uri,
-                name: data.avatar.name || `avatar_${Date.now()}.jpg`,
-                type: data.avatar.type || "image/jpeg",
-              }
-            : null,
-        });
+        const formData = buildUserFormData(data);
 
-        formData.append("user[personal_link]", data.personalLink);
+        formData.append("user[nickname]", data.nickname);
         if (data.address) {
           formData.append("user[address]", data.address);
         }
@@ -100,11 +92,7 @@ const PersonalInformation = () => {
         return;
       }
 
-      methods.setValue("avatar", {
-        uri: asset.uri,
-        name: asset.fileName || `file_${Date.now()}.jpg`,
-        type: asset.mimeType || "image/jpeg",
-      });
+      methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
   );
@@ -157,15 +145,16 @@ const PersonalInformation = () => {
         <View className="gap-2">
           <RhfTextField
             name="profession"
-            label="Профессия"
+            label="Профессия*"
             placeholder="Барбер"
           />
-          <RhfTextField name="name" label="Имя" placeholder="Иван" />
-          <RhfTextField name="surname" label="Фамилия" placeholder="Иванов" />
+          <RhfTextField name="name" label="Имя*" placeholder="Иван" />
+          <RhfTextField name="surname" label="Фамилия*" placeholder="Иванов" />
           <Divider />
           <NicknameField />
+          <Divider />
         </View>
-        <Divider />
+
         <Typography className="text-neutral-500 text-caption mt-5">
           Формат работы
         </Typography>

@@ -15,7 +15,7 @@ type Props = InputToolbarProps<ChatIMessage> & {
   onCancelReply: () => void;
   onAttach: (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => void;
   isUser?: boolean;
-  onAttachService?: () => void;
+  onOpenAttachMenu?: () => void;
 };
 
 const ChatInputBar = ({
@@ -23,7 +23,7 @@ const ChatInputBar = ({
   onCancelReply,
   onAttach,
   isUser,
-  onAttachService,
+  onOpenAttachMenu,
   ...toolbarProps
 }: Props) => {
   return (
@@ -52,7 +52,7 @@ const ChatInputBar = ({
               </View>
             </ImagePickerTrigger>
 
-            {isUser && onAttachService && (
+            {isUser && onOpenAttachMenu && (
               <IconButton
                 icon={
                   <StSvg
@@ -61,7 +61,7 @@ const ChatInputBar = ({
                     color={colors.neutral[900]}
                   />
                 }
-                onPress={onAttachService}
+                onPress={onOpenAttachMenu}
               />
             )}
           </View>

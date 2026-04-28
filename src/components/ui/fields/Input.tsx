@@ -8,6 +8,7 @@ import { BaseField, FieldSize } from "./BaseField";
 type InputProps = {
   label?: string;
   error?: FieldError;
+  success?: boolean;
   disabled?: boolean;
   hideErrorText?: boolean;
   size?: FieldSize;
@@ -21,6 +22,7 @@ type InputProps = {
 export function Input({
   label,
   error,
+  success,
   hideErrorText,
   disabled,
   size = "md",
@@ -34,6 +36,7 @@ export function Input({
     <BaseField
       label={label}
       error={error}
+      success={success}
       hideErrorText={hideErrorText}
       disabled={disabled}
       size={size}

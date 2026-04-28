@@ -78,18 +78,21 @@ export type {
   FinancesIncome,
 } from "./finances";
 export type {
-  ChatRoomTag,
-  ChatRoomMember,
-  ChatLastMessage,
+  ChatRoomInterlocutor,
   ChatRoom,
   PaginationMeta,
   GetChatRoomsParams,
   GetChatRoomsResponse,
-  ChatMessageUser,
-  ChatMessageImageUrl,
+  ChatMessageImage,
+  ChatWidget,
+  ChatWidgetKind,
+  ChatWidgetService,
+  ChatWidgetAppointmentPayload,
   ChatMessageWidgetAppointment,
   ChatMessage,
   GetChatMessagesResponse,
+  ResourceChannelEvent,
+  RoomChannelEvent,
 } from "./chat";
 export type {
   GalleryPhoto,

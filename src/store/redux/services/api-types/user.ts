@@ -21,7 +21,7 @@ export interface User {
   last_name: string | null;
   about_me: string | null;
   address: string | null;
-  personal_link: string | null;
+  nickname: string | null;
   profession: string | null;
   experience: string | null;
   avatar_url: string | null;
@@ -33,9 +33,9 @@ export interface User {
   onboarding_step: string;
   is_auto_approve: boolean;
   appointment_step: AppointmentStep;
-  is_notify_booking: boolean;
-  is_notify_cancellation: boolean;
-  is_notify_reminder: boolean;
+  is_notify_new_appointment: boolean;
+  is_notify_customer_cancel: boolean;
+  is_notify_reminders: boolean;
   gallery_photos: GalleryPhoto[];
 }
 

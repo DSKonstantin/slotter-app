@@ -49,7 +49,7 @@ const Register = () => {
         router.push(Routers.onboarding.personalInformation);
       } catch (error) {
         toast.error(
-          getApiErrorMessage(error, "Произошла ошибка при обновлении."),
+          getApiErrorMessage(error, "Не удалось создать профиль. Попробуйте ещё раз."),
         );
       }
     },

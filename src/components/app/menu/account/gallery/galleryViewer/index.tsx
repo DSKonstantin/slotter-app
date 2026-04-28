@@ -1,13 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, Modal } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Modal } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Gallery } from "react-native-zoom-toolkit";
+import ImageViewer from "@/src/components/shared/imageViewer";
 import { CropView } from "../cropView";
 import type { CropData, GalleryPhoto } from "../types";
-import { ViewerHeader } from "./ViewerHeader";
 import { ViewerToolbar } from "./ViewerToolbar";
-import GalleryImage from "@/src/components/app/menu/account/gallery/galleryViewer/GalleryImage";
 
 type GalleryViewerProps = {
   photos: GalleryPhoto[];
@@ -26,86 +23,60 @@ export function GalleryViewer({
   onSetCover,
   onCropDone,
 }: GalleryViewerProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [cropVisible, setCropVisible] = useState(false);
-  const insets = useSafeAreaInsets();
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  const lastPhotoIndex = photos.length - 1;
-  const safeCurrentIndex =
-    lastPhotoIndex >= 0
-      ? Math.min(Math.max(currentIndex, 0), lastPhotoIndex)
-      : -1;
-  const current = safeCurrentIndex >= 0 ? photos[safeCurrentIndex] : null;
-
-  useEffect(() => {
-    if (photos.length === 0) {
-      onClose();
-      return;
-    }
-
-    if (safeCurrentIndex !== currentIndex) {
-      setCurrentIndex(safeCurrentIndex);
-    }
-  }, [currentIndex, onClose, photos.length, safeCurrentIndex]);
-
-  const handleCropDone = (cropData: CropData) => {
-    setCropVisible(false);
-    if (!current) return;
-    onCropDone(current.id, cropData);
-  };
-
-  const renderItem = useCallback(
-    (item: GalleryPhoto, index: number) => (
-      <GalleryImage uri={item.croppedUrl ?? item.photoUrl} index={index} />
-    ),
-    [],
+  const items = useMemo(
+    () => photos.map((p) => ({ id: p.id, uri: p.croppedUrl ?? p.photoUrl })),
+    [photos],
   );
 
-  if (!current) return null;
+  const lastIndex = photos.length - 1;
+  const safeIndex =
+    lastIndex >= 0 ? Math.min(Math.max(currentIndex, 0), lastIndex) : -1;
+  const current = safeIndex >= 0 ? photos[safeIndex] : null;
 
-  return (
-    <Modal
-      visible
-      animationType="fade"
-      statusBarTranslucent
-      transparent
-      presentationStyle="overFullScreen"
-    >
-      <GestureHandlerRootView className="flex-1">
-        {cropVisible ? (
+  if (cropVisible && current) {
+    return (
+      <Modal
+        visible
+        animationType="fade"
+        statusBarTranslucent
+        transparent
+        presentationStyle="overFullScreen"
+      >
+        <GestureHandlerRootView className="flex-1">
           <CropView
             originalUri={current.originalUrl}
-            onDone={handleCropDone}
+            onDone={(cropData) => {
+              setCropVisible(false);
+              onCropDone(current.id, cropData);
+            }}
             onCancel={() => setCropVisible(false)}
           />
-        ) : (
-          <View className="flex-1 bg-black">
-            <ViewerHeader
-              currentIndex={safeCurrentIndex}
-              total={photos.length}
-              topInset={insets.top}
-              onClose={onClose}
-            />
+        </GestureHandlerRootView>
+      </Modal>
+    );
+  }
 
-            <Gallery
-              data={photos}
-              keyExtractor={(item) => item.id}
-              initialIndex={safeCurrentIndex}
-              renderItem={renderItem}
-              onIndexChange={setCurrentIndex}
-            />
-
-            <ViewerToolbar
-              onSetCover={() => {
-                onSetCover(current.id);
-                onClose();
-              }}
-              onEdit={() => setCropVisible(true)}
-              onDelete={() => onDelete(current.id)}
-            />
-          </View>
-        )}
-      </GestureHandlerRootView>
-    </Modal>
+  return (
+    <ImageViewer
+      images={items}
+      initialIndex={initialIndex}
+      onClose={onClose}
+      onIndexChange={setCurrentIndex}
+      renderFooter={() =>
+        current ? (
+          <ViewerToolbar
+            onSetCover={() => {
+              onSetCover(current.id);
+              onClose();
+            }}
+            onEdit={() => setCropVisible(true)}
+            onDelete={() => onDelete(current.id)}
+          />
+        ) : null
+      }
+    />
   );
 }

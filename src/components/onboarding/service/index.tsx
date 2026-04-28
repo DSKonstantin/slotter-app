@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { OnboardingServiceSchema } from "@/src/validation/schemas/onboardingService.schema";
+import {
+  OnboardingServiceSchema,
+  type OnboardingServiceFormValues,
+} from "@/src/validation/schemas/onboardingService.schema";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
@@ -18,21 +21,81 @@ import {
   ServiceImagesPicker,
   ServicePhotosValue,
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
+import { useGetFirstServiceCategoryQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
+import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
+import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import ErrorScreen from "@/src/components/shared/errorScreen";
 
 const Service = () => {
+  const auth = useRequiredAuth();
   const [photos, setPhotos] = useState<ServicePhotosValue>(
     createDefaultServicePhotos(),
   );
 
-  const methods = useForm({
+  const {
+    data: defaultCategory,
+    isLoading: isCategoryLoading,
+    isError: isCategoryError,
+    refetch: refetchCategory,
+  } = useGetFirstServiceCategoryQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
+
+  const [createService, { isLoading }] = useCreateServiceMutation();
+
+  const methods = useForm<OnboardingServiceFormValues>({
     resolver: yupResolver(OnboardingServiceSchema),
     defaultValues: {
       name: "",
+      price: "",
+      duration: "",
     },
   });
 
-  const onSubmit = (data: object) => {
-    router.push(Routers.onboarding.schedule);
+  if (isCategoryError) {
+    return (
+      <ErrorScreen
+        title="Не удалось загрузить данные"
+        onRetry={refetchCategory}
+        withTabBar={false}
+      />
+    );
+  }
+
+  const onSubmit = async (data: OnboardingServiceFormValues) => {
+    if (!auth) return;
+
+    try {
+      const categoryId = defaultCategory?.id;
+      if (!categoryId) {
+        toast.error("Не удалось определить категорию услуг");
+        return;
+      }
+
+      const formData = buildServiceFormData({
+        name: data.name,
+        price: data.price,
+        duration: String(Number(data.duration) * 60),
+        description: "",
+        isAvailableOnline: false,
+        isActive: true,
+      });
+      appendPhotosToFormData(formData, photos);
+
+      await createService({
+        categoryId,
+        data: formData,
+      }).unwrap();
+
+      router.push(Routers.onboarding.schedule);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось сохранить услугу"));
+    }
   };
 
   return (
@@ -44,11 +107,14 @@ const Service = () => {
           <AuthFooter
             primary={{
               title: "Сохранить",
+              loading: isLoading,
+              disabled: isLoading || isCategoryLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
             secondary={{
               title: "Пропустить",
               variant: "clear",
+              disabled: isLoading,
               onPress: () => {
                 router.push(Routers.onboarding.schedule);
               },
@@ -81,7 +147,7 @@ const Service = () => {
           </View>
           <View className="flex-1">
             <RHFSelect
-              name="fruit"
+              name="duration"
               label="Время"
               placeholder="1 час"
               items={HOURS_OPTIONS as any}

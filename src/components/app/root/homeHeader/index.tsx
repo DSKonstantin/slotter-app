@@ -11,8 +11,8 @@ const HomeHeader = () => {
   const fullName = [user?.first_name, user?.last_name]
     .filter(Boolean)
     .join(" ");
-  const profileLink = user?.personal_link
-    ? `${process.env.EXPO_PUBLIC_BOOKING_DISPLAY_URL}/${user.personal_link}`
+  const profileLink = user?.nickname
+    ? `${process.env.EXPO_PUBLIC_BOOKING_DISPLAY_URL}/${user.nickname}`
     : null;
 
   return (

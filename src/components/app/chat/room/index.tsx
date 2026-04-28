@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Alert, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat } from "react-native-gifted-chat";
 import {
@@ -10,24 +10,16 @@ import { shallowEqual } from "react-redux";
 import type { ImagePickerAsset } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import {
-  Avatar,
-  Button,
-  IconButton,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useAppSelector } from "@/src/store/redux/store";
 import {
   useGetChatRoomsQuery,
-  useUnblockChatRoomMutation,
+  useMarkRoomReadMutation,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import {
   useGetChatMessagesQuery,
   useCreateChatMessageMutation,
-  useDeleteChatMessageMutation,
-  type ChatMessagesCache,
 } from "@/src/store/redux/services/api/chatMessagesApi";
 import type { ChatIMessage } from "@/src/utils/chat/types";
 import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
@@ -41,8 +33,14 @@ import ChatSystemMessage from "./components/ChatSystemMessage";
 import ChatScrollBottomButton from "./components/ChatScrollBottomButton";
 import ChatEmptyState from "./components/ChatEmptyState";
 import ChatMessage from "./components/ChatMessage";
-import ChatAppointmentWidget from "./components/ChatAppointmentWidget";
-import AttachServiceSheet from "./components/AttachServiceSheet";
+import {
+  AttachSheet,
+  ChatAppointmentWidget,
+  ChatServiceWidget,
+} from "./components/widget";
+import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { Service } from "@/src/store/redux/services/api-types";
 
 type Props = { roomId: string };
@@ -56,10 +54,11 @@ export default function ChatRoom({ roomId }: Props) {
   const { bottom: bottomInset } = useSafeAreaInsets();
 
   // ── Local UI State ─────────────────────────────────────────────────────
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [menuMessage, setMenuMessage] = useState<ChatIMessage | null>(null);
   const [roomMenuVisible, setRoomMenuVisible] = useState(false);
-  const [attachServiceVisible, setAttachServiceVisible] = useState(false);
+  const [attachVisible, setAttachVisible] = useState(false);
+  const [isProposing, setIsProposing] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
   const loadingMoreRef = useRef(false);
 
@@ -91,42 +90,43 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Queries ───────────────────────────────────────────────────────────
-  const { otherMember, blockedByMe, iAmBlocked, mutedByMe } =
-    useGetChatRoomsQuery(undefined, {
-      selectFromResult: ({ data }) => {
-        const room = data?.chat_rooms?.find((r) => r.id === id);
-        return {
-          otherMember: room?.other_member ?? null,
-          blockedByMe: room?.blocked_by_me ?? false,
-          iAmBlocked: room?.i_am_blocked ?? false,
-          mutedByMe: room?.muted_by_me ?? false,
-        };
-      },
-    });
+  // selectFromResult must return an object (RTK Query merges it with the
+  // query state) — returning a primitive or null breaks the typing.
+  const { interlocutor } = useGetChatRoomsQuery(undefined, {
+    selectFromResult: ({ data }) => ({
+      interlocutor: data?.rooms?.find((r) => r.id === id)?.interlocutor ?? null,
+    }),
+  });
 
-  const [unblockChatRoom] = useUnblockChatRoomMutation();
+  const [markRoomRead] = useMarkRoomReadMutation();
 
-  const { data: chatData, isFetching } = useGetChatMessagesQuery(
-    { chatRoomId: id, page },
+  const {
+    data: chatData,
+    isFetching,
+    isLoading,
+  } = useGetChatMessagesQuery(
+    { chatRoomId: id, cursor },
     { skip: !id, refetchOnMountOrArgChange: true },
   );
 
   const messages = chatData?.messages ?? EMPTY_MESSAGES;
   const hasMore = chatData?.hasMore ?? false;
-  const isTyping =
-    (chatData as (ChatMessagesCache & { _typing?: boolean }) | undefined)
-      ?._typing ?? false;
 
   // ── Mutations ─────────────────────────────────────────────────────────
   const [createMessage] = useCreateChatMessageMutation();
-  const [deleteChatMessage] = useDeleteChatMessageMutation();
+  const [createAppointment] = useCreateAppointmentMutation();
+
+  // ── Mark read on mount ────────────────────────────────────────────────
+  React.useEffect(() => {
+    if (id) markRoomRead({ chatRoomId: id });
+  }, [id, markRoomRead]);
 
   // ── Pagination ────────────────────────────────────────────────────────
   const handleLoadEarlier = useCallback(() => {
     if (!hasMore || isFetching || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
-    setPage((p) => p + 1);
-  }, [hasMore, isFetching]);
+    setCursor(chatData?.nextCursor ?? undefined);
+  }, [hasMore, isFetching, chatData?.nextCursor]);
 
   if (!isFetching) loadingMoreRef.current = false;
 
@@ -138,9 +138,6 @@ export default function ChatRoom({ roomId }: Props) {
 
       const formData = new FormData();
       if (msg.text) formData.append("body", msg.text.trim());
-      if (replyingTo?._id != null) {
-        formData.append("replied_to_id", String(replyingTo._id));
-      }
 
       createMessage({
         chatRoomId: id,
@@ -222,13 +219,15 @@ export default function ChatRoom({ roomId }: Props) {
     (service: Service) => {
       if (!currentUser) return;
 
-      // TODO: working_day_id и start_time — моки, заменить на реальный выбор
       createMessage({
         chatRoomId: id,
         data: {
-          service_id: service.id,
-          working_day_id: 1,
-          start_time: "10:00",
+          widget: {
+            kind: "service_card",
+            widgetable_type: "Service",
+            widgetable_id: service.id,
+            payload: {},
+          },
         },
         optimistic: {
           _id: `temp_${Date.now()}`,
@@ -237,25 +236,19 @@ export default function ChatRoom({ roomId }: Props) {
           pending: true,
           sent: false,
           reply_to: null,
-          appointment: {
+          widget: {
             id: -1,
-            type: "Appointment",
-            status: "offered",
-            start_time: "10:00",
-            end_time: "",
-            date: "",
-            duration: 0,
-            price_cents: 0,
-            price_currency: "",
-            payment_method: "",
-            comment: null,
-            cancel_reason: null,
-            send_notification: false,
-            public_token: "",
-            customer_confirmed_at: null,
-            customer: null,
-            services: [],
-            additional_services: [],
+            kind: "service_card",
+            payload: {},
+            created_at: new Date().toISOString(),
+            widgetable: {
+              id: service.id,
+              name: service.name,
+              duration: service.duration,
+              price_cents: service.price_cents,
+              price_currency: service.price_currency,
+              main_photo_url: service.main_photo_url ?? null,
+            },
           },
           user: makeUser(),
         },
@@ -264,15 +257,89 @@ export default function ChatRoom({ roomId }: Props) {
     [id, currentUser, createMessage, makeUser],
   );
 
-  const handleDelete = useCallback(
-    (message: ChatIMessage) => {
-      if (typeof message._id === "string") return;
-      deleteChatMessage({
-        chatRoomId: id,
-        messageId: message._id as number,
-      });
+  const handleProposeAppointment = useCallback(
+    async ({
+      service,
+      date,
+      startTime,
+    }: {
+      service: Service;
+      date: string;
+      startTime: string;
+    }) => {
+      if (!currentUser) return;
+      if (!interlocutor || interlocutor.type !== "Customer") {
+        toast.error("Запись можно предложить только клиенту");
+        return;
+      }
+
+      setIsProposing(true);
+      try {
+        const appointment = await createAppointment({
+          userId: currentUser.id,
+          body: {
+            customer_id: interlocutor.id,
+            date,
+            start_time: startTime,
+            service_ids: [service.id],
+            duration: service.duration,
+            price_cents: service.price_cents,
+          },
+        }).unwrap();
+
+        createMessage({
+          chatRoomId: id,
+          data: {
+            widget: {
+              kind: "appointment_proposal",
+              widgetable_type: "Appointment",
+              widgetable_id: appointment.id,
+              payload: {
+                start_time: startTime,
+                duration: service.duration,
+                price_cents: service.price_cents,
+              },
+            },
+          },
+          optimistic: {
+            _id: `temp_${Date.now()}`,
+            text: "",
+            createdAt: Date.now(),
+            pending: true,
+            sent: false,
+            reply_to: null,
+            widget: {
+              id: -1,
+              kind: "appointment_proposal",
+              payload: {
+                start_time: startTime,
+                duration: service.duration,
+                price_cents: service.price_cents,
+              },
+              created_at: new Date().toISOString(),
+              widgetable: {
+                id: appointment.id,
+                status: appointment.status,
+                start_time: appointment.start_time,
+                end_time: appointment.end_time,
+                date: appointment.date,
+                duration: appointment.duration,
+                price_cents: appointment.price_cents,
+                price_currency: appointment.price_currency,
+              },
+            },
+            user: makeUser(),
+          },
+        });
+
+        setAttachVisible(false);
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
+      } finally {
+        setIsProposing(false);
+      }
     },
-    [id, deleteChatMessage],
+    [id, currentUser, interlocutor, createAppointment, createMessage, makeUser],
   );
 
   // ── Message actions ───────────────────────────────────────────────────
@@ -292,11 +359,11 @@ export default function ChatRoom({ roomId }: Props) {
   // ── Render ────────────────────────────────────────────────────────────
   const titleNode = useMemo(
     () =>
-      otherMember ? (
+      interlocutor ? (
         <View className="flex-row items-center gap-2 max-w-full">
           <Avatar
-            name={otherMember.name}
-            uri={otherMember.avatar_url ?? undefined}
+            name={interlocutor.name}
+            uri={interlocutor.avatar_url ?? undefined}
             size="xs"
           />
           <Typography
@@ -304,11 +371,11 @@ export default function ChatRoom({ roomId }: Props) {
             className="shrink text-[17px] leading-[22px]"
             numberOfLines={2}
           >
-            {otherMember.name}
+            {interlocutor.name}
           </Typography>
         </View>
       ) : undefined,
-    [otherMember],
+    [interlocutor],
   );
 
   return (
@@ -347,7 +414,6 @@ export default function ChatRoom({ roomId }: Props) {
               keyboardAvoidingViewProps={{
                 keyboardVerticalOffset: -bottomInset + 8,
               }}
-              isTyping={isTyping}
               textInputProps={{
                 placeholder: "Сообщение...",
                 maxLength: undefined,
@@ -367,7 +433,7 @@ export default function ChatRoom({ roomId }: Props) {
               onLongPressMessage={onLongPressMessage}
               loadEarlierMessagesProps={{
                 isAvailable: hasMore,
-                isLoading: isFetching && page > 1,
+                isLoading: isFetching && !!cursor,
                 onPress: handleLoadEarlier,
                 label: "Загрузить ранее",
               }}
@@ -376,50 +442,55 @@ export default function ChatRoom({ roomId }: Props) {
               renderMessage={(props) => <ChatMessage {...props} />}
               renderBubble={(props) => {
                 const msg = props.currentMessage as ChatIMessage | undefined;
-                if (msg?.appointment) {
-                  return (
-                    <ChatAppointmentWidget
-                      appointment={msg.appointment}
-                      isOwnMessage={msg.user._id === (currentGiftedId ?? 0)}
-                      onLongPress={() => setMenuMessage(msg)}
-                    />
-                  );
+                const widget = msg?.widget;
+                if (widget) {
+                  const isOwnMessage = msg.user._id === (currentGiftedId ?? 0);
+                  if (widget.kind === "service_card") {
+                    return (
+                      <ChatServiceWidget
+                        service={widget.widgetable}
+                        onLongPress={() => setMenuMessage(msg)}
+                      />
+                    );
+                  }
+                  if (widget.kind === "appointment_proposal") {
+                    return (
+                      <ChatAppointmentWidget
+                        appointment={widget.widgetable}
+                        payload={widget.payload}
+                        isOwnMessage={isOwnMessage}
+                        onLongPress={() => setMenuMessage(msg)}
+                      />
+                    );
+                  }
                 }
                 return <ChatBubble {...props} />;
               }}
               renderMessageImage={(props) => <ChatMessageImages {...props} />}
-              renderInputToolbar={(props) =>
-                blockedByMe || iAmBlocked ? (
-                  <View className="absolute bottom-0 left-0 right-0 items-center justify-center py-4 px-6 bg-background-surface gap-2">
-                    <Typography className="text-caption text-neutral-500 text-center">
-                      {blockedByMe
-                        ? "Вы заблокировали пользователя"
-                        : "Пользователь ограничил переписку"}
-                    </Typography>
-                    {blockedByMe && (
-                      <Button
-                        title="Разблокировать"
-                        variant="clear"
-                        size="sm"
-                        textClassName="text-accent-red-500"
-                        onPress={() => unblockChatRoom({ chatRoomId: id })}
-                      />
-                    )}
-                  </View>
-                ) : (
-                  <ChatInputBar
-                    {...props}
-                    replyingTo={replyingTo}
-                    onCancelReply={() => setReplyingTo(null)}
-                    onAttach={handleAttach}
-                    isUser={resourceType === "user"}
-                    onAttachService={() => setAttachServiceVisible(true)}
-                  />
-                )
-              }
+              renderInputToolbar={(props) => (
+                <ChatInputBar
+                  {...props}
+                  replyingTo={replyingTo}
+                  onCancelReply={() => setReplyingTo(null)}
+                  onAttach={handleAttach}
+                  isUser={resourceType === "user"}
+                  onOpenAttachMenu={() => setAttachVisible(true)}
+                />
+              )}
               renderSend={(props) => <ChatSendButton {...props} />}
               renderSystemMessage={(props) => <ChatSystemMessage {...props} />}
-              renderChatEmpty={() => <ChatEmptyState />}
+              renderChatEmpty={() =>
+                isLoading ? (
+                  <View
+                    className="flex-1 items-center justify-center pb-20"
+                    style={{ transform: [{ scaleY: -1 }] }}
+                  >
+                    <ActivityIndicator color={colors.neutral[500]} />
+                  </View>
+                ) : (
+                  <ChatEmptyState />
+                )
+              }
               messagesContainerStyle={{
                 backgroundColor: colors.background.DEFAULT,
               }}
@@ -437,23 +508,25 @@ export default function ChatRoom({ roomId }: Props) {
         )}
       </ScreenWithToolbar>
 
-      {otherMember && (
+      {interlocutor && (
         <ChatRoomMenu
           visible={roomMenuVisible}
           onClose={() => setRoomMenuVisible(false)}
           roomId={id}
-          name={otherMember.name}
-          blockedByMe={blockedByMe}
-          iAmBlocked={iAmBlocked}
-          mutedByMe={mutedByMe}
+          name={interlocutor.name}
         />
       )}
 
-      <AttachServiceSheet
-        visible={attachServiceVisible}
-        onClose={() => setAttachServiceVisible(false)}
-        onSelect={handleAttachWidget}
-      />
+      {currentUser && (
+        <AttachSheet
+          visible={attachVisible}
+          onClose={() => setAttachVisible(false)}
+          userId={currentUser.id}
+          isSubmitting={isProposing}
+          onPickService={handleAttachWidget}
+          onProposeAppointment={handleProposeAppointment}
+        />
+      )}
 
       <ChatBubbleMenu
         visible={!!menuMessage}
@@ -462,7 +535,6 @@ export default function ChatRoom({ roomId }: Props) {
         isOwnMessage={menuMessage?.user?._id === currentGiftedId}
         onReply={handleReply}
         onCopy={handleCopy}
-        onDelete={handleDelete}
       />
     </>
   );

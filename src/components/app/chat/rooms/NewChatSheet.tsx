@@ -90,9 +90,9 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
   const roomByCustomerId = useMemo(() => {
     const map = new Map<number, ChatRoom>();
-    for (const room of roomsData?.chat_rooms ?? []) {
-      if (room.other_member) {
-        map.set(room.other_member.id, room);
+    for (const room of roomsData?.rooms ?? []) {
+      if (room.interlocutor) {
+        map.set(room.interlocutor.id, room);
       }
     }
     return map;
@@ -127,9 +127,12 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
       setCreatingId(item.id);
       try {
-        const result = await createChatRoom({ memberId: item.id }).unwrap();
+        const result = await createChatRoom({
+          userId: auth.userId,
+          customerId: item.id,
+        }).unwrap();
         onClose();
-        router.push(Routers.app.chat.room(result.chat_room.id));
+        router.push(Routers.app.chat.room(result.id));
       } catch (err) {
         const message =
           (err as { data?: { error?: string } })?.data?.error ??

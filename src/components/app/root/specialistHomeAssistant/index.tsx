@@ -7,7 +7,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 
 const SpecialistHomeAssistant = () => {
   const personalLink = useAppSelector(
-    (s) => s.auth.user?.personal_link ?? "",
+    (s) => s.auth.user?.nickname ?? "",
   );
 
   if (!personalLink) return null;

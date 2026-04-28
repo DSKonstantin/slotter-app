@@ -1,6 +1,5 @@
 import { api } from "../api";
-import { chatRoomsApi } from "./chatRoomsApi";
-import { getCable } from "@/src/services/cable";
+import { subscribeToChatRoom } from "@/src/services/chat/cableChannels";
 import { toIMessage } from "@/src/utils/chat/toIMessage";
 import type { ChatIMessage } from "@/src/utils/chat/types";
 import type {
@@ -9,231 +8,106 @@ import type {
 } from "@/src/store/redux/services/api-types";
 import type { RootState } from "@/src/store/redux/store";
 
-const TYPING_TIMEOUT_MS = 5_000;
+const FEED_LIMIT = 30;
 
-type EventUser = { id: number; resource_type: string };
-
-type RoomEvent =
-  | { event: "message_created"; chat_message: ChatMessage }
-  | { event: "message_updated"; chat_message: ChatMessage }
-  | { event: "message_destroyed"; message_id: number; user: EventUser }
-  | { event: "messages_read"; user: EventUser }
-  | { event: "typing"; user: EventUser }
-  | { event: "blocked"; blocked_by: EventUser }
-  | { event: "unblocked"; unblocked_by: EventUser };
-
-function toUserId(u: EventUser): string {
-  return `${u.resource_type}_${u.id}`;
-}
-
-function getCurrentGiftedId(state: RootState): string | null {
-  const { user, resourceType } = state.auth;
-  return user && resourceType ? `${resourceType}_${user.id}` : null;
-}
-
-interface ChatMessagesCache {
+export interface ChatMessagesCache {
   messages: ChatIMessage[];
-  totalCount: number;
-  unreadMessagesCount: number;
-  page: number;
+  nextCursor: string | null;
   hasMore: boolean;
 }
-
-const PAGE_SIZE = 30;
 
 const chatMessagesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
     getChatMessages: builder.query<
       ChatMessagesCache,
-      { chatRoomId: number; page?: number }
+      { chatRoomId: number; cursor?: string }
     >({
-      query: ({ chatRoomId, page = 1 }) => ({
-        url: `/chat_rooms/${chatRoomId}/chat_messages`,
+      query: ({ chatRoomId, cursor }) => ({
+        url: `/chat/rooms/${chatRoomId}/feed`,
         method: "GET",
-        params: { page },
+        params: { before: cursor, limit: FEED_LIMIT },
       }),
       transformResponse: (
         response: GetChatMessagesResponse,
-        _meta,
-        arg,
       ): ChatMessagesCache => ({
-        messages: response.chat_messages.map(toIMessage),
-        totalCount: response.total_count,
-        unreadMessagesCount: response.unread_messages_count,
-        page: arg.page ?? 1,
-        hasMore: response.chat_messages.length === PAGE_SIZE,
+        messages: response.items.map(toIMessage),
+        nextCursor: response.next_cursor,
+        hasMore: response.items.length === FEED_LIMIT,
       }),
       serializeQueryArgs: ({ queryArgs }) => ({
         chatRoomId: queryArgs.chatRoomId,
       }),
-      merge: (currentCache, newItems) => {
-        if (newItems.page === 1) return newItems;
+      merge: (currentCache, newItems, { arg }) => {
+        if (!arg.cursor) return newItems;
         return {
           ...newItems,
           messages: [...currentCache.messages, ...newItems.messages],
         };
       },
       forceRefetch: ({ currentArg, previousArg }) =>
-        currentArg?.page !== previousArg?.page,
+        currentArg?.cursor !== previousArg?.cursor,
       keepUnusedDataFor: 0,
       async onCacheEntryAdded(
         { chatRoomId },
-        {
-          dispatch,
-          getState,
-          updateCachedData,
-          cacheDataLoaded,
-          cacheEntryRemoved,
-        },
+        { getState, updateCachedData, cacheDataLoaded, cacheEntryRemoved },
       ) {
         const token = (getState() as RootState).auth.token;
-        const cable = getCable(token);
-        if (!cable) return;
-
-        const subscription = cable.subscribeTo("Chat::RoomChannel", {
-          room_id: chatRoomId,
-        });
-        let typingTimer: ReturnType<typeof setTimeout> | null = null;
+        const subscription = subscribeToChatRoom(token, chatRoomId);
+        if (!subscription) return;
 
         try {
           await cacheDataLoaded;
 
-          subscription.on("message", (raw: unknown) => {
-            const data = raw as RoomEvent;
-            const currentId = getCurrentGiftedId(getState() as RootState);
-            const isMe = (id: string) => id === currentId;
+          subscription.on("message", (data) => {
+            const { user: authUser, resourceType } = (getState() as RootState).auth;
+            const currentId =
+              authUser && resourceType
+                ? `${resourceType}_${authUser.id}`
+                : null;
 
-            switch (data.event) {
-              case "message_created": {
-                if (!isMe(toUserId(data.chat_message.user))) {
-                  updateCachedData((draft) => {
-                    const msg = toIMessage(data.chat_message);
-                    if (!draft.messages.some((m) => m._id === msg._id)) {
-                      draft.messages.unshift(msg);
-                    }
-                  });
+            if (data.type === "message.created") {
+              const ownerId = `${data.payload.owner.type.toLowerCase()}_${data.payload.owner.id}`;
+              if (ownerId === currentId) return;
+
+              updateCachedData((draft) => {
+                const msg = toIMessage(data.payload);
+                if (!draft.messages.some((m) => m._id === msg._id)) {
+                  draft.messages.unshift(msg);
                 }
-                break;
-              }
-              case "message_updated": {
-                if (!isMe(toUserId(data.chat_message.user))) {
-                  updateCachedData((draft) => {
-                    const msg = toIMessage(data.chat_message);
-                    const idx = draft.messages.findIndex(
-                      (m) => m._id === msg._id,
-                    );
-                    if (idx !== -1) draft.messages[idx] = msg;
-                  });
+              });
+              return;
+            }
+
+            if (data.type === "read") {
+              const viewerId = `${data.viewer.type.toLowerCase()}_${data.viewer.id}`;
+              if (viewerId === currentId) return;
+
+              const readAt = new Date(data.last_read_at).getTime();
+              updateCachedData((draft) => {
+                for (const m of draft.messages) {
+                  const ts =
+                    m.createdAt instanceof Date
+                      ? m.createdAt.getTime()
+                      : m.createdAt;
+                  if (m.user._id === currentId && ts <= readAt) {
+                    m.received = true;
+                  }
                 }
-                break;
-              }
-              case "message_destroyed": {
-                if (!isMe(toUserId(data.user))) {
-                  updateCachedData((draft) => {
-                    draft.messages = draft.messages.filter(
-                      (m) => m._id !== data.message_id,
-                    );
-                  });
-                }
-                break;
-              }
-              case "messages_read": {
-                if (!isMe(toUserId(data.user))) {
-                  updateCachedData((draft) => {
-                    for (const m of draft.messages) {
-                      if ((m as ChatIMessage).status !== "read") {
-                        (m as ChatIMessage).status = "read";
-                      }
-                    }
-                  });
-                }
-                break;
-              }
-              case "typing": {
-                if (!isMe(toUserId(data.user))) {
-                  dispatch(
-                    chatMessagesApi.util.updateQueryData(
-                      "getChatMessages",
-                      { chatRoomId },
-                      (draft) => {
-                        (
-                          draft as ChatMessagesCache & { _typing?: boolean }
-                        )._typing = true;
-                      },
-                    ),
-                  );
-                  if (typingTimer) clearTimeout(typingTimer);
-                  typingTimer = setTimeout(() => {
-                    dispatch(
-                      chatMessagesApi.util.updateQueryData(
-                        "getChatMessages",
-                        { chatRoomId },
-                        (draft) => {
-                          (
-                            draft as ChatMessagesCache & { _typing?: boolean }
-                          )._typing = false;
-                        },
-                      ),
-                    );
-                  }, TYPING_TIMEOUT_MS);
-                }
-                break;
-              }
-              case "blocked": {
-                const blockedByMe = isMe(toUserId(data.blocked_by));
-                dispatch(
-                  chatRoomsApi.util.updateQueryData(
-                    "getChatRooms",
-                    undefined,
-                    (draft) => {
-                      const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
-                      if (room) {
-                        if (blockedByMe) {
-                          room.blocked_by_me = true;
-                        } else {
-                          room.i_am_blocked = true;
-                        }
-                      }
-                    },
-                  ),
-                );
-                break;
-              }
-              case "unblocked": {
-                const unblockedByMe = isMe(toUserId(data.unblocked_by));
-                dispatch(
-                  chatRoomsApi.util.updateQueryData(
-                    "getChatRooms",
-                    undefined,
-                    (draft) => {
-                      const room = draft.chat_rooms.find((r) => r.id === chatRoomId);
-                      if (room) {
-                        if (unblockedByMe) {
-                          room.blocked_by_me = false;
-                        } else {
-                          room.i_am_blocked = false;
-                        }
-                      }
-                    },
-                  ),
-                );
-                break;
-              }
+              });
             }
           });
         } catch {
-          // cacheEntryRemoved resolved before cacheDataLoaded
+          // no-op: cacheEntryRemoved resolved before cacheDataLoaded
         }
 
         await cacheEntryRemoved;
         subscription.disconnect();
-        if (typingTimer) clearTimeout(typingTimer);
       },
     }),
 
     createChatMessage: builder.mutation<
-      { chat_message: ChatMessage; unread_messages_count: number },
+      ChatMessage,
       {
         chatRoomId: number;
         data: FormData | Record<string, unknown>;
@@ -241,7 +115,7 @@ const chatMessagesApi = api.injectEndpoints({
       }
     >({
       query: ({ chatRoomId, data }) => ({
-        url: `/chat_rooms/${chatRoomId}/chat_messages`,
+        url: `/chat/rooms/${chatRoomId}/messages`,
         method: "POST",
         data,
       }),
@@ -271,44 +145,10 @@ const chatMessagesApi = api.injectEndpoints({
                 const idx = draft.messages.findIndex(
                   (m) => m._id === optimistic._id,
                 );
-                if (idx !== -1) {
-                  draft.messages[idx] = toIMessage(result.chat_message);
-                }
+                if (idx !== -1) draft.messages[idx] = toIMessage(result);
               },
             ),
           );
-        } catch {
-          patch.undo();
-        }
-      },
-    }),
-
-    deleteChatMessage: builder.mutation<
-      { success: boolean; unread_messages_count: number },
-      { chatRoomId: number; messageId: number; rollback?: ChatIMessage }
-    >({
-      query: ({ chatRoomId, messageId }) => ({
-        url: `/chat_rooms/${chatRoomId}/chat_messages/${messageId}`,
-        method: "DELETE",
-      }),
-      async onQueryStarted(
-        { chatRoomId, messageId },
-        { dispatch, queryFulfilled },
-      ) {
-        const patch = dispatch(
-          chatMessagesApi.util.updateQueryData(
-            "getChatMessages",
-            { chatRoomId },
-            (draft) => {
-              draft.messages = draft.messages.filter(
-                (m) => m._id !== messageId,
-              );
-            },
-          ),
-        );
-
-        try {
-          await queryFulfilled;
         } catch {
           patch.undo();
         }
@@ -318,11 +158,9 @@ const chatMessagesApi = api.injectEndpoints({
 });
 
 export { chatMessagesApi };
-export type { ChatMessagesCache };
 
 export const {
   useGetChatMessagesQuery,
   useLazyGetChatMessagesQuery,
   useCreateChatMessageMutation,
-  useDeleteChatMessageMutation,
 } = chatMessagesApi;

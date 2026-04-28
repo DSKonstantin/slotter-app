@@ -17,6 +17,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 type NavItem = {
   title: string;
@@ -77,7 +78,16 @@ const AccountScreen = () => {
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
-  const { refreshing, onRefresh } = useRefresh(triggerGetMe);
+
+  const handleRefresh = async () => {
+    try {
+      await triggerGetMe().unwrap();
+    } catch {
+      toast.error("Не удалось обновить данные профиля");
+    }
+  };
+
+  const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
   if (!auth) return null;
 
