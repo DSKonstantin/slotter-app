@@ -7,7 +7,7 @@ import type { ChatIMessage } from "@/src/utils/chat/types";
 const ChatBubble = (props: BubbleProps<ChatIMessage>) => {
   const { currentMessage, position } = props;
   const isRight = position === "right";
-  const isRead = false; // read status is tracked per-room, not per-message
+  const isRead = !!currentMessage?.received;
 
   return (
     <Bubble

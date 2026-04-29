@@ -138,6 +138,9 @@ export default function ChatRoom({ roomId }: Props) {
 
       const formData = new FormData();
       if (msg.text) formData.append("body", msg.text.trim());
+      if (replyingTo && typeof replyingTo._id === "number") {
+        formData.append("reply_to_id", String(replyingTo._id));
+      }
 
       createMessage({
         chatRoomId: id,
@@ -222,7 +225,7 @@ export default function ChatRoom({ roomId }: Props) {
       createMessage({
         chatRoomId: id,
         data: {
-          widget: {
+          chat_widget: {
             kind: "service_card",
             widgetable_type: "Service",
             widgetable_id: service.id,
@@ -290,7 +293,7 @@ export default function ChatRoom({ roomId }: Props) {
         createMessage({
           chatRoomId: id,
           data: {
-            widget: {
+            chat_widget: {
               kind: "appointment_proposal",
               widgetable_type: "Appointment",
               widgetable_id: appointment.id,

@@ -1,10 +1,11 @@
 import React from "react";
-import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 
 import { Typography } from "@/src/components/ui";
 import AppointmentCard from "@/src/components/shared/cards/scheduling/appointmentCard";
+import RetryInline from "@/src/components/shared/retryInline";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { formatTimeString } from "@/src/utils/date/formatTime";
@@ -30,16 +31,11 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
 
   if (isError) {
     return (
-      <View className="gap-1">
-        <Typography className="text-caption text-neutral-500">
-          Не удалось загрузить записи
-        </Typography>
-        <TouchableOpacity onPress={refetch}>
-          <Typography className="text-caption text-primary-blue-500">
-            Повторить
-          </Typography>
-        </TouchableOpacity>
-      </View>
+      <RetryInline
+        text="Не удалось загрузить записи"
+        buttonText="Повторить"
+        onRetry={refetch}
+      />
     );
   }
 

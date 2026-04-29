@@ -18,6 +18,13 @@ export const usersApi = api.injectEndpoints({
       }),
     }),
 
+    deleteUser: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `/users/${id}`,
+        method: "DELETE",
+      }),
+    }),
+
     checkNickname: builder.query<{ available: boolean }, string>({
       query: (nickname) => ({
         url: `/users/nickname_availability`,
@@ -40,6 +47,7 @@ export const usersApi = api.injectEndpoints({
 
 export const {
   useUpdateUserMutation,
+  useDeleteUserMutation,
   useUpdateCustomerMutation,
   useLazyCheckNicknameQuery,
 } = usersApi;

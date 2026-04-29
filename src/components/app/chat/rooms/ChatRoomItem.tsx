@@ -1,8 +1,10 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
+import { shallowEqual } from "react-redux";
 import { Avatar, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatMessageTime } from "@/src/utils/date/formatDate";
+import { useAppSelector } from "@/src/store/redux/store";
 import type { ChatRoom } from "@/src/store/redux/services/api-types";
 
 type Props = {
@@ -11,9 +13,30 @@ type Props = {
 };
 
 const ChatRoomItem = ({ room, onPress }: Props) => {
-  const { interlocutor, unread_count, last_activity_at } = room;
+  const { interlocutor, unread_count, last_activity_at, last_message } = room;
+  const { currentUserId, resourceType } = useAppSelector(
+    (s) => ({
+      currentUserId: s.auth.user?.id,
+      resourceType: s.auth.resourceType,
+    }),
+    shallowEqual,
+  );
+
   if (!interlocutor) return null;
   const hasUnread = unread_count > 0;
+
+  const previewText = (() => {
+    if (!last_message) return "";
+    const isMine =
+      !!currentUserId &&
+      !!resourceType &&
+      last_message.owner.id === currentUserId &&
+      last_message.owner.type.toLowerCase() === resourceType;
+    const body = last_message.body?.trim() || "Вложение";
+    return isMine ? `Вы: ${body}` : body;
+  })();
+
+  const timestamp = last_message?.created_at ?? last_activity_at;
 
   return (
     <TouchableOpacity
@@ -41,17 +64,17 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
             weight="regular"
             className="shrink-0 text-neutral-500 text-caption"
           >
-            {formatMessageTime(last_activity_at)}
+            {formatMessageTime(timestamp)}
           </Typography>
         </View>
 
-        <View className="flex-row justify-between items-center h-[20px]">
+        <View className="flex-row justify-between items-center gap-2 h-[20px]">
           <Typography
             weight="regular"
-            className="text-neutral-500 text-caption"
+            className="flex-1 text-neutral-500 text-caption"
             numberOfLines={1}
           >
-            {hasUnread ? `${unread_count} непрочитанных сообщения` : ""}
+            {previewText}
           </Typography>
 
           {hasUnread && (

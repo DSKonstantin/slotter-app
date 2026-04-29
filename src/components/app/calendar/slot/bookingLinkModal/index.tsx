@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import * as Clipboard from "expo-clipboard";
@@ -13,6 +13,8 @@ import {
 import { colors } from "@/src/styles/colors";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
 
 type Props = {
   visible: boolean;
@@ -23,12 +25,27 @@ type Props = {
 const CHANNEL_OPTIONS = [{ label: "Чат Slotter", value: "slotter" }];
 
 const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
+  const auth = useRequiredAuth();
   const [channel, setChannel] = useState("slotter");
   const [isCopied, setIsCopied] = useState(false);
 
   const methods = useForm({
     defaultValues: { client: null, message: "" },
   });
+
+  const { data, isLoading } = useGetCustomersQuery(
+    auth ? { userId: auth.userId, items: 100 } : { userId: 0 },
+    { skip: !visible || !auth },
+  );
+
+  const clientItems = useMemo(
+    () =>
+      (data?.customers ?? []).map((c) => ({
+        label: c.phone ? `${c.name} · ${c.phone}` : c.name,
+        value: String(c.id),
+      })),
+    [data],
+  );
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(bookingUrl);
@@ -54,7 +71,8 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             name="client"
             label="Клиент"
             placeholder="Кому отправляем"
-            items={[]}
+            items={clientItems}
+            emptyText={isLoading ? "Загрузка..." : "Нет клиентов"}
           />
 
           <SegmentedControl
@@ -71,7 +89,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             hideErrorText
           />
           <Typography className="text-caption text-neutral-500">
-            Отправим в: WhatsApp
+            Отправим в: Чат Slotter
           </Typography>
         </View>
 
@@ -84,11 +102,6 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
               <StSvg name="Copy" size={24} color={colors.neutral[900]} />
             }
           />
-          {isCopied && (
-            <Typography className="text-caption text-primary-blue-500 text-center">
-              Ссылка скопирована
-            </Typography>
-          )}
           <Button title="Отправить" onPress={handleClose} />
         </View>
       </FormProvider>

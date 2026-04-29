@@ -5,12 +5,28 @@ export interface ChatRoomInterlocutor {
   avatar_url: string | null;
 }
 
+export interface ChatRoomLastMessageOwner {
+  id: number;
+  type: string;
+  name: string;
+  avatar_url: string | null;
+}
+
+export interface ChatRoomLastMessage {
+  id: number;
+  body: string | null;
+  created_at: string;
+  owner: ChatRoomLastMessageOwner;
+}
+
 export interface ChatRoom {
   id: number;
   interlocutor: ChatRoomInterlocutor | null;
   unread_count: number;
   is_notify: boolean | null;
   last_activity_at: string;
+  last_read_at: string | null;
+  last_message: ChatRoomLastMessage | null;
   created_at: string;
 }
 
@@ -110,13 +126,29 @@ export type ChatWidget =
       widgetable: ChatMessageWidgetAppointment | null;
     };
 
+export interface ChatMessageReplyOwner {
+  id: number;
+  type: string;
+  name: string;
+  avatar_url: string | null;
+}
+
+export interface ChatMessageReply {
+  id: number;
+  body: string | null;
+  created_at: string;
+  owner: ChatMessageReplyOwner;
+}
+
 export interface ChatMessage {
   id: number;
   body: string | null;
   owner: ChatRoomInterlocutor;
   chat_room_id: number;
   images: ChatMessageImage[];
-  widget: ChatWidget | null;
+  chat_widget: ChatWidget | null;
+  reply_to: ChatMessageReply | null;
+  is_read: boolean;
   created_at: string;
 }
 

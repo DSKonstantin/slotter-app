@@ -95,7 +95,10 @@ const ChatAppointmentWidget = ({
             {duration ? ` · ${duration} мин` : ""}
           </Typography>
           {priceCents ? (
-            <Typography weight="semibold" className="text-body text-neutral-900">
+            <Typography
+              weight="semibold"
+              className="text-body text-neutral-900"
+            >
               {formatRublesFromCents(priceCents)}
             </Typography>
           ) : null}

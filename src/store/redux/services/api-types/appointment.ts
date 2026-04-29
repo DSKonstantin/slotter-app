@@ -57,6 +57,36 @@ export type GetAppointmentsResponse =
   | Appointment[]
   | Record<string, Appointment[]>;
 
+export interface UpcomingAppointmentCustomer {
+  id: number;
+  name: string;
+  avatar_url: string | null;
+}
+
+export interface UpcomingAppointment {
+  id: number;
+  status: AppointmentStatus;
+  payment_method: PaymentMethod;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  price_cents: number;
+  price_currency: string;
+  comment: string | null;
+  cancel_reason: string | null;
+  send_notification: boolean;
+  public_token: string;
+  date: string;
+  customer_confirmed_at: string | null;
+  customer: UpcomingAppointmentCustomer;
+  services: AppointmentService[];
+  additional_services: AppointmentService[];
+}
+
+export interface GetUpcomingAppointmentsResponse {
+  appointments: UpcomingAppointment[];
+}
+
 export type CreateAppointmentPayload = {
   date: string;
   start_time: string;

@@ -1,5 +1,19 @@
-import type { ChatMessage } from "@/src/store/redux/services/api-types";
+import type {
+  ChatMessage,
+  ChatMessageReply,
+} from "@/src/store/redux/services/api-types";
 import type { ChatIMessage } from "./types";
+
+const replyToIMessage = (reply: ChatMessageReply): ChatIMessage => ({
+  _id: reply.id,
+  text: reply.body ?? "",
+  createdAt: new Date(reply.created_at).getTime(),
+  user: {
+    _id: `${reply.owner.type.toLowerCase()}_${reply.owner.id}`,
+    name: reply.owner.name,
+    avatar: reply.owner.avatar_url ?? undefined,
+  },
+});
 
 export const toIMessage = (msg: ChatMessage): ChatIMessage => {
   // Normalize to lowercase to match auth.resourceType ("user" | "customer")
@@ -18,9 +32,11 @@ export const toIMessage = (msg: ChatMessage): ChatIMessage => {
     image: firstImage?.url,
     system: false,
     sent: true,
+    received: msg.is_read,
     pending: false,
     chatRoomId: msg.chat_room_id,
     images: msg.images,
-    widget: msg.widget ?? null,
+    widget: msg.chat_widget ?? null,
+    reply_to: msg.reply_to ? replyToIMessage(msg.reply_to) : null,
   };
 };

@@ -35,6 +35,9 @@ export type {
   UpdateAppointmentPayload,
   ReschedulePayload,
   CancelPayload,
+  UpcomingAppointment,
+  UpcomingAppointmentCustomer,
+  GetUpcomingAppointmentsResponse,
 } from "./appointment";
 export type {
   Customer,
@@ -79,6 +82,8 @@ export type {
 } from "./finances";
 export type {
   ChatRoomInterlocutor,
+  ChatRoomLastMessage,
+  ChatRoomLastMessageOwner,
   ChatRoom,
   PaginationMeta,
   GetChatRoomsParams,
@@ -90,6 +95,8 @@ export type {
   ChatWidgetAppointmentPayload,
   ChatMessageWidgetAppointment,
   ChatMessage,
+  ChatMessageReply,
+  ChatMessageReplyOwner,
   GetChatMessagesResponse,
   ResourceChannelEvent,
   RoomChannelEvent,

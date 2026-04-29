@@ -10,6 +10,7 @@ export type ChatIMessage = IMessage & {
   /** Embedded widget — service_card or appointment_proposal. Comes from backend
    *  Chat::WidgetBlueprint; absent on plain text/image messages. */
   widget?: ChatWidget | null;
-  /** Local-only: set on optimistic messages to show a quote bubble. Not persisted by backend. */
+  /** Quoted parent message rendered as a bubble preview. Backend sends a stripped
+   *  payload (id, body, created_at, owner); also set on optimistic messages. */
   reply_to?: ChatIMessage | null;
 };

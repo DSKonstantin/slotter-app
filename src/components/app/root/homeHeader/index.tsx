@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Pressable, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 import { colors } from "@/src/styles/colors";
@@ -14,6 +15,13 @@ const HomeHeader = () => {
   const profileLink = user?.nickname
     ? `${process.env.EXPO_PUBLIC_BOOKING_DISPLAY_URL}/${user.nickname}`
     : null;
+  const profileUrl = user?.nickname
+    ? `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${user.nickname}`
+    : null;
+
+  const handleOpenProfile = useCallback(() => {
+    if (profileUrl) void WebBrowser.openBrowserAsync(profileUrl);
+  }, [profileUrl]);
 
   return (
     <View className="flex-row items-center justify-between px-screen py-3">
@@ -24,14 +32,18 @@ const HomeHeader = () => {
             {fullName}
           </Typography>
           {profileLink && (
-            <View className="flex-row items-center gap-1">
+            <Pressable
+              onPress={handleOpenProfile}
+              hitSlop={6}
+              className="flex-row items-center gap-1 active:opacity-70"
+            >
               <Typography className="text-caption text-neutral-500">
                 {profileLink}
               </Typography>
               <View style={{ transform: [{ rotate: "90deg" }] }}>
                 <StSvg name="Out_light" size={18} color={colors.neutral[500]} />
               </View>
-            </View>
+            </Pressable>
           )}
         </View>
       </View>
