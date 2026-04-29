@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { useNavigation } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
@@ -25,8 +25,14 @@ export function useFormNavigationGuard(isDirty: boolean, options?: Options) {
     ...options,
   };
 
+  const releasedRef = useRef(false);
+
   const onPreventRemove = useCallback(
     ({ data }: { data: { action: NavigationAction } }) => {
+      if (releasedRef.current) {
+        navigation.dispatch(data.action);
+        return;
+      }
       Alert.alert(title, message, [
         { text: cancelText, style: "cancel" },
         {
@@ -40,4 +46,10 @@ export function useFormNavigationGuard(isDirty: boolean, options?: Options) {
   );
 
   usePreventRemove(isDirty, onPreventRemove);
+
+  const release = useCallback(() => {
+    releasedRef.current = true;
+  }, []);
+
+  return { release };
 }

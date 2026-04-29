@@ -14,8 +14,7 @@ import { View } from "react-native";
 import { StepProgress } from "@/src/components/ui/StepProgress";
 import { Button, Typography } from "@/src/components/ui";
 import { days, DAY_ID_BY_INDEX } from "@/src/constants/days";
-import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
-import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
+import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import { useBulkCreateWorkingDaysMutation } from "@/src/store/redux/services/api/workingDaysApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -32,8 +31,8 @@ const Schedule = () => {
   const methods = useForm({
     resolver: yupResolver(OnboardingScheduleSchema),
     defaultValues: {
-      workingTimeFrom: "",
-      workingTimeTo: "",
+      startAt: "",
+      endAt: "",
       workingDays: [],
       breaks: [],
     },
@@ -64,8 +63,8 @@ const Schedule = () => {
       )
       .map((d) => ({
         day: format(d, "yyyy-MM-dd"),
-        start_at: data.workingTimeFrom,
-        end_at: data.workingTimeTo,
+        start_at: data.startAt,
+        end_at: data.endAt,
         ...(data.breaks?.length && {
           working_day_breaks: data.breaks.map((b) => ({
             start_at: b.start!,
@@ -146,18 +145,17 @@ const Schedule = () => {
             )}
           </View>
 
-          <TimeFields
+          <WorkingHoursFields
             label="Время работы"
-            startName="workingTimeFrom"
-            endName="workingTimeTo"
+            startName="startAt"
+            endName="endAt"
+            middleSlot={
+              <Typography className="text-caption text-neutral-900">
+                Свободный или сменный график (2/2) можно будет настроить в
+                календаре позже
+              </Typography>
+            }
           />
-
-          <Typography className="text-caption text-neutral-900">
-            Свободный или сменный график (2/2) можно будет настроить в календаре
-            позже
-          </Typography>
-
-          <BreaksFieldArray />
         </View>
       </AuthScreenLayout>
     </FormProvider>

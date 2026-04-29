@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
-import ErrorScreen from "@/src/components/shared/errorScreen";
 import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
@@ -16,7 +15,9 @@ import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDa
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { Appointment } from "@/src/store/redux/services/api-types";
-import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
+import EmptyStateScreen, {
+  ErrorScreen,
+} from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";

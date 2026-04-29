@@ -7,7 +7,7 @@ import DraggableFlatList, {
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { Button, StSvg, Typography } from "@/src/components/ui";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 
 import { colors } from "@/src/styles/colors";
 

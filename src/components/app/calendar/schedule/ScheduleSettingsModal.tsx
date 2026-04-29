@@ -8,8 +8,7 @@ import {
   type BottomSheetBackgroundProps,
 } from "@gorhom/bottom-sheet";
 
-import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
-import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
+import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import {
   Button,
   Divider,
@@ -73,10 +72,10 @@ export const ScheduleSettingsModal = ({
 
       if (nextMode === "perDay") {
         selectedEditableDays.forEach(({ index }) => {
-          setValue(`calendarDays.${index}.scheduleStart`, "", {
+          setValue(`calendarDays.${index}.startAt`, "", {
             shouldDirty: true,
           });
-          setValue(`calendarDays.${index}.scheduleEnd`, "", {
+          setValue(`calendarDays.${index}.endAt`, "", {
             shouldDirty: true,
           });
           setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
@@ -96,7 +95,7 @@ export const ScheduleSettingsModal = ({
             onPress: () => {
               setValue(
                 "commonDraft",
-                { scheduleStart: "", scheduleEnd: "", breaks: [] },
+                { startAt: "", endAt: "", breaks: [] },
                 { shouldDirty: true },
               );
               setValue("mode", "bulk", { shouldDirty: true });
@@ -224,16 +223,14 @@ export const ScheduleSettingsModal = ({
         <BottomSheetScrollView contentContainerStyle={styles.content}>
           {canSave ? (
             mode === "bulk" ? (
-              <>
-                <TimeFields
+              <View className="mb-4">
+                <WorkingHoursFields
                   label="Рабочее время"
-                  startName="commonDraft.scheduleStart"
-                  endName="commonDraft.scheduleEnd"
+                  startName="commonDraft.startAt"
+                  endName="commonDraft.endAt"
+                  breaksName="commonDraft.breaks"
                 />
-                <View className="mt-3 mb-4">
-                  <BreaksFieldArray name="commonDraft.breaks" />
-                </View>
-              </>
+              </View>
             ) : (
               <View className="gap-4 mb-4">
                 {selectedEditableDays.map(({ day, index }, i) => (
@@ -256,13 +253,11 @@ export const ScheduleSettingsModal = ({
                         }
                       />
                     </View>
-                    <TimeFields
-                      startName={`calendarDays.${index}.scheduleStart`}
-                      endName={`calendarDays.${index}.scheduleEnd`}
+                    <WorkingHoursFields
+                      startName={`calendarDays.${index}.startAt`}
+                      endName={`calendarDays.${index}.endAt`}
+                      breaksName={`calendarDays.${index}.breaks`}
                     />
-                    <View className="mt-3">
-                      <BreaksFieldArray name={`calendarDays.${index}.breaks`} />
-                    </View>
                   </View>
                 ))}
               </View>

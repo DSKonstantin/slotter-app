@@ -54,11 +54,10 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   const {
     handleSubmit,
     setValue,
-    reset,
     control,
     formState: { isDirty },
   } = methods;
-  useFormNavigationGuard(isDirty);
+  const { release } = useFormNavigationGuard(isDirty);
   const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
 
   const [createCustomer, { isLoading }] = useCreateCustomerMutation();
@@ -73,13 +72,13 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
           customer_tag_id: values.customer_tag?.id ?? undefined,
         }).unwrap();
         onCreated?.(customer);
-        reset();
+        release();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать клиента"));
       }
     },
-    [createCustomer, onCreated, reset],
+    [createCustomer, onCreated, release],
   );
 
   const handleContactsPress = useCallback(async () => {

@@ -10,7 +10,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRouter } from "expo-router";
 import ScheduleActionsModal from "./ScheduleActionsModal";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import useMonthCalendarData from "@/src/hooks/useMonthCalendarData";
 
 const MonthCalendarView = () => {

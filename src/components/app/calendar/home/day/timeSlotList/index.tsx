@@ -54,7 +54,13 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   const segments = useMemo(() => {
     if (!startAt || !endAt) return null;
-    return createSegments(startAt, endAt, breaks, appointments, visibleStatuses);
+    return createSegments(
+      startAt,
+      endAt,
+      breaks,
+      appointments,
+      visibleStatuses,
+    );
   }, [appointments, visibleStatuses, breaks, startAt, endAt]);
 
   useEffect(() => {

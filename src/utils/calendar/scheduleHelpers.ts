@@ -19,8 +19,8 @@ export const createEmptyCalendarDay = (
   workingDayId: undefined,
   isExisting: false,
   isSelected: false,
-  scheduleStart: "",
-  scheduleEnd: "",
+  startAt: "",
+  endAt: "",
   breaks: [],
 });
 
@@ -32,8 +32,8 @@ export const createExistingCalendarDay = (
   workingDayId: workingDay.id,
   isExisting: true,
   isSelected: false,
-  scheduleStart: formatTimeFromISO(workingDay.start_at),
-  scheduleEnd: formatTimeFromISO(workingDay.end_at),
+  startAt: formatTimeFromISO(workingDay.start_at),
+  endAt: formatTimeFromISO(workingDay.end_at),
   breaks: (workingDay.working_day_breaks ?? []).map((item) => ({
     start: formatTimeFromISO(item.start_at),
     end: formatTimeFromISO(item.end_at),
@@ -49,7 +49,7 @@ export const buildFormValues = (
 
   return {
     mode: "bulk",
-    commonDraft: { scheduleStart: "", scheduleEnd: "", breaks: [] },
+    commonDraft: { startAt: "", endAt: "", breaks: [] },
     calendarDays: Array.from({ length: getDate(end) }, (_, index) => {
       const date = addDays(start, index);
       const key = getDateKey(date);
@@ -69,11 +69,11 @@ export const cloneBreaks = (
 export const createDraftFromDay = (
   day?: Pick<
     CalendarScheduleDayValues,
-    "scheduleStart" | "scheduleEnd" | "breaks"
+    "startAt" | "endAt" | "breaks"
   >,
 ): CalendarScheduleDraftValues => ({
-  scheduleStart: day?.scheduleStart ?? "",
-  scheduleEnd: day?.scheduleEnd ?? "",
+  startAt: day?.startAt ?? "",
+  endAt: day?.endAt ?? "",
   breaks: cloneBreaks(day?.breaks),
 });
 
@@ -98,8 +98,8 @@ export const areSameCalendarDays = (
       item.workingDayId === right[index]?.workingDayId &&
       item.isExisting === right[index]?.isExisting &&
       item.isSelected === right[index]?.isSelected &&
-      item.scheduleStart === right[index]?.scheduleStart &&
-      item.scheduleEnd === right[index]?.scheduleEnd &&
+      item.startAt === right[index]?.startAt &&
+      item.endAt === right[index]?.endAt &&
       areSameBreaks(item.breaks, right[index]?.breaks),
   );
 
@@ -109,8 +109,8 @@ export const applyDraftToDay = (
 ): CalendarScheduleDayValues => ({
   ...day,
   isSelected: true,
-  scheduleStart: draft.scheduleStart,
-  scheduleEnd: draft.scheduleEnd,
+  startAt: draft.startAt,
+  endAt: draft.endAt,
   breaks: cloneBreaks(draft.breaks),
 });
 
@@ -122,8 +122,8 @@ export const clearSelectedDay = (
     : {
         ...day,
         isSelected: false,
-        scheduleStart: "",
-        scheduleEnd: "",
+        startAt: "",
+        endAt: "",
         breaks: [],
       };
 
@@ -131,10 +131,10 @@ export const areUniformDays = (days: CalendarScheduleDayValues[]) =>
   days.length <= 1 ||
   days.every(
     (day) =>
-      day.scheduleStart === days[0]?.scheduleStart &&
-      day.scheduleEnd === days[0]?.scheduleEnd &&
+      day.startAt === days[0]?.startAt &&
+      day.endAt === days[0]?.endAt &&
       areSameBreaks(day.breaks, days[0]?.breaks),
   );
 
 export const getScheduleTimeLabel = (day: CalendarScheduleDayValues) =>
-  `${day.scheduleStart} - ${day.scheduleEnd}`;
+  `${day.startAt} - ${day.endAt}`;

@@ -9,7 +9,7 @@ import { View, ActivityIndicator, RefreshControl } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import {
   Avatar,
   Badge,

@@ -15,17 +15,18 @@ import {
   StSvg,
   Typography,
 } from "@/src/components/ui";
-import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
-import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
 import {
   ScheduleTemplateSchema,
   type ScheduleTemplateFormValues,
 } from "@/src/validation/schemas/scheduleTemplate.schema";
 import { days } from "@/src/constants/days";
-import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
+import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
+
+const DEFAULT_START_AT = new Date(2000, 0, 1, 9, 0);
+const DEFAULT_END_AT = new Date(2000, 0, 1, 18, 0);
 
 const DayRow = ({ index }: { index: number }) => {
   const { control } = useFormContext<ScheduleTemplateFormValues>();
@@ -45,36 +46,14 @@ const DayRow = ({ index }: { index: number }) => {
       </View>
 
       {isEnabled && (
-        <View className="gap-2">
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <RhfDatePicker
-                name={`days.${index}.startAt`}
-                placeholder="9:00"
-                hideErrorText
-                parseValue={parseTimeString}
-                formatValue={formatTime}
-                endAdornment={
-                  <StSvg name="Time" size={24} color={colors.neutral[500]} />
-                }
-              />
-            </View>
-            <View className="flex-1">
-              <RhfDatePicker
-                name={`days.${index}.endAt`}
-                placeholder="18:00"
-                hideErrorText
-                parseValue={parseTimeString}
-                formatValue={formatTime}
-                endAdornment={
-                  <StSvg name="Time" size={24} color={colors.neutral[500]} />
-                }
-              />
-            </View>
-          </View>
-
-          <BreaksFieldArray name={`days.${index}.breaks`} />
-        </View>
+        <WorkingHoursFields
+          startName={`days.${index}.startAt`}
+          endName={`days.${index}.endAt`}
+          breaksName={`days.${index}.breaks`}
+          startDefault={DEFAULT_START_AT}
+          endDefault={DEFAULT_END_AT}
+          spacing="tight"
+        />
       )}
     </View>
   );

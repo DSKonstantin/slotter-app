@@ -33,8 +33,8 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
     defaultValues: {
       isActive: true,
       date: format(new Date(date), "d MMMM, EEEE", { locale: ru }),
-      scheduleStart: "",
-      scheduleEnd: "",
+      startAt: "",
+      endAt: "",
       breaks: [],
     },
   });
@@ -48,8 +48,8 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
         userId: auth.userId,
         data: {
           day: date,
-          start_at: data.scheduleStart,
-          end_at: data.scheduleEnd,
+          start_at: data.startAt,
+          end_at: data.endAt,
           is_active: data.isActive,
           ...(data.breaks &&
             data.breaks.length > 0 && {

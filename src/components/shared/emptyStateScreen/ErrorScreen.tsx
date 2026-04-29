@@ -1,5 +1,5 @@
 import React from "react";
-import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
+import EmptyStateScreen from "./EmptyStateScreen";
 
 type ErrorScreenProps = {
   title: string;

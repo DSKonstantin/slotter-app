@@ -5,8 +5,7 @@ import { type DayScheduleFormValues } from "@/src/validation/schemas/daySchedule
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Item } from "@/src/components/ui";
-import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
-import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
+import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 
 export type { DayScheduleFormValues };
 
@@ -23,14 +22,12 @@ export const DayScheduleForm = () => {
       >
         <RhfTextField name="date" label="Дата" disabled={true} />
 
-        <View className="mb-5">
-          <TimeFields
-            label="Расписание"
-            startName="scheduleStart"
-            endName="scheduleEnd"
-          />
-        </View>
-        <BreaksFieldArray />
+        <WorkingHoursFields
+          label="Расписание"
+          startName="startAt"
+          endName="endAt"
+          spacing="loose"
+        />
       </View>
     </>
   );

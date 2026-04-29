@@ -40,7 +40,7 @@ const AboutSpecialist = () => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = useCallback(
     async (data: AccountAboutFormValues) => {
@@ -56,12 +56,13 @@ const AboutSpecialist = () => {
             is_out_call: data.onRoad,
           },
         }).unwrap();
+        release();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser],
+    [auth, updateUser, release],
   );
 
   if (!auth) return null;

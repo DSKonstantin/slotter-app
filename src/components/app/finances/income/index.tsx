@@ -21,7 +21,7 @@ import FinancesIncomeSkeleton from "./FinancesIncomeSkeleton";
 import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
 import IncomeBreakdownServices from "./IncomeBreakdownServices";
 import IncomeBreakdownClients from "./IncomeBreakdownClients";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 
 const today = new Date();
 

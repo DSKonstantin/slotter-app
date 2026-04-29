@@ -7,6 +7,7 @@ type DatePickerFieldsProps = {
   label?: string;
   placeholder?: string;
   hideErrorText?: boolean;
+  defaultDisplayValue?: Date;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
 
@@ -21,6 +22,7 @@ export function RhfDatePicker({
   startAdornment,
   endAdornment,
   hideErrorText,
+  defaultDisplayValue,
   formatValue,
   parseValue,
   ...other
@@ -37,6 +39,7 @@ export function RhfDatePicker({
           placeholder={placeholder}
           error={error}
           hideErrorText={hideErrorText}
+          defaultDisplayValue={defaultDisplayValue}
           startAdornment={startAdornment}
           endAdornment={endAdornment}
           onChange={(d: Date) => {

@@ -98,7 +98,7 @@ const SlotCreate: React.FC = () => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const { handleSubmit, watch, setValue } = methods;
   const watchedServices = watch("services");
@@ -192,13 +192,14 @@ const SlotCreate: React.FC = () => {
         }).unwrap();
         dispatch(clearSlotDraft());
         dispatch(setHighlightSlotId(result.id));
+        release();
         router.dismissAll();
         router.replace(Routers.app.calendar.root(values.date));
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
     },
-    [auth, draft.additionalServices, createAppointment, dispatch],
+    [auth, draft.additionalServices, createAppointment, dispatch, release],
   );
 
   const onValidationError = useCallback(() => {

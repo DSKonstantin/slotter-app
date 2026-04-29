@@ -57,7 +57,7 @@ const PersonalInformation = () => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const avatar = methods.watch("avatar");
 
@@ -76,12 +76,13 @@ const PersonalInformation = () => {
       try {
         const formData = buildUserFormData(data);
         await updateUser({ id: auth.userId, data: formData }).unwrap();
+        release();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser],
+    [auth, updateUser, release],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -89,12 +90,12 @@ const PersonalInformation = () => {
     try {
       await deleteUser(auth.userId).unwrap();
       setDeleteModalVisible(false);
-      methods.reset(methods.getValues());
+      release();
       await logout();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось удалить профиль"));
     }
-  }, [auth, deleteUser, logout, methods]);
+  }, [auth, deleteUser, logout, release]);
 
   if (!auth) return null;
 

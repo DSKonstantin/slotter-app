@@ -24,7 +24,7 @@ import {
 } from "@/src/validation/schemas/daySchedule.schema";
 import { DayScheduleForm } from "./DayScheduleForm";
 import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/DayScheduleAppointments";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
@@ -57,8 +57,8 @@ const DayScheduleEdit = ({
     defaultValues: {
       isActive: workingDay.is_active,
       date: formatFullDateWithDay(new Date(workingDay.day)),
-      scheduleStart: formatTimeFromISO(workingDay.start_at),
-      scheduleEnd: formatTimeFromISO(workingDay.end_at),
+      startAt: formatTimeFromISO(workingDay.start_at),
+      endAt: formatTimeFromISO(workingDay.end_at),
       breaks,
     },
   });
@@ -72,8 +72,8 @@ const DayScheduleEdit = ({
         userId,
         id: workingDay.id,
         data: {
-          start_at: data.scheduleStart,
-          end_at: data.scheduleEnd,
+          start_at: data.startAt,
+          end_at: data.endAt,
           is_active: data.isActive,
           working_day_breaks_attributes: [
             ...(data.breaks ?? []).map((b) => ({

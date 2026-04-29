@@ -1,5 +1,9 @@
 import * as Yup from "yup";
-import { isEndAfterStart, breaksField } from "@/src/validation/utils/timeRange";
+import {
+  breaksField,
+  withEndAfterStart,
+  EMPTY_WORKING_HOURS,
+} from "@/src/validation/utils/timeRange";
 
 const dayTemplateSchema = Yup.object().shape({
   isEnabled: Yup.boolean().required().default(false),
@@ -13,18 +17,10 @@ const dayTemplateSchema = Yup.object().shape({
     .default("")
     .when("isEnabled", {
       is: true,
-      then: (schema) => schema.required("Укажите время окончания"),
-    })
-    .when(["isEnabled", "startAt"], {
-      is: (isEnabled: boolean, startAt: string) => isEnabled && !!startAt,
       then: (schema) =>
-        schema.test(
-          "end-after-start",
-          "Время окончания должно быть позже начала",
-          (endAt, context) => isEndAfterStart(context.parent.startAt, endAt),
-        ),
+        withEndAfterStart(schema.required("Укажите время окончания")),
     }),
-  breaks: breaksField("startAt", "endAt"),
+  breaks: breaksField(),
 });
 
 export const ScheduleTemplateSchema = Yup.object().shape({
@@ -34,9 +30,7 @@ export const ScheduleTemplateSchema = Yup.object().shape({
     .default(
       Array.from({ length: 7 }, () => ({
         isEnabled: false,
-        startAt: "",
-        endAt: "",
-        breaks: [],
+        ...EMPTY_WORKING_HOURS,
       })),
     ),
 });

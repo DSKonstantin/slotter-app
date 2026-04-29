@@ -29,7 +29,7 @@ import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData"
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 
 const Service = () => {
   const auth = useRequiredAuth();

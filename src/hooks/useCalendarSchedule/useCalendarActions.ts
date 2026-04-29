@@ -46,7 +46,7 @@ export const useCalendarActions = ({
       setValue("calendarDays", nextCalendarDays);
     }
     setValue("mode", "bulk");
-    setValue("commonDraft", { scheduleStart: "", scheduleEnd: "", breaks: [] });
+    setValue("commonDraft", { startAt: "", endAt: "", breaks: [] });
   }, [getValues, setValue]);
 
   const toggleDay = useCallback(
@@ -76,13 +76,13 @@ export const useCalendarActions = ({
           (day) =>
             day.isSelected &&
             !day.isExisting &&
-            !!day.scheduleStart &&
-            !!day.scheduleEnd,
+            !!day.startAt &&
+            !!day.endAt,
         )
         .map((day) => ({
           day: day.date,
-          start_at: day.scheduleStart!,
-          end_at: day.scheduleEnd!,
+          start_at: day.startAt!,
+          end_at: day.endAt!,
           ...(day.breaks.length > 0 && {
             working_day_breaks: day.breaks.map((item) => ({
               start_at: item.start,
@@ -124,8 +124,8 @@ export const useCalendarActions = ({
         return applyDraftToDay(
           { ...day, isSelected: true },
           {
-            scheduleStart: templateDay.startAt,
-            scheduleEnd: templateDay.endAt,
+            startAt: templateDay.startAt,
+            endAt: templateDay.endAt,
             breaks: cloneBreaks(templateDay.breaks),
           },
         );

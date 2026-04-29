@@ -21,6 +21,8 @@ type DatePickerProps = {
   error?: FieldError;
   disabled?: boolean;
   hideErrorText?: boolean;
+  /** Where the picker spinner starts when `value` is empty. Defaults to `new Date()`. */
+  defaultDisplayValue?: Date;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -34,6 +36,7 @@ export const DatePicker = ({
   error,
   hideErrorText,
   disabled,
+  defaultDisplayValue,
   startAdornment,
   endAdornment,
 }: DatePickerProps) => {
@@ -41,20 +44,21 @@ export const DatePicker = ({
 
   const safeValue = useMemo(() => {
     if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
-    return new Date();
-  }, [value]);
+    return defaultDisplayValue ?? new Date();
+  }, [value, defaultDisplayValue]);
 
   const [tempValue, setTempValue] = useState<Date>(safeValue);
 
   const openPicker = () => {
     if (disabled) return;
+    setTempValue(safeValue);
     setOpen(true);
   };
 
-  const onChangeAndroid = (_: DateTimePickerEvent, selected?: Date) => {
+  const onChangeAndroid = (event: DateTimePickerEvent, selected?: Date) => {
     setOpen(false);
 
-    if (selected) {
+    if (event.type === "set" && selected) {
       onChange(selected);
     }
   };

@@ -37,7 +37,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
@@ -49,7 +49,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
         categoryId: nextCategoryId,
         data: formData,
       }).unwrap();
-      methods.reset(values);
+      release();
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось создать услугу"));

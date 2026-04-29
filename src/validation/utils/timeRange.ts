@@ -17,12 +17,39 @@ export const breakSchema = Yup.object().shape({
   end: Yup.string().required(),
 });
 
-export const breaksField = (
+export const breakWithIdSchema = breakSchema.shape({
+  id: Yup.number().optional(),
+});
+
+export const EMPTY_WORKING_HOURS = {
+  startAt: "",
+  endAt: "",
+  breaks: [] as { start: string; end: string }[],
+};
+
+export const withEndAfterStart = <T extends Yup.AnySchema>(
+  schema: T,
+  startFieldName = "startAt",
+): T =>
+  schema.test(
+    "end-after-start",
+    "Время окончания должно быть позже начала",
+    (endAt, ctx) => isEndAfterStart(ctx.parent[startFieldName], endAt as string),
+  ) as T;
+
+type BreaksFieldOptions = {
+  itemSchema?: Yup.AnySchema;
+  startFieldName?: string;
+  endFieldName?: string;
+};
+
+export const breaksField = ({
+  itemSchema = breakSchema,
   startFieldName = "startAt",
   endFieldName = "endAt",
-) =>
+}: BreaksFieldOptions = {}) =>
   Yup.array()
-    .of(breakSchema)
+    .of(itemSchema)
     .required()
     .default([])
     .test("valid-breaks", "Проверьте перерывы", (breaks, context) =>
@@ -35,14 +62,14 @@ export const breaksField = (
 
 export const areBreaksValid = (
   breaks: { start: string; end: string }[] = [],
-  scheduleStart?: string,
-  scheduleEnd?: string,
+  startAt?: string,
+  endAt?: string,
 ): boolean => {
   if (breaks.length === 0) return true;
-  if (!scheduleStart || !scheduleEnd) return true;
+  if (!startAt || !endAt) return true;
 
-  const dayStart = parseTimeToMinutes(scheduleStart);
-  const dayEnd = parseTimeToMinutes(scheduleEnd);
+  const dayStart = parseTimeToMinutes(startAt);
+  const dayEnd = parseTimeToMinutes(endAt);
 
   if (dayStart === null || dayEnd === null || dayEnd <= dayStart) return false;
 

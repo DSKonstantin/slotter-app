@@ -22,7 +22,7 @@ import StatCard from "@/src/components/shared/cards/statСard";
 import CreateExpenseModal from "./createExpenseModal";
 import ExpenseCategoriesList from "./ExpenseCategoriesList";
 import FinancesSkeleton from "./FinancesSkeleton";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 
 const now = new Date();
