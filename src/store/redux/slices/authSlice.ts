@@ -115,12 +115,6 @@ const authSlice = createSlice({
         (state, { payload }) => {
           setUserOnly(state, payload);
         },
-      )
-      .addMatcher(
-        usersApi.endpoints.updateCustomer.matchFulfilled,
-        (state, { payload }) => {
-          setUserOnly(state, payload);
-        },
       );
   },
 });

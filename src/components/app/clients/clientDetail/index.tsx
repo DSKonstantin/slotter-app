@@ -18,45 +18,59 @@ import HomeCard from "@/src/components/shared/cards/homeCard";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import {
-  useGetCustomerQuery,
-  useUpdateCustomerMutation,
-} from "@/src/store/redux/services/api/customersApi";
+  useGetUserCustomerQuery,
+  useUpdateUserCustomerMutation,
+} from "@/src/store/redux/services/api/userCustomersApi";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type Props = { customerId: number };
 
 const ClientDetail = ({ customerId }: Props) => {
+  const auth = useRequiredAuth();
   const {
     data: customerData,
     isLoading: customerLoading,
     isError: customerError,
     refetch: refetchCustomer,
-  } = useGetCustomerQuery({ customerId });
+  } = useGetUserCustomerQuery(
+    auth ? { userId: auth.userId, id: customerId } : { userId: 0, id: 0 },
+    { skip: !auth },
+  );
 
-  const [updateCustomer, { isLoading: isSaving }] = useUpdateCustomerMutation();
+  const [updateUserCustomer, { isLoading: isSaving }] =
+    useUpdateUserCustomerMutation();
   const [createChatRoom] = useCreateChatRoomMutation();
 
-  const customer = customerData?.customer;
+  const userCustomer = customerData?.user_customer;
+  const customer = userCustomer?.customer;
+  const note0 = userCustomer?.note ?? "";
 
-  const [note, setNote] = useState(customer?.note ?? "");
-  const isDirty = note !== (customer?.note ?? "");
+  const [note, setNote] = useState(note0);
+  const isDirty = note !== note0;
 
   useEffect(() => {
-    setNote(customer?.note ?? "");
-  }, [customer?.note]);
+    setNote(note0);
+  }, [note0]);
 
   const handleSaveNote = async () => {
-    if (!isDirty) return;
-    await updateCustomer({ customerId, body: { note } });
+    if (!isDirty || !auth || !userCustomer) return;
+    await updateUserCustomer({
+      userId: auth.userId,
+      id: userCustomer.id,
+      body: { note },
+    });
   };
 
   const handleOpenChat = async () => {
+    if (!auth || !customer) return;
     try {
-      const { chat_room } = await createChatRoom({
-        memberId: customerId,
+      const room = await createChatRoom({
+        userId: auth.userId,
+        customerId: customer.id,
       }).unwrap();
-      router.push(Routers.app.chat.room(chat_room.id));
+      router.push(Routers.app.chat.room(room.id));
     } catch {}
   };
 
@@ -97,15 +111,15 @@ const ClientDetail = ({ customerId }: Props) => {
             paddingHorizontal: 20,
           }}
         >
-          <BirthdayBadge />
+          {customer.birthday && <BirthdayBadge />}
 
           <View className="gap-2 mt-2">
             <ClientInfoCard
               name={customer.name}
               phone={customer.phone || undefined}
-              visitsCount={0}
-              totalSpent="0 ₽"
-              tag={customer.customer_tag ?? undefined}
+              visitsCount={userCustomer?.stats.visits_count ?? 0}
+              totalSpent={`${Math.round((userCustomer?.stats.total_spent_cents ?? 0) / 100).toLocaleString("ru-RU")} ₽`}
+              tag={userCustomer?.customer_tag ?? undefined}
             />
 
             <Card

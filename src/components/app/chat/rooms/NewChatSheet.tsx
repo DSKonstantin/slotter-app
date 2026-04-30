@@ -19,16 +19,21 @@ import { StModal } from "@/src/components/ui/StModal";
 import { Avatar, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import RetryInline from "@/src/components/shared/retryInline";
 import {
   useCreateChatRoomMutation,
   useGetChatRoomsQuery,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import { Routers } from "@/src/constants/routers";
-import type { ChatRoom, Customer } from "@/src/store/redux/services/api-types";
+import type { ChatRoom } from "@/src/store/redux/services/api-types";
 
-type RowItem = Customer & { existingRoom: ChatRoom | null };
+type RowItem = {
+  id: number;
+  name: string;
+  phone: string;
+  existingRoom: ChatRoom | null;
+};
 
 type Props = {
   visible: boolean;
@@ -85,7 +90,7 @@ export function NewChatSheet({ visible, onClose }: Props) {
     isLoading: isCustomersLoading,
     isError: isCustomersError,
     refetch: refetchCustomers,
-  } = useGetCustomersQuery(
+  } = useGetUserCustomersQuery(
     auth
       ? { userId: auth.userId, query: debouncedSearch || undefined }
       : { userId: 0 },
@@ -106,9 +111,11 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
   const customers = useMemo<RowItem[]>(
     () =>
-      (customersData?.customers ?? []).map((c) => ({
-        ...c,
-        existingRoom: roomByCustomerId.get(c.id) ?? null,
+      (customersData?.user_customers ?? []).map((uc) => ({
+        id: uc.customer.id,
+        name: uc.customer.name,
+        phone: uc.customer.phone,
+        existingRoom: roomByCustomerId.get(uc.customer.id) ?? null,
       })),
     [customersData, roomByCustomerId],
   );

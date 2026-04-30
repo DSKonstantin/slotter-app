@@ -13,7 +13,7 @@ import RetryInline from "@/src/components/shared/retryInline";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import { colors } from "@/src/styles/colors";
 
 type Props = {
@@ -35,16 +35,18 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
     defaultValues: { client: null, message: "" },
   });
 
-  const { data, isLoading, isError, refetch } = useGetCustomersQuery(
-    auth ? { userId: auth.userId, items: 100 } : { userId: 0 },
+  const { data, isLoading, isError, refetch } = useGetUserCustomersQuery(
+    auth ? { userId: auth.userId, per_count: 100 } : { userId: 0 },
     { skip: !visible || !auth },
   );
 
   const clientItems = useMemo(
     () =>
-      (data?.customers ?? []).map((c) => ({
-        label: c.phone ? `${c.name} · ${c.phone}` : c.name,
-        value: String(c.id),
+      (data?.user_customers ?? []).map((uc) => ({
+        label: uc.customer.phone
+          ? `${uc.customer.name} · ${uc.customer.phone}`
+          : uc.customer.name,
+        value: String(uc.customer.id),
       })),
     [data],
   );

@@ -3,6 +3,7 @@ import debounce from "lodash/debounce";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import {
   Avatar,
   Badge,
@@ -11,15 +12,13 @@ import {
   StSvg,
   Typography,
 } from "@/src/components/ui";
-import {
-  useGetCustomersPaginatedInfiniteQuery,
-  useGetCustomerTagsQuery,
-} from "@/src/store/redux/services/api/customersApi";
+import { useGetCustomerTagsQuery } from "@/src/store/redux/services/api/customersApi";
+import { useGetUserCustomersPaginatedInfiniteQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
 import { colors } from "@/src/styles/colors";
-import type { Customer } from "@/src/store/redux/services/api-types";
+import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import RetryInline from "@/src/components/shared/retryInline";
@@ -34,15 +33,25 @@ import {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-const ClientRow = React.memo(function ClientRow({ item }: { item: Customer }) {
+const ClientRow = React.memo(function ClientRow({
+  item,
+}: {
+  item: UserCustomer;
+}) {
   return (
     <Card
-      title={item.name}
+      title={item.customer.name}
       titleProps={{
         numberOfLines: 2,
       }}
-      subtitle={item.phone || undefined}
-      left={<Avatar name={item.name} size="md" />}
+      subtitle={item.customer.phone || undefined}
+      left={
+        <Avatar
+          name={item.customer.name}
+          uri={item.customer.avatar_url ?? undefined}
+          size="md"
+        />
+      }
       right={
         <StSvg
           name="Expand_right_light"
@@ -106,7 +115,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     () => ({
       userId: auth!.userId,
       query: debouncedSearch || undefined,
-      tag_id: tagId,
+      customer_tag_id: tagId,
     }),
     [auth, debouncedSearch, tagId],
   );
@@ -120,7 +129,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     isFetchingNextPage,
     fetchNextPage,
     refetch,
-  } = useGetCustomersPaginatedInfiniteQuery(queryParams);
+  } = useGetUserCustomersPaginatedInfiniteQuery(queryParams);
 
   const handleRefresh = useCallback(() => {
     return refetch({ refetchCachedPages: false });
@@ -140,9 +149,9 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   const customers = useMemo(() => {
     if (!data?.pages) return [];
-    const unique = new Map<number, Customer>();
+    const unique = new Map<number, UserCustomer>();
     data.pages.forEach((page) => {
-      page.customers.forEach((c) => unique.set(c.id, c));
+      page.user_customers.forEach((uc) => unique.set(uc.id, uc));
     });
     return [...unique.values()];
   }, [data?.pages]);
@@ -151,24 +160,31 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     <View className="flex-1" style={{ paddingTop: topInset }}>
       {!searchMode && (
         <>
-          <View className="flex-row px-screen pb-3 gap-2">
-            {filters.map((f) => (
+          <FlatList
+            horizontal
+            data={filters}
+            keyExtractor={(f) => f.label}
+            showsHorizontalScrollIndicator={false}
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+            className="pb-3"
+            renderItem={({ item: f }) => (
               <Badge
-                key={f.label}
                 title={f.label}
                 variant={tagId === f.value ? "accent" : "secondary"}
                 onPress={() => handleSetTagId(f.value)}
               />
-            ))}
-            {isTagsError && (
+            )}
+          />
+          {isTagsError && (
+            <View className="px-screen pb-3">
               <RetryInline
                 text="Не удалось загрузить теги"
                 buttonText="Обновить"
                 onRetry={refetchTags}
-                className="px-screen"
               />
-            )}
-          </View>
+            </View>
+          )}
 
           <View className="flex-row gap-2.5 px-screen mb-5">
             <Button
@@ -202,18 +218,11 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           <ActivityIndicator />
         </View>
       ) : isError && !data ? (
-        <View className="flex-1 items-center justify-center px-screen gap-4">
-          <Typography className="text-body text-accent-red-500">
-            Ошибка загрузки клиентов
-          </Typography>
-          <Button
-            title="Повторить"
-            onPress={onRefresh}
-            loading={isFetching}
-            disabled={isFetching}
-            buttonClassName="w-full"
-          />
-        </View>
+        <ErrorScreen
+          title="Не удалось загрузить клиентов"
+          isLoading={isFetching}
+          onRetry={onRefresh}
+        />
       ) : (
         <FlatList
           data={customers}
@@ -245,10 +254,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 };
 
 const ClientsList = () => {
-  const auth = useRequiredAuth();
-
-  if (!auth) return null;
-
   return (
     <ScreenWithToolbar
       title="Клиенты"

@@ -32,22 +32,11 @@ export const usersApi = api.injectEndpoints({
       }),
     }),
 
-    updateCustomer: builder.mutation<
-      User,
-      { id: number; data: Partial<UpdateUserPayload> | FormData }
-    >({
-      query: ({ id, data }) => ({
-        url: `/customers/${id}`,
-        method: "PATCH",
-        data,
-      }),
-    }),
   }),
 });
 
 export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
-  useUpdateCustomerMutation,
   useLazyCheckNicknameQuery,
 } = usersApi;

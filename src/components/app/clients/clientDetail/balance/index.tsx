@@ -9,16 +9,16 @@ import {
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Badge, Typography } from "@/src/components/ui";
-import { useGetCustomerBalanceQuery } from "@/src/store/redux/services/api/customersApi";
+import { useGetUserCustomerFinancesQuery } from "@/src/store/redux/services/api/userCustomersApi";
+import type { UserCustomerPeriod } from "@/src/store/redux/services/api-types";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import RetryInline from "@/src/components/shared/retryInline";
 
-const PERIODS = [
-  { label: "Неделя", value: "week" },
-  { label: "Месяц", value: "month" },
-  { label: "Год", value: "year" },
-  { label: "Всё время", value: "all" },
+const PERIODS: { label: string; value: UserCustomerPeriod }[] = [
+  { label: "7 дней", value: "last_7_days" },
+  { label: "30 дней", value: "last_30_days" },
+  { label: "90 дней", value: "last_90_days" },
 ];
 
 const formatPrice = (cents: number) => {
@@ -27,7 +27,7 @@ const formatPrice = (cents: number) => {
 };
 
 type LineChartProps = {
-  data: { period: string; amount_cents: number }[];
+  data: { month: string; amount_cents: number }[];
 };
 
 const LineChart = ({ data }: LineChartProps) => {
@@ -48,7 +48,7 @@ const LineChart = ({ data }: LineChartProps) => {
               className="font-inter-regular text-[10px] text-neutral-400"
               numberOfLines={1}
             >
-              {item.period}
+              {item.month}
             </Text>
           )}
         </View>
@@ -61,10 +61,12 @@ type Props = { customerId: number };
 
 const ClientBalance = ({ customerId }: Props) => {
   const auth = useRequiredAuth();
-  const [period, setPeriod] = useState("all");
+  const [period, setPeriod] = useState<UserCustomerPeriod>("last_30_days");
 
-  const { data, isLoading, isError, refetch } = useGetCustomerBalanceQuery(
-    auth ? { userId: auth.userId, customerId, period } : skipToken,
+  const { data, isLoading, isError, refetch } = useGetUserCustomerFinancesQuery(
+    auth
+      ? { userId: auth.userId, id: customerId, params: { period } }
+      : skipToken,
   );
 
   const { refreshing, onRefresh } = useRefresh(refetch);
@@ -101,7 +103,7 @@ const ClientBalance = ({ customerId }: Props) => {
                   Общая сумма
                 </Text>
                 <Text className="font-inter-bold text-[36px] text-neutral-900">
-                  {data ? formatPrice(data.total_cents) : "—"}
+                  {data ? formatPrice(data.total_income_cents) : "—"}
                 </Text>
               </>
             )}
@@ -151,7 +153,7 @@ const ClientBalance = ({ customerId }: Props) => {
                         className="bg-white rounded-2xl p-4 flex-row items-center justify-between"
                       >
                         <Text className="font-inter-regular text-body text-neutral-700">
-                          {item.period}
+                          {item.month}
                         </Text>
                         <Text className="font-inter-semibold text-body text-neutral-900">
                           {formatPrice(item.amount_cents)}

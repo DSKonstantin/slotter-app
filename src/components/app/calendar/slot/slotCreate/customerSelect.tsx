@@ -18,7 +18,7 @@ import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { clearCreatedCustomer } from "@/src/store/redux/slices/slotDraftSlice";
-import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import RetryInline from "@/src/components/shared/retryInline";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 
@@ -40,14 +40,14 @@ const CustomerSelect = () => {
     isLoading: isCustomersLoading,
     isError: isCustomersError,
     refetch: refetchCustomers,
-  } = useGetCustomersQuery(auth ? { userId: auth.userId } : skipToken);
+  } = useGetUserCustomersQuery(auth ? { userId: auth.userId } : skipToken);
 
   const customerItems = useMemo<CustomerOption[]>(
     () =>
-      (customersData?.customers ?? []).map((c) => ({
-        id: String(c.id),
-        title: c.name,
-        avatarUrl: c.avatar_url,
+      (customersData?.user_customers ?? []).map((uc) => ({
+        id: String(uc.customer.id),
+        title: uc.customer.name,
+        avatarUrl: uc.customer.avatar_url,
       })),
     [customersData],
   );

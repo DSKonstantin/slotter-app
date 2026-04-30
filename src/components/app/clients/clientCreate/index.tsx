@@ -18,12 +18,10 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useContactsPermission } from "@/src/hooks/useContactsPermission";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
-import {
-  useCreateCustomerMutation,
-  useGetCustomerTagsQuery,
-} from "@/src/store/redux/services/api/customersApi";
+import { useGetCustomerTagsQuery } from "@/src/store/redux/services/api/customersApi";
+import { useCreateUserCustomerMutation } from "@/src/store/redux/services/api/userCustomersApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import type { Customer } from "@/src/store/redux/services/api-types";
+import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { colors } from "@/src/styles/colors";
 import ContactPickerModal, {
   type PickedContact,
@@ -33,7 +31,7 @@ import { unMask } from "react-native-mask-text";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type ClientCreateProps = {
-  onCreated?: (customer: Customer) => void;
+  onCreated?: (userCustomer: UserCustomer) => void;
 };
 
 const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
@@ -60,25 +58,31 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   const { release } = useFormNavigationGuard(isDirty);
   const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
 
-  const [createCustomer, { isLoading }] = useCreateCustomerMutation();
+  const [createUserCustomer, { isLoading }] = useCreateUserCustomerMutation();
 
   const onSubmit = useCallback(
     async (values: ClientCreateFormValues) => {
+      if (!auth) return;
       try {
-        const { customer } = await createCustomer({
-          name: values.name.trim(),
-          phone: `+${unMask(values?.phone ?? "")}`,
-          note: values.comment?.trim() || undefined,
-          customer_tag_id: values.customer_tag?.id ?? undefined,
+        const { user_customer } = await createUserCustomer({
+          userId: auth.userId,
+          body: {
+            customer: {
+              name: values.name.trim() || undefined,
+              phone: `+${unMask(values?.phone ?? "")}`,
+            },
+            customer_tag_id: values.customer_tag?.id ?? undefined,
+            note: values.comment?.trim() || undefined,
+          },
         }).unwrap();
-        onCreated?.(customer);
+        onCreated?.(user_customer);
         release();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать клиента"));
       }
     },
-    [createCustomer, onCreated, release],
+    [auth, createUserCustomer, onCreated, release],
   );
 
   const handleContactsPress = useCallback(async () => {
