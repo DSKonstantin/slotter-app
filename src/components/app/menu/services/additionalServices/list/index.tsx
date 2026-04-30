@@ -148,7 +148,6 @@ const AdditionalServicesList = () => {
             <ErrorScreen
               title="Не удалось загрузить услуги"
               isLoading={isFetching}
-              withTabBar={false}
               onRetry={onRefresh}
             />
           );

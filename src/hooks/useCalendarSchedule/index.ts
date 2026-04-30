@@ -16,8 +16,15 @@ export const useCalendarSchedule = (current: Date) => {
 
   const [modalTemplate, setModalTemplate] = useState(false);
 
-  const { auth, workingDaysData, appointmentDates, initialFormValues } =
-    useCalendarData(current);
+  const {
+    auth,
+    workingDaysData,
+    appointmentDates,
+    initialFormValues,
+    isLoading,
+    isError,
+    refetch,
+  } = useCalendarData(current);
 
   const {
     methods,
@@ -81,6 +88,9 @@ export const useCalendarSchedule = (current: Date) => {
     modalTemplate,
     setModalTemplate,
     isSaving,
+    isLoading,
+    isError,
+    refetch,
     hasPendingEditableSelection,
     clearSelection,
     toggleDay,

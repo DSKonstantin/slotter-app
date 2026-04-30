@@ -20,6 +20,7 @@ import { Avatar, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import RetryInline from "@/src/components/shared/retryInline";
 import {
   useCreateChatRoomMutation,
   useGetChatRoomsQuery,
@@ -79,7 +80,12 @@ export function NewChatSheet({ visible, onClose }: Props) {
   const [creatingId, setCreatingId] = useState<number | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: customersData } = useGetCustomersQuery(
+  const {
+    data: customersData,
+    isLoading: isCustomersLoading,
+    isError: isCustomersError,
+    refetch: refetchCustomers,
+  } = useGetCustomersQuery(
     auth
       ? { userId: auth.userId, query: debouncedSearch || undefined }
       : { userId: 0 },
@@ -186,30 +192,43 @@ export function NewChatSheet({ visible, onClose }: Props) {
         </View>
       </View>
 
-      <FlatList<RowItem>
-        data={customers}
-        keyExtractor={(item) => String(item.id)}
-        keyboardShouldPersistTaps="handled"
-        style={{ maxHeight: height * 0.5 }}
-        renderItem={({ item }) => (
-          <CustomerRow
-            item={item}
-            isCreating={creatingId === item.id}
-            anyCreating={creatingId !== null}
-            onPress={handleSelect}
+      {isCustomersLoading && customers.length === 0 ? (
+        <View className="items-center justify-center py-10">
+          <ActivityIndicator color={colors.neutral[400]} />
+        </View>
+      ) : isCustomersError && customers.length === 0 ? (
+        <View className="px-screen py-6">
+          <RetryInline
+            text="Не удалось загрузить клиентов"
+            onRetry={refetchCustomers}
           />
-        )}
-        ItemSeparatorComponent={() => (
-          <View className="mx-screen h-px bg-neutral-100" />
-        )}
-        ListEmptyComponent={
-          <View className="items-center justify-center py-10 gap-2">
-            <Typography className="text-body text-neutral-400">
-              {search ? "Клиенты не найдены" : "Нет клиентов"}
-            </Typography>
-          </View>
-        }
-      />
+        </View>
+      ) : (
+        <FlatList<RowItem>
+          data={customers}
+          keyExtractor={(item) => String(item.id)}
+          keyboardShouldPersistTaps="handled"
+          style={{ maxHeight: height * 0.5 }}
+          renderItem={({ item }) => (
+            <CustomerRow
+              item={item}
+              isCreating={creatingId === item.id}
+              anyCreating={creatingId !== null}
+              onPress={handleSelect}
+            />
+          )}
+          ItemSeparatorComponent={() => (
+            <View className="mx-screen h-px bg-neutral-100" />
+          )}
+          ListEmptyComponent={
+            <View className="items-center justify-center py-10 gap-2">
+              <Typography className="text-body text-neutral-400">
+                {search ? "Клиенты не найдены" : "Нет клиентов"}
+              </Typography>
+            </View>
+          }
+        />
+      )}
     </StModal>
   );
 }

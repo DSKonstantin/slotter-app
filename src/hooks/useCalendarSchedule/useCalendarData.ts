@@ -22,11 +22,19 @@ export const useCalendarData = (current: Date) => {
     };
   }, [auth, current]);
 
-  const { data: workingDaysData } = useGetWorkingDaysQuery(
-    dateRange ?? skipToken,
-  );
+  const {
+    data: workingDaysData,
+    isLoading: isWorkingDaysLoading,
+    isError: isWorkingDaysError,
+    refetch: refetchWorkingDays,
+  } = useGetWorkingDaysQuery(dateRange ?? skipToken);
 
-  const { data: appointmentsData } = useGetAppointmentsQuery(
+  const {
+    data: appointmentsData,
+    isLoading: isAppointmentsLoading,
+    isError: isAppointmentsError,
+    refetch: refetchAppointments,
+  } = useGetAppointmentsQuery(
     dateRange
       ? {
           userId: dateRange.userId,
@@ -50,10 +58,18 @@ export const useCalendarData = (current: Date) => {
     [current, workingDaysData],
   );
 
+  const refetch = () => {
+    refetchWorkingDays();
+    refetchAppointments();
+  };
+
   return {
     auth,
     workingDaysData,
     appointmentDates,
     initialFormValues,
+    isLoading: isWorkingDaysLoading || isAppointmentsLoading,
+    isError: isWorkingDaysError || isAppointmentsError,
+    refetch,
   };
 };

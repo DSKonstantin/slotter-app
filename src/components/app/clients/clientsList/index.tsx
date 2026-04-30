@@ -22,6 +22,7 @@ import { colors } from "@/src/styles/colors";
 import type { Customer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
@@ -71,9 +72,11 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
   ).current;
 
-  const { data: tagsData } = useGetCustomerTagsQuery(
-    auth ? { userId: auth.userId } : skipToken,
-  );
+  const {
+    data: tagsData,
+    isError: isTagsError,
+    refetch: refetchTags,
+  } = useGetCustomerTagsQuery(auth ? { userId: auth.userId } : skipToken);
 
   const filters = useMemo(
     () => [
@@ -125,6 +128,11 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
+  const handleSetTagId = useCallback(
+    (value?: number) => dispatch(setTagId(value)),
+    [dispatch],
+  );
+
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
@@ -149,9 +157,17 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
                 key={f.label}
                 title={f.label}
                 variant={tagId === f.value ? "accent" : "secondary"}
-                onPress={() => dispatch(setTagId(f.value))}
+                onPress={() => handleSetTagId(f.value)}
               />
             ))}
+            {isTagsError && (
+              <RetryInline
+                text="Не удалось загрузить теги"
+                buttonText="Обновить"
+                onRetry={refetchTags}
+                className="px-screen"
+              />
+            )}
           </View>
 
           <View className="flex-row gap-2.5 px-screen mb-5">

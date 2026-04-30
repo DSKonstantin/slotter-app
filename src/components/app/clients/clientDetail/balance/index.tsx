@@ -12,6 +12,7 @@ import { Badge, Typography } from "@/src/components/ui";
 import { useGetCustomerBalanceQuery } from "@/src/store/redux/services/api/customersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import RetryInline from "@/src/components/shared/retryInline";
 
 const PERIODS = [
   { label: "Неделя", value: "week" },
@@ -62,7 +63,7 @@ const ClientBalance = ({ customerId }: Props) => {
   const auth = useRequiredAuth();
   const [period, setPeriod] = useState("all");
 
-  const { data, isLoading, refetch } = useGetCustomerBalanceQuery(
+  const { data, isLoading, isError, refetch } = useGetCustomerBalanceQuery(
     auth ? { userId: auth.userId, customerId, period } : skipToken,
   );
 
@@ -88,6 +89,12 @@ const ClientBalance = ({ customerId }: Props) => {
           <View className="px-screen items-center py-4">
             {isLoading ? (
               <ActivityIndicator />
+            ) : isError ? (
+              <RetryInline
+                text="Не удалось загрузить баланс"
+                onRetry={refetch}
+                layout="column"
+              />
             ) : (
               <>
                 <Text className="font-inter-regular text-caption text-neutral-500 mb-1">

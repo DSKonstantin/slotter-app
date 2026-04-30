@@ -23,6 +23,7 @@ import {
 } from "@/src/store/redux/services/api/chatMessagesApi";
 import type { ChatIMessage } from "@/src/utils/chat/types";
 import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
+import RetryInline from "@/src/components/shared/retryInline";
 import ChatBubble from "./components/ChatBubble";
 import ChatMessageImages from "./components/ChatMessageImages";
 import ChatInputBar from "./components/ChatInputBar";
@@ -104,6 +105,8 @@ export default function ChatRoom({ roomId }: Props) {
     data: chatData,
     isFetching,
     isLoading,
+    isError,
+    refetch,
   } = useGetChatMessagesQuery(
     { chatRoomId: id, cursor },
     { skip: !id, refetchOnReconnect: true },
@@ -400,7 +403,20 @@ export default function ChatRoom({ roomId }: Props) {
       >
         {({ topInset }) => (
           <SafeAreaView className="flex-1" edges={["left", "right"]}>
-            <GiftedChat<ChatIMessage>
+            {isLoading ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : isError && messages.length === 0 ? (
+              <View className="flex-1 items-center justify-center px-screen">
+                <RetryInline
+                  text="Не удалось загрузить сообщения"
+                  onRetry={refetch}
+                  layout="column"
+                />
+              </View>
+            ) : (
+              <GiftedChat<ChatIMessage>
               messages={messages}
               onSend={onSend}
               user={{ _id: currentGiftedId ?? 0 }}
@@ -507,6 +523,7 @@ export default function ChatRoom({ roomId }: Props) {
                 onEndReachedThreshold: 0.2,
               }}
             />
+            )}
           </SafeAreaView>
         )}
       </ScreenWithToolbar>

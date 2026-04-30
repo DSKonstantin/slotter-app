@@ -108,7 +108,7 @@ const ServiceFormBody = ({
 
       <CreateAdditionalService />
 
-      <View className="px-screen">
+      <View className="px-screen mt-4">
         <ServiceImagesPicker value={photos} onChange={setPhotos} />
 
         <Button

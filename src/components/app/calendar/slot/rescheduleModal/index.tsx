@@ -23,6 +23,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
+import RetryInline from "@/src/components/shared/retryInline";
 
 type Props = {
   visible: boolean;
@@ -56,22 +57,26 @@ const RescheduleModal = ({
 
   const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(dateValue ?? "");
 
-  const { data: availableSlots, isFetching: isFetchingSlots } =
-    useGetAvailableSlotsQuery(
-      auth
-        ? {
-            userId: auth.userId,
-            date: dateValue,
-            step: 15,
-            appointment_id: appointmentId,
-          }
-        : skipToken,
+  const {
+    data: availableSlots,
+    isFetching: isFetchingSlots,
+    isError: isSlotsError,
+    refetch: refetchSlots,
+  } = useGetAvailableSlotsQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          date: dateValue,
+          step: 15,
+          appointment_id: appointmentId,
+        }
+      : skipToken,
 
-      {
-        skip: !visible || !isValidDate,
-        refetchOnMountOrArgChange: true,
-      },
-    );
+    {
+      skip: !visible || !isValidDate,
+      refetchOnMountOrArgChange: true,
+    },
+  );
 
   const [reschedule, { isLoading }] = useRescheduleAppointmentMutation();
 
@@ -173,11 +178,23 @@ const RescheduleModal = ({
             </View>
           )}
 
-          {!isFetchingSlots && isValidDate && availableSlots?.length === 0 && (
-            <Typography className="text-caption text-neutral-400 mt-5 text-center">
-              Нет доступных слотов на эту дату
-            </Typography>
+          {!isFetchingSlots && isSlotsError && (
+            <View className="mt-5">
+              <RetryInline
+                text="Не удалось загрузить слоты"
+                onRetry={refetchSlots}
+              />
+            </View>
           )}
+
+          {!isFetchingSlots &&
+            !isSlotsError &&
+            isValidDate &&
+            availableSlots?.length === 0 && (
+              <Typography className="text-caption text-neutral-400 mt-5 text-center">
+                Нет доступных слотов на эту дату
+              </Typography>
+            )}
         </View>
 
         <View className="mt-6 gap-3">

@@ -23,6 +23,7 @@ export const api = createApi({
     "WorkingDayBreaks",
     "Appointments",
     "Customers",
+    "UserCustomers",
     "CustomerTags",
     "GalleryPhotos",
     "User",

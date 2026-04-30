@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import BirthdayBadge from "@/src/components/app/clients/shared/birthdayBadge";
 import {
   Button,
@@ -26,8 +27,12 @@ import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 type Props = { customerId: number };
 
 const ClientDetail = ({ customerId }: Props) => {
-  const { data: customerData, isLoading: customerLoading } =
-    useGetCustomerQuery({ customerId });
+  const {
+    data: customerData,
+    isLoading: customerLoading,
+    isError: customerError,
+    refetch: refetchCustomer,
+  } = useGetCustomerQuery({ customerId });
 
   const [updateCustomer, { isLoading: isSaving }] = useUpdateCustomerMutation();
   const [createChatRoom] = useCreateChatRoomMutation();
@@ -55,13 +60,26 @@ const ClientDetail = ({ customerId }: Props) => {
     } catch {}
   };
 
-  if (customerLoading || !customer) {
+  if (customerLoading) {
     return (
       <ScreenWithToolbar title="Карточка клиента">
         {() => (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator />
           </View>
+        )}
+      </ScreenWithToolbar>
+    );
+  }
+
+  if (customerError || !customer) {
+    return (
+      <ScreenWithToolbar title="Карточка клиента">
+        {() => (
+          <ErrorScreen
+            title="Не удалось загрузить клиента"
+            onRetry={refetchCustomer}
+          />
         )}
       </ScreenWithToolbar>
     );

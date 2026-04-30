@@ -56,6 +56,28 @@ export type {
   UpdateCustomerTagPayload,
 } from "./customer";
 export type {
+  UserCustomer,
+  UserCustomerPerson,
+  UserCustomerStats,
+  UserCustomerSort,
+  UserCustomerPeriod,
+  GetUserCustomersParams,
+  GetUserCustomersResponse,
+  GetUserCustomerResponse,
+  CreateUserCustomerPayload,
+  UpdateUserCustomerPayload,
+  GetUserCustomerAppointmentsParams,
+  GetUserCustomerAppointmentsResponse,
+  GetUserCustomerFinancesParams,
+  UserCustomerFinancesPayment,
+  UserCustomerFinancesChartPoint,
+  GetUserCustomerFinancesResponse,
+  GetUserCustomersStatisticsParams,
+  GetUserCustomersStatisticsResponse,
+  UserCustomersStatisticDelta,
+  UserCustomersStatisticAvgCheck,
+} from "./userCustomer";
+export type {
   WorkingDay,
   WorkingDayBreak,
   WorkingDayBreaksAttributesPayload,

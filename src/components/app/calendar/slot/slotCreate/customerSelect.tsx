@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Controller, useFormContext } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -19,6 +19,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { clearCreatedCustomer } from "@/src/store/redux/slices/slotDraftSlice";
 import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import RetryInline from "@/src/components/shared/retryInline";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 
 type CustomerOption = AutocompleteItem & { avatarUrl?: string | null };
@@ -34,9 +35,12 @@ const CustomerSelect = () => {
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
 
-  const { data: customersData } = useGetCustomersQuery(
-    auth ? { userId: auth.userId } : skipToken,
-  );
+  const {
+    data: customersData,
+    isLoading: isCustomersLoading,
+    isError: isCustomersError,
+    refetch: refetchCustomers,
+  } = useGetCustomersQuery(auth ? { userId: auth.userId } : skipToken);
 
   const customerItems = useMemo<CustomerOption[]>(
     () =>
@@ -150,7 +154,18 @@ const CustomerSelect = () => {
           }
         />
         <View>
-          {filteredCustomers.length === 0 ? (
+          {isCustomersLoading ? (
+            <View className="items-center py-6">
+              <ActivityIndicator color={colors.neutral[400]} />
+            </View>
+          ) : isCustomersError ? (
+            <View className="py-4">
+              <RetryInline
+                text="Не удалось загрузить клиентов"
+                onRetry={refetchCustomers}
+              />
+            </View>
+          ) : filteredCustomers.length === 0 ? (
             <View className="flex-1 items-center justify-center gap-2 mt-2 mb-4">
               <StSvg name="Chat_search" size={32} color={colors.neutral[400]} />
               <Typography className="text-body text-neutral-500 text-center">

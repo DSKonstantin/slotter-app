@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useFocusEffect, router, useLocalSearchParams } from "expo-router";
-import { Alert, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
@@ -9,6 +9,7 @@ import { FormProvider } from "react-hook-form";
 
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
@@ -39,6 +40,9 @@ const CalendarSchedule = () => {
     modalTemplate,
     setModalTemplate,
     isSaving,
+    isLoading,
+    isError,
+    refetch,
     clearSelection,
     toggleDay,
     handleSave,
@@ -152,17 +156,28 @@ const CalendarSchedule = () => {
             className="flex-1 px-screen"
             style={{ paddingTop: topInset }}
           >
-            <Calendar
-              key={format(current, "yyyy-MM")}
-              initialDate={formatApiDate(current)}
-              firstDay={1}
-              hideArrows
-              hideExtraDays={true}
-              renderHeader={renderHeader}
-              theme={scheduleCalendarTheme}
-              style={calendarStyle.calendar}
-              dayComponent={renderDay}
-            />
+            {isLoading ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : isError ? (
+              <ErrorScreen
+                title="Не удалось загрузить расписание"
+                onRetry={refetch}
+              />
+            ) : (
+              <Calendar
+                key={format(current, "yyyy-MM")}
+                initialDate={formatApiDate(current)}
+                firstDay={1}
+                hideArrows
+                hideExtraDays={true}
+                renderHeader={renderHeader}
+                theme={scheduleCalendarTheme}
+                style={calendarStyle.calendar}
+                dayComponent={renderDay}
+              />
+            )}
           </SafeAreaView>
         )}
       </ScreenWithToolbar>

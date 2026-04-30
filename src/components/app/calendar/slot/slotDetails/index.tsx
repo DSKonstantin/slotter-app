@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -26,7 +26,7 @@ import { Routers } from "@/src/constants/routers";
 import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
 import RescheduleModal from "@/src/components/app/calendar/slot/rescheduleModal";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
-import { formatTimeString } from "@/src/utils/date/formatTime";
+import { formatDayMonth, formatTimeString } from "@/src/utils/date/formatTime";
 import {
   formatRublesFromCents,
   centsToRubles,
@@ -52,6 +52,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [editingField, setEditingField] = useState<EditingField>(null);
+  const isSavingRef = useRef(false);
 
   const {
     data: slot,
@@ -76,6 +77,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
   const handleSave = async () => {
     if (!slot || !editingField) return;
+    if (isSavingRef.current) return;
 
     const duration = Number(methods.getValues("duration"));
     const price = Number(methods.getValues("price"));
@@ -104,6 +106,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       }
     }
 
+    isSavingRef.current = true;
     try {
       await updateAppointment({
         id,
@@ -118,6 +121,8 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       setEditingField(null);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
@@ -126,7 +131,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     return {
       canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
       statusConfig: STATUS_CONFIG[slot.status] ?? null,
-      timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
+      timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
       serviceNames: slot.services.map((s) => s.name).join(", "),
       additionalServiceNames: slot.additional_services
         .map((s) => s.name)

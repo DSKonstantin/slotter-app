@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -34,11 +34,16 @@ const HatchPattern: React.FC = () => (
 const FilteredSlotBlock: React.FC = () => {
   const dispatch = useAppDispatch();
 
+  const handleOpenFilter = useCallback(
+    () => dispatch(setFilterModalOpen(true)),
+    [dispatch],
+  );
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       className="relative flex-1 rounded-base flex-row items-center overflow-hidden border border-neutral-200 bg-background px-4 mb-1"
-      onPress={() => dispatch(setFilterModalOpen(true))}
+      onPress={handleOpenFilter}
     >
       <HatchPattern />
       <View className="items-center flex-row">

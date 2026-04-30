@@ -4,6 +4,7 @@ import { Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
+import RetryInline from "@/src/components/shared/retryInline";
 import type { Service } from "@/src/store/redux/services/api-types";
 
 type Props = {
@@ -12,11 +13,15 @@ type Props = {
 };
 
 const ServicePicker = ({ userId, onSelect }: Props) => {
-  const { data: categoriesData, isLoading } =
-    useGetServiceCategoriesInfiniteQuery({
-      userId,
-      params: { view: "public_profile" },
-    });
+  const {
+    data: categoriesData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetServiceCategoriesInfiniteQuery({
+    userId,
+    params: { view: "public_profile" },
+  });
 
   const sections = useMemo(
     () =>
@@ -33,6 +38,17 @@ const ServicePicker = ({ userId, onSelect }: Props) => {
     return (
       <View className="items-center py-6">
         <ActivityIndicator color={colors.neutral[400]} />
+      </View>
+    );
+  }
+  if (isError) {
+    return (
+      <View className="py-6">
+        <RetryInline
+          text="Не удалось загрузить услуги"
+          onRetry={refetch}
+          layout="column"
+        />
       </View>
     );
   }

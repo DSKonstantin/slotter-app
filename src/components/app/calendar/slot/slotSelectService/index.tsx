@@ -29,6 +29,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import RetryInline from "@/src/components/shared/retryInline";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
@@ -107,15 +108,24 @@ const SlotSelectService: React.FC<Props> = ({
   const showServices = mode !== "additional";
   const showAdditional = mode !== "services";
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useGetServiceCategoriesInfiniteQuery(
-      auth && showServices
-        ? { userId: auth.userId, params: { view: "public_profile" } }
-        : skipToken,
-    );
+  const {
+    data,
+    isLoading,
+    isError: isCategoriesError,
+    refetch: refetchCategories,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetServiceCategoriesInfiniteQuery(
+    auth && showServices
+      ? { userId: auth.userId, params: { view: "public_profile" } }
+      : skipToken,
+  );
 
   const {
     data: additionalData,
+    isError: isAdditionalError,
+    refetch: refetchAdditional,
     fetchNextPage: fetchAdditionalNextPage,
     hasNextPage: hasAdditionalNextPage,
     isFetchingNextPage: isAdditionalFetchingNextPage,
@@ -334,6 +344,17 @@ const SlotSelectService: React.FC<Props> = ({
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
                 <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : isCategoriesError || isAdditionalError ? (
+              <View className="flex-1 items-center justify-center px-screen">
+                <RetryInline
+                  text="Не удалось загрузить услуги"
+                  onRetry={() => {
+                    if (isCategoriesError) refetchCategories();
+                    if (isAdditionalError) refetchAdditional();
+                  }}
+                  layout="column"
+                />
               </View>
             ) : showEmptyState ? (
               <View className="flex-1 items-center justify-center gap-4">

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
@@ -21,9 +21,13 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
     userId ? { userId, params: { date } } : skipToken,
   );
 
-  const appointments = ((data as Appointment[] | undefined) ?? [])
-    .slice()
-    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  const appointments = useMemo(
+    () =>
+      ((data as Appointment[] | undefined) ?? [])
+        .slice()
+        .sort((a, b) => a.start_time.localeCompare(b.start_time)),
+    [data],
+  );
 
   if (isLoading) {
     return <ActivityIndicator />;

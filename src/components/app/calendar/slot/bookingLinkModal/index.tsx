@@ -9,6 +9,7 @@ import {
   SegmentedControl,
 } from "@/src/components/ui";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
+import RetryInline from "@/src/components/shared/retryInline";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -34,7 +35,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
     defaultValues: { client: null, message: "" },
   });
 
-  const { data, isLoading } = useGetCustomersQuery(
+  const { data, isLoading, isError, refetch } = useGetCustomersQuery(
     auth ? { userId: auth.userId, items: 100 } : { userId: 0 },
     { skip: !visible || !auth },
   );
@@ -74,6 +75,12 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             items={clientItems}
             emptyText={isLoading ? "Загрузка..." : "Нет клиентов"}
           />
+          {isError && (
+            <RetryInline
+              text="Не удалось загрузить клиентов"
+              onRetry={refetch}
+            />
+          )}
 
           <SegmentedControl
             options={CHANNEL_OPTIONS}

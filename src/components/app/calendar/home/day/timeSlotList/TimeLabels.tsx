@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Typography } from "@/src/components/ui";
 import { MINUTE_HEIGHT } from "./constants";
 import { formatTime } from "./utils";
@@ -9,29 +9,30 @@ type TimeLabelsProps = {
 };
 
 const TimeLabels = ({ segStart, segEnd }: TimeLabelsProps) => {
-  const firstHour = Math.ceil(segStart / 60);
-  const lastHour = Math.floor(segEnd / 60);
+  const hourMinutes = useMemo(() => {
+    const firstHour = Math.ceil(segStart / 60);
+    const lastHour = Math.floor(segEnd / 60);
+    return Array.from(
+      { length: lastHour - firstHour + 1 },
+      (_, i) => (firstHour + i) * 60,
+    ).filter((hMin) => hMin >= segStart && hMin < segEnd);
+  }, [segStart, segEnd]);
 
   return (
     <>
-      {Array.from(
-        { length: lastHour - firstHour + 1 },
-        (_, i) => (firstHour + i) * 60,
-      )
-        .filter((hMin) => hMin >= segStart && hMin < segEnd)
-        .map((hMin) => (
-          <Typography
-            key={hMin}
-            className="text-caption text-gray-500 absolute"
-            style={{
-              top: (hMin - segStart) * MINUTE_HEIGHT,
-            }}
-          >
-            {formatTime(hMin)}
-          </Typography>
-        ))}
+      {hourMinutes.map((hMin) => (
+        <Typography
+          key={hMin}
+          className="text-caption text-gray-500 absolute"
+          style={{
+            top: (hMin - segStart) * MINUTE_HEIGHT,
+          }}
+        >
+          {formatTime(hMin)}
+        </Typography>
+      ))}
     </>
   );
 };
 
-export default TimeLabels;
+export default React.memo(TimeLabels);

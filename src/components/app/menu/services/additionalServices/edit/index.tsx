@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import { ActivityIndicator, Alert, Text, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import AdditionalServicesForm from "@/src/components/app/menu/services/additionalServices/additionalServicesForm";
 import { FormProvider, useForm } from "react-hook-form";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button } from "@/src/components/ui";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
@@ -129,16 +129,11 @@ const AdditionalServiceEdit = () => {
   if (isError || !service) {
     return (
       <ScreenWithToolbar title="Редактировать доп. услугу">
-        <View className="flex-1 items-center justify-center gap-4 px-screen">
-          <Text className="text-body text-accent-red-500">Ошибка загрузки</Text>
-          <Button
-            title="Повторить"
-            onPress={refetch}
-            loading={isFetching}
-            disabled={isFetching}
-            buttonClassName="w-full"
-          />
-        </View>
+        <ErrorScreen
+          title="Не удалось загрузить услугу"
+          isLoading={isFetching}
+          onRetry={refetch}
+        />
       </ScreenWithToolbar>
     );
   }

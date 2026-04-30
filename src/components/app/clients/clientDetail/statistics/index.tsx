@@ -12,6 +12,7 @@ import { Badge, Typography } from "@/src/components/ui";
 import { useGetCustomerStatsQuery } from "@/src/store/redux/services/api/customersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import RetryInline from "@/src/components/shared/retryInline";
 
 const PERIODS = [
   { label: "Неделя", value: "week" },
@@ -51,7 +52,7 @@ const ClientStatistics = ({ customerId }: Props) => {
   const auth = useRequiredAuth();
   const [period, setPeriod] = useState("month");
 
-  const { data, isLoading, refetch } = useGetCustomerStatsQuery(
+  const { data, isLoading, isError, refetch } = useGetCustomerStatsQuery(
     auth ? { userId: auth.userId, customerId, period } : skipToken,
   );
 
@@ -89,6 +90,14 @@ const ClientStatistics = ({ customerId }: Props) => {
           {isLoading ? (
             <View className="flex-1 items-center justify-center py-20">
               <ActivityIndicator />
+            </View>
+          ) : isError ? (
+            <View className="px-screen py-10">
+              <RetryInline
+                text="Не удалось загрузить статистику"
+                onRetry={refetch}
+                layout="column"
+              />
             </View>
           ) : (
             <>

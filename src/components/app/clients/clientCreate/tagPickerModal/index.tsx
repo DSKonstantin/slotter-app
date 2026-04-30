@@ -5,6 +5,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetCustomerTagsQuery } from "@/src/store/redux/services/api/customersApi";
+import RetryInline from "@/src/components/shared/retryInline";
 import type { CustomerTag } from "@/src/store/redux/services/api-types";
 import CreateTagModal from "../createTagModal";
 
@@ -53,7 +54,7 @@ const TagPickerModal = ({
 }: Props) => {
   const [createVisible, setCreateVisible] = useState(false);
 
-  const { data, isLoading } = useGetCustomerTagsQuery(
+  const { data, isLoading, isError, refetch } = useGetCustomerTagsQuery(
     visible ? { userId } : skipToken,
   );
 
@@ -85,6 +86,10 @@ const TagPickerModal = ({
         {isLoading ? (
           <View className="items-center justify-center py-10">
             <ActivityIndicator />
+          </View>
+        ) : isError ? (
+          <View className="px-screen py-6">
+            <RetryInline text="Не удалось загрузить теги" onRetry={refetch} />
           </View>
         ) : (
           <FlatList

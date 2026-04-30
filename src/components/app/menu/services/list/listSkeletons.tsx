@@ -117,7 +117,7 @@ const SERVICE_CATEGORIES = [
 
 const ServiceListSkeletonComponent = () => {
   const { width } = useWindowDimensions();
-  const contentWidth = width;
+  const contentWidth = width - 40;
   const innerWidth = contentWidth - CARD_PAD * 2;
 
   return (
