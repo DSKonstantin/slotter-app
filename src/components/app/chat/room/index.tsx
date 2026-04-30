@@ -106,7 +106,7 @@ export default function ChatRoom({ roomId }: Props) {
     isLoading,
   } = useGetChatMessagesQuery(
     { chatRoomId: id, cursor },
-    { skip: !id, refetchOnMountOrArgChange: true },
+    { skip: !id, refetchOnReconnect: true },
   );
 
   const messages = chatData?.messages ?? EMPTY_MESSAGES;

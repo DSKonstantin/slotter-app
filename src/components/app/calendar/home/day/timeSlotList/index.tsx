@@ -28,6 +28,7 @@ import {
 type TimeSlotListProps = {
   appointments: Appointment[];
   breaks?: WorkingDayBreak[];
+  workingDayId?: number;
   startAt?: string;
   endAt?: string;
   date?: string;
@@ -37,6 +38,7 @@ type TimeSlotListProps = {
 const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointments,
   breaks = [],
+  workingDayId,
   startAt,
   endAt,
   date,
@@ -97,7 +99,10 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
           <View className="flex-1 pl-2.5 relative">
             {content.kind === "break" ? (
-              <BreakBlock breakItem={content.breakItem} />
+              <BreakBlock
+                breakItem={content.breakItem}
+                workingDayId={workingDayId}
+              />
             ) : (
               <>
                 {content.slots.map((slot) => (

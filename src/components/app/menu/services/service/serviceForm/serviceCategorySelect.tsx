@@ -8,12 +8,39 @@ import React, {
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
+import ContentLoader, { Rect } from "react-content-loader/native";
 
 import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import CreateCategoryModal from "@/src/components/app/menu/services/categories/createCategoryModal";
+import RetryInline from "@/src/components/shared/retryInline";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+
+const CATEGORY_SKELETON_WIDTHS = [96, 72, 120, 84, 64];
+
+const CategoriesSkeleton = () => (
+  <View
+    className="mb-2 flex-row"
+    style={{ paddingHorizontal: 20 }}
+    accessibilityLabel="Loading categories"
+    accessible
+  >
+    {CATEGORY_SKELETON_WIDTHS.map((width, index) => (
+      <View key={index} style={{ marginRight: 8 }}>
+        <ContentLoader
+          speed={1.2}
+          width={width}
+          height={36}
+          backgroundColor={colors.neutral[100]}
+          foregroundColor="#F5F5FA"
+        >
+          <Rect x={0} y={0} rx={18} ry={18} width={width} height={36} />
+        </ContentLoader>
+      </View>
+    ))}
+  </View>
+);
 
 const ServiceCategorySelect = () => {
   const auth = useRequiredAuth();
@@ -33,12 +60,19 @@ const ServiceCategorySelect = () => {
     name: "categoryId",
   });
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useGetServiceCategoriesInfiniteQuery(
-      auth
-        ? { userId: auth.userId, params: { view: "public_profile" } }
-        : skipToken,
-    );
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetServiceCategoriesInfiniteQuery(
+    auth
+      ? { userId: auth.userId, params: { view: "public_profile" } }
+      : skipToken,
+  );
 
   const categories = useMemo(() => {
     const unique = new Map<
@@ -110,9 +144,15 @@ const ServiceCategorySelect = () => {
       </Typography>
 
       {isLoading && categories.length === 0 ? (
-        <Typography className="text-caption text-neutral-500 mb-2 px-screen">
-          Загрузка категорий...
-        </Typography>
+        <CategoriesSkeleton />
+      ) : isError && categories.length === 0 ? (
+        <View className="mb-2 px-screen">
+          <RetryInline
+            text="Не удалось загрузить категории"
+            buttonText="Повторить"
+            onRetry={refetch}
+          />
+        </View>
       ) : (
         <>
           <FlatList

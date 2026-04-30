@@ -46,7 +46,6 @@ const appointmentsApi = api.injectEndpoints({
         url: `/users/${userId}/upcoming_appointments`,
         method: "GET",
       }),
-      providesTags: ["Appointments"],
     }),
 
     getAvailableSlots: builder.query<

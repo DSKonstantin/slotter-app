@@ -12,6 +12,20 @@ import SlotPicker from "./SlotPicker";
 type Mode = "menu" | "service" | "appointment";
 type AppointmentStage = "service" | "date" | "slot";
 
+type WizardState = {
+  mode: Mode;
+  stage: AppointmentStage;
+  selectedService: Service | null;
+  selectedDate: string | null;
+};
+
+const INITIAL_STATE: WizardState = {
+  mode: "menu",
+  stage: "service",
+  selectedService: null,
+  selectedDate: null,
+};
+
 export type ProposeData = {
   service: Service;
   date: string;
@@ -41,39 +55,21 @@ const AttachSheet = ({
   onPickService,
   onProposeAppointment,
 }: Props) => {
-  const [mode, setMode] = useState<Mode>("menu");
-  const [stage, setStage] = useState<AppointmentStage>("service");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  // Reset wizard state whenever the sheet closes — covers backdrop dismiss,
-  // parent-driven close (e.g. after a successful proposal), and back navigation.
-  // The 200ms delay matches the modal close animation so steps don't visibly
-  // jump back during the slide-out.
-  useEffect(() => {
-    if (visible) return;
-    const t = setTimeout(() => {
-      setMode("menu");
-      setStage("service");
-      setSelectedService(null);
-      setSelectedDate(null);
-    }, 200);
-    return () => clearTimeout(t);
-  }, [visible]);
+  const [state, setState] = useState<WizardState>(INITIAL_STATE);
+  const { mode, stage, selectedService, selectedDate } = state;
 
   const handleBack = useCallback(() => {
-    if (mode === "menu") {
-      onClose();
-      return;
-    }
-    if (mode === "service") {
-      setMode("menu");
-      return;
-    }
-    if (stage === "slot") setStage("date");
-    else if (stage === "date") setStage("service");
-    else setMode("menu");
-  }, [mode, stage, onClose]);
+    setState((prev) => {
+      if (prev.mode === "menu") {
+        onClose();
+        return prev;
+      }
+      if (prev.mode === "service") return { ...prev, mode: "menu" };
+      if (prev.stage === "slot") return { ...prev, stage: "date" };
+      if (prev.stage === "date") return { ...prev, stage: "service" };
+      return { ...prev, mode: "menu" };
+    });
+  }, [onClose]);
 
   const handleServiceTapped = useCallback(
     (service: Service) => {
@@ -82,15 +78,17 @@ const AttachSheet = ({
         onClose();
         return;
       }
-      setSelectedService(service);
-      setStage("date");
+      setState((prev) => ({
+        ...prev,
+        selectedService: service,
+        stage: "date",
+      }));
     },
     [mode, onPickService, onClose],
   );
 
   const handlePickDate = useCallback((date: string) => {
-    setSelectedDate(date);
-    setStage("slot");
+    setState((prev) => ({ ...prev, selectedDate: date, stage: "slot" }));
   }, []);
 
   const handlePickSlot = useCallback(
@@ -115,11 +113,10 @@ const AttachSheet = ({
     if (mode === "menu") {
       return (
         <AttachMenu
-          onPickService={() => setMode("service")}
-          onProposeAppointment={() => {
-            setMode("appointment");
-            setStage("service");
-          }}
+          onPickService={() => setState((p) => ({ ...p, mode: "service" }))}
+          onProposeAppointment={() =>
+            setState((p) => ({ ...p, mode: "appointment", stage: "service" }))
+          }
         />
       );
     }
@@ -141,6 +138,16 @@ const AttachSheet = ({
     }
     return null;
   };
+
+  // Reset wizard state whenever the sheet closes — covers backdrop dismiss,
+  // parent-driven close (e.g. after a successful proposal), and back navigation.
+  // The 200ms delay matches the modal close animation so steps don't visibly
+  // jump back during the slide-out.
+  useEffect(() => {
+    if (visible) return;
+    const t = setTimeout(() => setState(INITIAL_STATE), 200);
+    return () => clearTimeout(t);
+  }, [visible]);
 
   return (
     <StModal visible={visible} onClose={onClose}>

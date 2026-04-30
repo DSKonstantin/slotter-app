@@ -7,12 +7,11 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { ScrollView, View } from "react-native";
+import { FlatList, View } from "react-native";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
-import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import EditAdditionalServiceModal from "@/src/components/app/menu/services/service/createAdditionalService/editAdditionalServiceModal";
@@ -88,65 +87,64 @@ const CreateAdditionalService = () => {
         />
       </View>
 
-      <ScrollView
+      <FlatList
         className="mb-2"
         horizontal
+        data={additionalServicesFromApi}
+        keyExtractor={(service) => String(service.id)}
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 20,
+          gap: 8,
         }}
-        showsHorizontalScrollIndicator={false}
-      >
-        <View className="flex-row gap-2 py-2">
-          {map(additionalServicesFromApi, (service) => {
-            const selectedIndex = fields.findIndex(
-              (item) => item.serviceId === service.id,
-            );
+        renderItem={({ item: service }) => {
+          const selectedIndex = fields.findIndex(
+            (item) => item.serviceId === service.id,
+          );
+          const isSelected = selectedIndex !== -1;
 
-            const isSelected = selectedIndex !== -1;
-
-            return (
-              <View key={service.id} className="relative">
-                <Card
-                  title={service.name}
-                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
-                  onPress={() => handleToggle(service)}
-                  pressArea="content"
-                  active={isSelected}
-                  right={
-                    <IconButton
-                      size="xs"
-                      hitSlop={{ top: 16, bottom: 16, left: 8, right: 16 }}
-                      onPress={() => setEditingService(service)}
-                      icon={
-                        <StSvg
-                          name="Edit_light"
-                          size={24}
-                          color={colors.neutral[500]}
-                        />
-                      }
-                    />
-                  }
-                />
-
-                {isSelected && (
+          return (
+            <View className="relative">
+              <Card
+                title={service.name}
+                subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+                onPress={() => handleToggle(service)}
+                pressArea="content"
+                active={isSelected}
+                right={
                   <IconButton
-                    onPress={() => remove(selectedIndex)}
                     size="xs"
-                    buttonClassName="absolute -top-2 -right-2 bg-background rounded-full"
+                    hitSlop={{ top: 16, bottom: 16, left: 8, right: 16 }}
+                    onPress={() => setEditingService(service)}
                     icon={
                       <StSvg
-                        name="Close_round_fill_light"
-                        size={18}
-                        color={colors.neutral[900]}
+                        name="Edit_light"
+                        size={24}
+                        color={colors.neutral[500]}
                       />
                     }
                   />
-                )}
-              </View>
-            );
-          })}
-        </View>
-      </ScrollView>
+                }
+              />
+
+              {isSelected && (
+                <IconButton
+                  onPress={() => remove(selectedIndex)}
+                  size="xs"
+                  buttonClassName="absolute -top-2 -right-2 bg-background rounded-full"
+                  icon={
+                    <StSvg
+                      name="Close_round_fill_light"
+                      size={18}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                />
+              )}
+            </View>
+          );
+        }}
+      />
 
       <EditAdditionalServiceModal
         visible={!!editingService}

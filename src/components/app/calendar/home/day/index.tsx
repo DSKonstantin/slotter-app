@@ -128,7 +128,9 @@ const DayCalendarView = () => {
   }, [router, selectedDay]);
 
   const handleHighlightScroll = useCallback((y: number) => {
-    pendingScrollY.current = y + dateSelectorHeightRef.current;
+    const total = y + dateSelectorHeightRef.current;
+    pendingScrollY.current = total;
+    scrollViewRef.current?.scrollTo({ y: total, animated: true });
   }, []);
 
   const content = useMemo(() => {
@@ -160,6 +162,7 @@ const DayCalendarView = () => {
       <TimeSlotList
         appointments={appointments}
         breaks={selectedWorkingDay?.working_day_breaks}
+        workingDayId={selectedWorkingDay?.id}
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
         date={selectedDay}

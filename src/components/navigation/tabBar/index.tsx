@@ -1,9 +1,13 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Typography, StSvg, IconButton } from "@/src/components/ui";
+import {
+  Typography,
+  StSvg,
+  IconButton,
+  FadeOverlay,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { FadeOverlay } from "@/src/components/ui";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
@@ -44,9 +48,12 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         backgroundColor: "transparent",
       }}
     >
-      <FadeOverlay position="bottom" height={TAB_BAR_HEIGHT + insets.bottom + 8} />
+      <FadeOverlay
+        position="bottom"
+        height={TAB_BAR_HEIGHT + insets.bottom + 8}
+      />
       <View className="flex-row items-center justify-between px-5 bg-transparent">
-        <View className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1">
+        <View className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1 overflow-hidden">
           {TABS.map((tab) => {
             const isActive = activeRoute === tab.key;
 
@@ -67,7 +74,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
                 }}
                 className={`flex-1 px-2 py-1.5 items-center justify-center
                 h-[58px] gap-0.5
-                rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "transparent"}`}
+                rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "bg-transparent"}`}
               >
                 <StSvg
                   name={tab.icon as string}

@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useFocusEffect } from "expo-router";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetUpcomingAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
@@ -30,7 +31,15 @@ const SpecialistHomeAssistant = () => {
     refetch: refetchAppointments,
   } = useGetUpcomingAppointmentsQuery(
     auth ? { userId: auth.userId } : skipToken,
-    { refetchOnFocus: true },
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (auth) {
+        refetchAppointments();
+        refetchSchedule();
+      }
+    }, [auth, refetchAppointments, refetchSchedule]),
   );
 
   const handleRetry = useCallback(() => {

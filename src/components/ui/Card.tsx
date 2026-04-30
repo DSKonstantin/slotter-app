@@ -52,7 +52,7 @@ export const Card = ({
       {left ? <View className="mr-3">{left}</View> : null}
 
       <ContentComponent
-        className="flex-1 min-w-0"
+        className="grow shrink basis-auto min-w-0"
         {...(pressContent ? { onPress } : {})}
       >
         <View className="flex-row items-center gap-1">

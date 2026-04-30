@@ -5,19 +5,17 @@ import {
   SlotDetailsSchema,
   type SlotDetailsFormValues,
 } from "@/src/validation/schemas/slotDetails.schema";
-import { View, ActivityIndicator, RefreshControl } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  RefreshControl,
+  Pressable,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
-import {
-  Avatar,
-  Badge,
-  Card,
-  IconButton,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Avatar, Badge, Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import {
   useGetAppointmentQuery,
@@ -270,7 +268,22 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <InfoRow
                     label="Услуга"
                     right={
-                      <View className="flex-row gap-1 flex-1 justify-end">
+                      <Pressable
+                        onPress={
+                          derived!.canEdit
+                            ? () =>
+                                router.push(
+                                  Routers.app.calendar.slotSelectService({
+                                    ...derived!.serviceSelectionParams,
+                                    mode: "services",
+                                  }),
+                                )
+                            : undefined
+                        }
+                        disabled={!derived!.canEdit}
+                        hitSlop={8}
+                        className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                      >
                         <Typography
                           weight="regular"
                           className="text-body text-neutral-900 flex-shrink text-right"
@@ -278,33 +291,37 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           {derived!.serviceNames || "—"}
                         </Typography>
                         {derived!.canEdit && (
-                          <IconButton
-                            size="xs"
-                            onPress={() =>
-                              router.push(
-                                Routers.app.calendar.slotSelectService(
-                                  derived!.serviceSelectionParams,
-                                ),
-                              )
-                            }
-                            icon={
-                              <StSvg
-                                name="Edit_light"
-                                size={20}
-                                color={colors.neutral[500]}
-                              />
-                            }
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
                           />
                         )}
-                      </View>
+                      </Pressable>
                     }
                   />
 
-                  {(derived!.canEdit || slot.additional_services.length > 0) && (
+                  {(derived!.canEdit ||
+                    slot.additional_services.length > 0) && (
                     <InfoRow
                       label="Доп. услуги"
                       right={
-                        <View className="flex-row gap-1 flex-1 justify-end">
+                        <Pressable
+                          onPress={
+                            derived!.canEdit
+                              ? () =>
+                                  router.push(
+                                    Routers.app.calendar.slotSelectService({
+                                      ...derived!.serviceSelectionParams,
+                                      mode: "additional",
+                                    }),
+                                  )
+                              : undefined
+                          }
+                          disabled={!derived!.canEdit}
+                          hitSlop={8}
+                          className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                        >
                           <Typography
                             weight="regular"
                             className="text-body text-neutral-900 flex-shrink text-right"
@@ -312,26 +329,13 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                             {derived!.additionalServiceNames || "—"}
                           </Typography>
                           {derived!.canEdit && (
-                            <IconButton
-                              size="xs"
-                              onPress={() =>
-                                router.push(
-                                  Routers.app.calendar.slotSelectService({
-                                    ...derived!.serviceSelectionParams,
-                                    scrollTo: "additional",
-                                  }),
-                                )
-                              }
-                              icon={
-                                <StSvg
-                                  name="Edit_light"
-                                  size={20}
-                                  color={colors.neutral[500]}
-                                />
-                              }
+                            <StSvg
+                              name="Edit_light"
+                              size={20}
+                              color={colors.neutral[500]}
                             />
                           )}
-                        </View>
+                        </Pressable>
                       }
                     />
                   )}
@@ -384,48 +388,23 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 </View>
 
                 <View className="px-screen my-5">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Typography className="text-caption text-neutral-500">
-                      Комментарий к записи
-                    </Typography>
-                    {derived!.canEdit && (
-                      <IconButton
-                        size="xs"
-                        loading={editingField === "comment" && isUpdating}
-                        onPress={
-                          editingField === "comment"
-                            ? handleSave
-                            : () => setEditingField("comment")
-                        }
-                        icon={
-                          <StSvg
-                            name={
-                              editingField === "comment"
-                                ? "Check_round_fill"
-                                : "Edit_light"
-                            }
-                            size={20}
-                            color={
-                              editingField === "comment"
-                                ? colors.primary.blue[500]
-                                : colors.neutral[500]
-                            }
-                          />
-                        }
-                      />
-                    )}
-                  </View>
+                  <Typography className="text-caption text-neutral-500 mb-2">
+                    Комментарий к записи
+                  </Typography>
                   <RhfTextField
                     name="comment"
                     placeholder="Оставьте комментарий"
                     multiline={true}
-                    disabled={editingField !== "comment"}
+                    disabled={!derived!.canEdit}
                     hideErrorText
+                    onFocus={() => setEditingField("comment")}
                     onBlur={() => {
                       const comment = methods.getValues("comment");
                       if (comment === (slot.comment ?? "")) {
                         setEditingField(null);
+                        return;
                       }
+                      void handleSave();
                     }}
                   />
                 </View>

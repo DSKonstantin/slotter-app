@@ -87,9 +87,7 @@ const RescheduleModal = ({
         reason: "",
         send_notification: true,
       });
-      dispatch(setHighlightSlotId(appointmentId));
       onClose();
-      router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось перенести запись"));
     }

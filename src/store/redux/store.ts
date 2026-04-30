@@ -1,4 +1,5 @@
 import { configureStore, type StoreEnhancer } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import rootReducer from "@/src/store/redux/reducers";
 import { api } from "@/src/store/redux/services/api";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
@@ -16,6 +17,8 @@ export const store = configureStore({
     getDefaultMiddleware().concat(api.middleware),
   enhancers: (getDefault) => getDefault().concat(devEnhancers),
 });
+
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

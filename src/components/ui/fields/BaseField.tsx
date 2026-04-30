@@ -65,7 +65,7 @@ export function BaseField({
           (onEndAdornmentPress ? (
             <Pressable
               onPress={onEndAdornmentPress}
-              className={styles.adornmentEnd}
+              className={`${styles.adornmentEnd} active:opacity-70`}
             >
               {endAdornment}
             </Pressable>

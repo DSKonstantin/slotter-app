@@ -27,7 +27,6 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
     defaultValues: {
       name: "",
       price: "",
-      duration: 0,
       categoryId: Number(categoryId),
       description: "",
       isAvailableOnline: false,

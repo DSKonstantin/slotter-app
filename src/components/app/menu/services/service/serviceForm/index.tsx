@@ -84,7 +84,6 @@ const ServiceFormBody = ({
           name="duration"
           label="Длительность (мин)"
           placeholder="Выберите длительность"
-          defaultValue={0}
         />
 
         <RhfTextField

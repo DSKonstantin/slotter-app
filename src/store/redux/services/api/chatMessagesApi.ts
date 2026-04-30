@@ -47,7 +47,7 @@ const chatMessagesApi = api.injectEndpoints({
       },
       forceRefetch: ({ currentArg, previousArg }) =>
         currentArg?.cursor !== previousArg?.cursor,
-      keepUnusedDataFor: 0,
+      keepUnusedDataFor: 300,
       async onCacheEntryAdded(
         { chatRoomId },
         { getState, updateCachedData, cacheDataLoaded, cacheEntryRemoved },
