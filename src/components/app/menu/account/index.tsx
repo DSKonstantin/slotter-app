@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
+import SupportModal from "@/src/components/shared/modals/SupportModal";
 import {
   Avatar,
   Button,
@@ -68,7 +69,7 @@ const NAV_GROUPS: NavItem[][] = [
     {
       title: "Поддержка",
       icon: "Chat_alt_2_fill",
-      route: () => router.push(Routers.app.menu.account.support),
+      route: () => {},
     },
   ],
 ];
@@ -77,6 +78,7 @@ const AccountScreen = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
+  const [supportVisible, setSupportVisible] = useState(false);
   const [triggerGetMe] = useLazyGetMeQuery();
 
   const handleRefresh = async () => {
@@ -92,6 +94,7 @@ const AccountScreen = () => {
   if (!auth) return null;
 
   return (
+    <>
     <ScreenWithToolbar title="Аккаунт">
       {({ topInset, bottomInset }) => (
         <ScrollView
@@ -160,7 +163,11 @@ const AccountScreen = () => {
                           color={colors.neutral[400]}
                         />
                       }
-                      onPress={item.route}
+                      onPress={
+                        item.title === "Поддержка"
+                          ? () => setSupportVisible(true)
+                          : item.route
+                      }
                     />
                   </React.Fragment>
                 ))}
@@ -186,6 +193,8 @@ const AccountScreen = () => {
         </ScrollView>
       )}
     </ScreenWithToolbar>
+    <SupportModal visible={supportVisible} onClose={() => setSupportVisible(false)} />
+    </>
   );
 };
 

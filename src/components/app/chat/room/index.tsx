@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { router } from "expo-router";
 import { ActivityIndicator, Alert, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat } from "react-native-gifted-chat";
@@ -44,13 +45,13 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { Service } from "@/src/store/redux/services/api-types";
 
-type Props = { roomId: string };
+type Props = { roomId: string; backTo?: string };
 
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const EMPTY_MESSAGES: ChatIMessage[] = [];
 
-export default function ChatRoom({ roomId }: Props) {
+export default function ChatRoom({ roomId, backTo }: Props) {
   const id = Number(roomId);
   const { bottom: bottomInset } = useSafeAreaInsets();
 
@@ -388,6 +389,7 @@ export default function ChatRoom({ roomId }: Props) {
     <>
       <ScreenWithToolbar
         title={titleNode ?? "Чат"}
+        onBack={backTo ? () => router.push(backTo as never) : undefined}
         rightButton={
           <IconButton
             icon={
@@ -417,112 +419,116 @@ export default function ChatRoom({ roomId }: Props) {
               </View>
             ) : (
               <GiftedChat<ChatIMessage>
-              messages={messages}
-              onSend={onSend}
-              user={{ _id: currentGiftedId ?? 0 }}
-              locale="ru"
-              timeFormat="HH:mm"
-              dateFormatCalendar={{
-                sameDay: "[Сегодня]",
-                lastDay: "[Вчера]",
-                lastWeek: "D MMMM",
-                sameElse: "D MMMM YYYY",
-              }}
-              isSendButtonAlwaysVisible
-              minInputToolbarHeight={0}
-              keyboardAvoidingViewProps={{
-                keyboardVerticalOffset: -bottomInset + 8,
-              }}
-              textInputProps={{
-                placeholder: "Сообщение...",
-                maxLength: undefined,
-                multiline: true,
-                numberOfLines: 5,
-                style: {
-                  backgroundColor: colors.background.surface,
-                  borderRadius: 20,
-                  paddingHorizontal: 16,
-                  paddingTop: 12,
-                  paddingBottom: 12,
-                  marginHorizontal: 4,
-                  flex: 1,
-                  maxHeight: 120,
-                },
-              }}
-              onLongPressMessage={onLongPressMessage}
-              loadEarlierMessagesProps={{
-                isAvailable: hasMore,
-                isLoading: isFetching && !!cursor,
-                onPress: handleLoadEarlier,
-                label: "Загрузить ранее",
-              }}
-              scrollToBottomComponent={() => <ChatScrollBottomButton />}
-              renderAvatar={null}
-              renderMessage={(props) => <ChatMessage {...props} />}
-              renderBubble={(props) => {
-                const msg = props.currentMessage as ChatIMessage | undefined;
-                const widget = msg?.widget;
-                if (widget) {
-                  const isOwnMessage = msg.user._id === (currentGiftedId ?? 0);
-                  if (widget.kind === "service_card") {
-                    return (
-                      <ChatServiceWidget
-                        service={widget.widgetable}
-                        onLongPress={() => setMenuMessage(msg)}
-                      />
-                    );
+                messages={messages}
+                onSend={onSend}
+                user={{ _id: currentGiftedId ?? 0 }}
+                locale="ru"
+                timeFormat="HH:mm"
+                dateFormatCalendar={{
+                  sameDay: "[Сегодня]",
+                  lastDay: "[Вчера]",
+                  lastWeek: "D MMMM",
+                  sameElse: "D MMMM YYYY",
+                }}
+                isSendButtonAlwaysVisible
+                minInputToolbarHeight={0}
+                keyboardAvoidingViewProps={{
+                  keyboardVerticalOffset: -bottomInset + 8,
+                }}
+                textInputProps={{
+                  placeholder: "Сообщение...",
+                  maxLength: undefined,
+                  multiline: true,
+                  numberOfLines: 5,
+                  style: {
+                    backgroundColor: colors.background.surface,
+                    color: colors.neutral[900],
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingTop: 12,
+                    paddingBottom: 12,
+                    marginHorizontal: 4,
+                    flex: 1,
+                    maxHeight: 120,
+                  },
+                }}
+                onLongPressMessage={onLongPressMessage}
+                loadEarlierMessagesProps={{
+                  isAvailable: hasMore,
+                  isLoading: isFetching && !!cursor,
+                  onPress: handleLoadEarlier,
+                  label: "Загрузить ранее",
+                }}
+                scrollToBottomComponent={() => <ChatScrollBottomButton />}
+                renderAvatar={null}
+                renderMessage={(props) => <ChatMessage {...props} />}
+                renderBubble={(props) => {
+                  const msg = props.currentMessage as ChatIMessage | undefined;
+                  const widget = msg?.widget;
+                  if (widget) {
+                    const isOwnMessage =
+                      msg.user._id === (currentGiftedId ?? 0);
+                    if (widget.kind === "service_card") {
+                      return (
+                        <ChatServiceWidget
+                          service={widget.widgetable}
+                          onLongPress={() => setMenuMessage(msg)}
+                        />
+                      );
+                    }
+                    if (widget.kind === "appointment_proposal") {
+                      return (
+                        <ChatAppointmentWidget
+                          appointment={widget.widgetable}
+                          payload={widget.payload}
+                          isOwnMessage={isOwnMessage}
+                          onLongPress={() => setMenuMessage(msg)}
+                        />
+                      );
+                    }
                   }
-                  if (widget.kind === "appointment_proposal") {
-                    return (
-                      <ChatAppointmentWidget
-                        appointment={widget.widgetable}
-                        payload={widget.payload}
-                        isOwnMessage={isOwnMessage}
-                        onLongPress={() => setMenuMessage(msg)}
-                      />
-                    );
-                  }
+                  return <ChatBubble {...props} />;
+                }}
+                renderMessageImage={(props) => <ChatMessageImages {...props} />}
+                renderInputToolbar={(props) => (
+                  <ChatInputBar
+                    {...props}
+                    replyingTo={replyingTo}
+                    onCancelReply={() => setReplyingTo(null)}
+                    onAttach={handleAttach}
+                    isUser={resourceType === "user"}
+                    onOpenAttachMenu={() => setAttachVisible(true)}
+                  />
+                )}
+                renderSend={(props) => <ChatSendButton {...props} />}
+                renderSystemMessage={(props) => (
+                  <ChatSystemMessage {...props} />
+                )}
+                renderChatEmpty={() =>
+                  isLoading ? (
+                    <View
+                      className="flex-1 items-center justify-center pb-20"
+                      style={{ transform: [{ scaleY: -1 }] }}
+                    >
+                      <ActivityIndicator color={colors.neutral[500]} />
+                    </View>
+                  ) : (
+                    <ChatEmptyState />
+                  )
                 }
-                return <ChatBubble {...props} />;
-              }}
-              renderMessageImage={(props) => <ChatMessageImages {...props} />}
-              renderInputToolbar={(props) => (
-                <ChatInputBar
-                  {...props}
-                  replyingTo={replyingTo}
-                  onCancelReply={() => setReplyingTo(null)}
-                  onAttach={handleAttach}
-                  isUser={resourceType === "user"}
-                  onOpenAttachMenu={() => setAttachVisible(true)}
-                />
-              )}
-              renderSend={(props) => <ChatSendButton {...props} />}
-              renderSystemMessage={(props) => <ChatSystemMessage {...props} />}
-              renderChatEmpty={() =>
-                isLoading ? (
-                  <View
-                    className="flex-1 items-center justify-center pb-20"
-                    style={{ transform: [{ scaleY: -1 }] }}
-                  >
-                    <ActivityIndicator color={colors.neutral[500]} />
-                  </View>
-                ) : (
-                  <ChatEmptyState />
-                )
-              }
-              messagesContainerStyle={{
-                backgroundColor: colors.background.DEFAULT,
-              }}
-              listProps={{
-                contentContainerStyle: {
-                  paddingTop: 70 + bottomInset,
-                  paddingBottom: topInset,
-                  flexGrow: 1,
-                },
-                onEndReached: handleLoadEarlier,
-                onEndReachedThreshold: 0.2,
-              }}
-            />
+                messagesContainerStyle={{
+                  backgroundColor: colors.background.DEFAULT,
+                }}
+                listProps={{
+                  contentContainerStyle: {
+                    paddingTop: 70 + bottomInset,
+                    paddingBottom: topInset,
+                    flexGrow: 1,
+                  },
+                  onEndReached: handleLoadEarlier,
+                  onEndReachedThreshold: 0.2,
+                }}
+              />
             )}
           </SafeAreaView>
         )}

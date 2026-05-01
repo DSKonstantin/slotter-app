@@ -12,9 +12,19 @@ export const isEndAfterStart = (startAt?: string, endAt?: string): boolean => {
   return end > start;
 };
 
+export const withEndAfterStart = <T extends Yup.AnySchema>(
+  schema: T,
+  startFieldName = "startAt",
+): T =>
+  schema.test(
+    "end-after-start",
+    "Время окончания должно быть позже начала",
+    (endAt, ctx) => isEndAfterStart(ctx.parent[startFieldName], endAt as string),
+  ) as T;
+
 export const breakSchema = Yup.object().shape({
   start: Yup.string().required(),
-  end: Yup.string().required(),
+  end: withEndAfterStart(Yup.string().required(), "start"),
 });
 
 export const breakWithIdSchema = breakSchema.shape({
@@ -26,16 +36,6 @@ export const EMPTY_WORKING_HOURS = {
   endAt: "",
   breaks: [] as { start: string; end: string }[],
 };
-
-export const withEndAfterStart = <T extends Yup.AnySchema>(
-  schema: T,
-  startFieldName = "startAt",
-): T =>
-  schema.test(
-    "end-after-start",
-    "Время окончания должно быть позже начала",
-    (endAt, ctx) => isEndAfterStart(ctx.parent[startFieldName], endAt as string),
-  ) as T;
 
 type BreaksFieldOptions = {
   itemSchema?: Yup.AnySchema;

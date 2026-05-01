@@ -61,7 +61,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
               <Pressable
                 key={tab.key}
                 onPress={() => {
-                  if (isActive) {
+                  if (isActive || tab.key === "chat") {
                     navigation.dispatch(
                       CommonActions.reset({
                         index: 0,
@@ -72,7 +72,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
                     navigation.navigate(tab.key);
                   }
                 }}
-                className={`flex-1 px-2 py-1.5 items-center justify-center
+                className={`flex-1 p-1 items-center justify-center
                 h-[58px] gap-0.5
                 rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "bg-transparent"}`}
               >

@@ -101,7 +101,7 @@ const CreateAdditionalService = () => {
 
   return (
     <>
-      <View className="flex-row justify-between items-center px-screen mt-5 mb-2">
+      <View className="flex-row justify-between items-center px-screen mt-5  mb-2">
         <Typography className="text-caption text-neutral-500">
           Дополнительные услуги
         </Typography>
@@ -150,7 +150,7 @@ const CreateAdditionalService = () => {
             const isSelected = selectedIndex !== -1;
 
             return (
-              <View className="relative">
+              <View className="relative py-2">
                 <Card
                   title={service.name}
                   subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
@@ -177,7 +177,7 @@ const CreateAdditionalService = () => {
                   <IconButton
                     onPress={() => remove(selectedIndex)}
                     size="xs"
-                    buttonClassName="absolute -top-2 -right-2 bg-background rounded-full"
+                    buttonClassName="absolute top-0 right-0 bg-background rounded-full"
                     icon={
                       <StSvg
                         name="Close_round_fill_light"

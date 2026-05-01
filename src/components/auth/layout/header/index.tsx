@@ -1,13 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  IconButton,
-  Button,
-  Typography,
-  StSvg,
-  StModal,
-} from "@/src/components/ui";
+import { IconButton, StSvg } from "@/src/components/ui";
+import SupportModal from "@/src/components/shared/modals/SupportModal";
 import { colors } from "@/src/styles/colors";
 
 type AuthHeaderProps = {
@@ -66,27 +61,7 @@ export default function AuthHeader({
           />
         )}
       </View>
-      <StModal visible={supportVisible} onClose={closeSupport}>
-        <Typography weight="semibold" className="text-body text-center mb-2">
-          Нужна помощь?
-        </Typography>
-
-        <Typography
-          weight="regular"
-          className="text-neutral-500 text-body text-center"
-        >
-          Мы на связи, выбери где удобнее:
-        </Typography>
-
-        <View className="flex-row justify-center items-center my-6 gap-10">
-          <IconButton
-            buttonClassName={"border border-neutral-100"}
-            icon={<StSvg name="SocialTelegram" size={24} color="#37B5DB" />}
-          />
-        </View>
-
-        <Button title="Закрыть" onPress={closeSupport} />
-      </StModal>
+      <SupportModal visible={supportVisible} onClose={closeSupport} />
     </>
   );
 }

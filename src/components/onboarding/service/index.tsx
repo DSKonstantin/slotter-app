@@ -23,6 +23,7 @@ import {
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { useGetFirstServiceCategoryQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData";
@@ -30,6 +31,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 
 const Service = () => {
   const auth = useRequiredAuth();
@@ -47,6 +49,7 @@ const Service = () => {
   );
 
   const [createService, { isLoading }] = useCreateServiceMutation();
+  const [updateUser] = useUpdateUserMutation();
 
   const methods = useForm<OnboardingServiceFormValues>({
     resolver: yupResolver(OnboardingServiceSchema),
@@ -92,6 +95,8 @@ const Service = () => {
         data: formData,
       }).unwrap();
 
+      await updateUser({ id: auth.userId, data: { onboarding_step: "schedule" } }).unwrap();
+
       router.push(Routers.onboarding.schedule);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить услугу"));
@@ -123,7 +128,7 @@ const Service = () => {
         }
       >
         <View className="mt-4">
-          <StepProgress steps={3} currentStep={2} />
+          <StepProgress steps={TOTAL_STEPS} currentStep={STEP_PROGRESS.service!} />
         </View>
         <View className="mt-8 gap-2">
           <Typography weight="semibold" className="text-display mb-2">

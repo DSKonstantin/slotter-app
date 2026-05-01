@@ -166,6 +166,7 @@ const RescheduleModal = ({
                 placeholder="Будет отправлено клиенту"
                 hideErrorText={true}
                 multiline={true}
+                numberOfLines={4}
               />
 
               <Card

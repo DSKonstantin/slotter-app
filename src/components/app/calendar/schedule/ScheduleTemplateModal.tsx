@@ -24,9 +24,9 @@ import {
 import { days } from "@/src/constants/days";
 import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
+import {DEFAULT_END_AT, DEFAULT_START_AT} from "@/src/constants/hoursOptions";
 
-const DEFAULT_START_AT = new Date(2000, 0, 1, 9, 0);
-const DEFAULT_END_AT = new Date(2000, 0, 1, 18, 0);
+
 
 const DayRow = ({ index }: { index: number }) => {
   const { control } = useFormContext<ScheduleTemplateFormValues>();

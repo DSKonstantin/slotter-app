@@ -16,9 +16,10 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import RetryInline from "@/src/components/shared/retryInline";
 
 const PERIODS: { label: string; value: UserCustomerPeriod }[] = [
-  { label: "7 дней", value: "last_7_days" },
+  { label: "День", value: "today" },
+  { label: "Неделя", value: "current_week" },
+  { label: "Месяц", value: "current_month" },
   { label: "30 дней", value: "last_30_days" },
-  { label: "90 дней", value: "last_90_days" },
 ];
 
 type BarChartProps = {

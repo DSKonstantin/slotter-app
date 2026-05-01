@@ -107,7 +107,25 @@ const CalendarSchedule = () => {
             toggleDay(dayData.date);
             return;
           }
-          router.push(Routers.app.calendar.daySchedule(dayData.workingDayId));
+
+          const navigate = () =>
+            router.push(
+              Routers.app.calendar.daySchedule(dayData.workingDayId!),
+            );
+
+          if (methods.formState.isDirty) {
+            Alert.alert(
+              "Перейти к дню?",
+              "Несохранённые изменения будут сброшены.",
+              [
+                { text: "Отмена", style: "cancel" },
+                { text: "Перейти", style: "destructive", onPress: navigate },
+              ],
+            );
+            return;
+          }
+
+          navigate();
           return;
         }
 

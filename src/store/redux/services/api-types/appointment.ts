@@ -15,6 +15,7 @@ export interface AppointmentCustomer {
   phone: string;
   email: string | null;
   telegram_id: string | null;
+  avatar_url: string | null;
   customer_tag: { id: number; name: string; color: string } | null;
   note: string | null;
 }

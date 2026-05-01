@@ -161,18 +161,6 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     });
   }, [categoryId, methods, service]);
 
-  if (!hasValidIds) {
-    return (
-      <ScreenWithToolbar title="Редактировать услугу">
-        <View className="flex-1 items-center justify-center px-screen">
-          <Typography className="text-center text-neutral-500">
-            Не удалось определить услугу для редактирования
-          </Typography>
-        </View>
-      </ScreenWithToolbar>
-    );
-  }
-
   if (isServiceLoading || (isServiceFetching && !service)) {
     return (
       <ScreenWithToolbar title="Редактировать услугу">
@@ -183,7 +171,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     );
   }
 
-  if (isServiceError || !service) {
+  if (!hasValidIds || isServiceError || !service) {
     return (
       <ScreenWithToolbar title="Редактировать услугу">
         <View className="flex-1 items-center justify-center px-screen">

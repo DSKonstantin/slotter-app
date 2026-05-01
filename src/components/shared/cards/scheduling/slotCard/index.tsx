@@ -65,7 +65,7 @@ const SlotCard = ({
     slot?.status === "pending"
       ? "bg-accent-yellow-500"
       : slot?.status === "confirmed"
-        ? "bg-accent-lime-500"
+        ? "bg-primary-green-500"
         : null;
 
   const detailContent = (isShort: boolean) => (
@@ -73,61 +73,70 @@ const SlotCard = ({
       className="flex-row flex-1 active:opacity-70"
       onPress={isShort ? toggleExpand : onPress}
     >
-      {statusLineClass && (
-        <View pointerEvents="none" className={`w-1 ${statusLineClass}`} />
-      )}
       <View
         className={`flex-1 ${isShort ? "pt-5" : "py-5"} px-4 justify-center`}
       >
-        <View className="flex-row items-center justify-between">
-          <Typography className="text-body text-neutral-900">
-            {timeString}
-          </Typography>
-          <View className="flex-row items-center gap-2">
-            {statusConfig && (
-              <Badge
-                size="sm"
-                title={statusConfig.label}
-                variant={statusConfig.variant}
-                icon={statusConfig.icon}
-              />
-            )}
-            {isShort && (
-              <Animated.View style={{ transform: [{ rotate }] }}>
-                <StSvg
-                  name="Expand_down"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              </Animated.View>
+        <View className="flex-row gap-2.5">
+          {statusLineClass && (
+            <View
+              pointerEvents="none"
+              className={`w-2 rounded-full ${statusLineClass}`}
+            />
+          )}
+
+          <View className="flex-1">
+            <View className="flex-row items-center justify-between">
+              <Typography className="text-body text-neutral-900">
+                {timeString}
+              </Typography>
+              <View className="flex-row items-center gap-2">
+                {statusConfig && (
+                  <Badge
+                    size="sm"
+                    title={statusConfig.label}
+                    variant={statusConfig.variant}
+                    icon={statusConfig.icon}
+                  />
+                )}
+                {isShort && (
+                  <Animated.View style={{ transform: [{ rotate }] }}>
+                    <StSvg
+                      name="Expand_down"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  </Animated.View>
+                )}
+              </View>
+            </View>
+
+            <Typography
+              weight="medium"
+              className="text-caption text-neutral-500 mb-1"
+            >
+              {clientName && `${clientName} | `}
+              {slot.price_cents > 0 &&
+                `${formatRublesFromCents(slot.price_cents)}`}
+            </Typography>
+
+            {serviceNames && (
+              <Typography
+                weight="regular"
+                className="text-caption text-neutral-400 mb-1"
+                numberOfLines={2}
+              >
+                {[
+                  serviceNames,
+                  slot.additional_services?.length
+                    ? `+ ${slot.additional_services.length} доп.`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" | ")}
+              </Typography>
             )}
           </View>
         </View>
-
-        <Typography
-          weight="medium"
-          className="text-caption text-neutral-500 mb-1"
-        >
-          {clientName && `${clientName} | `}
-          {slot.price_cents > 0 && `${formatRublesFromCents(slot.price_cents)}`}
-        </Typography>
-
-        {serviceNames && (
-          <Typography
-            weight="regular"
-            className="text-caption text-neutral-400 mb-1"
-            numberOfLines={2}
-          >
-            {[
-              serviceNames,
-              slot.additional_services?.length
-                ? `+ ${slot.additional_services.length} доп.`
-                : null,
-            ]
-              .filter(Boolean)
-              .join(" | ")}
-          </Typography>
-        )}
       </View>
     </Pressable>
   );
@@ -151,8 +160,14 @@ const SlotCard = ({
         />
         <Pressable
           onPress={toggleExpand}
-          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-3 flex-1 active:opacity-70"
+          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-4 flex-1 active:opacity-70 gap-2.5"
         >
+          {statusLineClass && (
+            <View
+              pointerEvents="none"
+              className={`w-2 rounded-full ${statusLineClass}`}
+            />
+          )}
           <View className="flex-row flex-1 items-center justify-between">
             <Typography className="text-body text-neutral-900">
               {timeString}

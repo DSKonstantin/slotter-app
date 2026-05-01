@@ -97,6 +97,7 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
             label="Комментарий"
             placeholder="Дополнительная информация"
             multiline
+            numberOfLines={4}
           />
 
           <Button

@@ -21,6 +21,8 @@ import {
   useGetAppointmentQuery,
   useUpdateAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
+import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
@@ -49,6 +51,7 @@ interface Props {
 }
 
 const SlotDetails: React.FC<Props> = ({ slotId }) => {
+  const auth = useRequiredAuth();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [editingField, setEditingField] = useState<EditingField>(null);
@@ -67,6 +70,29 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
+  const [createChatRoom, { isLoading: isChatCreating }] =
+    useCreateChatRoomMutation();
+
+  const handleOpenChat = async () => {
+    if (!auth || !slot?.customer) return;
+    try {
+      const room = await createChatRoom({
+        userId: auth.userId,
+        customerId: slot.customer.id,
+      }).unwrap();
+      const chatRoute = Routers.app.chat.room(room.id);
+      const slotRoute = Routers.app.calendar.slot(slotId);
+      router.push({
+        pathname: chatRoute.pathname,
+        params: {
+          ...chatRoute.params,
+          backTo: slotRoute.pathname.replace("[id]", slotId),
+        },
+      });
+    } catch {
+      toast.error("Не удалось открыть чат");
+    }
+  };
 
   const methods = useForm<SlotDetailsFormValues>({
     resolver: yupResolver(SlotDetailsSchema),
@@ -194,7 +220,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               </View>
             );
           }
-
           return (
             <>
               <KeyboardAwareScrollView
@@ -213,9 +238,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <Card
                     title={slot.customer?.name ?? "—"}
                     subtitle={slot.customer?.phone ?? undefined}
+                    onPress={() => {}}
                     left={
                       <Avatar
                         name={slot.customer?.name ?? undefined}
+                        uri={slot.customer?.avatar_url ?? undefined}
                         size="sm"
                       />
                     }
@@ -236,6 +263,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       },
                     }}
                     subtitle="Перейти в чат"
+                    onPress={handleOpenChat}
                     left={
                       <View className="mb-[18px]">
                         <StSvg
@@ -246,11 +274,18 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       </View>
                     }
                     right={
-                      <StSvg
-                        name="Expand_right_light"
-                        size={24}
-                        color={colors.neutral[500]}
-                      />
+                      isChatCreating ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={colors.neutral[500]}
+                        />
+                      ) : (
+                        <StSvg
+                          name="Expand_right_light"
+                          size={24}
+                          color={colors.neutral[500]}
+                        />
+                      )
                     }
                   />
                 </View>
@@ -400,6 +435,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     name="comment"
                     placeholder="Оставьте комментарий"
                     multiline={true}
+                    numberOfLines={4}
                     disabled={!derived!.canEdit}
                     hideErrorText
                     onFocus={() => setEditingField("comment")}

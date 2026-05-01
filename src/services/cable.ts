@@ -80,14 +80,6 @@ function attach(sub: ActiveSub) {
     sub.channel,
     actionCable.subscriptions.create({ channel: sub.channel, ...sub.params }),
   );
-  sub.ch.on("received", (d: unknown) => {
-    console.tron?.display?.({
-      name: `WS ${sub.channel}`,
-      value: d,
-      preview: JSON.stringify(d).slice(0, 80),
-    });
-    console.log("[cable]", sub.channel, d);
-  });
   for (const handler of sub.handlers) {
     sub.ch.on("received", handler);
   }
@@ -105,14 +97,10 @@ function bindTransportStatus(consumer: Consumer) {
   const origOpen = conn.events.open;
   const origClose = conn.events.close;
   conn.events.open = () => {
-    console.tron?.display?.({ name: "WS OPEN", value: {} });
-    console.log("[cable] open");
     origOpen();
     if (actionCable === consumer) setStatus("connected");
   };
   conn.events.close = (e) => {
-    console.tron?.display?.({ name: "WS CLOSE", value: e, important: true });
-    console.log("[cable] close", e);
     origClose(e);
     if (actionCable === consumer) setStatus("reconnecting");
   };

@@ -8,6 +8,7 @@ import { Avatar, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { StepProgress } from "@/src/components/ui/StepProgress";
+import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -66,6 +67,7 @@ const PersonalInformation = () => {
         formData.append("user[is_home_work]", String(data.atHome));
         formData.append("user[is_online_work]", String(data.online));
         formData.append("user[is_out_call]", String(data.onRoad));
+        formData.append("user[onboarding_step]", "service");
 
         await updateUser({
           id: auth.userId,
@@ -116,7 +118,7 @@ const PersonalInformation = () => {
         }
       >
         <View className="mt-4">
-          <StepProgress steps={3} currentStep={1} />
+          <StepProgress steps={TOTAL_STEPS} currentStep={STEP_PROGRESS.personal_information!} />
         </View>
         <View className="mt-8 gap-2">
           <Typography weight="semibold" className="text-display mb-2">

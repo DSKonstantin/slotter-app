@@ -43,6 +43,9 @@ const AdditionalServiceEdit = () => {
     refetch,
   } = useGetAdditionalServiceQuery(
     auth?.userId && id ? { userId: auth.userId, id: id } : skipToken,
+    {
+      refetchOnMountOrArgChange: true,
+    },
   );
 
   const [updateAdditionalService, { isLoading }] =

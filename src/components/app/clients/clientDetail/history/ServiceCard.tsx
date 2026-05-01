@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { Badge, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -9,11 +9,13 @@ type Props = {
     main_photo_url?: string;
     name: string;
   };
+  date?: string;
+  onPress?: () => void;
 };
 
-const ServiceCard = ({ service }: Props) => {
+const ServiceCard = ({ service, date, onPress }: Props) => {
   return (
-    <View className="flex-1">
+    <Pressable className="flex-1 active:opacity-70" onPress={onPress}>
       <View className="relative h-[187px] bg-neutral-500 rounded-base overflow-hidden">
         <Image
           source={
@@ -24,19 +26,21 @@ const ServiceCard = ({ service }: Props) => {
           style={{ width: "100%", height: "100%", borderRadius: 20 }}
           contentFit="cover"
         />
-        <View className="absolute top-2 right-2">
-          <Badge
-            title="29.08"
-            size="sm"
-            icon={
-              <StSvg
-                name="Book_check_fill"
-                size={16}
-                color={colors.neutral[0]}
-              />
-            }
-          />
-        </View>
+        {date && (
+          <View className="absolute top-2 right-2">
+            <Badge
+              title={date}
+              size="sm"
+              icon={
+                <StSvg
+                  name="Book_check_fill"
+                  size={16}
+                  color={colors.neutral[0]}
+                />
+              }
+            />
+          </View>
+        )}
       </View>
 
       <View className="flex-row justify-between mt-2">
@@ -53,10 +57,10 @@ const ServiceCard = ({ service }: Props) => {
           icon={
             <StSvg name="Expand_right" size={24} color={colors.neutral[0]} />
           }
-          onPress={() => {}}
+          onPress={onPress}
         />
       </View>
-    </View>
+    </Pressable>
   );
 };
 

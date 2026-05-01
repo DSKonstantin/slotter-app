@@ -5,14 +5,16 @@ import { Avatar, Badge } from "@/src/components/ui";
 type Props = {
   name: string;
   phone?: string;
+  avatarUrl?: string;
   visitsCount: number;
   totalSpent: string;
-  tag?: { name: string };
+  tag?: { name: string; color: string };
 };
 
 const ClientInfoCard = ({
   name,
   phone,
+  avatarUrl,
   visitsCount,
   totalSpent,
   tag,
@@ -20,15 +22,22 @@ const ClientInfoCard = ({
   return (
     <View className="flex-row rounded-base bg-background-surface p-4">
       <View className="mr-3">
-        <Avatar name={name} size="md" />
+        <Avatar name={name} size="md" uri={avatarUrl} />
       </View>
 
       <View className="flex-1">
-        <View className="flex-row items-center justify-between gap-1">
+        <View className="flex-row items-center justify-between gap-1 min-h-[26px]">
           <Text className="font-inter-medium text-body text-neutral-900">
             {name}
           </Text>
-          {tag && <Badge title={tag.name} variant="info" size="sm" />}
+          {tag && (
+            <Badge
+              title={tag.name}
+              size="sm"
+              style={{ backgroundColor: tag.color }}
+              textStyle={{ color: "#fff" }}
+            />
+          )}
         </View>
 
         {phone && (

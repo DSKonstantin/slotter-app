@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import {
@@ -11,11 +11,11 @@ import { colors } from "@/src/styles/colors";
 import { pickerCalendarTheme } from "@/src/styles/calendarTheme";
 
 export const PERIODS = [
-  { label: "Сегодня", value: "1d" },
-  { label: "Текущая неделя", value: "7d" },
-  { label: "Текущий месяц", value: "30d" },
-  { label: "Последние 30 дней", value: "30d_last" },
-];
+  { label: "Сегодня", value: "today" },
+  { label: "Текущая неделя", value: "current_week" },
+  { label: "Текущий месяц", value: "current_month" },
+  { label: "Последние 30 дней", value: "last_30_days" },
+] as const;
 
 export const CUSTOM_PERIOD_VALUE = "custom";
 
@@ -54,7 +54,12 @@ function buildRangeMarks(start: string | null, end: string | null) {
 
 export type Period =
   | (typeof PERIODS)[number]
-  | { label: string; value: typeof CUSTOM_PERIOD_VALUE };
+  | {
+      label: string;
+      value: typeof CUSTOM_PERIOD_VALUE;
+      date_from?: string;
+      date_to?: string;
+    };
 
 type Props = {
   visible: boolean;
@@ -73,8 +78,18 @@ const PeriodModal = ({
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!visible) {
+      setCalendarVisible(false);
+      setRangeStart(null);
+      setRangeEnd(null);
+    }
+  }, [visible]);
+
   const handleSelectPeriod = (period: Period) => {
     setCalendarVisible(false);
+    setRangeStart(null);
+    setRangeEnd(null);
     onSelectPeriod(period);
   };
 
@@ -101,11 +116,17 @@ const PeriodModal = ({
         ? [dateString, rangeStart]
         : [rangeStart, dateString];
     setRangeEnd(end);
+    setCalendarVisible(false);
     const label =
       start === end
         ? formatDayMonthYearLong(new Date(start))
         : `${formatDayMonthLong(new Date(start))} — ${formatDayMonthYearLong(new Date(end))}`;
-    onSelectPeriod({ label, value: CUSTOM_PERIOD_VALUE });
+    onSelectPeriod({
+      label,
+      value: CUSTOM_PERIOD_VALUE,
+      date_from: start,
+      date_to: end,
+    });
   };
 
   const markedDates = useMemo(

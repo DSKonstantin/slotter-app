@@ -6,6 +6,7 @@ import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Item } from "@/src/components/ui";
 import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
+import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
 
 export type { DayScheduleFormValues };
 
@@ -27,6 +28,8 @@ export const DayScheduleForm = () => {
           startName="startAt"
           endName="endAt"
           spacing="loose"
+          startDefault={DEFAULT_START_AT}
+          endDefault={DEFAULT_END_AT}
         />
       </View>
     </>

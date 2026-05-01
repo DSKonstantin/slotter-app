@@ -24,6 +24,7 @@ import { parseISO } from "date-fns";
 import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
 import { BlurView } from "expo-blur";
+import {DEFAULT_END_AT, DEFAULT_START_AT} from "@/src/constants/hoursOptions";
 
 type Props = {
   visible: boolean;
@@ -41,7 +42,7 @@ export const ScheduleSettingsModal = ({
   const methods = useFormContext<CalendarScheduleFormValues>();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const { height } = useWindowDimensions();
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
 
   const { control, setValue } = methods;
@@ -220,7 +221,12 @@ export const ScheduleSettingsModal = ({
 
       {/* Content */}
       <FormProvider {...methods}>
-        <BottomSheetScrollView contentContainerStyle={styles.content}>
+        <BottomSheetScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: Math.max(bottom, 16) },
+          ]}
+        >
           {canSave ? (
             mode === "bulk" ? (
               <View className="mb-4">
@@ -229,6 +235,8 @@ export const ScheduleSettingsModal = ({
                   startName="commonDraft.startAt"
                   endName="commonDraft.endAt"
                   breaksName="commonDraft.breaks"
+                  startDefault={DEFAULT_START_AT}
+                  endDefault={DEFAULT_END_AT}
                 />
               </View>
             ) : (
@@ -257,6 +265,8 @@ export const ScheduleSettingsModal = ({
                       startName={`calendarDays.${index}.startAt`}
                       endName={`calendarDays.${index}.endAt`}
                       breaksName={`calendarDays.${index}.breaks`}
+                      startDefault={DEFAULT_START_AT}
+                      endDefault={DEFAULT_END_AT}
                     />
                   </View>
                 ))}
@@ -302,6 +312,5 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
   },
 });

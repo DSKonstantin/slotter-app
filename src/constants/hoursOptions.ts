@@ -32,3 +32,7 @@ export const HOURS_OPTIONS = [
   { label: "23 часа", value: "23" },
   { label: "24 часа", value: "24" },
 ] as const;
+
+
+export const DEFAULT_START_AT = new Date(2000, 0, 1, 9, 0);
+export const DEFAULT_END_AT = new Date(2000, 0, 1, 18, 0);

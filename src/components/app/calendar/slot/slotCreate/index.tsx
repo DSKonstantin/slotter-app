@@ -343,6 +343,7 @@ const SlotCreate: React.FC = () => {
                 name="comment"
                 placeholder="Добавить заметку к записи..."
                 multiline
+                numberOfLines={4}
               />
             </View>
 

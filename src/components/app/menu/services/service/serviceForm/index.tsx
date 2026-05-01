@@ -98,7 +98,7 @@ const ServiceFormBody = ({
       </View>
 
       <View className="px-screen">
-        <Divider className="my-8" />
+        <Divider className="mt-8 mb-4" />
 
         <Item
           title="Доступно для онлайн-записи"

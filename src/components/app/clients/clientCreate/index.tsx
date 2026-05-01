@@ -124,45 +124,46 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
               bottomOffset={BOTTOM_OFFSET}
               contentContainerStyle={{
                 paddingBottom: 16,
-                paddingHorizontal: 20,
               }}
               style={{ marginTop: topInset }}
             >
-              <RhfTextField
-                label="Имя"
-                name="name"
-                placeholder="Анна Петрова"
-              />
-
-              <View className="mt-1">
+              <View className="px-screen">
                 <RhfTextField
-                  label="Телефон"
-                  name="phone"
-                  maxLength={16}
-                  hideErrorText
-                  placeholder="+7 (___) ___-__-__"
-                  keyboardType="phone-pad"
-                  maskFn={maskPhone}
+                  label="Имя"
+                  name="name"
+                  placeholder="Анна Петрова"
                 />
-              </View>
 
-              <View className="mt-4">
-                <Button
-                  title="Выбрать из контактов"
-                  variant="secondary"
-                  onPress={handleContactsPress}
-                  leftIcon={
-                    <StSvg
-                      name="User_fill"
-                      size={20}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                />
+                <View className="mt-1">
+                  <RhfTextField
+                    label="Телефон"
+                    name="phone"
+                    maxLength={16}
+                    hideErrorText
+                    placeholder="+7 (___) ___-__-__"
+                    keyboardType="phone-pad"
+                    maskFn={maskPhone}
+                  />
+                </View>
+
+                <View className="mt-4">
+                  <Button
+                    title="Выбрать из контактов"
+                    variant="secondary"
+                    onPress={handleContactsPress}
+                    leftIcon={
+                      <StSvg
+                        name="User_fill"
+                        size={20}
+                        color={colors.neutral[900]}
+                      />
+                    }
+                  />
+                </View>
               </View>
 
               <View className="mt-5">
-                <Typography className="mb-2 font-inter-medium text-neutral-500 text-caption">
+                <Typography className="px-screen mb-2 font-inter-medium text-neutral-500 text-caption">
                   Категория
                 </Typography>
                 <FlatList
@@ -171,7 +172,10 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                   keyExtractor={(item) => String(item.id)}
                   showsHorizontalScrollIndicator={false}
                   className="mb-2"
-                  contentContainerStyle={{ paddingRight: 8 }}
+                  contentContainerStyle={{
+                    paddingRight: 8,
+                    paddingHorizontal: 20,
+                  }}
                   renderItem={({ item }) => (
                     <Badge
                       title={item.name}
@@ -190,6 +194,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                 />
                 <Button
                   title="Создать новую категорию"
+                  buttonClassName="mx-screen"
                   variant="clear"
                   onPress={() => setCreateTagVisible(true)}
                   rightIcon={
@@ -202,7 +207,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                 />
               </View>
 
-              <View className="mt-4">
+              <View className="mt-4 px-screen">
                 <RhfTextField
                   label="Комментарий"
                   name="comment"

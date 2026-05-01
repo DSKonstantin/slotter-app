@@ -16,17 +16,21 @@ import { Button, Typography } from "@/src/components/ui";
 import { days, DAY_ID_BY_INDEX } from "@/src/constants/days";
 import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import { useBulkCreateWorkingDaysMutation } from "@/src/store/redux/services/api/workingDaysApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { format } from "date-fns";
 import { getDatesUntilEndOfWeek } from "@/src/utils/schedule/getDatesUntilEndOfWeek";
+import {DEFAULT_END_AT, DEFAULT_START_AT} from "@/src/constants/hoursOptions";
+import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 
 const Schedule = () => {
   const auth = useRequiredAuth();
   const [activeDays, setActiveDays] = useState<string[]>([]);
   const [bulkCreateWorkingDays, { isLoading }] =
     useBulkCreateWorkingDaysMutation();
+  const [updateUser] = useUpdateUserMutation();
 
   const methods = useForm({
     resolver: yupResolver(OnboardingScheduleSchema),
@@ -74,6 +78,7 @@ const Schedule = () => {
       }));
 
     if (!working_days.length) {
+      await updateUser({ id: auth.userId, data: { onboarding_step: "notification" } }).unwrap();
       router.push(Routers.onboarding.notification);
       return;
     }
@@ -84,6 +89,7 @@ const Schedule = () => {
         working_days,
       }).unwrap();
 
+      await updateUser({ id: auth.userId, data: { onboarding_step: "notification" } }).unwrap();
       router.push(Routers.onboarding.notification);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить расписание"));
@@ -116,7 +122,7 @@ const Schedule = () => {
         }
       >
         <View className="mt-4">
-          <StepProgress steps={3} currentStep={3} />
+          <StepProgress steps={TOTAL_STEPS} currentStep={STEP_PROGRESS.schedule!} />
         </View>
         <View className="mt-8 gap-2">
           <Typography weight="semibold" className="text-display mb-2">
@@ -149,6 +155,8 @@ const Schedule = () => {
             label="Время работы"
             startName="startAt"
             endName="endAt"
+            startDefault={DEFAULT_START_AT}
+            endDefault={DEFAULT_END_AT}
             middleSlot={
               <Typography className="text-caption text-neutral-900">
                 Свободный или сменный график (2/2) можно будет настроить в

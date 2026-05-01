@@ -66,9 +66,10 @@ export type UpdateUserCustomerPayload = {
 };
 
 export type UserCustomerPeriod =
-  | "last_7_days"
+  | "today"
+  | "current_week"
+  | "current_month"
   | "last_30_days"
-  | "last_90_days"
   | "custom";
 
 export type GetUserCustomerAppointmentsParams = {
@@ -94,6 +95,8 @@ export type GetUserCustomerFinancesParams = {
 
 export interface UserCustomerFinancesPayment {
   appointment_id: number;
+  title: string;
+  start_time: string;
   amount_cents: number;
   date: string;
 }
@@ -106,6 +109,7 @@ export interface UserCustomerFinancesChartPoint {
 export interface GetUserCustomerFinancesResponse {
   total_income_cents: number;
   visits_count: number;
+  avg_check_cents: number;
   payments: UserCustomerFinancesPayment[];
   chart: UserCustomerFinancesChartPoint[];
 }
@@ -126,9 +130,16 @@ export interface UserCustomersStatisticAvgCheck {
   delta_percent: number | null;
 }
 
+export interface UserCustomersStatisticService {
+  service_id: number;
+  name: string;
+  customers_count: number;
+}
+
 export interface GetUserCustomersStatisticsResponse {
   new_clients: UserCustomersStatisticDelta;
   returned_clients: UserCustomersStatisticDelta;
   lost_clients: UserCustomersStatisticDelta;
   avg_check: UserCustomersStatisticAvgCheck;
+  services: UserCustomersStatisticService[];
 }
