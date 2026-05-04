@@ -1,12 +1,8 @@
 import React, { useCallback, useEffect } from "react";
-import { View, ScrollView } from "react-native";
-import {
-  FormProvider,
-  useForm,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import { View } from "react-native";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 
 import {
   Button,
@@ -24,9 +20,7 @@ import {
 import { days } from "@/src/constants/days";
 import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
-import {DEFAULT_END_AT, DEFAULT_START_AT} from "@/src/constants/hoursOptions";
-
-
+import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
 
 const DayRow = ({ index }: { index: number }) => {
   const { control } = useFormContext<ScheduleTemplateFormValues>();
@@ -95,23 +89,56 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
   }, [initialValues, methods]);
 
   return (
-    <StModal visible={visible} onClose={onClose} fullHeight>
-      <Typography weight="semibold" className="text-display text-center mb-2">
-        Шаблон недели
-      </Typography>
-
-      <Typography
-        weight="regular"
-        className="text-neutral-500 text-body text-center mb-5"
-      >
-        Шаблон месяца, применяется сразу до конца месяца
-      </Typography>
-
-      <FormProvider {...methods}>
-        <ScrollView
-          nestedScrollEnabled
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
+    <RhfFormProvider methods={methods}>
+      {({ setScrollRef, contentRef, scrollToError }) => (
+        <StModal
+          visible={visible}
+          onClose={onClose}
+          fullHeight
+          scrollable
+          scrollRef={setScrollRef}
+          contentRef={contentRef}
+          header={
+            <>
+              <Typography
+                weight="semibold"
+                className="text-display text-center mb-2"
+              >
+                Шаблон недели
+              </Typography>
+              <Typography
+                weight="regular"
+                className="text-neutral-500 text-body text-center mb-5"
+              >
+                Шаблон месяца, применяется сразу до конца месяца
+              </Typography>
+            </>
+          }
+          footer={
+            <>
+              <Button
+                title="Сохранить шаблон"
+                buttonClassName="mt-6"
+                rightIcon={
+                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+                }
+                onPress={methods.handleSubmit(handleSave, scrollToError)}
+              />
+              <Button
+                title="Применить шаблон"
+                variant="secondary"
+                buttonClassName="mt-3"
+                rightIcon={
+                  <StSvg
+                    name="Check_fill"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                }
+                onPress={methods.handleSubmit(handleApply, scrollToError)}
+              />
+            </>
+          }
         >
           <View className="gap-4">
             {days.map((_, index) => (
@@ -121,26 +148,8 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
               </View>
             ))}
           </View>
-        </ScrollView>
-
-        <Button
-          title="Сохранить шаблон"
-          buttonClassName="mt-6"
-          rightIcon={
-            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-          }
-          onPress={methods.handleSubmit(handleSave)}
-        />
-        <Button
-          title="Применить шаблон"
-          variant="secondary"
-          buttonClassName="mt-3"
-          rightIcon={
-            <StSvg name="Check_fill" size={24} color={colors.neutral[900]} />
-          }
-          onPress={methods.handleSubmit(handleApply)}
-        />
-      </FormProvider>
-    </StModal>
+        </StModal>
+      )}
+    </RhfFormProvider>
   );
 };

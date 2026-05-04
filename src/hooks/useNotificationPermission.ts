@@ -44,12 +44,10 @@ export function useNotificationPermission() {
 
     if (current.status === "granted") return current;
 
-    // можно показать системное окно разрешения
     if (current.canAskAgain) {
       return await request();
     }
 
-    // нельзя спросить снова -> только настройки
     openSettings();
     return current;
   }, [openSettings, refresh, request]);

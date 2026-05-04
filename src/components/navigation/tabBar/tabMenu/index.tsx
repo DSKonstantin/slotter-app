@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { Pressable, View } from "react-native";
-import { router, type Href } from "expo-router";
+import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
@@ -15,6 +15,8 @@ type MenuItem = {
   route?: string;
   disabled?: boolean;
 };
+
+const stripRouteGroups = (route: string) => route.replace(/\/\([^)]+\)/g, "");
 
 const MENU_ITEMS: MenuItem[] = [
   {
@@ -49,15 +51,16 @@ const TabMenu = () => {
   const dispatch = useAppDispatch();
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const { bottom, left: leftInset, right: rightInset } = useSafeAreaInsets();
+  const pathname = usePathname();
 
   const handleClose = useCallback(() => {
     dispatch(setTabMenuOpen(false));
   }, [dispatch]);
 
   const handleNavigate = useCallback(
-    (route?: string) => {
-      if (!route) return;
+    (route?: string, isActive?: boolean) => {
       handleClose();
+      if (!route || isActive) return;
       router.push(route as Href);
     },
     [handleClose],
@@ -71,6 +74,22 @@ const TabMenu = () => {
         className="absolute inset-0 bg-black/40"
         onPress={handleClose}
       />
+
+      <View
+        className="absolute"
+        style={{
+          bottom: bottom + 8,
+          right: rightInset + 20,
+        }}
+      >
+        <IconButton
+          size="lg"
+          icon={
+            <StSvg name="Close_round" size={36} color={colors.neutral[900]} />
+          }
+          onPress={handleClose}
+        />
+      </View>
 
       <View
         className="absolute"
@@ -93,7 +112,7 @@ const TabMenu = () => {
           />
         </View>
         <View
-          className="bg-white rounded-[30px] py-2"
+          className="bg-white rounded-[30px] py-2.5"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
@@ -102,28 +121,35 @@ const TabMenu = () => {
             elevation: 8,
           }}
         >
-          {MENU_ITEMS.map((item) => (
-            <Pressable
-              key={item.label}
-              onPress={() => handleNavigate(item.route)}
-              disabled={item.disabled}
-              className="flex-row items-center gap-3 px-5 py-3 active:opacity-60"
-            >
-              <StSvg
-                name={item.icon}
-                size={24}
-                color={
-                  item.disabled ? colors.neutral[300] : colors.neutral[900]
-                }
-              />
-              <Typography
-                weight="medium"
-                className={`text-body ${item.disabled ? "text-neutral-300" : "text-neutral-900"}`}
+          {MENU_ITEMS.map((item) => {
+            const normalized = item.route ? stripRouteGroups(item.route) : "";
+            const isActive = !!(
+              normalized &&
+              !item.disabled &&
+              (pathname === normalized || pathname.startsWith(`${normalized}/`))
+            );
+
+            return (
+              <Pressable
+                key={item.label}
+                onPress={() => handleNavigate(item.route, isActive)}
+                disabled={item.disabled}
+                className={`flex-row items-center gap-3 mx-2.5 px-2 py-3 rounded-[22px] active:opacity-70 ${
+                  isActive ? "bg-[#F9F8F9]" : ""
+                }`}
               >
-                {item.label}
-              </Typography>
-            </Pressable>
-          ))}
+                <StSvg name={item.icon} size={24} color={colors.neutral[900]} />
+                <Typography
+                  weight={isActive ? "semibold" : "medium"}
+                  className={`text-body ${
+                    item.disabled ? "text-neutral-300" : "text-neutral-900"
+                  }`}
+                >
+                  {item.label}
+                </Typography>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     </View>

@@ -24,21 +24,28 @@ const ERROR_META = new Set(["ref", "message", "type", "types", "root"]);
 const findFirstErrorPath = (err: unknown, prefix = ""): string | null => {
   if (!err || typeof err !== "object") return null;
   const e = err as Record<string, unknown>;
-  if (typeof e.message === "string") return prefix;
+
+  // Walk children first (deepest leaf wins) — иначе массив-уровневые
+  // сообщения (например, breaksField test) перехватывают путь раньше времени.
   if (Array.isArray(err)) {
     for (let i = 0; i < err.length; i += 1) {
+      if (err[i] == null) continue;
       const next = prefix ? `${prefix}.${i}` : `${i}`;
       const found = findFirstErrorPath(err[i], next);
       if (found) return found;
     }
-    return null;
+  } else {
+    for (const key of Object.keys(e)) {
+      if (ERROR_META.has(key)) continue;
+      const next = prefix ? `${prefix}.${key}` : key;
+      const found = findFirstErrorPath(e[key], next);
+      if (found) return found;
+    }
   }
-  for (const key of Object.keys(e)) {
-    if (ERROR_META.has(key)) continue;
-    const next = prefix ? `${prefix}.${key}` : key;
-    const found = findFirstErrorPath(e[key], next);
-    if (found) return found;
-  }
+
+  // Если в детях ничего — текущий узел сам лист с сообщением.
+  if (typeof e.message === "string") return prefix;
+
   return null;
 };
 

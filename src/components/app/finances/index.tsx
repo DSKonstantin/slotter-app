@@ -1,13 +1,19 @@
 import React, { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { toast } from "@backpackapp-io/react-native-toast";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { useGetFinancesSummaryQuery } from "@/src/store/redux/services/api/financesApi";
+import {
+  useDeleteExpenseMutation,
+  useGetFinancesSummaryQuery,
+} from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import type { SummaryExpense } from "@/src/store/redux/services/api-types";
 import {
   Card,
   Divider,
@@ -42,6 +48,34 @@ const FinancesScreen = () => {
     auth
       ? { userId: auth.userId, month: CURRENT_MONTH, year: CURRENT_YEAR }
       : skipToken,
+  );
+
+  const [deleteExpense] = useDeleteExpenseMutation();
+
+  const handleDeleteExpense = useCallback(
+    (expense: SummaryExpense) => {
+      Alert.alert(
+        "Удалить расход?",
+        expense.name,
+        [
+          { text: "Отмена", style: "cancel" },
+          {
+            text: "Удалить",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteExpense({ expenseId: expense.id }).unwrap();
+              } catch (error) {
+                toast.error(
+                  getApiErrorMessage(error, "Не удалось удалить расход"),
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [deleteExpense],
   );
 
   useFocusEffect(
@@ -164,6 +198,7 @@ const FinancesScreen = () => {
             <ExpenseCategoriesList
               expenses={summary?.expenses ?? []}
               isLoading={isSummaryLoading}
+              onDelete={handleDeleteExpense}
             />
 
             <Divider />

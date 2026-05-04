@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, View } from "react-native";
+import React, { memo, useCallback } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import {
   Typography,
@@ -11,10 +11,49 @@ import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
-import { usePathname, useSegments } from "expo-router";
+import { usePathname } from "expo-router";
 import { CommonActions } from "@react-navigation/native";
 
 const HIDDEN_TAB_BAR_ROUTES = ["/account/preview"];
+
+type Tab = (typeof TABS)[number];
+
+type TabItemProps = {
+  tab: Tab;
+  isActive: boolean;
+  isAtRoot: boolean;
+  onPress: (key: string, isActive: boolean, isAtRoot: boolean) => void;
+};
+
+const TabItem = memo(({ tab, isActive, isAtRoot, onPress }: TabItemProps) => {
+  const handlePress = useCallback(() => {
+    onPress(tab.key, isActive, isAtRoot);
+  }, [onPress, tab.key, isActive, isAtRoot]);
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      className={`flex-1 p-1 items-center justify-center
+        h-[58px] gap-0.5
+        rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "bg-transparent"}`}
+    >
+      <StSvg
+        name={tab.icon as string}
+        size={32}
+        color={isActive ? colors.neutral[900] : colors.neutral[500]}
+      />
+
+      <Typography
+        weight={isActive ? "semibold" : "medium"}
+        className="text-[9px] leading-none"
+        style={isActive ? styles.labelActive : styles.labelInactive}
+      >
+        {tab.label}
+      </Typography>
+    </Pressable>
+  );
+});
+TabItem.displayName = "TabItem";
 
 const StTabBar: React.FC<BottomTabBarProps> = ({
   state,
@@ -25,28 +64,43 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const activeRoute = state.routes[state.index]?.name;
   const pathname = usePathname();
-  const segments = useSegments();
+
+  const handleTabPress = useCallback(
+    (key: string, isActive: boolean, isAtRoot: boolean) => {
+      if (!isActive) {
+        navigation.navigate(key);
+        return;
+      }
+      if (isAtRoot) return;
+      navigation.dispatch(
+        CommonActions.reset({ index: 0, routes: [{ name: key }] }),
+      );
+    },
+    [navigation],
+  );
+
+  const handleMenuPress = useCallback(() => {
+    dispatch(setTabMenuOpen(!isMenuOpen));
+  }, [dispatch, isMenuOpen]);
 
   if (
     HIDDEN_TAB_BAR_ROUTES.some((route) => pathname.endsWith(route)) ||
-    (segments[1] === "chat" && segments[2] !== undefined)
+    /^\/chat\/[^/]+/.test(pathname)
   ) {
     return null;
   }
 
   return (
     <View
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: TAB_BAR_HEIGHT + insets.bottom,
-        paddingLeft: insets.left,
-        paddingRight: insets.right,
-        paddingBottom: insets.bottom,
-        backgroundColor: "transparent",
-      }}
+      style={[
+        styles.container,
+        {
+          height: TAB_BAR_HEIGHT + insets.bottom,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+          paddingBottom: insets.bottom + 8,
+        },
+      ]}
     >
       <FadeOverlay
         position="bottom"
@@ -55,60 +109,45 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
       <View className="flex-row items-center justify-between px-5 bg-transparent">
         <View className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1 overflow-hidden">
           {TABS.map((tab) => {
-            const isActive = activeRoute === tab.key;
+            const tabRoute = state.routes.find((r) => r.name === tab.key);
+            const isAtRoot =
+              !tabRoute?.state || (tabRoute.state.index ?? 0) === 0;
 
             return (
-              <Pressable
+              <TabItem
                 key={tab.key}
-                onPress={() => {
-                  if (isActive || tab.key === "chat") {
-                    navigation.dispatch(
-                      CommonActions.reset({
-                        index: 0,
-                        routes: [{ name: tab.key }],
-                      }),
-                    );
-                  } else {
-                    navigation.navigate(tab.key);
-                  }
-                }}
-                className={`flex-1 p-1 items-center justify-center
-                h-[58px] gap-0.5
-                rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "bg-transparent"}`}
-              >
-                <StSvg
-                  name={tab.icon as string}
-                  size={32}
-                  color={isActive ? colors.neutral[900] : colors.neutral[500]}
-                />
-
-                <Typography
-                  weight={isActive ? "semibold" : "medium"}
-                  className="text-[10px] leading-none"
-                  style={{
-                    color: isActive ? colors.neutral[900] : colors.neutral[500],
-                  }}
-                >
-                  {tab.label}
-                </Typography>
-              </Pressable>
+                tab={tab}
+                isActive={activeRoute === tab.key}
+                isAtRoot={isAtRoot}
+                onPress={handleTabPress}
+              />
             );
           })}
         </View>
         <IconButton
           size="lg"
           icon={
-            <StSvg
-              name={isMenuOpen ? "Close_round" : "Menu"}
-              size={36}
-              color={colors.neutral[900]}
-            />
+            <StSvg name="Menu" size={36} color={colors.neutral[900]} />
           }
-          onPress={() => dispatch(setTabMenuOpen(!isMenuOpen))}
+          onPress={handleMenuPress}
+          buttonClassName={isMenuOpen ? "opacity-0" : undefined}
+          disabled={isMenuOpen}
         />
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "transparent",
+  },
+  labelActive: { color: colors.neutral[900] },
+  labelInactive: { color: colors.neutral[500] },
+});
 
 export default StTabBar;
