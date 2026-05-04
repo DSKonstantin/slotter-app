@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import NetInfo from "@react-native-community/netinfo";
 import {
   useLazyGetMeQuery,
   useLogoutSessionMutation,
@@ -18,6 +19,12 @@ import {
   logout as logoutAction,
   setToken,
 } from "@/src/store/redux/slices/authSlice";
+
+const isAuthError = (e: unknown): boolean => {
+  if (!e || typeof e !== "object") return false;
+  const status = (e as { status?: unknown }).status;
+  return status === 401 || status === 403;
+};
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -70,7 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await getMe().unwrap();
         }
       } catch (e) {
-        console.error("Auth check failed", e);
+        if (isAuthError(e)) {
+          await accessTokenStorage.remove();
+          dispatch(logoutAction());
+        } else {
+          console.error("Auth check failed", e);
+        }
       } finally {
         setIsInitialLoading(false);
       }
@@ -80,6 +92,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Run auth bootstrap only once on app start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getMe]);
+
+  useEffect(() => {
+    if (!token || user) return;
+
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      if (!state.isConnected) return;
+      getMe()
+        .unwrap()
+        .catch(async (e) => {
+          if (isAuthError(e)) {
+            await accessTokenStorage.remove();
+            dispatch(logoutAction());
+          }
+        });
+    });
+
+    return unsubscribe;
+  }, [token, user, getMe, dispatch]);
 
   const value = useMemo(
     () => ({

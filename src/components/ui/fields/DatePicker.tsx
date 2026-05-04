@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, useState } from "react";
+import React, { ReactNode, Ref, useMemo, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { FieldError } from "react-hook-form";
 
@@ -24,6 +24,8 @@ type DatePickerProps = {
   /** Where the picker spinner starts when `value` is empty. Defaults to `new Date()`. */
   defaultDisplayValue?: Date;
 
+  ref?: Ref<View>;
+
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
 };
@@ -39,6 +41,7 @@ export const DatePicker = ({
   defaultDisplayValue,
   startAdornment,
   endAdornment,
+  ref,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
 
@@ -71,6 +74,7 @@ export const DatePicker = ({
 
   return (
     <BaseField
+      ref={ref}
       label={label}
       error={error}
       hideErrorText={hideErrorText}

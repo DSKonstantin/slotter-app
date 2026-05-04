@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { router } from "expo-router";
-import { Controller, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import {
@@ -12,7 +12,7 @@ import {
   StSvg,
   Typography,
 } from "@/src/components/ui";
-import { BaseField } from "@/src/components/ui/fields/BaseField";
+import { RhfPressableField } from "@/src/components/hookForm/rhf-pressable-field";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -28,7 +28,7 @@ const CustomerSelect = () => {
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const createdCustomer = useAppSelector((s) => s.slotDraft.createdCustomer);
-  const { control, setValue } = useFormContext();
+  const { setValue } = useFormContext();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState("");
@@ -95,36 +95,16 @@ const CustomerSelect = () => {
   return (
     <>
       <View className="mt-5 gap-2">
-        <Controller
-          control={control}
+        <RhfPressableField
           name="customerId"
-          render={({ fieldState: { error } }) => (
-            <BaseField
-              label="Клиент"
-              error={error}
-              hideErrorText
-              startAdornment={
-                <StSvg name="Search" size={24} color={colors.neutral[900]} />
-              }
-              renderControl={() => (
-                <Pressable
-                  className="flex-1 justify-center"
-                  onPress={() => setModalVisible(true)}
-                >
-                  <Text
-                    className="font-inter-regular text-[16px] px-4"
-                    style={{
-                      color: selectedCustomer
-                        ? colors.neutral[900]
-                        : colors.neutral[300],
-                    }}
-                  >
-                    {selectedCustomer?.title ?? "Поиск по имени или телефону"}
-                  </Text>
-                </Pressable>
-              )}
-            />
-          )}
+          label="Клиент"
+          hideErrorText
+          startAdornment={
+            <StSvg name="Search" size={24} color={colors.neutral[900]} />
+          }
+          displayValue={selectedCustomer?.title}
+          placeholder="Поиск по имени или телефону"
+          onPress={() => setModalVisible(true)}
         />
         <Button
           title=" Создать нового клиента"

@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
@@ -102,74 +103,93 @@ const PersonalInformation = () => {
   if (!auth) return null;
 
   return (
-    <FormProvider {...methods}>
-      <AuthScreenLayout
-        avoidKeyboard
-        header={<AuthHeader />}
-        footer={
-          <AuthFooter
-            primary={{
-              title: "Далее",
-              disabled: isLoading,
-              loading: isLoading,
-              onPress: methods.handleSubmit(onSubmit),
-            }}
-          />
-        }
-      >
-        <View className="mt-4">
-          <StepProgress steps={TOTAL_STEPS} currentStep={STEP_PROGRESS.personal_information!} />
-        </View>
-        <View className="mt-8 gap-2">
-          <Typography weight="semibold" className="text-display mb-2">
-            Твоя визитка
-          </Typography>
-          <Typography className="text-body text-neutral-500">
-            Чтобы клиенты знали, к кому идут
-          </Typography>
+    <RhfFormProvider methods={methods}>
+      {({ setScrollRef, contentRef, scrollToError }) => (
+        <AuthScreenLayout
+          avoidKeyboard
+          scrollRef={setScrollRef}
+          contentRef={contentRef}
+          header={
+            <>
+              <AuthHeader />
+              <View className="mt-4">
+                <StepProgress
+                  steps={TOTAL_STEPS}
+                  currentStep={STEP_PROGRESS.personal_information!}
+                />
+              </View>
+            </>
+          }
+          footer={
+            <AuthFooter
+              primary={{
+                title: "Далее",
+                disabled: isLoading,
+                loading: isLoading,
+                onPress: methods.handleSubmit(onSubmit, scrollToError),
+              }}
+            />
+          }
+        >
+          <View className="mt-8 gap-2">
+            <Typography weight="semibold" className="text-display mb-2">
+              Твоя визитка
+            </Typography>
+            <Typography className="text-body text-neutral-500">
+              Чтобы клиенты знали, к кому идут
+            </Typography>
 
-          <View className="items-center my-4">
-            <ImagePickerTrigger
-              title="Загрузить аватар"
-              options={{ aspect: [1, 1], cameraType: CameraType.front }}
-              onPick={handlePickAvatar}
-            >
-              <Avatar
-                size="xl"
-                uri={avatar?.uri ?? user?.avatar_url ?? undefined}
-                fallbackIcon={
-                  <StSvg name="Camera" size={40} color={colors.neutral[500]} />
-                }
-              />
-            </ImagePickerTrigger>
+            <View className="items-center my-4">
+              <ImagePickerTrigger
+                title="Загрузить аватар"
+                options={{ aspect: [1, 1], cameraType: CameraType.front }}
+                onPick={handlePickAvatar}
+              >
+                <Avatar
+                  size="xl"
+                  uri={avatar?.uri ?? user?.avatar_url ?? undefined}
+                  fallbackIcon={
+                    <StSvg
+                      name="Camera"
+                      size={40}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                />
+              </ImagePickerTrigger>
+            </View>
           </View>
-        </View>
-        <View className="gap-2">
-          <RhfTextField
-            name="profession"
-            label="Профессия*"
-            placeholder="Барбер"
-          />
-          <RhfTextField name="name" label="Имя*" placeholder="Иван" />
-          <RhfTextField name="surname" label="Фамилия*" placeholder="Иванов" />
-          <Divider />
-          <NicknameField />
-          <Divider />
-        </View>
+          <View className="gap-2">
+            <RhfTextField
+              name="profession"
+              label="Профессия*"
+              placeholder="Барбер"
+            />
+            <RhfTextField name="name" label="Имя*" placeholder="Иван" />
+            <RhfTextField
+              name="surname"
+              label="Фамилия*"
+              placeholder="Иванов"
+            />
+            <Divider />
+            <NicknameField />
+            <Divider />
+          </View>
 
-        <Typography className="text-neutral-500 text-caption mt-5">
-          Формат работы
-        </Typography>
-        <View className="mt-2 mb-5 gap-2">
-          <Item title="Дома/в студии" right={<RHFSwitch name="atHome" />} />
-          <Item title="Онлайн" right={<RHFSwitch name="online" />} />
-          <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
-        </View>
-        <View className="mb-8">
-          <AddressField />
-        </View>
-      </AuthScreenLayout>
-    </FormProvider>
+          <Typography className="text-neutral-500 text-caption mt-5">
+            Формат работы
+          </Typography>
+          <View className="mt-2 mb-5 gap-2">
+            <Item title="Дома/в студии" right={<RHFSwitch name="atHome" />} />
+            <Item title="Онлайн" right={<RHFSwitch name="online" />} />
+            <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
+          </View>
+          <View className="mb-8">
+            <AddressField />
+          </View>
+        </AuthScreenLayout>
+      )}
+    </RhfFormProvider>
   );
 };
 

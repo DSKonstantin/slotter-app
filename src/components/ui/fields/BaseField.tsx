@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, Ref, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
@@ -17,6 +17,8 @@ type BaseFieldProps = {
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   onEndAdornmentPress?: () => void;
+
+  ref?: Ref<View>;
 
   renderControl: (params: {
     disabled?: boolean;
@@ -37,11 +39,12 @@ export function BaseField({
   endAdornment,
   onEndAdornmentPress,
   renderControl,
+  ref,
 }: BaseFieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
-    <View className="flex-grow">
+    <View ref={ref} collapsable={false} className="flex-grow">
       {label && <Text className={styles.label}>{label}</Text>}
 
       <View

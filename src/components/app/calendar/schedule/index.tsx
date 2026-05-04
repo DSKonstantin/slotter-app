@@ -33,7 +33,6 @@ const CalendarSchedule = () => {
 
   const {
     methods,
-    handleSubmit,
     calendarDays,
     appointmentDates,
     modalVisible,
@@ -148,7 +147,7 @@ const CalendarSchedule = () => {
         </View>
       );
     },
-    [calendarDaysMap, appointmentDates, toggleDay],
+    [calendarDaysMap, appointmentDates, toggleDay, methods.formState.isDirty],
   );
 
   return (
@@ -203,7 +202,7 @@ const CalendarSchedule = () => {
       <ScheduleSettingsModal
         visible={modalVisible}
         onClose={clearSelection}
-        onSave={handleSubmit(handleSave)}
+        onSave={handleSave}
         isLoading={isSaving}
       />
 

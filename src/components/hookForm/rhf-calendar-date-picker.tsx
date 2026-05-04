@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
-import { Controller, useFormContext } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
 import { CalendarDatePicker } from "@/src/components/ui/fields/CalendarDatePicker";
+import { useComposedFieldRef } from "@/src/hooks/useScrollToError";
 
 type RhfCalendarDatePickerProps = {
   name: string;
@@ -24,25 +25,25 @@ export function RhfCalendarDatePicker({
   startAdornment,
 }: RhfCalendarDatePickerProps) {
   const { control } = useFormContext();
+  const {
+    field: { value, onChange, ref },
+    fieldState: { error },
+  } = useController({ name, control });
+  const setRef = useComposedFieldRef(name, ref);
 
   return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field: { value, onChange }, fieldState: { error } }) => (
-        <CalendarDatePicker
-          value={value ?? null}
-          onChange={onChange}
-          label={label}
-          placeholder={placeholder}
-          displayFormat={displayFormat}
-          error={error}
-          hideErrorText={hideErrorText}
-          disabled={disabled}
-          endAdornment={endAdornment}
-          startAdornment={startAdornment}
-        />
-      )}
+    <CalendarDatePicker
+      ref={setRef}
+      value={value ?? null}
+      onChange={onChange}
+      label={label}
+      placeholder={placeholder}
+      displayFormat={displayFormat}
+      error={error}
+      hideErrorText={hideErrorText}
+      disabled={disabled}
+      endAdornment={endAdornment}
+      startAdornment={startAdornment}
     />
   );
 }
