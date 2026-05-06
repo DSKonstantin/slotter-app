@@ -132,3 +132,14 @@ export type {
   UpdateGalleryPhotoPayload,
   GalleryPhotoPositionPayload,
 } from "./galleryPhoto";
+export type {
+  Notification,
+  NotificationKind,
+  NotificationCancelVariant,
+  NotificationPayload,
+  NotificationSubject,
+  GetNotificationsParams,
+  GetNotificationsResponse,
+  MarkNotificationReadResponse,
+  MarkAllNotificationsReadResponse,
+} from "./notification";

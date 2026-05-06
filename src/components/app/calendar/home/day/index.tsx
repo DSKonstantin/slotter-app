@@ -104,8 +104,8 @@ const DayCalendarView = () => {
   );
 
   const isEmpty = useMemo(
-    () => !isLoading && !selectedWorkingDay,
-    [isLoading, selectedWorkingDay],
+    () => !isLoading && !selectedWorkingDay && appointments.length === 0,
+    [isLoading, selectedWorkingDay, appointments.length],
   );
 
   const refetchAll = useCallback(async () => {

@@ -1,6 +1,12 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useFocusEffect, router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Alert, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
@@ -15,6 +21,7 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { getScheduleTimeLabel } from "@/src/utils/calendar/scheduleHelpers";
 import { useCalendarSchedule } from "@/src/hooks/useCalendarSchedule";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import {
   scheduleCalendarTheme,
   calendarStyle,
@@ -53,6 +60,8 @@ const CalendarSchedule = () => {
       return () => clearSelection();
     }, [clearSelection]),
   );
+
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const calendarDaysMap = useMemo(
     () => Object.fromEntries(calendarDays.map((day) => [day.date, day])),
@@ -183,17 +192,28 @@ const CalendarSchedule = () => {
                 onRetry={refetch}
               />
             ) : (
-              <Calendar
-                key={format(current, "yyyy-MM")}
-                initialDate={formatApiDate(current)}
-                firstDay={1}
-                hideArrows
-                hideExtraDays={true}
-                renderHeader={renderHeader}
-                theme={scheduleCalendarTheme}
-                style={calendarStyle.calendar}
-                dayComponent={renderDay}
-              />
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ flexGrow: 1 }}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+              >
+                <Calendar
+                  key={format(current, "yyyy-MM")}
+                  initialDate={formatApiDate(current)}
+                  firstDay={1}
+                  hideArrows
+                  hideExtraDays={true}
+                  renderHeader={renderHeader}
+                  theme={scheduleCalendarTheme}
+                  style={calendarStyle.calendar}
+                  dayComponent={renderDay}
+                />
+              </ScrollView>
             )}
           </SafeAreaView>
         )}

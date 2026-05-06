@@ -12,19 +12,14 @@ import {
   useLazyGetMeQuery,
   useLogoutSessionMutation,
 } from "@/src/store/redux/services/api/authApi";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { useDispatch } from "react-redux";
-import { useAppSelector } from "@/src/store/redux/store";
+import { persistor, useAppSelector } from "@/src/store/redux/store";
 import {
   logout as logoutAction,
   setToken,
 } from "@/src/store/redux/slices/authSlice";
-
-const isAuthError = (e: unknown): boolean => {
-  if (!e || typeof e !== "object") return false;
-  const status = (e as { status?: unknown }).status;
-  return status === 401 || status === 403;
-};
+import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { isAuthError } from "@/src/utils/apiError";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -45,13 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const login = useCallback(
-    async (token: string) => {
+    async (newToken: string) => {
       try {
-        await accessTokenStorage.set(token);
-        dispatch(setToken(token));
+        await accessTokenStorage.set(newToken);
+        dispatch(setToken(newToken));
       } catch {
         await accessTokenStorage.remove();
         dispatch(logoutAction());
+        await persistor.purge();
       }
     },
     [dispatch],
@@ -64,34 +60,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       await accessTokenStorage.remove();
       dispatch(logoutAction());
+      await persistor.purge();
     }
   }, [dispatch, logoutSession]);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const bootstrap = async () => {
       try {
-        const token = await accessTokenStorage.get();
-
-        if (token) {
-          dispatch(setToken(token));
-          await getMe().unwrap();
-        }
-      } catch (e) {
-        if (isAuthError(e)) {
-          await accessTokenStorage.remove();
-          dispatch(logoutAction());
-        } else {
-          console.error("Auth check failed", e);
+        const storedToken = await accessTokenStorage.get();
+        if (storedToken) {
+          dispatch(setToken(storedToken));
+          getMe()
+            .unwrap()
+            .catch(async (e) => {
+              if (isAuthError(e)) {
+                await accessTokenStorage.remove();
+                dispatch(logoutAction());
+                await persistor.purge();
+              }
+            });
         }
       } finally {
         setIsInitialLoading(false);
       }
     };
 
-    checkAuth();
+    bootstrap();
     // Run auth bootstrap only once on app start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getMe]);
+  }, []);
 
   useEffect(() => {
     if (!token || user) return;
@@ -104,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isAuthError(e)) {
             await accessTokenStorage.remove();
             dispatch(logoutAction());
+            await persistor.purge();
           }
         });
     });

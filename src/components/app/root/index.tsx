@@ -14,6 +14,7 @@ import { useGetUpcomingAppointmentsQuery } from "@/src/store/redux/services/api/
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview from "@/src/components/app/root/homeOverview";
+import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const Home = () => {
   const { bottom } = useSafeAreaInsets();
@@ -44,8 +45,11 @@ const Home = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View className="px-screen gap-3 mt-2">
+        <View className="px-screen flex-1 gap-3 mt-2">
           <HomeOverview />
+        </View>
+        <View className="px-screen gap-3">
+          <NotificationBanners />
         </View>
       </ScrollView>
     </SafeAreaView>

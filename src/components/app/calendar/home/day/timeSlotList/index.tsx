@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type {
   Appointment,
   WorkingDayBreak,
@@ -50,87 +50,100 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     (state) => state.calendar.highlightSlotId,
   );
 
+  const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
+
   const handleSlotPress = useCallback((id: number) => {
     router.push(Routers.app.calendar.slot(id));
   }, []);
 
-  const segments = useMemo(() => {
-    if (!startAt || !endAt) return null;
-    return createSegments(
-      startAt,
-      endAt,
-      breaks,
-      appointments,
-      visibleStatuses,
-    );
-  }, [appointments, visibleStatuses, breaks, startAt, endAt]);
+  const handleToggleExpand = useCallback((id: number) => {
+    setExpandedSlotId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const segmentsResult = useMemo(
+    () => createSegments(startAt, endAt, breaks, appointments, visibleStatuses),
+    [appointments, visibleStatuses, breaks, startAt, endAt],
+  );
+  const segments = segmentsResult.segments;
+  const effectiveStart = segmentsResult.effectiveStart;
 
   useEffect(() => {
-    if (!highlightSlotId || !startAt) return;
+    if (!highlightSlotId || segments.length === 0) return;
     const slot = appointments.find((a) => a.id === highlightSlotId);
     if (slot) {
       onHighlightScroll?.(
         Math.max(
           0,
-          (parseTime(slot.start_time) - parseTime(startAt)) * MINUTE_HEIGHT -
-            50,
+          (parseTime(slot.start_time) - effectiveStart) * MINUTE_HEIGHT - 50,
         ),
       );
     }
     const timer = setTimeout(() => dispatch(clearHighlightSlotId()), 3000);
     return () => clearTimeout(timer);
-  }, [highlightSlotId, startAt, dispatch, onHighlightScroll, appointments]);
+  }, [
+    highlightSlotId,
+    effectiveStart,
+    segments,
+    dispatch,
+    onHighlightScroll,
+    appointments,
+  ]);
 
-  if (!segments) return null;
+  if (segments.length === 0) return null;
 
   return (
     <View className="flex-1 pt-4 px-screen">
-      {segments.map(({ segStart, segEnd, content }) => (
-        <View
-          key={segStart}
-          className="flex-row"
-          style={{
-            height: getSegmentHeight(segStart, segEnd, content),
-          }}
-        >
-          <View className="border-r border-neutral-200 relative w-[50px]">
-            <TimeLabels segStart={segStart} segEnd={segEnd} />
-          </View>
+      {segments.map((segment) => {
+        const { segStart, segEnd, isCompressed, content } = segment;
+        return (
+          <View
+            key={segStart}
+            className="flex-row"
+            style={{ height: getSegmentHeight(segment) }}
+          >
+            <View className="border-r border-neutral-200 relative w-[50px]">
+              {!isCompressed && (
+                <TimeLabels segStart={segStart} segEnd={segEnd} />
+              )}
+            </View>
 
-          <View className="flex-1 pl-2.5 relative">
-            {content.kind === "break" ? (
-              <BreakBlock
-                breakItem={content.breakItem}
-                workingDayId={workingDayId}
-              />
-            ) : (
-              <>
-                {content.slots.map((slot) => (
-                  <SlotCard
-                    key={slot.id}
-                    slot={slot}
-                    onPress={() => handleSlotPress(slot.id)}
-                    highlighted={slot.id === highlightSlotId}
-                    containerStyle={{
-                      ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
-                      minHeight: getSlotMinHeight(slot),
-                      marginBottom: SLOT_GAP,
-                    }}
-                  />
-                ))}
-                {content.showFilteredBlock && <FilteredSlotBlock />}
-                {content.showFreeSlotBlock && (
-                  <FreeSlotBlock
-                    date={date}
-                    time={formatTime(segStart)}
-                    endTime={formatTime(segEnd)}
-                  />
-                )}
-              </>
-            )}
+            <View className="flex-1 pl-2.5 relative">
+              {content.kind === "break" ? (
+                <BreakBlock
+                  breakItem={content.breakItem}
+                  workingDayId={workingDayId}
+                />
+              ) : (
+                <>
+                  {content.slots.map((slot) => (
+                    <SlotCard
+                      key={slot.id}
+                      slot={slot}
+                      onPress={() => handleSlotPress(slot.id)}
+                      highlighted={slot.id === highlightSlotId}
+                      isExpanded={slot.id === expandedSlotId}
+                      onToggleExpand={() => handleToggleExpand(slot.id)}
+                      containerStyle={{
+                        ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
+                        minHeight: getSlotMinHeight(slot),
+                        marginBottom: SLOT_GAP,
+                      }}
+                    />
+                  ))}
+                  {content.showFilteredBlock && <FilteredSlotBlock />}
+                  {content.showFreeSlotBlock && (
+                    <FreeSlotBlock
+                      date={date}
+                      time={formatTime(segStart)}
+                      endTime={formatTime(segEnd)}
+                    />
+                  )}
+                </>
+              )}
+            </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 };

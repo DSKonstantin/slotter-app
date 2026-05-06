@@ -3,6 +3,7 @@ import type { AxiosRequestConfig } from "axios";
 import { AxiosHeaders, isAxiosError } from "axios";
 import axios from "./axios";
 import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
+import { isAuthError } from "@/src/utils/apiError";
 
 export interface AxiosBaseQueryError {
   status: number | "FETCH_ERROR" | "CUSTOM_ERROR";
@@ -159,7 +160,7 @@ const axiosBaseQuery = ({
 
     if (isFormData(requestConfig.data)) {
       const result = await fetchMultipart(requestConfig, preparedHeaders);
-      if ("error" in result && result.error.status === 401) {
+      if ("error" in result && isAuthError(result.error)) {
         await accessTokenStorage.remove();
         api.dispatch({ type: "auth/logout" });
       }
@@ -178,7 +179,7 @@ const axiosBaseQuery = ({
       };
     } catch (error) {
       const errorPayload = getErrorPayload(error);
-      if (errorPayload.status === 401) {
+      if (isAuthError(errorPayload)) {
         await accessTokenStorage.remove();
         api.dispatch({ type: "auth/logout" });
       }

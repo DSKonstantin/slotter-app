@@ -14,3 +14,5 @@ export const BG = colors.neutral[100];
 export const FG = "#F5F5FA";
 
 export const SKELETON_ROW_COUNT = 5;
+
+export const COMPRESSED_GAP_HEIGHT = 0;

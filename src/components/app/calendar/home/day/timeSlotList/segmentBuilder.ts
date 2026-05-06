@@ -4,6 +4,7 @@ import type {
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
 import {
+  COMPRESSED_GAP_HEIGHT,
   LONG_SLOT_MIN_HEIGHT,
   MINUTE_HEIGHT,
   SHORT_SLOT_MIN_HEIGHT,
@@ -40,8 +41,17 @@ export type SegmentContent =
 export type Segment = {
   segStart: number;
   segEnd: number;
+  isOutsideWorking: boolean;
+  isCompressed: boolean;
   content: SegmentContent;
 };
+
+export type CreateSegmentsResult = {
+  segments: Segment[];
+  effectiveStart: number;
+};
+
+
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -85,14 +95,32 @@ const parseAppointments = (
 // ── Time points ──────────────────────────────────────────────────────
 
 const collectTimePoints = (
-  dayStart: number,
-  dayEnd: number,
+  effectiveStart: number,
+  effectiveEnd: number,
+  workingStart: number | undefined,
+  workingEnd: number | undefined,
   parsedBreaks: ParsedBreak[],
   blockingAppointments: ParsedAppointment[],
 ) => {
-  const timePoints = new Set<number>([dayStart, dayEnd]);
-  const startHour = Math.ceil(dayStart / 60);
-  const endHour = Math.floor(dayEnd / 60);
+  const timePoints = new Set<number>([effectiveStart, effectiveEnd]);
+
+  if (
+    workingStart !== undefined &&
+    workingStart > effectiveStart &&
+    workingStart < effectiveEnd
+  ) {
+    timePoints.add(workingStart);
+  }
+  if (
+    workingEnd !== undefined &&
+    workingEnd > effectiveStart &&
+    workingEnd < effectiveEnd
+  ) {
+    timePoints.add(workingEnd);
+  }
+
+  const startHour = Math.ceil(effectiveStart / 60);
+  const endHour = Math.floor(effectiveEnd / 60);
 
   for (let hour = startHour; hour <= endHour; hour++) {
     const hourMinute = hour * 60;
@@ -103,8 +131,12 @@ const collectTimePoints = (
       ({ start, end, slot }) =>
         slot.duration > 0 && start < hourMinute && end > hourMinute,
     );
+    const insideOutsideWorking =
+      workingStart !== undefined &&
+      workingEnd !== undefined &&
+      (hourMinute < workingStart || hourMinute > workingEnd);
 
-    if (!insideBreak && !insideAppointment) {
+    if (!insideBreak && !insideAppointment && !insideOutsideWorking) {
       timePoints.add(hourMinute);
     }
   }
@@ -126,13 +158,13 @@ const collectTimePoints = (
 
     if (
       !isInsideLongerAppointment &&
-      appointment.start >= dayStart &&
-      appointment.start <= dayEnd
+      appointment.start >= effectiveStart &&
+      appointment.start <= effectiveEnd
     ) {
       timePoints.add(appointment.start);
     }
 
-    if (appointment.end > dayStart && appointment.end <= dayEnd) {
+    if (appointment.end > effectiveStart && appointment.end <= effectiveEnd) {
       timePoints.add(appointment.end);
     }
   });
@@ -146,9 +178,16 @@ const buildSegments = (
   timePoints: number[],
   parsedBreaks: ParsedBreak[],
   parsedAppointments: ParsedAppointment[],
+  workingStart: number | undefined,
+  workingEnd: number | undefined,
 ): Segment[] =>
   timePoints.slice(0, -1).map((segStart, index) => {
     const segEnd = timePoints[index + 1];
+    const isOutsideWorking =
+      workingStart === undefined ||
+      workingEnd === undefined ||
+      segEnd <= workingStart ||
+      segStart >= workingEnd;
     const breakItem = parsedBreaks.find(
       (parsedBreak) =>
         parsedBreak.start <= segStart && parsedBreak.end >= segEnd,
@@ -158,13 +197,15 @@ const buildSegments = (
       return {
         segStart,
         segEnd,
+        isOutsideWorking,
+        isCompressed: false,
         content: { kind: "break", breakItem: breakItem.breakItem } as const,
       };
     }
 
     const segmentAppointments = parsedAppointments
       .filter(({ start }) => start >= segStart && start < segEnd)
-      .sort((a, b) => a.start - b.start);
+      .sort((a, b) => a.start - b.start || a.slot.duration - b.slot.duration);
     const visibleAppointments = segmentAppointments.filter(
       ({ isVisible }) => isVisible,
     );
@@ -172,16 +213,26 @@ const buildSegments = (
       (appointment) => !appointment.isVisible && occupiesTime(appointment),
     );
 
+    const showFreeSlotBlock =
+      !isOutsideWorking && !segmentAppointments.some(occupiesTime);
+    const showFilteredBlock =
+      hiddenOccupiedAppointments.length > 0 && visibleAppointments.length === 0;
+    const isCompressed =
+      isOutsideWorking &&
+      visibleAppointments.length === 0 &&
+      !showFreeSlotBlock &&
+      !showFilteredBlock;
+
     return {
       segStart,
       segEnd,
+      isOutsideWorking,
+      isCompressed,
       content: {
         kind: "slots",
         slots: visibleAppointments.map(({ slot }) => slot),
-        showFreeSlotBlock: !segmentAppointments.some(occupiesTime),
-        showFilteredBlock:
-          hiddenOccupiedAppointments.length > 0 &&
-          visibleAppointments.length === 0,
+        showFreeSlotBlock,
+        showFilteredBlock,
         filteredBlockMinHeight:
           hiddenOccupiedAppointments.reduce(
             (total, appointment) => total + getSlotMinHeight(appointment.slot),
@@ -194,11 +245,10 @@ const buildSegments = (
 
 // ── Segment height ───────────────────────────────────────────────────
 
-export const getSegmentHeight = (
-  segStart: number,
-  segEnd: number,
-  content: SegmentContent,
-) => {
+export const getSegmentHeight = (segment: Segment) => {
+  if (segment.isCompressed) return COMPRESSED_GAP_HEIGHT;
+
+  const { segStart, segEnd, content } = segment;
   const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
 
   if (content.kind === "break") return baseGridHeight;
@@ -219,25 +269,66 @@ export const getSegmentHeight = (
 // ── Public API ───────────────────────────────────────────────────────
 
 export const createSegments = (
-  startAt: string,
-  endAt: string,
+  startAt: string | undefined,
+  endAt: string | undefined,
   breaks: WorkingDayBreak[],
   appointments: Appointment[],
   visibleStatuses: AppointmentStatus[],
-): Segment[] => {
-  const dayStart = parseTime(startAt);
-  const dayEnd = parseTime(endAt);
+): CreateSegmentsResult => {
+  const workingStart = startAt ? parseTime(startAt) : undefined;
+  const workingEnd = endAt ? parseTime(endAt) : undefined;
   const parsedBreaks = parseBreaks(breaks);
   const parsedAppointments = parseAppointments(appointments, visibleStatuses);
   const blockingAppointments = parsedAppointments.filter(
     ({ blocksTime }) => blocksTime,
   );
+
+  const apptStarts = parsedAppointments.map((a) => a.start);
+  const apptEnds = parsedAppointments.map((a) => Math.max(a.start, a.end));
+
+  let effectiveStart: number;
+  let effectiveEnd: number;
+
+  if (workingStart !== undefined && workingEnd !== undefined) {
+    effectiveStart = Math.min(workingStart, ...apptStarts);
+    effectiveEnd = Math.max(workingEnd, ...apptEnds);
+  } else if (apptStarts.length > 0) {
+    effectiveStart = Math.min(...apptStarts);
+    effectiveEnd = Math.max(...apptEnds);
+  } else {
+    return { segments: [], effectiveStart: 0 };
+  }
+
+  effectiveStart = Math.max(0, effectiveStart);
+  effectiveEnd = Math.min(24 * 60, effectiveEnd);
+
+  const hasBoundaryZeroDuration = parsedAppointments.some(
+    (a) => a.slot.duration === 0 && a.start === effectiveEnd,
+  );
+  if (hasBoundaryZeroDuration && effectiveEnd < 24 * 60) {
+    effectiveEnd += 1;
+  }
+
+  if (effectiveEnd <= effectiveStart) {
+    return { segments: [], effectiveStart };
+  }
+
   const timePoints = collectTimePoints(
-    dayStart,
-    dayEnd,
+    effectiveStart,
+    effectiveEnd,
+    workingStart,
+    workingEnd,
     parsedBreaks,
     blockingAppointments,
   );
 
-  return buildSegments(timePoints, parsedBreaks, parsedAppointments);
+  const segments = buildSegments(
+    timePoints,
+    parsedBreaks,
+    parsedAppointments,
+    workingStart,
+    workingEnd,
+  );
+
+  return { segments, effectiveStart };
 };

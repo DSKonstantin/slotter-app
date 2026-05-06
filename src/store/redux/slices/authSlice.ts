@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "../services/api/authApi";
 import { usersApi } from "../services/api/usersApi";
 import { User } from "@/src/store/redux/services/api-types";
+import { isAuthError } from "@/src/utils/apiError";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
@@ -94,9 +95,11 @@ const authSlice = createSlice({
           }
         },
       )
-      .addMatcher(authApi.endpoints.getMe.matchRejected, (state) => {
-        state.user = null;
-        state.status = "unauthenticated";
+      .addMatcher(authApi.endpoints.getMe.matchRejected, (state, action) => {
+        if (isAuthError(action.payload)) {
+          state.user = null;
+          state.status = "unauthenticated";
+        }
       })
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,

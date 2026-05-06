@@ -9,6 +9,12 @@ type ApiError = {
   data: ApiErrorData;
 };
 
+export const isAuthError = (e: unknown): boolean => {
+  if (!e || typeof e !== "object") return false;
+  const status = (e as { status?: unknown }).status;
+  return status === 401 || status === 403;
+};
+
 const isApiError = (e: unknown): e is ApiError =>
   typeof e === "object" &&
   e !== null &&
