@@ -225,8 +225,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <KeyboardAwareScrollView
                 showsVerticalScrollIndicator={false}
                 bottomOffset={BOTTOM_OFFSET}
-                contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
-                style={{ marginTop: topInset }}
+                contentContainerStyle={{
+                  paddingTop: topInset,
+                  paddingBottom: bottomInset + 16,
+                }}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
@@ -238,7 +240,15 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <Card
                     title={slot.customer?.name ?? "—"}
                     subtitle={slot.customer?.phone ?? undefined}
-                    onPress={() => {}}
+                    onPress={() =>
+                      slot.customer &&
+                      router.push(
+                        Routers.app.clients.detail(
+                          slot.customer.id,
+                          "customer",
+                        ),
+                      )
+                    }
                     left={
                       <Avatar
                         name={slot.customer?.name ?? undefined}

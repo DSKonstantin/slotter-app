@@ -111,10 +111,9 @@ export const StModal = ({
       {...props}
     >
       <View
-        className="py-3 relative rounded-t-large bg-white/90 overflow-hidden"
+        className="py-3 relative rounded-t-large bg-background overflow-hidden"
         style={containerStyle}
       >
-        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
         <BottomSheetHandle />
 
         {header}

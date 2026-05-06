@@ -28,9 +28,9 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ChangeCategoryModal from "./changeCategoryModal";
 
-type Props = { customerId: number };
+type Props = { userCustomerId?: number; customerId?: number };
 
-const ClientDetail = ({ customerId }: Props) => {
+const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const auth = useRequiredAuth();
   const {
     data: customerData,
@@ -38,8 +38,13 @@ const ClientDetail = ({ customerId }: Props) => {
     isError: customerError,
     refetch: refetchCustomer,
   } = useGetUserCustomerQuery(
-    auth ? { userId: auth.userId, id: customerId } : { userId: 0, id: 0 },
-    { skip: !auth, refetchOnMountOrArgChange: true },
+    auth
+      ? { userId: auth.userId, userCustomerId, customerId }
+      : { userId: 0 },
+    {
+      skip: !auth || (userCustomerId === undefined && customerId === undefined),
+      refetchOnMountOrArgChange: true,
+    },
   );
 
   const [updateUserCustomer, { isLoading: isSaving }] =
@@ -74,19 +79,19 @@ const ClientDetail = ({ customerId }: Props) => {
   };
 
   const handleOpenChat = async () => {
-    if (!auth || !customer) return;
+    if (!auth || !customer || !userCustomer) return;
     try {
       const room = await createChatRoom({
         userId: auth.userId,
         customerId: customer.id,
       }).unwrap();
       const chatRoute = Routers.app.chat.room(room.id);
-      const clientRoute = Routers.app.clients.detail(customerId);
+      const clientRoute = Routers.app.clients.detail(userCustomer.id);
       router.push({
         pathname: chatRoute.pathname,
         params: {
           ...chatRoute.params,
-          backTo: clientRoute.pathname.replace("[id]", String(customerId)),
+          backTo: clientRoute.pathname.replace("[id]", String(userCustomer.id)),
         },
       });
     } catch {}
@@ -192,7 +197,8 @@ const ClientDetail = ({ customerId }: Props) => {
                   />
                 }
                 onPress={() =>
-                  router.push(Routers.app.clients.history(customerId))
+                  userCustomer &&
+                  router.push(Routers.app.clients.history(userCustomer.id))
                 }
               />
               <HomeCard

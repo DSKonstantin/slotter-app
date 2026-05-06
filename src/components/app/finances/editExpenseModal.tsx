@@ -7,44 +7,45 @@ import {
   ExpenseCreateSchema,
   type ExpenseCreateFormValues,
 } from "@/src/validation/schemas/expenseCreate.schema";
-import { useCreateExpenseMutation } from "@/src/store/redux/services/api/financesApi";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useUpdateExpenseMutation } from "@/src/store/redux/services/api/financesApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { centsToRubles } from "@/src/utils/price/formatPrice";
+import type { SummaryExpense } from "@/src/store/redux/services/api-types";
 import ExpenseForm from "./ExpenseForm";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
+  expense: SummaryExpense | null;
+  onDelete: (expense: SummaryExpense) => void;
 };
 
-const emptyValues: ExpenseCreateFormValues = {
-  name: "",
-  amount: undefined as unknown as number,
-  date: new Date().toISOString().split("T")[0],
-  comment: "",
-};
+const toFormValues = (expense: SummaryExpense): ExpenseCreateFormValues => ({
+  name: expense.name,
+  amount: centsToRubles(expense.amount_cents),
+  date: expense.date,
+  comment: expense.comment ?? "",
+});
 
-const CreateExpenseModal = ({ visible, onClose }: Props) => {
-  const auth = useRequiredAuth();
-  const [createExpense, { isLoading }] = useCreateExpenseMutation();
+const EditExpenseModal = ({ visible, onClose, expense, onDelete }: Props) => {
+  const [updateExpense, { isLoading }] = useUpdateExpenseMutation();
 
   const methods = useForm({
     resolver: yupResolver(ExpenseCreateSchema),
-    defaultValues: emptyValues,
   });
 
   const { handleSubmit, reset } = methods;
 
   useEffect(() => {
-    if (visible) reset(emptyValues);
-  }, [visible, reset]);
+    if (visible && expense) reset(toFormValues(expense));
+  }, [visible, expense, reset]);
 
   const onSubmit = useCallback(
     async (values: ExpenseCreateFormValues) => {
-      if (!auth) return;
+      if (!expense) return;
       try {
-        await createExpense({
-          userId: auth.userId,
+        await updateExpense({
+          expenseId: expense.id,
           body: {
             name: values.name,
             amount: values.amount,
@@ -52,26 +53,28 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
             comment: values.comment || undefined,
           },
         }).unwrap();
-        reset(emptyValues);
         onClose();
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось создать расход"));
+        toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
       }
     },
-    [auth, createExpense, reset, onClose],
+    [expense, updateExpense, onClose],
   );
+
+  if (!expense) return null;
 
   return (
     <StModal visible={visible} onClose={onClose} keyboardAware>
       <ExpenseForm
         methods={methods}
-        title="Добавить расход"
-        submitTitle="Добавить"
+        title="Редактировать расход"
+        submitTitle="Сохранить"
         isLoading={isLoading}
         onSubmit={handleSubmit(onSubmit)}
+        onDelete={() => onDelete(expense)}
       />
     </StModal>
   );
 };
 
-export default CreateExpenseModal;
+export default EditExpenseModal;

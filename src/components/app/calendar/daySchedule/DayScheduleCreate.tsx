@@ -77,7 +77,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
               <ScrollView
                 className="flex-1 px-screen"
                 contentContainerStyle={{
-                  paddingTop: topInset + 16,
+                  paddingTop: topInset,
                   paddingBottom: bottomInset + 82,
                 }}
               >

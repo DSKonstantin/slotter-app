@@ -1,8 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, router } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { Alert, RefreshControl, ScrollView, View } from "react-native";
-import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { Routers } from "@/src/constants/routers";
@@ -26,6 +25,7 @@ import { MONTH_NAMES } from "@/src/constants/finances";
 import IncomeCard from "@/src/components/shared/cards/incomeCard";
 import StatCard from "@/src/components/shared/cards/statСard";
 import CreateExpenseModal from "./createExpenseModal";
+import EditExpenseModal from "./editExpenseModal";
 import ExpenseCategoriesList from "./ExpenseCategoriesList";
 import FinancesSkeleton from "./FinancesSkeleton";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -38,6 +38,9 @@ const CURRENT_YEAR = now.getFullYear();
 const FinancesScreen = () => {
   const auth = useRequiredAuth();
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<SummaryExpense | null>(
+    null,
+  );
 
   const {
     data: summary,
@@ -54,26 +57,23 @@ const FinancesScreen = () => {
 
   const handleDeleteExpense = useCallback(
     (expense: SummaryExpense) => {
-      Alert.alert(
-        "Удалить расход?",
-        expense.name,
-        [
-          { text: "Отмена", style: "cancel" },
-          {
-            text: "Удалить",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await deleteExpense({ expenseId: expense.id }).unwrap();
-              } catch (error) {
-                toast.error(
-                  getApiErrorMessage(error, "Не удалось удалить расход"),
-                );
-              }
-            },
+      Alert.alert("Удалить расход?", expense.name, [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteExpense({ expenseId: expense.id }).unwrap();
+              setEditingExpense(null);
+            } catch (error) {
+              toast.error(
+                getApiErrorMessage(error, "Не удалось удалить расход"),
+              );
+            }
           },
-        ],
-      );
+        },
+      ]);
     },
     [deleteExpense],
   );
@@ -199,6 +199,7 @@ const FinancesScreen = () => {
               expenses={summary?.expenses ?? []}
               isLoading={isSummaryLoading}
               onDelete={handleDeleteExpense}
+              onPressItem={setEditingExpense}
             />
 
             <Divider />
@@ -236,6 +237,13 @@ const FinancesScreen = () => {
           <CreateExpenseModal
             visible={isExpenseModalOpen}
             onClose={() => setIsExpenseModalOpen(false)}
+          />
+
+          <EditExpenseModal
+            visible={editingExpense !== null}
+            expense={editingExpense}
+            onClose={() => setEditingExpense(null)}
+            onDelete={handleDeleteExpense}
           />
         </ScrollView>
       )}

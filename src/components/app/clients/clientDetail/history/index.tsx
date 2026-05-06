@@ -79,7 +79,7 @@ const ClientHistory = ({ customerId }: Props) => {
   const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[0]);
 
   const { data: customerData } = useGetUserCustomerQuery(
-    auth ? { userId: auth.userId, id: customerId } : skipToken,
+    auth ? { userId: auth.userId, userCustomerId: customerId } : skipToken,
   );
 
   const {

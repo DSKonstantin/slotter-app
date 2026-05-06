@@ -19,7 +19,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
-import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { BOTTOM_OFFSET_SMALL, TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const AboutSpecialist = () => {
@@ -76,7 +76,7 @@ const AboutSpecialist = () => {
               showsVerticalScrollIndicator={false}
               bottomOffset={BOTTOM_OFFSET_SMALL}
               contentContainerStyle={{
-                paddingTop: topInset + 16,
+                paddingTop: topInset,
                 paddingBottom: 16,
               }}
             >

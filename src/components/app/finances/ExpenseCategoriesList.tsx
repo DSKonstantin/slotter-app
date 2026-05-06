@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -13,9 +13,15 @@ type Props = {
   expenses: SummaryExpense[];
   isLoading: boolean;
   onDelete?: (expense: SummaryExpense) => void;
+  onPressItem?: (expense: SummaryExpense) => void;
 };
 
-const ExpenseCategoriesList = ({ expenses, isLoading, onDelete }: Props) => {
+const ExpenseCategoriesList = ({
+  expenses,
+  isLoading,
+  onDelete,
+  onPressItem,
+}: Props) => {
   const swipeableRefs = useRef<Map<number, SwipeableMethods>>(new Map());
 
   if (isLoading) {
@@ -30,14 +36,15 @@ const ExpenseCategoriesList = ({ expenses, isLoading, onDelete }: Props) => {
     );
   }
 
-  const renderLeftActions = (expense: SummaryExpense) => (
+  const renderRightActions = (expense: SummaryExpense) => (
     <IconButton
+      size="xs"
       onPress={() => {
         swipeableRefs.current.get(expense.id)?.close();
         onDelete?.(expense);
       }}
-      buttonClassName="bg-accent-red-500 rounded-small mr-2"
-      icon={<StSvg name="Trash" size={24} color={colors.neutral[0]} />}
+      buttonClassName="ml-2"
+      icon={<StSvg name="Trash" size={24} color={colors.accent.red[500]} />}
     />
   );
 
@@ -53,21 +60,27 @@ const ExpenseCategoriesList = ({ expenses, isLoading, onDelete }: Props) => {
                 else swipeableRefs.current.delete(expense.id);
               }) as never
             }
-            renderLeftActions={() => renderLeftActions(expense)}
-            overshootLeft={false}
+            renderRightActions={() => renderRightActions(expense)}
+            overshootRight={false}
           >
-            <View className="flex-row justify-between items-center bg-background-surface w-full">
-              <Typography
-                numberOfLines={1}
-                className="text-body text-neutral-500 flex-1 mr-2"
-              >
-                {expense.name}
-              </Typography>
+            <TouchableOpacity
+              activeOpacity={0.6}
+              onPress={() => onPressItem?.(expense)}
+              className="flex-row justify-between items-center bg-background-surface w-full"
+            >
+              <View className="flex-row items-center flex-1 mr-2 gap-1.5">
+                <Typography
+                  numberOfLines={1}
+                  className="text-body text-neutral-500 shrink"
+                >
+                  {expense.name}
+                </Typography>
+              </View>
 
               <Typography weight="regular" className="text-body shrink-0">
                 {formatRublesFromCents(expense.amount_cents)}
               </Typography>
-            </View>
+            </TouchableOpacity>
           </ReanimatedSwipeable>
         </View>
       ))}

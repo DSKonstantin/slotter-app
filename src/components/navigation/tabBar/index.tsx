@@ -45,7 +45,7 @@ const TabItem = memo(({ tab, isActive, isAtRoot, onPress }: TabItemProps) => {
 
       <Typography
         weight={isActive ? "semibold" : "medium"}
-        className="text-[9px] leading-none"
+        className="text-[10px] leading-none text-center"
         style={isActive ? styles.labelActive : styles.labelInactive}
       >
         {tab.label}
@@ -67,6 +67,13 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
 
   const handleTabPress = useCallback(
     (key: string, isActive: boolean, isAtRoot: boolean) => {
+      if (key === "chat") {
+        if (isActive && isAtRoot) return;
+        navigation.dispatch(
+          CommonActions.reset({ index: 0, routes: [{ name: key }] }),
+        );
+        return;
+      }
       if (!isActive) {
         navigation.navigate(key);
         return;
@@ -106,8 +113,11 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         position="bottom"
         height={TAB_BAR_HEIGHT + insets.bottom + 8}
       />
-      <View className="flex-row items-center justify-between px-5 bg-transparent">
-        <View className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1 overflow-hidden">
+      <View className="flex-row items-center justify-between px-screen bg-transparent">
+        <View
+          className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1 overflow-hidden"
+          style={styles.topShadow}
+        >
           {TABS.map((tab) => {
             const tabRoute = state.routes.find((r) => r.name === tab.key);
             const isAtRoot =
@@ -126,9 +136,8 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         </View>
         <IconButton
           size="lg"
-          icon={
-            <StSvg name="Menu" size={36} color={colors.neutral[900]} />
-          }
+          style={styles.topShadow}
+          icon={<StSvg name="Menu" size={36} color={colors.neutral[900]} />}
           onPress={handleMenuPress}
           buttonClassName={isMenuOpen ? "opacity-0" : undefined}
           disabled={isMenuOpen}
@@ -145,6 +154,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "transparent",
+  },
+  topShadow: {
+    boxShadow: "0px -4px 12px rgba(0, 0, 0, 0.08)",
   },
   labelActive: { color: colors.neutral[900] },
   labelInactive: { color: colors.neutral[500] },

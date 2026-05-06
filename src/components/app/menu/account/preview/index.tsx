@@ -1,45 +1,32 @@
-import React, { useCallback } from "react";
-import { RefreshControl, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { skipToken } from "@reduxjs/toolkit/query";
+import React, { useCallback, useRef, useState } from "react";
+import { ActivityIndicator, Share, View } from "react-native";
+import { WebView } from "react-native-webview";
 import { useAppSelector } from "@/src/store/redux/store";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
-import { useRefresh } from "@/src/hooks/useRefresh";
 import { colors } from "@/src/styles/colors";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import ParallaxScrollView from "@/src/components/parallaxScrollView";
-import {
-  PreviewHeaderImage,
-  PreviewHeaderContent,
-} from "@/src/components/app/menu/account/preview/header";
-import PreviewLinks from "@/src/components/app/menu/account/preview/links";
-import { BottomSheetHandle, IconButton, StSvg } from "@/src/components/ui";
-import Booking from "@/src/components/app/menu/account/preview/booking";
-import Services from "@/src/components/app/menu/account/preview/services";
-import Footer from "@/src/components/app/menu/account/preview/footer";
+import { IconButton, StSvg } from "@/src/components/ui";
+import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const AccountPreview = () => {
-  const user = useAppSelector((s) => s.auth.user);
-  const auth = useRequiredAuth();
-  const { bottom } = useSafeAreaInsets();
+  const id = useAppSelector((s) => s.auth.user?.id);
+  const insets = useSafeAreaInsets();
+  const webViewRef = useRef<WebView>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { refetch } = useGetServiceCategoriesInfiniteQuery(
-    auth
-      ? { userId: auth.userId, params: { view: "public_profile" } }
-      : skipToken,
-  );
+  const shareUrl = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${id}`;
+  const previewUrl = `${shareUrl}?preview=mobile`;
 
-  const handleRefetch = useCallback(() => {
-    return refetch({ refetchCachedPages: false });
-  }, [refetch]);
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({ message: shareUrl });
+    } catch {}
+  }, [shareUrl]);
 
-  const { refreshing, onRefresh } = useRefresh(handleRefetch);
-
-  if (!user) return null;
+  if (!id) return null;
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-background">
       <ToolbarTop
         title="Режим просмотра"
         rightButton={
@@ -47,31 +34,32 @@ const AccountPreview = () => {
             icon={
               <StSvg name="link_alt" size={28} color={colors.neutral[900]} />
             }
-            onPress={() => {}}
+            onPress={handleShare}
           />
         }
       />
-      <ParallaxScrollView
-        headerImage={<PreviewHeaderImage photos={user.gallery_photos} />}
-        headerContent={<PreviewHeaderContent user={user} />}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        headerBackgroundColor={{
-          light: colors.background.DEFAULT,
-          dark: colors.background.DEFAULT,
+      <View
+        className="flex-1"
+        style={{
+          marginTop: TOOLBAR_HEIGHT + insets.top,
+          marginBottom: insets.bottom,
         }}
-        headerHeight={500}
-        contentInset={{ bottom: bottom }}
       >
-        <View className="gap-7 pt-2">
-          <BottomSheetHandle />
-          <Booking />
-          <Services />
-          <PreviewLinks user={user} />
-          <Footer />
-        </View>
-      </ParallaxScrollView>
+        <WebView
+          ref={webViewRef}
+          source={{ uri: previewUrl }}
+          onLoadEnd={() => setIsLoading(false)}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          allowsBackForwardNavigationGestures={false}
+          onShouldStartLoadWithRequest={(req) => req.navigationType !== "click"}
+        />
+        {isLoading && (
+          <View className="absolute inset-0 items-center justify-center bg-background">
+            <ActivityIndicator size="large" color={colors.neutral[400]} />
+          </View>
+        )}
+      </View>
     </View>
   );
 };

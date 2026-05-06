@@ -55,7 +55,10 @@ const ToolbarTop = ({
       >
         {(toolbar?.searchMode ?? false) ? (
           <>
-            <View className="flex-1 flex-row items-center rounded-full h-[48px] px-4 bg-background-surface gap-2">
+            <View
+              className="flex-1 flex-row items-center rounded-full h-[48px] px-4 bg-background-surface gap-2"
+              style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
+            >
               <StSvg name="Search" size={20} color={colors.neutral[500]} />
               <TextInput
                 autoFocus
@@ -95,6 +98,7 @@ const ToolbarTop = ({
           <>
             {showBack ? (
               <IconButton
+                style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
                 icon={
                   <StSvg
                     name="Arrow_left"
@@ -109,7 +113,10 @@ const ToolbarTop = ({
             )}
 
             <View className="flex-1 items-center justify-center">
-              <View className="rounded-full h-[48px] px-4 items-center justify-center bg-background-surface max-w-[100%]">
+              <View
+                className="rounded-full h-[48px] px-4 items-center justify-center bg-background-surface max-w-[100%]"
+                style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
+              >
                 {typeof title === "string" ? (
                   <Typography
                     weight="semibold"
@@ -125,7 +132,16 @@ const ToolbarTop = ({
               </View>
             </View>
 
-            {rightButton ?? <View className="w-[48px]" />}
+            {rightButton ? (
+              <View
+                className="rounded-full"
+                style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
+              >
+                {rightButton}
+              </View>
+            ) : (
+              <View className="w-[48px]" />
+            )}
           </>
         )}
       </View>

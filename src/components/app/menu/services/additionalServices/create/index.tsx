@@ -24,7 +24,7 @@ const AdditionalServiceCreate = () => {
       name: "",
       description: "",
       price: "",
-      duration: "",
+      duration: "0",
       isActive: true,
     },
   });
@@ -39,6 +39,7 @@ const AdditionalServiceCreate = () => {
         userId: auth.userId,
         data: {
           name: values.name.trim(),
+          description: values.description,
           duration: Number(values.duration),
           price: Number(values.price),
           is_active: values.isActive,

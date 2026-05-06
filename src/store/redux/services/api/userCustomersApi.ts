@@ -53,11 +53,21 @@ const userCustomersApi = api.injectEndpoints({
 
     getUserCustomer: builder.query<
       GetUserCustomerResponse,
-      { userId: number; id: number }
+      {
+        userId: number;
+        customerId?: number;
+        userCustomerId?: number;
+      }
     >({
-      query: ({ userId, id }) => ({
-        url: `/users/${userId}/user_customers/${id}`,
+      query: ({ userId, customerId, userCustomerId }) => ({
+        url: `/users/${userId}/user_customers/card`,
         method: "GET",
+        params: {
+          ...(customerId !== undefined && { customer_id: customerId }),
+          ...(userCustomerId !== undefined && {
+            user_customer_id: userCustomerId,
+          }),
+        },
       }),
       providesTags: ["UserCustomers"],
     }),

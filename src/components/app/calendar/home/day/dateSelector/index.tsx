@@ -34,7 +34,7 @@ const DateItem = memo<DateItemProps>(
     <TouchableOpacity
       onPress={() => onPress(workingDayId, item, isEmpty)}
       style={{ width: ITEM_WIDTH }}
-      className={`items-center justify-between p-[6px] rounded-full ${
+      className={`items-center justify-between p-[6px] min-h-[70px] rounded-full ${
         isSelected ? "bg-neutral-900" : "bg-transparent"
       } ${isEmpty ? "opacity-50" : ""}`}
     >

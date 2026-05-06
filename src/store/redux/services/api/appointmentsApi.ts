@@ -53,7 +53,7 @@ const appointmentsApi = api.injectEndpoints({
       {
         userId: number;
         date: string;
-        step?: 5 | 10 | 15;
+        step?: 5 | 10 | 15 | 30 | 60;
         appointment_id?: number;
       }
     >({
