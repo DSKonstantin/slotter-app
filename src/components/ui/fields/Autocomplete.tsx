@@ -95,6 +95,11 @@ export function Autocomplete({
           suggestionsListContainerStyle={{
             borderRadius: 16,
             backgroundColor: "white",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
           }}
           suggestionsListTextStyle={{
             ...styles.text,
@@ -111,8 +116,14 @@ export function Autocomplete({
           )}
           textInputProps={{
             placeholder: placeholder,
+            multiline: false,
+            scrollEnabled: false,
+            textAlignVertical: "center",
             style: {
               ...styles.text,
+              paddingTop: 0,
+              paddingBottom: 0,
+              includeFontPadding: false,
             },
           }}
           onFocus={() => {

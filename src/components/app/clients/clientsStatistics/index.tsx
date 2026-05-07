@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   TouchableOpacity,
@@ -23,6 +22,7 @@ import PeriodModal, {
   CUSTOM_PERIOD_VALUE,
   type Period,
 } from "./periodModal";
+import ClientsStatisticsSkeleton from "./ClientsStatisticsSkeleton";
 
 function deltaTag(
   delta: number | null,
@@ -44,7 +44,7 @@ const ClientsStatistics = () => {
   const queryParams =
     selectedPeriod.value === CUSTOM_PERIOD_VALUE
       ? {
-          period: CUSTOM_PERIOD_VALUE as const,
+          period: CUSTOM_PERIOD_VALUE,
           date_from: (selectedPeriod as { date_from?: string }).date_from,
           date_to: (selectedPeriod as { date_to?: string }).date_to,
         }
@@ -109,9 +109,7 @@ const ClientsStatistics = () => {
             </View>
 
             {isLoading ? (
-              <View className="flex-1 items-center justify-center py-10">
-                <ActivityIndicator />
-              </View>
+              <ClientsStatisticsSkeleton />
             ) : isError || !data ? (
               <View className="items-center py-10">
                 <Typography className="text-body text-neutral-400">
@@ -146,18 +144,22 @@ const ClientsStatistics = () => {
                   />
                 </View>
 
-                {data.services.length > 0 && (
-                  <View className="bg-background-surface rounded-base p-4 gap-4 mb-6">
-                    <Typography
-                      weight="semibold"
-                      className="text-body text-neutral-900"
-                    >
-                      Статистика по услугам
+                <View className="bg-background-surface rounded-base p-4 gap-4 mb-6">
+                  <Typography
+                    weight="semibold"
+                    className="text-body text-neutral-900"
+                  >
+                    Статистика по услугам
+                  </Typography>
+
+                  <Divider />
+
+                  {data.services.length === 0 ? (
+                    <Typography className="text-body text-neutral-400 text-center py-2">
+                      Нет данных за выбранный период
                     </Typography>
-
-                    <Divider />
-
-                    {data.services.map((service, index) => (
+                  ) : (
+                    data.services.map((service, index) => (
                       <React.Fragment key={service.service_id}>
                         <View className="flex-row items-center justify-between">
                           <Typography className="text-body text-neutral-500">
@@ -177,9 +179,9 @@ const ClientsStatistics = () => {
                         </View>
                         {index < data.services.length - 1 && <Divider />}
                       </React.Fragment>
-                    ))}
-                  </View>
-                )}
+                    ))
+                  )}
+                </View>
               </>
             )}
 

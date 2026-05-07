@@ -23,12 +23,12 @@ const ClientMenuModal = ({ visible, onClose, onChangeCategory }: Props) => {
         </Typography>
 
         <View className="gap-2">
-          <Item
-            title="Редактировать"
-            left={
-              <StSvg name="Edit_fill" size={20} color={colors.neutral[900]} />
-            }
-          />
+          {/*<Item*/}
+          {/*  title="Редактировать"*/}
+          {/*  left={*/}
+          {/*    <StSvg name="Edit_fill" size={20} color={colors.neutral[900]} />*/}
+          {/*  }*/}
+          {/*/>*/}
           <Item
             title="Изменить категорию"
             left={

@@ -1,12 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useFocusEffect, router, useLocalSearchParams } from "expo-router";
-import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  View,
-} from "react-native";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
@@ -29,6 +23,7 @@ import {
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
 import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
+import ScheduleSkeleton from "./ScheduleSkeleton";
 
 const CalendarSchedule = () => {
   const { date } = useLocalSearchParams<{ date?: string }>();
@@ -183,9 +178,7 @@ const CalendarSchedule = () => {
             style={{ paddingTop: topInset }}
           >
             {isLoading ? (
-              <View className="flex-1 items-center justify-center">
-                <ActivityIndicator color={colors.neutral[400]} />
-              </View>
+              <ScheduleSkeleton />
             ) : isError ? (
               <ErrorScreen
                 title="Не удалось загрузить расписание"

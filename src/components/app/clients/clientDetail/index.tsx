@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { ActivityIndicator, View, RefreshControl } from "react-native";
+import { View, RefreshControl } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -40,6 +40,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ChangeCategoryModal from "./changeCategoryModal";
 import ContactsModal from "./contactsModal";
 import ClientMenuModal from "./clientMenuModal";
+import ClientDetailSkeleton from "./ClientDetailSkeleton";
 
 type NoteFormValues = { note: string };
 
@@ -137,10 +138,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   if (customerLoading) {
     return (
       <ScreenWithToolbar title="Карточка клиента">
-        {() => (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator />
-          </View>
+        {({ topInset, bottomInset }) => (
+          <ClientDetailSkeleton topInset={topInset} bottomInset={bottomInset} />
         )}
       </ScreenWithToolbar>
     );
