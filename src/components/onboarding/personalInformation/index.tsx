@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
@@ -8,6 +9,7 @@ import { Avatar, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { StepProgress } from "@/src/components/ui/StepProgress";
+import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
@@ -26,6 +28,8 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
+import { assetToFile } from "@/src/utils/files/assetToFile";
+import { NicknameField } from "./NicknameField";
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
@@ -38,6 +42,7 @@ const PersonalInformation = () => {
       name: user?.first_name ?? "",
       surname: user?.last_name ?? "",
       profession: user?.profession ?? "",
+      nickname: user?.nickname ?? "",
       address: user?.address ?? "",
       hideAddress: false,
       atHome: user?.is_home_work ?? false,
@@ -54,23 +59,16 @@ const PersonalInformation = () => {
       if (!auth) return;
 
       try {
-        const formData = buildUserFormData({
-          ...data,
-          avatar: data.avatar
-            ? {
-                uri: data.avatar.uri,
-                name: data.avatar.name || `avatar_${Date.now()}.jpg`,
-                type: data.avatar.type || "image/jpeg",
-              }
-            : null,
-        });
+        const formData = buildUserFormData(data);
 
+        formData.append("user[nickname]", data.nickname);
         if (data.address) {
           formData.append("user[address]", data.address);
         }
         formData.append("user[is_home_work]", String(data.atHome));
         formData.append("user[is_online_work]", String(data.online));
         formData.append("user[is_out_call]", String(data.onRoad));
+        formData.append("user[onboarding_step]", "service");
 
         await updateUser({
           id: auth.userId,
@@ -97,11 +95,7 @@ const PersonalInformation = () => {
         return;
       }
 
-      methods.setValue("avatar", {
-        uri: asset.uri,
-        name: asset.fileName || `file_${Date.now()}.jpg`,
-        type: asset.mimeType || "image/jpeg",
-      });
+      methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
   );
@@ -109,71 +103,93 @@ const PersonalInformation = () => {
   if (!auth) return null;
 
   return (
-    <FormProvider {...methods}>
-      <AuthScreenLayout
-        avoidKeyboard
-        header={<AuthHeader />}
-        footer={
-          <AuthFooter
-            primary={{
-              title: "Далее",
-              disabled: isLoading,
-              loading: isLoading,
-              onPress: methods.handleSubmit(onSubmit),
-            }}
-          />
-        }
-      >
-        <View className="mt-4">
-          <StepProgress steps={3} currentStep={1} />
-        </View>
-        <View className="mt-8 gap-2">
-          <Typography weight="semibold" className="text-display mb-2">
-            Твоя визитка
-          </Typography>
-          <Typography className="text-body text-neutral-500">
-            Чтобы клиенты знали, к кому идут
-          </Typography>
+    <RhfFormProvider methods={methods}>
+      {({ setScrollRef, contentRef, scrollToError }) => (
+        <AuthScreenLayout
+          avoidKeyboard
+          scrollRef={setScrollRef}
+          contentRef={contentRef}
+          header={
+            <>
+              <AuthHeader />
+              <View className="mt-4">
+                <StepProgress
+                  steps={TOTAL_STEPS}
+                  currentStep={STEP_PROGRESS.personal_information!}
+                />
+              </View>
+            </>
+          }
+          footer={
+            <AuthFooter
+              primary={{
+                title: "Далее",
+                disabled: isLoading,
+                loading: isLoading,
+                onPress: methods.handleSubmit(onSubmit, scrollToError),
+              }}
+            />
+          }
+        >
+          <View className="mt-8 gap-2">
+            <Typography weight="semibold" className="text-display mb-2">
+              Твоя визитка
+            </Typography>
+            <Typography className="text-body text-neutral-500">
+              Чтобы клиенты знали, к кому идут
+            </Typography>
 
-          <View className="items-center my-4">
-            <ImagePickerTrigger
-              title="Загрузить аватар"
-              options={{ aspect: [1, 1], cameraType: CameraType.front }}
-              onPick={handlePickAvatar}
-            >
-              <Avatar
-                size="xl"
-                uri={avatar?.uri ?? user?.avatar_url ?? undefined}
-                fallbackIcon={
-                  <StSvg name="Camera" size={40} color={colors.neutral[500]} />
-                }
-              />
-            </ImagePickerTrigger>
+            <View className="items-center my-4">
+              <ImagePickerTrigger
+                title="Загрузить аватар"
+                options={{ aspect: [1, 1], cameraType: CameraType.front }}
+                onPick={handlePickAvatar}
+              >
+                <Avatar
+                  size="xl"
+                  uri={avatar?.uri ?? user?.avatar_url ?? undefined}
+                  fallbackIcon={
+                    <StSvg
+                      name="Camera"
+                      size={40}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                />
+              </ImagePickerTrigger>
+            </View>
           </View>
-        </View>
-        <View className="gap-2">
-          <RhfTextField name="name" label="Имя" placeholder="Иван" />
-          <RhfTextField name="surname" label="Фамилия" placeholder="Иванов" />
-          <RhfTextField
-            name="profession"
-            label="Профессия"
-            placeholder="Барбер"
-          />
-        </View>
-        <Divider />
-        <Typography className="text-neutral-500 text-caption mt-5">
-          Формат работы
-        </Typography>
-        <View className="mt-2 mb-5 gap-2">
-          <Item title="Дома/в студии" right={<RHFSwitch name="atHome" />} />
-          <Item title="Онлайн" right={<RHFSwitch name="online" />} />
-          <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
-        </View>
-        <View className="mb-8">
-          <AddressField />
-        </View>
-      </AuthScreenLayout>
-    </FormProvider>
+          <View className="gap-2">
+            <RhfTextField
+              name="profession"
+              label="Профессия*"
+              placeholder="Барбер"
+            />
+            <RhfTextField name="name" label="Имя*" placeholder="Иван" />
+            <RhfTextField
+              name="surname"
+              label="Фамилия*"
+              placeholder="Иванов"
+            />
+            <Divider />
+            <NicknameField />
+            <Divider />
+          </View>
+
+          <Typography className="text-neutral-500 text-caption mt-5">
+            Формат работы
+          </Typography>
+          <View className="mt-2 mb-5 gap-2">
+            <Item title="Дома/в студии" right={<RHFSwitch name="atHome" />} />
+            <Item title="Онлайн" right={<RHFSwitch name="online" />} />
+            <Item title="На выезд" right={<RHFSwitch name="onRoad" />} />
+          </View>
+          <View className="mb-8">
+            <AddressField />
+          </View>
+        </AuthScreenLayout>
+      )}
+    </RhfFormProvider>
   );
 };
 

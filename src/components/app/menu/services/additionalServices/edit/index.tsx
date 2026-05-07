@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import { ActivityIndicator, Alert, Text, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import AdditionalServicesForm from "@/src/components/app/menu/services/additionalServices/additionalServicesForm";
 import { FormProvider, useForm } from "react-hook-form";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button } from "@/src/components/ui";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
@@ -43,12 +43,17 @@ const AdditionalServiceEdit = () => {
     refetch,
   } = useGetAdditionalServiceQuery(
     auth?.userId && id ? { userId: auth.userId, id: id } : skipToken,
+    {
+      refetchOnMountOrArgChange: true,
+    },
   );
 
   const [updateAdditionalService, { isLoading }] =
     useUpdateAdditionalServiceMutation();
 
   const [deleteAdditionalService] = useDeleteAdditionalServiceMutation();
+
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const handleDelete = () => {
     if (!auth?.userId) return;
@@ -65,6 +70,7 @@ const AdditionalServiceEdit = () => {
               id,
             }).unwrap();
 
+            release();
             router.back();
           } catch (error) {
             toast.error(
@@ -75,8 +81,6 @@ const AdditionalServiceEdit = () => {
       },
     ]);
   };
-
-  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     if (!auth?.userId) return;
@@ -94,6 +98,7 @@ const AdditionalServiceEdit = () => {
         },
       }).unwrap();
 
+      release();
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось изменить доп. услугу"));
@@ -127,16 +132,11 @@ const AdditionalServiceEdit = () => {
   if (isError || !service) {
     return (
       <ScreenWithToolbar title="Редактировать доп. услугу">
-        <View className="flex-1 items-center justify-center gap-4 px-screen">
-          <Text className="text-body text-accent-red-500">Ошибка загрузки</Text>
-          <Button
-            title="Повторить"
-            onPress={refetch}
-            loading={isFetching}
-            disabled={isFetching}
-            buttonClassName="w-full"
-          />
-        </View>
+        <ErrorScreen
+          title="Не удалось загрузить услугу"
+          isLoading={isFetching}
+          onRetry={refetch}
+        />
       </ScreenWithToolbar>
     );
   }

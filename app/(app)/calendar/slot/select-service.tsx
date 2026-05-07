@@ -9,12 +9,14 @@ const SlotSelectServiceScreen = () => {
     appointmentId,
     selectedServiceIds,
     selectedAdditionalServiceIds,
+    mode,
   } = useLocalSearchParams<{
     date?: string;
     time?: string;
     appointmentId?: string;
     selectedServiceIds?: string;
     selectedAdditionalServiceIds?: string;
+    mode?: "services" | "additional";
   }>();
   return (
     <SlotSelectService
@@ -23,6 +25,7 @@ const SlotSelectServiceScreen = () => {
       appointmentId={appointmentId}
       selectedServiceIds={selectedServiceIds}
       selectedAdditionalServiceIds={selectedAdditionalServiceIds}
+      mode={mode}
     />
   );
 };

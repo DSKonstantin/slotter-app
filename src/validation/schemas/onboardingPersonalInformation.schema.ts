@@ -2,12 +2,14 @@ import * as Yup from "yup";
 import { nameField } from "@/src/validation/fields/name";
 import { surnameField } from "@/src/validation/fields/surname";
 import { professionField } from "@/src/validation/fields/profession";
+import { nicknameField } from "@/src/validation/fields/nickname";
 import { avatarField } from "@/src/validation/fields/avatar";
 
 export const PersonalInformationSchema = Yup.object({
   name: nameField,
   surname: surnameField,
   profession: professionField,
+  nickname: nicknameField,
   address: Yup.string().notRequired(),
   atHome: Yup.boolean().required(),
   online: Yup.boolean().required(),

@@ -69,7 +69,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
@@ -91,7 +91,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
         id: serviceId,
         data: formData,
       }).unwrap();
-      methods.reset(values);
+      release();
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
@@ -113,7 +113,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
               id: serviceId,
             }).unwrap();
 
-            methods.reset();
+            release();
             router.back();
           } catch (error) {
             toast.error(getApiErrorMessage(error, "Не удалось удалить услугу"));
@@ -161,18 +161,6 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     });
   }, [categoryId, methods, service]);
 
-  if (!hasValidIds) {
-    return (
-      <ScreenWithToolbar title="Редактировать услугу">
-        <View className="flex-1 items-center justify-center px-screen">
-          <Typography className="text-center text-neutral-500">
-            Не удалось определить услугу для редактирования
-          </Typography>
-        </View>
-      </ScreenWithToolbar>
-    );
-  }
-
   if (isServiceLoading || (isServiceFetching && !service)) {
     return (
       <ScreenWithToolbar title="Редактировать услугу">
@@ -183,7 +171,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     );
   }
 
-  if (isServiceError || !service) {
+  if (!hasValidIds || isServiceError || !service) {
     return (
       <ScreenWithToolbar title="Редактировать услугу">
         <View className="flex-1 items-center justify-center px-screen">

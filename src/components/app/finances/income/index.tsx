@@ -5,14 +5,19 @@ import { RefreshControl, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import TrendChartCard from "@/src/components/shared/cards/trendChartCard";
-import { Card, Divider, SegmentedControl, StSvg } from "@/src/components/ui";
+import {
+  Card,
+  Divider,
+  SegmentedControl,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetFinancesIncomeQuery } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
 import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
-import { Typography } from "@/src/components/ui";
 import {
   INCOME_GROUP_OPTIONS,
   MONTH_NAMES_SHORT,
@@ -21,6 +26,7 @@ import FinancesIncomeSkeleton from "./FinancesIncomeSkeleton";
 import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
 import IncomeBreakdownServices from "./IncomeBreakdownServices";
 import IncomeBreakdownClients from "./IncomeBreakdownClients";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 
 const today = new Date();
 
@@ -58,6 +64,7 @@ const FinancesIncomeScreen = () => {
   const {
     data,
     isLoading: isIncomeLoading,
+    isError: isIncomeError,
     isFetching,
     refetch,
   } = useGetFinancesIncomeQuery(
@@ -95,6 +102,19 @@ const FinancesIncomeScreen = () => {
     return (
       <ScreenWithToolbar title="Доходы по периоду">
         {({ topInset }) => <FinancesIncomeSkeleton topInset={topInset} />}
+      </ScreenWithToolbar>
+    );
+  }
+
+  if (isIncomeError) {
+    return (
+      <ScreenWithToolbar title="Доходы по периоду">
+        {() => (
+          <ErrorScreen
+            title="Не удалось загрузить данные о доходах"
+            onRetry={refetch}
+          />
+        )}
       </ScreenWithToolbar>
     );
   }

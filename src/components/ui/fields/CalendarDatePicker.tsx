@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, Ref, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { FieldError } from "react-hook-form";
 import { Calendar } from "react-native-calendars";
@@ -18,6 +18,7 @@ type CalendarDatePickerProps = {
   error?: FieldError;
   disabled?: boolean;
   hideErrorText?: boolean;
+  ref?: Ref<View>;
   endAdornment?: ReactNode;
   startAdornment?: ReactNode;
 };
@@ -33,6 +34,7 @@ export const CalendarDatePicker = ({
   hideErrorText,
   endAdornment,
   startAdornment,
+  ref,
 }: CalendarDatePickerProps) => {
   const [open, setOpen] = useState(false);
   const today = format(new Date(), "yyyy-MM-dd");
@@ -45,6 +47,7 @@ export const CalendarDatePicker = ({
 
   return (
     <BaseField
+      ref={ref}
       label={label}
       error={error}
       hideErrorText={hideErrorText}

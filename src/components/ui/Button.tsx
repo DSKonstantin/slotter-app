@@ -10,7 +10,7 @@ import { twMerge } from "tailwind-merge";
 export interface CustomBtn {
   title: string;
   onPress: () => void;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   variant?: "primary" | "secondary" | "accent" | "clear" | "destructive";
   textVariant?: "default" | "accent";
   direction?: "horizontal" | "vertical";
@@ -101,6 +101,7 @@ const styles = {
     vertical: "flex-col",
   },
   sizes: {
+    xs: "h-[28px] px-2",
     sm: "h-[40px] px-4",
     md: "h-[50px] px-4",
     lg: "h-[80px] px-4",

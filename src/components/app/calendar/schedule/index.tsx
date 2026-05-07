@@ -1,6 +1,12 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useFocusEffect, router, useLocalSearchParams } from "expo-router";
-import { Alert, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
@@ -9,11 +15,13 @@ import { FormProvider } from "react-hook-form";
 
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import ScheduleDayCard from "@/src/components/shared/cards/scheduleDayCard";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { getScheduleTimeLabel } from "@/src/utils/calendar/scheduleHelpers";
 import { useCalendarSchedule } from "@/src/hooks/useCalendarSchedule";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import {
   scheduleCalendarTheme,
   calendarStyle,
@@ -32,13 +40,15 @@ const CalendarSchedule = () => {
 
   const {
     methods,
-    handleSubmit,
     calendarDays,
     appointmentDates,
     modalVisible,
     modalTemplate,
     setModalTemplate,
     isSaving,
+    isLoading,
+    isError,
+    refetch,
     clearSelection,
     toggleDay,
     handleSave,
@@ -50,6 +60,8 @@ const CalendarSchedule = () => {
       return () => clearSelection();
     }, [clearSelection]),
   );
+
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const calendarDaysMap = useMemo(
     () => Object.fromEntries(calendarDays.map((day) => [day.date, day])),
@@ -103,7 +115,25 @@ const CalendarSchedule = () => {
             toggleDay(dayData.date);
             return;
           }
-          router.push(Routers.app.calendar.daySchedule(dayData.workingDayId));
+
+          const navigate = () =>
+            router.push(
+              Routers.app.calendar.daySchedule(dayData.workingDayId!),
+            );
+
+          if (methods.formState.isDirty) {
+            Alert.alert(
+              "Перейти к дню?",
+              "Несохранённые изменения будут сброшены.",
+              [
+                { text: "Отмена", style: "cancel" },
+                { text: "Перейти", style: "destructive", onPress: navigate },
+              ],
+            );
+            return;
+          }
+
+          navigate();
           return;
         }
 
@@ -126,7 +156,7 @@ const CalendarSchedule = () => {
         </View>
       );
     },
-    [calendarDaysMap, appointmentDates, toggleDay],
+    [calendarDaysMap, appointmentDates, toggleDay, methods.formState.isDirty],
   );
 
   return (
@@ -152,17 +182,39 @@ const CalendarSchedule = () => {
             className="flex-1 px-screen"
             style={{ paddingTop: topInset }}
           >
-            <Calendar
-              key={format(current, "yyyy-MM")}
-              initialDate={formatApiDate(current)}
-              firstDay={1}
-              hideArrows
-              hideExtraDays={true}
-              renderHeader={renderHeader}
-              theme={scheduleCalendarTheme}
-              style={calendarStyle.calendar}
-              dayComponent={renderDay}
-            />
+            {isLoading ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : isError ? (
+              <ErrorScreen
+                title="Не удалось загрузить расписание"
+                onRetry={refetch}
+              />
+            ) : (
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ flexGrow: 1 }}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+              >
+                <Calendar
+                  key={format(current, "yyyy-MM")}
+                  initialDate={formatApiDate(current)}
+                  firstDay={1}
+                  hideArrows
+                  hideExtraDays={true}
+                  renderHeader={renderHeader}
+                  theme={scheduleCalendarTheme}
+                  style={calendarStyle.calendar}
+                  dayComponent={renderDay}
+                />
+              </ScrollView>
+            )}
           </SafeAreaView>
         )}
       </ScreenWithToolbar>
@@ -170,7 +222,7 @@ const CalendarSchedule = () => {
       <ScheduleSettingsModal
         visible={modalVisible}
         onClose={clearSelection}
-        onSave={handleSubmit(handleSave)}
+        onSave={handleSave}
         isLoading={isSaving}
       />
 

@@ -2,39 +2,31 @@ import * as Yup from "yup";
 import {
   isEndAfterStart,
   areBreaksValid,
+  breakSchema,
+  breaksField,
+  withEndAfterStart,
+  EMPTY_WORKING_HOURS,
 } from "@/src/validation/utils/timeRange";
 
 export const calendarScheduleModes = ["bulk", "perDay"] as const;
 
 export type CalendarScheduleMode = (typeof calendarScheduleModes)[number];
 
-const breakSchema = Yup.object().shape({
-  start: Yup.string().required(),
-  end: Yup.string().required(),
+const scheduleDraftSchema = Yup.object().shape({
+  startAt: Yup.string().when("$mode", {
+    is: "bulk",
+    then: (schema) => schema.required("Обязательное поле"),
+    otherwise: (schema) => schema.default(""),
+  }),
+  endAt: withEndAfterStart(
+    Yup.string().when("$mode", {
+      is: "bulk",
+      then: (schema) => schema.required("Обязательное поле"),
+      otherwise: (schema) => schema.default(""),
+    }),
+  ),
+  breaks: breaksField(),
 });
-
-const scheduleDraftSchema = Yup.object()
-  .shape({
-    scheduleStart: Yup.string().when("$mode", {
-      is: "bulk",
-      then: (schema) => schema.required("Обязательное поле"),
-      otherwise: (schema) => schema.default(""),
-    }),
-    scheduleEnd: Yup.string().when("$mode", {
-      is: "bulk",
-      then: (schema) => schema.required("Обязательное поле"),
-      otherwise: (schema) => schema.default(""),
-    }),
-    breaks: Yup.array().of(breakSchema).required().default([]),
-  })
-  .test(
-    "draft-time-range",
-    "Время окончания должно быть позже времени начала",
-    (value) => isEndAfterStart(value?.scheduleStart, value?.scheduleEnd),
-  )
-  .test("draft-breaks", "Проверьте перерывы", (value) =>
-    areBreaksValid(value?.breaks, value?.scheduleStart, value?.scheduleEnd),
-  );
 
 const calendarDaySchema = Yup.object()
   .shape({
@@ -42,13 +34,13 @@ const calendarDaySchema = Yup.object()
     workingDayId: Yup.number().optional(),
     isExisting: Yup.boolean().required().default(false),
     isSelected: Yup.boolean().required().default(false),
-    scheduleStart: Yup.string().when(["isSelected", "isExisting"], {
+    startAt: Yup.string().when(["isSelected", "isExisting"], {
       is: (isSelected: boolean, isExisting: boolean) =>
         isSelected && !isExisting,
       then: (schema) => schema.required("Обязательное поле"),
       otherwise: (schema) => schema.default(""),
     }),
-    scheduleEnd: Yup.string().when(["isSelected", "isExisting"], {
+    endAt: Yup.string().when(["isSelected", "isExisting"], {
       is: (isSelected: boolean, isExisting: boolean) =>
         isSelected && !isExisting,
       then: (schema) => schema.required("Обязательное поле"),
@@ -61,17 +53,15 @@ const calendarDaySchema = Yup.object()
     workingDayId: undefined,
     isExisting: false,
     isSelected: false,
-    scheduleStart: "",
-    scheduleEnd: "",
-    breaks: [],
+    ...EMPTY_WORKING_HOURS,
   });
 
 const getSelectedEditableDays = (
   days?: {
     isExisting?: boolean;
     isSelected?: boolean;
-    scheduleStart?: string;
-    scheduleEnd?: string;
+    startAt?: string;
+    endAt?: string;
     breaks?: { start: string; end: string }[];
   }[],
 ) => (days ?? []).filter((day) => day.isSelected && !day.isExisting);
@@ -82,11 +72,9 @@ export const CalendarScheduleSchema = Yup.object()
       .oneOf(calendarScheduleModes)
       .required()
       .default("bulk"),
-    commonDraft: scheduleDraftSchema.required().default({
-      scheduleStart: "",
-      scheduleEnd: "",
-      breaks: [],
-    }),
+    commonDraft: scheduleDraftSchema
+      .required()
+      .default({ ...EMPTY_WORKING_HOURS }),
     calendarDays: Yup.array().of(calendarDaySchema).required().default([]),
   })
   .test(
@@ -95,7 +83,7 @@ export const CalendarScheduleSchema = Yup.object()
     (value) =>
       value?.mode !== "perDay" ||
       getSelectedEditableDays(value?.calendarDays).every((day) =>
-        isEndAfterStart(day.scheduleStart, day.scheduleEnd),
+        isEndAfterStart(day.startAt, day.endAt),
       ),
   )
   .test(
@@ -104,7 +92,7 @@ export const CalendarScheduleSchema = Yup.object()
     (value) =>
       value?.mode !== "perDay" ||
       getSelectedEditableDays(value?.calendarDays).every((day) =>
-        areBreaksValid(day.breaks, day.scheduleStart, day.scheduleEnd),
+        areBreaksValid(day.breaks, day.startAt, day.endAt),
       ),
   )
   .test(

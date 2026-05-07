@@ -18,17 +18,25 @@ export const usersApi = api.injectEndpoints({
       }),
     }),
 
-    updateCustomer: builder.mutation<
-      User,
-      { id: number; data: Partial<UpdateUserPayload> | FormData }
-    >({
-      query: ({ id, data }) => ({
-        url: `/customers/${id}`,
-        method: "PATCH",
-        data,
+    deleteUser: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `/users/${id}`,
+        method: "DELETE",
       }),
     }),
+
+    checkNickname: builder.query<{ available: boolean }, string>({
+      query: (nickname) => ({
+        url: `/users/nickname_availability`,
+        params: { nickname },
+      }),
+    }),
+
   }),
 });
 
-export const { useUpdateUserMutation, useUpdateCustomerMutation } = usersApi;
+export const {
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  useLazyCheckNicknameQuery,
+} = usersApi;

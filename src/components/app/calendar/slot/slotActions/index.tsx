@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, {memo, useCallback} from "react";
 import { Alert, View } from "react-native";
 
 import { Button, StSvg } from "@/src/components/ui";
@@ -13,6 +13,7 @@ import {
   useMarkLateAppointmentMutation,
   useMarkNoShowAppointmentMutation,
   useCompleteAppointmentMutation,
+  useRemindAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
 
 interface Props {
@@ -38,6 +39,7 @@ const SlotActions: React.FC<Props> = ({
     useMarkNoShowAppointmentMutation();
   const [complete, { isLoading: isCompleting }] =
     useCompleteAppointmentMutation();
+  const [remind, { isLoading: isReminding }] = useRemindAppointmentMutation();
 
   const handleConfirm = useCallback(() => {
     Alert.alert("Подтвердить запись?", "", [
@@ -139,6 +141,25 @@ const SlotActions: React.FC<Props> = ({
     ]);
   }, [appointmentId, complete]);
 
+  const handleRemind = useCallback(() => {
+    Alert.alert("Отправить напоминание клиенту?", "", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Отправить",
+        onPress: async () => {
+          try {
+            await remind(appointmentId).unwrap();
+            toast.success("Напоминание отправлено");
+          } catch (error) {
+            toast.error(
+              getApiErrorMessage(error, "Не удалось отправить напоминание"),
+            );
+          }
+        },
+      },
+    ]);
+  }, [appointmentId, remind]);
+
   const renderActions = () => {
     switch (status) {
       case "pending":
@@ -216,6 +237,15 @@ const SlotActions: React.FC<Props> = ({
               </View>
             </View>
             <Button
+              title="Напомнить"
+              variant="clear"
+              onPress={handleRemind}
+              loading={isReminding}
+              rightIcon={
+                <StSvg name="Bell_fill" size={24} color={colors.neutral[900]} />
+              }
+            />
+            <Button
               title="Перенести"
               variant="clear"
               rightIcon={
@@ -268,4 +298,4 @@ const SlotActions: React.FC<Props> = ({
   );
 };
 
-export default React.memo(SlotActions);
+export default memo(SlotActions);

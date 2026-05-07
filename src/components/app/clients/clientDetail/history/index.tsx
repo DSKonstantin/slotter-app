@@ -1,6 +1,21 @@
-import React, { useState } from "react";
-import { View, ScrollView } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  View,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { FlashList } from "@shopify/flash-list";
+import { skipToken } from "@reduxjs/toolkit/query";
+import {
+  parseISO,
+  isThisMonth,
+  isAfter,
+  subMonths,
+  startOfMonth,
+  format,
+} from "date-fns";
+import { ru } from "date-fns/locale";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Avatar,
@@ -13,71 +28,116 @@ import IncomeCard from "@/src/components/shared/cards/incomeCard";
 import { colors } from "@/src/styles/colors";
 import TrendChartCard from "@/src/components/shared/cards/trendChartCard";
 import ServiceCard from "@/src/components/app/clients/clientDetail/history/ServiceCard";
+import {
+  useGetUserCustomerFinancesQuery,
+  useGetUserCustomerAppointmentsQuery,
+  useGetUserCustomerQuery,
+} from "@/src/store/redux/services/api/userCustomersApi";
+import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { formatDayMonth } from "@/src/utils/date/formatTime";
+import type { Appointment } from "@/src/store/redux/services/api-types";
+import type { UserCustomerPeriod } from "@/src/store/redux/services/api-types/userCustomer";
 
-const MOCK_SERVICE_SECTIONS = [
-  {
-    title: "В этом месяце",
-    services: [
-      { name: "Окрашивание тон в тон / тонирование" },
-      { name: "Маникюр классический" },
-    ],
-  },
-  {
-    title: "За прошлые 3 месяца",
-    services: [
-      { name: "Стрижка + Укладка" },
-      { name: "Окрашивание" },
-      { name: "Педикюр" },
-    ],
-  },
-  {
-    title: "Ранее",
-    services: [{ name: "Стрижка" }, { name: "Укладка" }],
-  },
+const FINANCE_PERIODS: { label: string; value: UserCustomerPeriod }[] = [
+  { label: "День", value: "today" },
+  { label: "Неделя", value: "current_week" },
+  { label: "Месяц", value: "current_month" },
 ];
 
-const MOCK_PAYMENTS = [
-  {
-    id: 1,
-    title: "Стрижка + Укладка",
-    date: "20 октября",
-    time: "14:00",
-    amount: "+ 4 500 ₽",
-  },
-  {
-    id: 2,
-    title: "Окрашивание",
-    date: "5 октября",
-    time: "11:00",
-    amount: "+ 8 200 ₽",
-  },
-  {
-    id: 3,
-    title: "Маникюр",
-    date: "28 сентября",
-    time: "15:30",
-    amount: "+ 2 800 ₽",
-  },
-  {
-    id: 4,
-    title: "Стрижка",
-    date: "10 сентября",
-    time: "12:00",
-    amount: "+ 1 500 ₽",
-  },
-  {
-    id: 5,
-    title: "Укладка + Маникюр",
-    date: "1 сентября",
-    time: "10:00",
-    amount: "+ 3 500 ₽",
-  },
-];
+const groupAppointmentsByPeriod = (appointments: Appointment[]) => {
+  const threeMonthsAgo = subMonths(startOfMonth(new Date()), 3);
+
+  const sections: { title: string; items: Appointment[] }[] = [
+    { title: "В этом месяце", items: [] },
+    { title: "За прошлые 3 месяца", items: [] },
+    { title: "Ранее", items: [] },
+  ];
+
+  for (const appt of appointments) {
+    const date = parseISO(appt.date);
+    if (isThisMonth(date)) {
+      sections[0].items.push(appt);
+    } else if (isAfter(date, threeMonthsAgo)) {
+      sections[1].items.push(appt);
+    } else {
+      sections[2].items.push(appt);
+    }
+  }
+
+  return sections.filter((s) => s.items.length > 0);
+};
 
 type Props = { customerId: number };
 
-const ClientHistory = ({ customerId: _ }: Props) => {
+const ClientHistory = ({ customerId }: Props) => {
+  const auth = useRequiredAuth();
   const [filterActive, setFilterActive] = useState(false);
+  const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[0]);
+
+  const { data: customerData } = useGetUserCustomerQuery(
+    auth ? { userId: auth.userId, userCustomerId: customerId } : skipToken,
+  );
+
+  const {
+    data: financesData,
+    isLoading: financesLoading,
+    refetch: refetchFinances,
+  } = useGetUserCustomerFinancesQuery(
+    auth && !filterActive
+      ? {
+          userId: auth.userId,
+          id: customerId,
+          params: { period: financePeriod.value },
+        }
+      : skipToken,
+    { refetchOnMountOrArgChange: true },
+  );
+
+  const {
+    data: appointmentsData,
+    isLoading: appointmentsLoading,
+    refetch: refetchAppointments,
+  } = useGetUserCustomerAppointmentsQuery(
+    auth && filterActive
+      ? { userId: auth.userId, id: customerId, params: { sort: "asc" } }
+      : skipToken,
+    { refetchOnMountOrArgChange: true },
+  );
+
+  const userCustomer = customerData?.user_customer;
+  const customer = userCustomer?.customer;
+
+  const chartData = useMemo(
+    () =>
+      financesData?.chart.map((point) => ({
+        value: point.amount_cents,
+        label: format(parseISO(point.month + "-01"), "MMM", { locale: ru }),
+      })) ?? [],
+    [financesData],
+  );
+
+  const appointmentSections = useMemo(
+    () => groupAppointmentsByPeriod(appointmentsData?.appointments ?? []),
+    [appointmentsData],
+  );
+
+  const lastVisitAt = userCustomer?.stats.last_visit_at;
+  const lastVisitLabel = lastVisitAt
+    ? format(parseISO(lastVisitAt), "d MMM yyyy", { locale: ru })
+    : "—";
+
+  const isLoading = filterActive ? appointmentsLoading : financesLoading;
+
+  const handleRefresh = useCallback(
+    () => (filterActive ? refetchAppointments() : refetchFinances()),
+    [filterActive, refetchAppointments, refetchFinances],
+  );
+  const { refreshing, onRefresh } = useRefresh(handleRefresh);
+
   return (
     <ScreenWithToolbar
       title="История посещений"
@@ -104,65 +164,120 @@ const ClientHistory = ({ customerId: _ }: Props) => {
             paddingBottom: bottomInset + 16,
             paddingHorizontal: 20,
           }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           <View className="items-center mb-5">
             <View className="flex-row gap-2 bg-background-surface rounded-base py-1 pl-1 pr-2.5 items-center">
-              <Avatar size="xs" />
-              <Typography className="text-body">Анна Петрова</Typography>
+              <Avatar
+                size="xs"
+                name={customer?.name}
+                uri={customer?.avatar_url ?? undefined}
+              />
+              <Typography className="text-body">
+                {customer?.name ?? ""}
+              </Typography>
             </View>
           </View>
 
-          {filterActive ? (
+          {isLoading ? (
+            <View className="flex-1 items-center justify-center py-10">
+              <ActivityIndicator />
+            </View>
+          ) : filterActive ? (
             <View className="gap-6">
-              {MOCK_SERVICE_SECTIONS.map((section) => (
+              {appointmentSections.map((section) => (
                 <View key={section.title} className="gap-4">
                   <Typography className="text-body">{section.title}</Typography>
                   <FlashList
-                    data={section.services}
-                    keyExtractor={(item) => item.name}
+                    data={section.items}
+                    keyExtractor={(item) => String(item.id)}
                     numColumns={2}
                     scrollEnabled={false}
                     ItemSeparatorComponent={() => <View className="h-3" />}
-                    renderItem={({ item, index }) => (
-                      <View
-                        style={{
-                          flex: 1,
-                          marginRight: index % 2 === 0 ? 6 : 0,
-                        }}
-                      >
-                        <ServiceCard service={item} />
-                      </View>
-                    )}
+                    renderItem={({ item, index }) => {
+                      const name =
+                        item.services.map((s) => s.name).join(" + ") ||
+                        "Запись";
+                      return (
+                        <View
+                          style={{
+                            flex: 1,
+                            marginRight: index % 2 === 0 ? 6 : 0,
+                          }}
+                        >
+                          <ServiceCard
+                            service={{ name }}
+                            date={formatDayMonth(item.date)}
+                            onPress={() =>
+                              router.push(Routers.app.calendar.slot(item.id))
+                            }
+                          />
+                        </View>
+                      );
+                    }}
                   />
                 </View>
               ))}
+              {appointmentSections.length === 0 && (
+                <View className="items-center py-10">
+                  <Typography className="text-body text-neutral-400">
+                    Нет посещений
+                  </Typography>
+                </View>
+              )}
             </View>
           ) : (
             <View className="gap-5">
               <IncomeCard
-                totalIncome="52 500 ₽"
+                totalIncome={formatRublesFromCents(
+                  financesData?.total_income_cents ?? 0,
+                )}
                 items={[
-                  { label: "Визитов", value: "15" },
-                  { label: "Последний визит", value: "8 апр. 2026" },
+                  {
+                    label: "Визитов",
+                    value: String(financesData?.visits_count ?? 0),
+                  },
+                  { label: "Последний визит", value: lastVisitLabel },
                 ]}
               />
 
-              <TrendChartCard title="Динамика" />
+              <TrendChartCard
+                title="Динамика"
+                data={chartData}
+                periods={FINANCE_PERIODS}
+                onPeriodChange={(p) =>
+                  setFinancePeriod(p as (typeof FINANCE_PERIODS)[number])
+                }
+              />
 
               <View className="gap-2">
                 <Typography className="text-caption">История оплат</Typography>
-                {MOCK_PAYMENTS.map((payment) => (
+                {(financesData?.payments ?? []).map((payment) => (
                   <Card
-                    key={payment.id}
+                    key={payment.appointment_id}
                     title={payment.title}
-                    subtitle={`${payment.date} | ${payment.time}`}
+                    subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
+                    onPress={() =>
+                      router.push(
+                        Routers.app.calendar.slot(payment.appointment_id),
+                      )
+                    }
                     right={
                       <Typography className="text-body">
-                        {payment.amount}
+                        {formatRublesFromCents(payment.amount_cents)}
                       </Typography>
                     }
                   />
                 ))}
+                {(financesData?.payments ?? []).length === 0 && (
+                  <View className="items-center py-6">
+                    <Typography className="text-body text-neutral-400">
+                      Нет оплат за период
+                    </Typography>
+                  </View>
+                )}
               </View>
             </View>
           )}

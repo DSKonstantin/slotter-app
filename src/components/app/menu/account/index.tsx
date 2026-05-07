@@ -1,6 +1,7 @@
-import React, { useCallback } from "react";
+import React, { useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
+import SupportModal from "@/src/components/shared/modals/SupportModal";
 import {
   Avatar,
   Button,
@@ -13,11 +14,11 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useAppSelector, useAppDispatch } from "@/src/store/redux/store";
-import { logout } from "@/src/store/redux/slices/authSlice";
+import { useAppSelector } from "@/src/store/redux/store";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
-import { accessTokenStorage } from "@/src/utils/tokenStorage/accessTokenStorage";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 type NavItem = {
   title: string;
@@ -68,7 +69,7 @@ const NAV_GROUPS: NavItem[][] = [
     {
       title: "Поддержка",
       icon: "Chat_alt_2_fill",
-      route: () => router.push(Routers.app.menu.account.support),
+      route: () => {},
     },
   ],
 ];
@@ -76,113 +77,127 @@ const NAV_GROUPS: NavItem[][] = [
 const AccountScreen = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
-  const dispatch = useAppDispatch();
+  const { logout } = useAuth();
+  const [supportVisible, setSupportVisible] = useState(false);
   const [triggerGetMe] = useLazyGetMeQuery();
-  const { refreshing, onRefresh } = useRefresh(triggerGetMe);
 
-  const handleLogout = useCallback(async () => {
-    await accessTokenStorage.remove();
-    dispatch(logout());
-    router.replace(Routers.auth.root);
-  }, [dispatch]);
+  const handleRefresh = async () => {
+    try {
+      await triggerGetMe().unwrap();
+    } catch {
+      toast.error("Не удалось обновить данные профиля");
+    }
+  };
+
+  const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
   if (!auth) return null;
 
   return (
-    <ScreenWithToolbar title="Аккаунт">
-      {({ topInset, bottomInset }) => (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: topInset,
-            paddingBottom: bottomInset + 16,
-          }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <Card
-            title={[user?.first_name, user?.last_name]
-              .filter(Boolean)
-              .join(" ")}
-            subtitle={user?.profession ?? ""}
-            left={
-              <Avatar
-                uri={user?.avatar_url ?? undefined}
-                name={[user?.first_name, user?.last_name]
-                  .filter(Boolean)
-                  .join(" ")}
-                size="md"
-              />
+    <>
+      <ScreenWithToolbar title="Аккаунт">
+        {({ topInset, bottomInset }) => (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingTop: topInset,
+              paddingBottom: bottomInset + 16,
+            }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
-            className="mx-screen mb-7"
-            right={
-              <StSvg
-                name="Expand_right"
-                size={20}
-                color={colors.neutral[400]}
-              />
-            }
-            onPress={() =>
-              router.push(Routers.app.menu.account.personalInformation)
-            }
-          />
-
-          <View className="mx-screen gap-7">
-            {NAV_GROUPS.map((group, groupIndex) => (
-              <View
-                key={groupIndex}
-                className="bg-background-surface rounded-base overflow-hidden"
-              >
-                {group.map((item, index) => (
-                  <React.Fragment key={item.title}>
-                    {index > 0 && (
-                      <Divider className="ml-12 mr-4 flex-1 w-auto" />
-                    )}
-                    <Item
-                      title={item.title}
-                      subtitle={item.subtitle}
-                      left={
-                        <StSvg
-                          name={item.icon}
-                          size={24}
-                          color={colors.neutral[900]}
-                        />
-                      }
-                      className="border-0 rounded-none"
-                      right={
-                        <StSvg
-                          name="Expand_right"
-                          size={20}
-                          color={colors.neutral[400]}
-                        />
-                      }
-                      onPress={item.route}
-                    />
-                  </React.Fragment>
-                ))}
-              </View>
-            ))}
-          </View>
-
-          <View className="mx-screen mt-7">
-            <Button
-              title="Выйти"
-              variant="clear"
-              onPress={handleLogout}
-              textClassName="text-accent-red-500"
-              rightIcon={
-                <StSvg
-                  name="Sign_out_squre_fill"
-                  size={24}
-                  color={colors.accent.red[500]}
+          >
+            <Card
+              title={[user?.first_name, user?.last_name]
+                .filter(Boolean)
+                .join(" ")}
+              subtitle={user?.profession ?? ""}
+              left={
+                <Avatar
+                  uri={user?.avatar_url ?? undefined}
+                  name={[user?.first_name, user?.last_name]
+                    .filter(Boolean)
+                    .join(" ")}
+                  size="md"
                 />
               }
+              className="mx-screen mb-7"
+              right={
+                <StSvg
+                  name="Expand_right"
+                  size={20}
+                  color={colors.neutral[400]}
+                />
+              }
+              onPress={() =>
+                router.push(Routers.app.menu.account.personalInformation)
+              }
             />
-          </View>
-        </ScrollView>
-      )}
-    </ScreenWithToolbar>
+
+            <View className="mx-screen gap-7">
+              {NAV_GROUPS.map((group, groupIndex) => (
+                <View
+                  key={groupIndex}
+                  className="bg-background-surface rounded-base overflow-hidden"
+                >
+                  {group.map((item, index) => (
+                    <React.Fragment key={item.title}>
+                      {index > 0 && (
+                        <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                      )}
+                      <Item
+                        title={item.title}
+                        subtitle={item.subtitle}
+                        left={
+                          <StSvg
+                            name={item.icon}
+                            size={24}
+                            color={colors.neutral[900]}
+                          />
+                        }
+                        className="border-0 rounded-none"
+                        right={
+                          <StSvg
+                            name="Expand_right"
+                            size={20}
+                            color={colors.neutral[400]}
+                          />
+                        }
+                        onPress={
+                          item.title === "Поддержка"
+                            ? () => setSupportVisible(true)
+                            : item.route
+                        }
+                      />
+                    </React.Fragment>
+                  ))}
+                </View>
+              ))}
+            </View>
+
+            <View className="mx-screen mt-7">
+              <Button
+                title="Выйти"
+                variant="clear"
+                onPress={logout}
+                textClassName="text-accent-red-500"
+                rightIcon={
+                  <StSvg
+                    name="Sign_out_squre_fill"
+                    size={24}
+                    color={colors.accent.red[500]}
+                  />
+                }
+              />
+            </View>
+          </ScrollView>
+        )}
+      </ScreenWithToolbar>
+      <SupportModal
+        visible={supportVisible}
+        onClose={() => setSupportVisible(false)}
+      />
+    </>
   );
 };
 

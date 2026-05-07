@@ -19,7 +19,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
-import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { BOTTOM_OFFSET_SMALL, TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const AboutSpecialist = () => {
@@ -40,7 +40,7 @@ const AboutSpecialist = () => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = useCallback(
     async (data: AccountAboutFormValues) => {
@@ -56,12 +56,13 @@ const AboutSpecialist = () => {
             is_out_call: data.onRoad,
           },
         }).unwrap();
+        release();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser],
+    [auth, updateUser, release],
   );
 
   if (!auth) return null;
@@ -75,7 +76,7 @@ const AboutSpecialist = () => {
               showsVerticalScrollIndicator={false}
               bottomOffset={BOTTOM_OFFSET_SMALL}
               contentContainerStyle={{
-                paddingTop: topInset + 16,
+                paddingTop: topInset,
                 paddingBottom: 16,
               }}
             >

@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
-import ErrorScreen from "@/src/components/shared/errorScreen";
 import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlotList/TimeSlotListSkeleton";
 
 import { useAppSelector } from "@/src/store/redux/store";
@@ -16,7 +15,9 @@ import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDa
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { Appointment } from "@/src/store/redux/services/api-types";
-import EmptyStateScreen from "@/src/components/shared/emptyStateScreen";
+import EmptyStateScreen, {
+  ErrorScreen,
+} from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
@@ -103,8 +104,8 @@ const DayCalendarView = () => {
   );
 
   const isEmpty = useMemo(
-    () => !isLoading && !selectedWorkingDay,
-    [isLoading, selectedWorkingDay],
+    () => !isLoading && !selectedWorkingDay && appointments.length === 0,
+    [isLoading, selectedWorkingDay, appointments.length],
   );
 
   const refetchAll = useCallback(async () => {
@@ -127,7 +128,9 @@ const DayCalendarView = () => {
   }, [router, selectedDay]);
 
   const handleHighlightScroll = useCallback((y: number) => {
-    pendingScrollY.current = y + dateSelectorHeightRef.current;
+    const total = y + dateSelectorHeightRef.current;
+    pendingScrollY.current = total;
+    scrollViewRef.current?.scrollTo({ y: total, animated: true });
   }, []);
 
   const content = useMemo(() => {
@@ -159,6 +162,7 @@ const DayCalendarView = () => {
       <TimeSlotList
         appointments={appointments}
         breaks={selectedWorkingDay?.working_day_breaks}
+        workingDayId={selectedWorkingDay?.id}
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
         date={selectedDay}

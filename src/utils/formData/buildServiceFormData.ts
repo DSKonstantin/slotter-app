@@ -1,7 +1,7 @@
 type ServiceFormValues = {
   name: string;
   price: string;
-  duration: string;
+  duration: number | string;
   description: string;
   isAvailableOnline: boolean;
   isActive: boolean;

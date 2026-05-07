@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -8,14 +8,25 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Avatar, Button, StSvg } from "@/src/components/ui";
+import {
+  Avatar,
+  Button,
+  StModal,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
+import {
+  useDeleteUserMutation,
+  useUpdateUserMutation,
+} from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAuth } from "@/src/contexts/AuthContext";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
+import { assetToFile } from "@/src/utils/files/assetToFile";
 import { AccountPersonalInformationSchema } from "@/src/validation/schemas/accountPersonalInformation.schema";
 import type { UploadFile } from "@/src/types/upload";
 import { colors } from "@/src/styles/colors";
@@ -31,7 +42,10 @@ type FormValues = {
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
+  const { logout } = useAuth();
   const [updateUser, { isLoading }] = useUpdateUserMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const methods = useForm<FormValues>({
     resolver: yupResolver(AccountPersonalInformationSchema),
@@ -43,7 +57,7 @@ const PersonalInformation = () => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const avatar = methods.watch("avatar");
 
@@ -51,11 +65,7 @@ const PersonalInformation = () => {
     (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => {
       const asset = assets[0];
       if (!asset || !("width" in asset)) return;
-      methods.setValue("avatar", {
-        uri: asset.uri,
-        name: asset.fileName || `avatar_${Date.now()}.jpg`,
-        type: asset.mimeType || "image/jpeg",
-      });
+      methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
   );
@@ -66,13 +76,26 @@ const PersonalInformation = () => {
       try {
         const formData = buildUserFormData(data);
         await updateUser({ id: auth.userId, data: formData }).unwrap();
+        release();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser],
+    [auth, updateUser, release],
   );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!auth) return;
+    try {
+      await deleteUser(auth.userId).unwrap();
+      setDeleteModalVisible(false);
+      release();
+      await logout();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось удалить профиль"));
+    }
+  }, [auth, deleteUser, logout, release]);
 
   if (!auth) return null;
 
@@ -127,7 +150,7 @@ const PersonalInformation = () => {
             </KeyboardAwareScrollView>
 
             <View
-              className="px-screen"
+              className="px-screen gap-4"
               style={{ paddingBottom: bottomInset + 16 }}
             >
               <Button
@@ -139,7 +162,51 @@ const PersonalInformation = () => {
                 loading={isLoading}
                 disabled={isLoading}
               />
+              <Button
+                title="Удалить профиль"
+                variant="clear"
+                onPress={() => setDeleteModalVisible(true)}
+                textClassName="text-accent-red-500"
+                rightIcon={
+                  <StSvg
+                    name="Trash"
+                    size={24}
+                    color={colors.accent.red[500]}
+                  />
+                }
+                disabled={isDeleting}
+              />
             </View>
+
+            <StModal
+              visible={deleteModalVisible}
+              onClose={() => setDeleteModalVisible(false)}
+            >
+              <Typography
+                weight="semibold"
+                className="text-display text-center mb-3"
+              >
+                Удалить профиль?
+              </Typography>
+              <Typography className="text-body text-center mb-6">
+                Аккаунт будет удалён. Это действие нельзя отменить.
+              </Typography>
+              <View className="gap-3">
+                <Button
+                  title="Удалить"
+                  variant="destructive"
+                  onPress={handleConfirmDelete}
+                  loading={isDeleting}
+                  disabled={isDeleting}
+                />
+                <Button
+                  title="Отмена"
+                  variant="clear"
+                  onPress={() => setDeleteModalVisible(false)}
+                  disabled={isDeleting}
+                />
+              </View>
+            </StModal>
           </>
         )}
       </ScreenWithToolbar>

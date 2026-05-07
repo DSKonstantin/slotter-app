@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, Ref, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
@@ -9,6 +9,7 @@ type BaseFieldProps = {
   label?: string;
   hideErrorText?: boolean;
   error?: FieldError;
+  success?: boolean;
   disabled?: boolean;
   size?: FieldSize;
   multiline?: boolean;
@@ -16,6 +17,8 @@ type BaseFieldProps = {
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   onEndAdornmentPress?: () => void;
+
+  ref?: Ref<View>;
 
   renderControl: (params: {
     disabled?: boolean;
@@ -27,6 +30,7 @@ type BaseFieldProps = {
 export function BaseField({
   label,
   error,
+  success,
   disabled,
   size = "md",
   multiline,
@@ -35,11 +39,12 @@ export function BaseField({
   endAdornment,
   onEndAdornmentPress,
   renderControl,
+  ref,
 }: BaseFieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
-    <View className="flex-grow">
+    <View ref={ref} collapsable={false} className="flex-grow">
       {label && <Text className={styles.label}>{label}</Text>}
 
       <View
@@ -48,6 +53,7 @@ export function BaseField({
           multiline ? styles.baseTop : styles.baseCenter,
           styles.sizes[size],
           focused && styles.focus,
+          success && styles.success,
           error && styles.error,
           disabled && styles.disabled,
         )}
@@ -62,7 +68,7 @@ export function BaseField({
           (onEndAdornmentPress ? (
             <Pressable
               onPress={onEndAdornmentPress}
-              className={styles.adornmentEnd}
+              className={`${styles.adornmentEnd} active:opacity-70`}
             >
               {endAdornment}
             </Pressable>
@@ -92,6 +98,8 @@ const styles = {
   },
 
   focus: "border-primary-blue-500",
+
+  success: "border-primary-green-700",
 
   error: "border-accent-red-500",
 

@@ -24,12 +24,12 @@ const AdditionalServiceCreate = () => {
       name: "",
       description: "",
       price: "",
-      duration: "",
+      duration: "0",
       isActive: true,
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     if (!auth?.userId) return;
@@ -39,13 +39,14 @@ const AdditionalServiceCreate = () => {
         userId: auth.userId,
         data: {
           name: values.name.trim(),
+          description: values.description,
           duration: Number(values.duration),
           price: Number(values.price),
           is_active: values.isActive,
         },
       }).unwrap();
 
-      methods.reset();
+      release();
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось создать доп. услугу"));

@@ -12,12 +12,8 @@ const LOADER_SPEED = 1.2;
 const LOADER_BG = colors.neutral[100];
 const LOADER_FG = "#F5F5FA";
 
-const HEADER_WIDTH = 108;
-const HEADER_HEIGHT = 16;
-const HEADER_BOTTOM_GAP = 16;
-const ITEM_TOP_OFFSET = HEADER_HEIGHT + HEADER_BOTTOM_GAP;
-const ITEM_HEIGHT = 56;
-const ITEM_BOTTOM_PADDING = 6;
+const ITEM_TOP_OFFSET = 0;
+const ITEM_HEIGHT = 70;
 const MIN_VISIBLE_ITEMS = 6;
 const MAX_VISIBLE_ITEMS = 7;
 
@@ -35,7 +31,7 @@ const DateSelectorSkeleton = () => {
   }, [width]);
 
   const contentWidth = width;
-  const contentHeight = ITEM_TOP_OFFSET + ITEM_HEIGHT + ITEM_BOTTOM_PADDING;
+  const contentHeight = ITEM_TOP_OFFSET + ITEM_HEIGHT;
 
   return (
     <View className="gap-2">
@@ -46,15 +42,6 @@ const DateSelectorSkeleton = () => {
         backgroundColor={LOADER_BG}
         foregroundColor={LOADER_FG}
       >
-        <Rect
-          x={(contentWidth - HEADER_WIDTH) / 2}
-          y={0}
-          rx={6}
-          ry={6}
-          width={HEADER_WIDTH}
-          height={HEADER_HEIGHT}
-        />
-
         {Array.from({ length: itemCount }).map((_, index) => {
           const itemX = HORIZONTAL_PADDING + index * (ITEM_WIDTH + ITEM_GAP);
           const circleX = itemX + (ITEM_WIDTH - DATE_CIRCLE_SIZE) / 2;

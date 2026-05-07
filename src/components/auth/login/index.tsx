@@ -10,13 +10,15 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "@/src/validation/schemas/login.schema";
 import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
-import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useAuth } from "@/src/contexts/AuthContext";
+import getRedirectPath from "@/src/utils/getOnboardingStep";
 
 const Login = () => {
-  const [login, { isLoading }] = useLoginMutation();
+  const [loginMutation, { isLoading }] = useLoginMutation();
+  const { login } = useAuth();
 
   const methods = useForm({
     resolver: yupResolver(loginSchema),
@@ -31,19 +33,20 @@ const Login = () => {
       try {
         const isEmail = data.identifier.includes("@");
 
-        await login({
+        const result = await loginMutation({
           email: isEmail ? data.identifier : undefined,
-          phone: isEmail ? "" : data.identifier,
+          phone: isEmail ? undefined : data.identifier,
           password: data.password,
           type: UserType.USER,
         }).unwrap();
 
-        router.replace(Routers.app.root);
+        await login(result.token);
+        router.replace(getRedirectPath(result.resource));
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Произошла ошибка"));
       }
     },
-    [login],
+    [login, loginMutation],
   );
 
   return (

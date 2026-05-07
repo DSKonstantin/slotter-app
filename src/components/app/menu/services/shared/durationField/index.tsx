@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
@@ -34,7 +34,10 @@ const DurationField = ({
   const currentValue = String(value ?? "");
 
   const [isCustomSelected, setIsCustomSelected] = useState<boolean>(
-    () => currentValue.length > 0 && !presetValues.includes(currentValue),
+    () =>
+      currentValue.length > 0 &&
+      currentValue !== "0" &&
+      !presetValues.includes(currentValue),
   );
 
   const handlePresetPress = (preset: number | string) => {
@@ -46,12 +49,6 @@ const DurationField = ({
     setIsCustomSelected(true);
     onChange("");
   };
-
-  useEffect(() => {
-    if (currentValue.length > 0) {
-      setIsCustomSelected(!presetValues.includes(currentValue));
-    }
-  }, [currentValue, presetValues]);
 
   return (
     <View className={`gap-2 ${!isCustomSelected && "mb-5"}`}>

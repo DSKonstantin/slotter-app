@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useState } from "react";
 
 import { ActivityIndicator, SectionList, View } from "react-native";
 import { router } from "expo-router";
@@ -35,11 +29,14 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import RetryInline from "@/src/components/shared/retryInline";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
   { label: "Групповая", disabled: true, value: "group" },
 ];
+
+type Mode = "services" | "additional";
 
 type ServiceRowProps = {
   service: Service;
@@ -81,7 +78,7 @@ interface Props {
   appointmentId?: string;
   selectedServiceIds?: string;
   selectedAdditionalServiceIds?: string;
-  scrollTo?: string;
+  mode?: Mode;
 }
 
 type SectionType = "category" | "additional";
@@ -98,34 +95,42 @@ const SlotSelectService: React.FC<Props> = ({
   appointmentId,
   selectedServiceIds,
   selectedAdditionalServiceIds,
-  scrollTo,
+  mode,
 }) => {
-  const sectionListRef = useRef<SectionList<SectionItem, Section>>(null);
-  const hasScrolledRef = useRef(false);
-  const initializedServicesRef = useRef(false);
-  const initializedAdditionalRef = useRef(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
-  const personalLink = useAppSelector((s) => s.auth.user?.personal_link);
+  const personalLink = useAppSelector((s) => s.auth.user?.nickname);
   const [bookingLinkVisible, setBookingLinkVisible] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useGetServiceCategoriesInfiniteQuery(
-      auth
-        ? { userId: auth.userId, params: { view: "public_profile" } }
-        : skipToken,
-    );
+  const showServices = mode !== "additional";
+  const showAdditional = mode !== "services";
+
+  const {
+    data,
+    isLoading,
+    isError: isCategoriesError,
+    refetch: refetchCategories,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetServiceCategoriesInfiniteQuery(
+    auth && showServices
+      ? { userId: auth.userId, params: { view: "public_profile" } }
+      : skipToken,
+  );
 
   const {
     data: additionalData,
+    isError: isAdditionalError,
+    refetch: refetchAdditional,
     fetchNextPage: fetchAdditionalNextPage,
     hasNextPage: hasAdditionalNextPage,
     isFetchingNextPage: isAdditionalFetchingNextPage,
   } = useGetAdditionalServicesInfiniteQuery(
-    auth ? { userId: auth.userId, params: {} } : skipToken,
+    auth && showAdditional ? { userId: auth.userId, params: {} } : skipToken,
   );
 
   const additionalServices = useMemo(
@@ -142,67 +147,85 @@ const SlotSelectService: React.FC<Props> = ({
   );
 
   const sections = useMemo<Section[]>(() => {
-    const categorySections: Section[] = categories
-      .map((cat) => ({
-        title: cat.name,
-        type: "category" as const,
-        data: (cat.services ?? []) as SectionItem[],
-      }))
-      .filter((section) => section.data.length > 0);
+    const result: Section[] = [];
 
-    if (additionalServices.length > 0) {
-      categorySections.push({
+    if (showServices) {
+      categories
+        .map<Section>((cat) => ({
+          title: cat.name,
+          type: "category",
+          data: (cat.services ?? []) as SectionItem[],
+        }))
+        .filter((section) => section.data.length > 0)
+        .forEach((section) => result.push(section));
+    }
+
+    if (showAdditional && additionalServices.length > 0) {
+      result.push({
         title: "Дополнительные услуги",
-        type: "additional" as const,
+        type: "additional",
         data: additionalServices as SectionItem[],
       });
     }
 
-    return categorySections;
-  }, [categories, additionalServices]);
-
-  const preselectedIds = useMemo(
-    () => (selectedServiceIds ? selectedServiceIds.split(",").map(Number) : []),
-    [selectedServiceIds],
-  );
-
-  const preselectedAdditionalIds = useMemo(
-    () =>
-      selectedAdditionalServiceIds
-        ? selectedAdditionalServiceIds.split(",").map(Number)
-        : [],
-    [selectedAdditionalServiceIds],
-  );
+    return result;
+  }, [categories, additionalServices, showServices, showAdditional]);
 
   const allServices = useMemo(
     () => categories.flatMap((cat) => cat.services ?? []),
     [categories],
   );
 
-  const [selectedServices, setSelectedServices] = useState<Service[]>(() =>
-    allServices.filter((s) => preselectedIds.includes(s.id)),
+  const [selectedServiceIdSet, setSelectedServiceIdSet] = useState<Set<number>>(
+    () =>
+      new Set(
+        selectedServiceIds ? selectedServiceIds.split(",").map(Number) : [],
+      ),
   );
-  const [selectedAdditional, setSelectedAdditional] = useState<
-    AdditionalService[]
-  >([]);
+  const [selectedAdditionalIdSet, setSelectedAdditionalIdSet] = useState<
+    Set<number>
+  >(
+    () =>
+      new Set(
+        selectedAdditionalServiceIds
+          ? selectedAdditionalServiceIds.split(",").map(Number)
+          : [],
+      ),
+  );
+
+  const selectedServices = useMemo(
+    () => allServices.filter((s) => selectedServiceIdSet.has(s.id)),
+    [allServices, selectedServiceIdSet],
+  );
+
+  const selectedAdditional = useMemo(
+    () => additionalServices.filter((s) => selectedAdditionalIdSet.has(s.id)),
+    [additionalServices, selectedAdditionalIdSet],
+  );
 
   const handleToggleService = useCallback((service: Service) => {
-    setSelectedServices((prev) => {
-      if (prev.some((s) => s.id === service.id)) {
-        return prev.filter((s) => s.id !== service.id);
+    setSelectedServiceIdSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(service.id)) {
+        next.delete(service.id);
+      } else {
+        if (next.size >= 5) return prev;
+        next.add(service.id);
       }
-      if (prev.length >= 5) return prev;
-      return [...prev, service];
+      return next;
     });
   }, []);
 
   const handleToggleAdditional = useCallback((service: AdditionalService) => {
-    setSelectedAdditional((prev) => {
-      if (prev.some((s) => s.id === service.id)) {
-        return prev.filter((s) => s.id !== service.id);
+    setSelectedAdditionalIdSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(service.id)) {
+        next.delete(service.id);
+      } else {
+        if (next.size >= 10) return prev;
+        next.add(service.id);
       }
-      if (prev.length >= 10) return prev;
-      return [...prev, service];
+      return next;
     });
   }, []);
 
@@ -211,18 +234,26 @@ const SlotSelectService: React.FC<Props> = ({
   }, []);
 
   const handleNext = useCallback(async () => {
-    if (selectedServices.length === 0) return;
+    if (mode !== "additional" && selectedServices.length === 0) return;
 
     if (appointmentId) {
       try {
+        const body =
+          mode === "services"
+            ? { service_ids: selectedServices.map((s) => s.id) }
+            : mode === "additional"
+              ? {
+                  additional_service_ids: selectedAdditional.map((s) => s.id),
+                }
+              : {
+                  service_ids: selectedServices.map((s) => s.id),
+                  additional_service_ids: selectedAdditional.map((s) => s.id),
+                };
+
         await updateAppointment({
           id: Number(appointmentId),
-          body: {
-            service_ids: selectedServices.map((s) => s.id),
-            additional_service_ids: selectedAdditional.map((s) => s.id),
-          },
+          body,
         }).unwrap();
-        toast.success("Услуги обновлены");
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось обновить услуги"));
@@ -240,83 +271,66 @@ const SlotSelectService: React.FC<Props> = ({
     );
     router.push(Routers.app.calendar.slotCreate());
   }, [
+    mode,
     selectedServices,
+    selectedAdditional,
     appointmentId,
     dispatch,
     date,
     time,
-    selectedAdditional,
     updateAppointment,
   ]);
 
-  useEffect(() => {
-    if (
-      !initializedServicesRef.current &&
-      allServices.length > 0 &&
-      preselectedIds.length > 0
-    ) {
-      initializedServicesRef.current = true;
-      setSelectedServices(
-        allServices.filter((s) => preselectedIds.includes(s.id)),
-      );
-    }
-  }, [allServices, preselectedIds]);
-
-  useEffect(() => {
-    if (
-      !initializedAdditionalRef.current &&
-      additionalServices.length > 0 &&
-      preselectedAdditionalIds.length > 0
-    ) {
-      initializedAdditionalRef.current = true;
-      setSelectedAdditional(
-        additionalServices.filter((s) =>
-          preselectedAdditionalIds.includes(s.id),
-        ),
-      );
-    }
-  }, [additionalServices, preselectedAdditionalIds]);
-
-  useEffect(() => {
-    if (
-      scrollTo === "additional" &&
-      !hasScrolledRef.current &&
-      sections.length > 0 &&
-      sections.some((s) => s.type === "additional")
-    ) {
-      hasScrolledRef.current = true;
-      const sectionIndex = sections.findIndex((s) => s.type === "additional");
-      if (sectionIndex !== -1) {
-        setTimeout(() => {
-          sectionListRef.current?.scrollToLocation({
-            sectionIndex,
-            itemIndex: 0,
-            animated: true,
-          });
-        }, 300);
-      }
-    }
-  }, [scrollTo, sections]);
-
   if (!auth) return null;
+
+  const screenTitle =
+    mode === "additional" ? "Выберите доп. услугу" : "Выберите услугу";
+
+  const isPrimarySelectionEmpty =
+    mode === "additional" ? false : selectedServices.length === 0;
+
+  const nextButtonTitle = (() => {
+    if (mode === "additional") {
+      return selectedAdditional.length === 0
+        ? "Сохранить"
+        : `Сохранить (${selectedAdditional.length} доп)`;
+    }
+    if (mode === "services") {
+      return selectedServices.length === 0
+        ? "Далее"
+        : `Далее (${selectedServices.length})`;
+    }
+    if (selectedServices.length === 0) return "Далее";
+    if (appointmentId || selectedAdditional.length === 0) {
+      return `Далее (${selectedServices.length})`;
+    }
+    return `Далее (${selectedServices.length} + ${selectedAdditional.length} доп)`;
+  })();
+
+  const showEmptyState =
+    mode === "additional"
+      ? !isLoading && additionalServices.length === 0 && !showServices
+      : !isLoading && allServices.length === 0;
 
   return (
     <>
-      <ScreenWithToolbar title="Выберите услугу">
+      <ScreenWithToolbar title={screenTitle}>
         {({ topInset, bottomInset }) => (
           <View
             className="flex-1 px-screen"
             style={{ marginTop: topInset, marginBottom: bottomInset + 16 }}
           >
-            <SegmentedControl
-              options={VIEW_OPTIONS}
-              value="individual"
-              onChange={(value) => {
-                if (value === "group") setGroupModalVisible(true);
-              }}
-            />
+            {!mode && (
+              <SegmentedControl
+                options={VIEW_OPTIONS}
+                value="individual"
+                onChange={(value) => {
+                  if (value === "group") setGroupModalVisible(true);
+                }}
+              />
+            )}
 
-            {selectedServices.length > 0 && (
+            {showServices && selectedServices.length > 0 && (
               <View className="flex-row justify-between items-center py-2">
                 <Typography className="text-caption text-neutral-500">
                   Выбрано услуг
@@ -331,17 +345,34 @@ const SlotSelectService: React.FC<Props> = ({
               <View className="flex-1 items-center justify-center">
                 <ActivityIndicator color={colors.neutral[400]} />
               </View>
-            ) : allServices.length === 0 ? (
+            ) : isCategoriesError || isAdditionalError ? (
+              <View className="flex-1 items-center justify-center px-screen">
+                <RetryInline
+                  text="Не удалось загрузить услуги"
+                  onRetry={() => {
+                    if (isCategoriesError) refetchCategories();
+                    if (isAdditionalError) refetchAdditional();
+                  }}
+                  layout="column"
+                />
+              </View>
+            ) : showEmptyState ? (
               <View className="flex-1 items-center justify-center gap-4">
                 <Typography className="text-body text-neutral-500 text-center">
-                  У вас пока нет услуг
+                  {mode === "additional"
+                    ? "У вас пока нет доп. услуг"
+                    : "У вас пока нет услуг"}
                 </Typography>
-                <Button title="Создать услугу" onPress={handleCreateService} />
+                {mode !== "additional" && (
+                  <Button
+                    title="Создать услугу"
+                    onPress={handleCreateService}
+                  />
+                )}
               </View>
             ) : (
               <>
                 <SectionList<SectionItem, Section>
-                  ref={sectionListRef}
                   sections={sections}
                   keyExtractor={(item) => String(item.id)}
                   stickySectionHeadersEnabled={false}
@@ -352,7 +383,8 @@ const SlotSelectService: React.FC<Props> = ({
                     );
                     const isLastCategory =
                       section.type === "category" &&
-                      section === categorySections[categorySections.length - 1];
+                      section ===
+                        categorySections[categorySections.length - 1];
 
                     if (isLastCategory && hasNextPage) {
                       return (
@@ -447,27 +479,23 @@ const SlotSelectService: React.FC<Props> = ({
                 />
 
                 <View className="gap-2">
+                  {!mode && (
+                    <Button
+                      title="Отправить ссылку на бронирование"
+                      variant="clear"
+                      rightIcon={
+                        <StSvg
+                          name="link_alt"
+                          size={24}
+                          color={colors.neutral[900]}
+                        />
+                      }
+                      onPress={() => setBookingLinkVisible(true)}
+                    />
+                  )}
                   <Button
-                    title="Отправить ссылку на бронирование"
-                    variant="clear"
-                    rightIcon={
-                      <StSvg
-                        name="link_alt"
-                        size={24}
-                        color={colors.neutral[900]}
-                      />
-                    }
-                    onPress={() => setBookingLinkVisible(true)}
-                  />
-                  <Button
-                    title={
-                      selectedServices.length === 0
-                        ? "Далее"
-                        : appointmentId || selectedAdditional.length === 0
-                          ? `Далее (${selectedServices.length})`
-                          : `Далее (${selectedServices.length} + ${selectedAdditional.length} доп)`
-                    }
-                    disabled={selectedServices.length === 0}
+                    title={nextButtonTitle}
+                    disabled={isPrimarySelectionEmpty}
                     loading={isUpdating}
                     onPress={handleNext}
                   />

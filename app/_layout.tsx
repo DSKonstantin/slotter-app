@@ -22,7 +22,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
-import { store } from "@/src/store/redux/store";
+import { PersistGate } from "redux-persist/integration/react";
+import { persistor, store } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
 import "@/src/utils/date/date";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
@@ -98,9 +99,11 @@ function InitialLayout() {
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <AuthProvider>
-        <InitialLayout />
-      </AuthProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <AuthProvider>
+          <InitialLayout />
+        </AuthProvider>
+      </PersistGate>
     </Provider>
   );
 }

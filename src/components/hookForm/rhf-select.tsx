@@ -1,7 +1,8 @@
 import React, { ReactNode } from "react";
-import { Controller, useFormContext } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
 import { ItemType } from "react-native-dropdown-picker";
 import { DropDown } from "@/src/components/ui";
+import { useComposedFieldRef } from "@/src/hooks/useScrollToError";
 
 type RHFSelectFieldProps = {
   name: string;
@@ -25,25 +26,25 @@ export function RHFSelect({
   onEndAdornmentPress,
 }: RHFSelectFieldProps) {
   const { control } = useFormContext();
+  const {
+    field: { value, onChange, ref },
+    fieldState: { error },
+  } = useController({ name, control });
+  const setRef = useComposedFieldRef(name, ref);
 
   return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field: { value, onChange }, fieldState: { error } }) => (
-        <DropDown
-          label={label}
-          value={value ?? null}
-          onChange={onChange}
-          items={items}
-          placeholder={placeholder}
-          emptyText={emptyText}
-          disabled={disabled}
-          error={error}
-          endAdornment={endAdornment}
-          onEndAdornmentPress={onEndAdornmentPress}
-        />
-      )}
+    <DropDown
+      ref={setRef}
+      label={label}
+      value={value ?? null}
+      onChange={onChange}
+      items={items}
+      placeholder={placeholder}
+      emptyText={emptyText}
+      disabled={disabled}
+      error={error}
+      endAdornment={endAdornment}
+      onEndAdornmentPress={onEndAdornmentPress}
     />
   );
 }

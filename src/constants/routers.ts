@@ -62,7 +62,7 @@ export const Routers = {
         appointmentId?: string;
         selectedServiceIds?: string;
         selectedAdditionalServiceIds?: string;
-        scrollTo?: string;
+        mode?: "services" | "additional";
       }) =>
         ({
           pathname: "/(app)/calendar/slot/select-service",
@@ -86,10 +86,16 @@ export const Routers = {
       root: "/(app)/clients",
       create: "/(app)/clients/create" as const,
       statistics: "/(app)/clients/statistics" as const,
-      detail: (id: string | number) =>
+      detail: (
+        id: string | number,
+        kind: "customer" | "userCustomer" = "userCustomer",
+      ) =>
         ({
           pathname: "/(app)/clients/[id]",
-          params: { id: String(id) },
+          params: {
+            id: String(id),
+            ...(kind === "customer" && { kind: "customer" as const }),
+          },
         }) as const,
       history: (id: string | number) =>
         ({

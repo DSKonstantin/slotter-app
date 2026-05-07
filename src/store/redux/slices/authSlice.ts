@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "../services/api/authApi";
 import { usersApi } from "../services/api/usersApi";
 import { User } from "@/src/store/redux/services/api-types";
+import { isAuthError } from "@/src/utils/apiError";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
@@ -44,6 +45,15 @@ function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
 
   state.user = user;
   state.status = "authenticated";
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "resource_type" in payload &&
+    payload.resource_type
+  ) {
+    state.resourceType = payload.resource_type as "user" | "customer";
+  }
 }
 
 function setUserOnly(state: AuthState, payload: UserPayload) {
@@ -85,45 +95,26 @@ const authSlice = createSlice({
           }
         },
       )
-      .addMatcher(authApi.endpoints.getMe.matchRejected, (state) => {
-        state.user = null;
-        state.status = "unauthenticated";
+      .addMatcher(authApi.endpoints.getMe.matchRejected, (state, action) => {
+        if (isAuthError(action.payload)) {
+          state.user = null;
+          state.status = "unauthenticated";
+        }
       })
       .addMatcher(
         authApi.endpoints.login.matchFulfilled,
-        (state, { payload }) => {
-          setAuthenticatedUser(state, payload);
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
-        },
+        (state, { payload }) => setAuthenticatedUser(state, payload),
       )
       .addMatcher(
         authApi.endpoints.confirmCode.matchFulfilled,
-        (state, { payload }) => {
-          setAuthenticatedUser(state, payload);
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
-        },
+        (state, { payload }) => setAuthenticatedUser(state, payload),
       )
       .addMatcher(
         authApi.endpoints.resetPassword.matchFulfilled,
-        (state, { payload }) => {
-          setAuthenticatedUser(state, payload);
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
-        },
+        (state, { payload }) => setAuthenticatedUser(state, payload),
       )
       .addMatcher(
         usersApi.endpoints.updateUser.matchFulfilled,
-        (state, { payload }) => {
-          setUserOnly(state, payload);
-        },
-      )
-      .addMatcher(
-        usersApi.endpoints.updateCustomer.matchFulfilled,
         (state, { payload }) => {
           setUserOnly(state, payload);
         },

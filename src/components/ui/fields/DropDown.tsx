@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
+import React, { Ref, useEffect, useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
 import { BaseField } from "./BaseField";
 import { FieldError } from "react-hook-form";
@@ -17,6 +17,7 @@ type SelectFieldProps = {
   items: ItemType<string>[];
   placeholder?: string;
   emptyText?: string;
+  ref?: Ref<View>;
   endAdornment?: React.ReactNode;
   onEndAdornmentPress?: () => void;
 };
@@ -32,6 +33,7 @@ export function DropDown({
   emptyText = "Нет вариантов",
   endAdornment,
   onEndAdornmentPress,
+  ref,
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
   const [innerItems, setInnerItems] = useState<ItemType<string>[]>(() => items);
@@ -49,6 +51,7 @@ export function DropDown({
 
   return (
     <BaseField
+      ref={ref}
       label={label}
       error={error}
       disabled={disabled}
@@ -105,6 +108,7 @@ export function DropDown({
           dropDownContainerStyle={{
             borderRadius: 16,
             borderWidth: 0,
+            marginTop: 4,
           }}
           labelStyle={{
             ...styles.text,

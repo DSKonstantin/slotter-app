@@ -19,15 +19,21 @@ import { StModal } from "@/src/components/ui/StModal";
 import { Avatar, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetCustomersQuery } from "@/src/store/redux/services/api/customersApi";
+import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
+import RetryInline from "@/src/components/shared/retryInline";
 import {
   useCreateChatRoomMutation,
   useGetChatRoomsQuery,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import { Routers } from "@/src/constants/routers";
-import type { ChatRoom, Customer } from "@/src/store/redux/services/api-types";
+import type { ChatRoom } from "@/src/store/redux/services/api-types";
 
-type RowItem = Customer & { existingRoom: ChatRoom | null };
+type RowItem = {
+  id: number;
+  name: string;
+  phone: string;
+  existingRoom: ChatRoom | null;
+};
 
 type Props = {
   visible: boolean;
@@ -79,7 +85,12 @@ export function NewChatSheet({ visible, onClose }: Props) {
   const [creatingId, setCreatingId] = useState<number | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: customersData } = useGetCustomersQuery(
+  const {
+    data: customersData,
+    isLoading: isCustomersLoading,
+    isError: isCustomersError,
+    refetch: refetchCustomers,
+  } = useGetUserCustomersQuery(
     auth
       ? { userId: auth.userId, query: debouncedSearch || undefined }
       : { userId: 0 },
@@ -90,9 +101,9 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
   const roomByCustomerId = useMemo(() => {
     const map = new Map<number, ChatRoom>();
-    for (const room of roomsData?.chat_rooms ?? []) {
-      if (room.other_member) {
-        map.set(room.other_member.id, room);
+    for (const room of roomsData?.rooms ?? []) {
+      if (room.interlocutor) {
+        map.set(room.interlocutor.id, room);
       }
     }
     return map;
@@ -100,9 +111,11 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
   const customers = useMemo<RowItem[]>(
     () =>
-      (customersData?.customers ?? []).map((c) => ({
-        ...c,
-        existingRoom: roomByCustomerId.get(c.id) ?? null,
+      (customersData?.user_customers ?? []).map((uc) => ({
+        id: uc.customer.id,
+        name: uc.customer.name,
+        phone: uc.customer.phone,
+        existingRoom: roomByCustomerId.get(uc.customer.id) ?? null,
       })),
     [customersData, roomByCustomerId],
   );
@@ -127,9 +140,12 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
       setCreatingId(item.id);
       try {
-        const result = await createChatRoom({ memberId: item.id }).unwrap();
+        const result = await createChatRoom({
+          userId: auth.userId,
+          customerId: item.id,
+        }).unwrap();
         onClose();
-        router.push(Routers.app.chat.room(result.chat_room.id));
+        router.push(Routers.app.chat.room(result.id));
       } catch (err) {
         const message =
           (err as { data?: { error?: string } })?.data?.error ??
@@ -183,30 +199,43 @@ export function NewChatSheet({ visible, onClose }: Props) {
         </View>
       </View>
 
-      <FlatList<RowItem>
-        data={customers}
-        keyExtractor={(item) => String(item.id)}
-        keyboardShouldPersistTaps="handled"
-        style={{ maxHeight: height * 0.5 }}
-        renderItem={({ item }) => (
-          <CustomerRow
-            item={item}
-            isCreating={creatingId === item.id}
-            anyCreating={creatingId !== null}
-            onPress={handleSelect}
+      {isCustomersLoading && customers.length === 0 ? (
+        <View className="items-center justify-center py-10">
+          <ActivityIndicator color={colors.neutral[400]} />
+        </View>
+      ) : isCustomersError && customers.length === 0 ? (
+        <View className="px-screen py-6">
+          <RetryInline
+            text="Не удалось загрузить клиентов"
+            onRetry={refetchCustomers}
           />
-        )}
-        ItemSeparatorComponent={() => (
-          <View className="mx-screen h-px bg-neutral-100" />
-        )}
-        ListEmptyComponent={
-          <View className="items-center justify-center py-10 gap-2">
-            <Typography className="text-body text-neutral-400">
-              {search ? "Клиенты не найдены" : "Нет клиентов"}
-            </Typography>
-          </View>
-        }
-      />
+        </View>
+      ) : (
+        <FlatList<RowItem>
+          data={customers}
+          keyExtractor={(item) => String(item.id)}
+          keyboardShouldPersistTaps="handled"
+          style={{ maxHeight: height * 0.5 }}
+          renderItem={({ item }) => (
+            <CustomerRow
+              item={item}
+              isCreating={creatingId === item.id}
+              anyCreating={creatingId !== null}
+              onPress={handleSelect}
+            />
+          )}
+          ItemSeparatorComponent={() => (
+            <View className="mx-screen h-px bg-neutral-100" />
+          )}
+          ListEmptyComponent={
+            <View className="items-center justify-center py-10 gap-2">
+              <Typography className="text-body text-neutral-400">
+                {search ? "Клиенты не найдены" : "Нет клиентов"}
+              </Typography>
+            </View>
+          }
+        />
+      )}
     </StModal>
   );
 }

@@ -16,6 +16,7 @@ export type RightButtonProp =
 type ScreenWithToolbarProps = {
   title: string | React.ReactNode;
   rightButton?: RightButtonProp;
+  onBack?: () => void;
   children:
     | ReactNode
     | ((ctx: { topInset: number; bottomInset: number }) => ReactNode);
@@ -32,6 +33,7 @@ function RightButtonSlot({ rightButton }: { rightButton?: RightButtonProp }) {
 const ScreenWithToolbar = ({
   title,
   rightButton,
+  onBack,
   children,
   className = "flex-1",
   style,
@@ -51,6 +53,7 @@ const ScreenWithToolbar = ({
       <View className="relative flex-1">
         <ToolbarTop
           title={title}
+          onBack={onBack}
           rightButton={
             rightButton ? (
               <RightButtonSlot rightButton={rightButton} />

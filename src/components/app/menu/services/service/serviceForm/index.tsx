@@ -84,7 +84,6 @@ const ServiceFormBody = ({
           name="duration"
           label="Длительность (мин)"
           placeholder="Выберите длительность"
-          defaultValue={0}
         />
 
         <RhfTextField
@@ -99,7 +98,7 @@ const ServiceFormBody = ({
       </View>
 
       <View className="px-screen">
-        <Divider className="my-8" />
+        <Divider className="mt-8 mb-4" />
 
         <Item
           title="Доступно для онлайн-записи"
@@ -109,7 +108,7 @@ const ServiceFormBody = ({
 
       <CreateAdditionalService />
 
-      <View className="px-screen">
+      <View className="px-screen mt-4">
         <ServiceImagesPicker value={photos} onChange={setPhotos} />
 
         <Button

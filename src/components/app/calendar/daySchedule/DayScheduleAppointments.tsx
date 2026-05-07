@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 
 import { Typography } from "@/src/components/ui";
 import AppointmentCard from "@/src/components/shared/cards/scheduling/appointmentCard";
+import RetryInline from "@/src/components/shared/retryInline";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { formatTimeString } from "@/src/utils/date/formatTime";
@@ -16,16 +17,30 @@ type Props = {
 };
 
 const DayScheduleAppointments = ({ userId, date }: Props) => {
-  const { data, isLoading } = useGetAppointmentsQuery(
+  const { data, isLoading, isError, refetch } = useGetAppointmentsQuery(
     userId ? { userId, params: { date } } : skipToken,
   );
 
-  const appointments = ((data as Appointment[] | undefined) ?? [])
-    .slice()
-    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  const appointments = useMemo(
+    () =>
+      ((data as Appointment[] | undefined) ?? [])
+        .slice()
+        .sort((a, b) => a.start_time.localeCompare(b.start_time)),
+    [data],
+  );
 
   if (isLoading) {
     return <ActivityIndicator />;
+  }
+
+  if (isError) {
+    return (
+      <RetryInline
+        text="Не удалось загрузить записи"
+        buttonText="Повторить"
+        onRetry={refetch}
+      />
+    );
   }
 
   if (appointments.length === 0) {

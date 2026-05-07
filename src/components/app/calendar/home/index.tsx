@@ -51,15 +51,14 @@ const CalendarHome = () => {
     }
   }, [mode, date, dispatch]);
 
-  const title =
-    mode === "day" && selectedDay
-      ? capitalize(formatMonthYear(parseISO(selectedDay)))
-      : "Календарь";
-
   return (
     <>
       <ScreenWithToolbar
-        title={title}
+        title={
+          mode === "day" && selectedDay
+            ? capitalize(formatMonthYear(parseISO(selectedDay)))
+            : "Календарь"
+        }
         rightButton={
           mode === "day" && (
             <IconButton

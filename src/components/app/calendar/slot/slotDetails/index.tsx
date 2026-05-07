@@ -1,34 +1,34 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
   SlotDetailsSchema,
   type SlotDetailsFormValues,
 } from "@/src/validation/schemas/slotDetails.schema";
-import { View, ActivityIndicator, RefreshControl } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  RefreshControl,
+  Pressable,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import ErrorScreen from "@/src/components/shared/errorScreen";
-import {
-  Avatar,
-  Badge,
-  Card,
-  IconButton,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import { Avatar, Badge, Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import {
   useGetAppointmentQuery,
   useUpdateAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
+import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
 import RescheduleModal from "@/src/components/app/calendar/slot/rescheduleModal";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
-import { formatTimeString } from "@/src/utils/date/formatTime";
+import { formatDayMonth, formatTimeString } from "@/src/utils/date/formatTime";
 import {
   formatRublesFromCents,
   centsToRubles,
@@ -51,9 +51,11 @@ interface Props {
 }
 
 const SlotDetails: React.FC<Props> = ({ slotId }) => {
+  const auth = useRequiredAuth();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [editingField, setEditingField] = useState<EditingField>(null);
+  const isSavingRef = useRef(false);
 
   const {
     data: slot,
@@ -68,6 +70,29 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
+  const [createChatRoom, { isLoading: isChatCreating }] =
+    useCreateChatRoomMutation();
+
+  const handleOpenChat = async () => {
+    if (!auth || !slot?.customer) return;
+    try {
+      const room = await createChatRoom({
+        userId: auth.userId,
+        customerId: slot.customer.id,
+      }).unwrap();
+      const chatRoute = Routers.app.chat.room(room.id);
+      const slotRoute = Routers.app.calendar.slot(slotId);
+      router.push({
+        pathname: chatRoute.pathname,
+        params: {
+          ...chatRoute.params,
+          backTo: slotRoute.pathname.replace("[id]", slotId),
+        },
+      });
+    } catch {
+      toast.error("Не удалось открыть чат");
+    }
+  };
 
   const methods = useForm<SlotDetailsFormValues>({
     resolver: yupResolver(SlotDetailsSchema),
@@ -78,6 +103,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
   const handleSave = async () => {
     if (!slot || !editingField) return;
+    if (isSavingRef.current) return;
 
     const duration = Number(methods.getValues("duration"));
     const price = Number(methods.getValues("price"));
@@ -106,6 +132,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       }
     }
 
+    isSavingRef.current = true;
     try {
       await updateAppointment({
         id,
@@ -120,6 +147,8 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       setEditingField(null);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
@@ -128,7 +157,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     return {
       canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
       statusConfig: STATUS_CONFIG[slot.status] ?? null,
-      timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
+      timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
       serviceNames: slot.services.map((s) => s.name).join(", "),
       additionalServiceNames: slot.additional_services
         .map((s) => s.name)
@@ -191,14 +220,15 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               </View>
             );
           }
-
           return (
             <>
               <KeyboardAwareScrollView
                 showsVerticalScrollIndicator={false}
                 bottomOffset={BOTTOM_OFFSET}
-                contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
-                style={{ marginTop: topInset }}
+                contentContainerStyle={{
+                  paddingTop: topInset,
+                  paddingBottom: bottomInset + 16,
+                }}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}
@@ -210,9 +240,19 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <Card
                     title={slot.customer?.name ?? "—"}
                     subtitle={slot.customer?.phone ?? undefined}
+                    onPress={() =>
+                      slot.customer &&
+                      router.push(
+                        Routers.app.clients.detail(
+                          slot.customer.id,
+                          "customer",
+                        ),
+                      )
+                    }
                     left={
                       <Avatar
                         name={slot.customer?.name ?? undefined}
+                        uri={slot.customer?.avatar_url ?? undefined}
                         size="sm"
                       />
                     }
@@ -233,6 +273,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       },
                     }}
                     subtitle="Перейти в чат"
+                    onPress={handleOpenChat}
                     left={
                       <View className="mb-[18px]">
                         <StSvg
@@ -243,11 +284,18 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       </View>
                     }
                     right={
-                      <StSvg
-                        name="Expand_right_light"
-                        size={24}
-                        color={colors.neutral[500]}
-                      />
+                      isChatCreating ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={colors.neutral[500]}
+                        />
+                      ) : (
+                        <StSvg
+                          name="Expand_right_light"
+                          size={24}
+                          color={colors.neutral[500]}
+                        />
+                      )
                     }
                   />
                 </View>
@@ -270,7 +318,22 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <InfoRow
                     label="Услуга"
                     right={
-                      <View className="flex-row gap-1 flex-1 justify-end">
+                      <Pressable
+                        onPress={
+                          derived!.canEdit
+                            ? () =>
+                                router.push(
+                                  Routers.app.calendar.slotSelectService({
+                                    ...derived!.serviceSelectionParams,
+                                    mode: "services",
+                                  }),
+                                )
+                            : undefined
+                        }
+                        disabled={!derived!.canEdit}
+                        hitSlop={8}
+                        className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                      >
                         <Typography
                           weight="regular"
                           className="text-body text-neutral-900 flex-shrink text-right"
@@ -278,33 +341,37 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           {derived!.serviceNames || "—"}
                         </Typography>
                         {derived!.canEdit && (
-                          <IconButton
-                            size="xs"
-                            onPress={() =>
-                              router.push(
-                                Routers.app.calendar.slotSelectService(
-                                  derived!.serviceSelectionParams,
-                                ),
-                              )
-                            }
-                            icon={
-                              <StSvg
-                                name="Edit_light"
-                                size={20}
-                                color={colors.neutral[500]}
-                              />
-                            }
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
                           />
                         )}
-                      </View>
+                      </Pressable>
                     }
                   />
 
-                  {(derived!.canEdit || slot.additional_services.length > 0) && (
+                  {(derived!.canEdit ||
+                    slot.additional_services.length > 0) && (
                     <InfoRow
                       label="Доп. услуги"
                       right={
-                        <View className="flex-row gap-1 flex-1 justify-end">
+                        <Pressable
+                          onPress={
+                            derived!.canEdit
+                              ? () =>
+                                  router.push(
+                                    Routers.app.calendar.slotSelectService({
+                                      ...derived!.serviceSelectionParams,
+                                      mode: "additional",
+                                    }),
+                                  )
+                              : undefined
+                          }
+                          disabled={!derived!.canEdit}
+                          hitSlop={8}
+                          className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                        >
                           <Typography
                             weight="regular"
                             className="text-body text-neutral-900 flex-shrink text-right"
@@ -312,26 +379,13 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                             {derived!.additionalServiceNames || "—"}
                           </Typography>
                           {derived!.canEdit && (
-                            <IconButton
-                              size="xs"
-                              onPress={() =>
-                                router.push(
-                                  Routers.app.calendar.slotSelectService({
-                                    ...derived!.serviceSelectionParams,
-                                    scrollTo: "additional",
-                                  }),
-                                )
-                              }
-                              icon={
-                                <StSvg
-                                  name="Edit_light"
-                                  size={20}
-                                  color={colors.neutral[500]}
-                                />
-                              }
+                            <StSvg
+                              name="Edit_light"
+                              size={20}
+                              color={colors.neutral[500]}
                             />
                           )}
-                        </View>
+                        </Pressable>
                       }
                     />
                   )}
@@ -384,48 +438,24 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 </View>
 
                 <View className="px-screen my-5">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Typography className="text-caption text-neutral-500">
-                      Комментарий к записи
-                    </Typography>
-                    {derived!.canEdit && (
-                      <IconButton
-                        size="xs"
-                        loading={editingField === "comment" && isUpdating}
-                        onPress={
-                          editingField === "comment"
-                            ? handleSave
-                            : () => setEditingField("comment")
-                        }
-                        icon={
-                          <StSvg
-                            name={
-                              editingField === "comment"
-                                ? "Check_round_fill"
-                                : "Edit_light"
-                            }
-                            size={20}
-                            color={
-                              editingField === "comment"
-                                ? colors.primary.blue[500]
-                                : colors.neutral[500]
-                            }
-                          />
-                        }
-                      />
-                    )}
-                  </View>
+                  <Typography className="text-caption text-neutral-500 mb-2">
+                    Комментарий к записи
+                  </Typography>
                   <RhfTextField
                     name="comment"
                     placeholder="Оставьте комментарий"
                     multiline={true}
-                    disabled={editingField !== "comment"}
+                    numberOfLines={4}
+                    disabled={!derived!.canEdit}
                     hideErrorText
+                    onFocus={() => setEditingField("comment")}
                     onBlur={() => {
                       const comment = methods.getValues("comment");
                       if (comment === (slot.comment ?? "")) {
                         setEditingField(null);
+                        return;
                       }
+                      void handleSave();
                     }}
                   />
                 </View>

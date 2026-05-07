@@ -10,9 +10,17 @@ type Props = {
   startName: string;
   endName: string;
   label?: string;
+  startDefault?: Date;
+  endDefault?: Date;
 };
 
-export const TimeFields = ({ startName, endName, label }: Props) => (
+export const TimeFields = ({
+  startName,
+  endName,
+  label,
+  startDefault,
+  endDefault,
+}: Props) => (
   <View>
     {label && (
       <Typography className="mb-2 text-neutral-500 text-caption">
@@ -24,6 +32,7 @@ export const TimeFields = ({ startName, endName, label }: Props) => (
         <RhfDatePicker
           name={startName}
           placeholder="9:00"
+          defaultDisplayValue={startDefault}
           hideErrorText
           parseValue={parseTimeString}
           formatValue={formatTime}
@@ -39,6 +48,7 @@ export const TimeFields = ({ startName, endName, label }: Props) => (
         <RhfDatePicker
           name={endName}
           placeholder="18:00"
+          defaultDisplayValue={endDefault}
           hideErrorText
           parseValue={parseTimeString}
           formatValue={formatTime}

@@ -1,18 +1,20 @@
-import React, { memo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
-import * as Clipboard from "expo-clipboard";
 
 import {
   StModal,
   Button,
   Typography,
-  StSvg,
   SegmentedControl,
 } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
+import RetryInline from "@/src/components/shared/retryInline";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
+import { colors } from "@/src/styles/colors";
 
 type Props = {
   visible: boolean;
@@ -20,25 +22,43 @@ type Props = {
   onClose: () => void;
 };
 
-const CHANNEL_OPTIONS = [{ label: "Чат Slotter", value: "slotter" }];
+const CHANNEL_OPTIONS = [
+  { label: "Чат Slotter", value: "slotter" },
+  { label: "Чат Telegram", value: "telegram" },
+];
 
 const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
+  const auth = useRequiredAuth();
   const [channel, setChannel] = useState("slotter");
-  const [isCopied, setIsCopied] = useState(false);
 
   const methods = useForm({
     defaultValues: { client: null, message: "" },
   });
 
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(bookingUrl);
-    setIsCopied(true);
-  };
+  const { data, isLoading, isError, refetch } = useGetUserCustomersQuery(
+    auth ? { userId: auth.userId, per_count: 100 } : { userId: 0 },
+    { skip: !visible || !auth },
+  );
+
+  const clientItems = useMemo(
+    () =>
+      (data?.user_customers ?? []).map((uc) => ({
+        label: uc.customer.phone
+          ? `${uc.customer.name} · ${uc.customer.phone}`
+          : uc.customer.name,
+        value: String(uc.customer.id),
+      })),
+    [data],
+  );
+
+  const fullBookingUrl = useMemo(
+    () => `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${bookingUrl}`,
+    [bookingUrl],
+  );
 
   const handleClose = () => {
     methods.reset();
     setChannel("slotter");
-    setIsCopied(false);
     onClose();
   };
 
@@ -54,8 +74,15 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             name="client"
             label="Клиент"
             placeholder="Кому отправляем"
-            items={[]}
+            items={clientItems}
+            emptyText={isLoading ? "Загрузка..." : "Нет клиентов"}
           />
+          {isError && (
+            <RetryInline
+              text="Не удалось загрузить клиентов"
+              onRetry={refetch}
+            />
+          )}
 
           <SegmentedControl
             options={CHANNEL_OPTIONS}
@@ -68,27 +95,23 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             label="Сообщение"
             placeholder="Добавьте сообщение к ссылке..."
             multiline
+            numberOfLines={4}
             hideErrorText
           />
           <Typography className="text-caption text-neutral-500">
-            Отправим в: WhatsApp
+            Отправим в:{" "}
+            {CHANNEL_OPTIONS.find((o) => o.value === channel)?.label}
           </Typography>
         </View>
 
         <View className="mt-6 gap-3">
-          <Button
-            title="Скопировать ссылку"
-            variant="clear"
-            onPress={handleCopy}
-            rightIcon={
-              <StSvg name="Copy" size={24} color={colors.neutral[900]} />
-            }
+          <CopyLinkButton
+            link={fullBookingUrl}
+            displayLink="Скопировать ссылку"
+            className="border-0 rounded-none bg-transparent"
+            textClassName="text-gray-900"
+            iconColor={colors.neutral[900]}
           />
-          {isCopied && (
-            <Typography className="text-caption text-primary-blue-500 text-center">
-              Ссылка скопирована
-            </Typography>
-          )}
           <Button title="Отправить" onPress={handleClose} />
         </View>
       </FormProvider>

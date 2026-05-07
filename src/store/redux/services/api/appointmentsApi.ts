@@ -3,6 +3,7 @@ import type {
   Appointment,
   GetAppointmentsParams,
   GetAppointmentsResponse,
+  GetUpcomingAppointmentsResponse,
   CreateAppointmentPayload,
   UpdateAppointmentPayload,
   ReschedulePayload,
@@ -37,12 +38,22 @@ const appointmentsApi = api.injectEndpoints({
       providesTags: ["Appointments"],
     }),
 
+    getUpcomingAppointments: builder.query<
+      GetUpcomingAppointmentsResponse,
+      { userId: number }
+    >({
+      query: ({ userId }) => ({
+        url: `/users/${userId}/upcoming_appointments`,
+        method: "GET",
+      }),
+    }),
+
     getAvailableSlots: builder.query<
       string[],
       {
         userId: number;
         date: string;
-        step?: 5 | 10 | 15;
+        step?: 5 | 10 | 15 | 30 | 60;
         appointment_id?: number;
       }
     >({
@@ -163,6 +174,7 @@ const appointmentsApi = api.injectEndpoints({
 export const {
   useGetAppointmentsQuery,
   useGetAppointmentQuery,
+  useGetUpcomingAppointmentsQuery,
   useGetAvailableSlotsQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentMutation,

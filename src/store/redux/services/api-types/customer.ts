@@ -14,6 +14,7 @@ export interface Customer {
   telegram_id: string | null;
   note: string | null;
   customer_tag: CustomerTag | null;
+  avatar_url?: string | null;
   created_at: string;
 }
 

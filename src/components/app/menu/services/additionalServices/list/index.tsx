@@ -7,7 +7,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 
 import { Button, Card, StSvg, Typography, Switch } from "@/src/components/ui";
-import ErrorScreen from "@/src/components/shared/errorScreen";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 
 import { colors } from "@/src/styles/colors";
 
@@ -148,7 +148,6 @@ const AdditionalServicesList = () => {
             <ErrorScreen
               title="Не удалось загрузить услуги"
               isLoading={isFetching}
-              withTabBar={false}
               onRetry={onRefresh}
             />
           );

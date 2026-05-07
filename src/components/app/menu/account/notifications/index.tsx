@@ -21,9 +21,9 @@ const AccountNotifications = () => {
   const methods = useForm<AccountNotificationsFormValues>({
     resolver: yupResolver(AccountNotificationsSchema),
     defaultValues: {
-      newBooking: user?.is_notify_booking ?? true,
-      clientCancellation: user?.is_notify_cancellation ?? true,
-      reminders: user?.is_notify_reminder ?? false,
+      newBooking: user?.is_notify_new_appointment ?? true,
+      clientCancellation: user?.is_notify_customer_cancel ?? true,
+      reminders: user?.is_notify_reminders ?? false,
     },
   });
 
@@ -33,9 +33,9 @@ const AccountNotifications = () => {
       await updateUser({
         id: user.id,
         data: {
-          is_notify_booking: values.newBooking,
-          is_notify_cancellation: values.clientCancellation,
-          is_notify_reminder: values.reminders,
+          is_notify_new_appointment: values.newBooking,
+          is_notify_customer_cancel: values.clientCancellation,
+          is_notify_reminders: values.reminders,
         },
       }).unwrap();
     } catch (e) {

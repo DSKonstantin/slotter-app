@@ -57,6 +57,20 @@ const serviceCategoriesApi = api.injectEndpoints({
           : [TAG],
     }),
 
+    getFirstServiceCategory: builder.query<
+      ServiceCategory | undefined,
+      { userId: number }
+    >({
+      query: ({ userId }) => ({
+        url: `/users/${userId}/service_categories`,
+        method: "GET",
+        params: { page: 1, per_page: 1 },
+      }),
+      transformResponse: (res: PaginatedResponse<ServiceCategory>) =>
+        res.service_categories[0],
+      providesTags: [TAG],
+    }),
+
     createServiceCategory: builder.mutation<
       CreateServiceCategoryResponse,
       { userId: number; data: CreateServiceCategoryPayload }
@@ -199,6 +213,7 @@ const serviceCategoriesApi = api.injectEndpoints({
 
 export const {
   useGetServiceCategoriesInfiniteQuery,
+  useGetFirstServiceCategoryQuery,
   useCreateServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
   useDeleteServiceCategoryMutation,

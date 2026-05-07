@@ -35,6 +35,9 @@ export type {
   UpdateAppointmentPayload,
   ReschedulePayload,
   CancelPayload,
+  UpcomingAppointment,
+  UpcomingAppointmentCustomer,
+  GetUpcomingAppointmentsResponse,
 } from "./appointment";
 export type {
   Customer,
@@ -52,6 +55,28 @@ export type {
   CreateCustomerTagPayload,
   UpdateCustomerTagPayload,
 } from "./customer";
+export type {
+  UserCustomer,
+  UserCustomerPerson,
+  UserCustomerStats,
+  UserCustomerSort,
+  UserCustomerPeriod,
+  GetUserCustomersParams,
+  GetUserCustomersResponse,
+  GetUserCustomerResponse,
+  CreateUserCustomerPayload,
+  UpdateUserCustomerPayload,
+  GetUserCustomerAppointmentsParams,
+  GetUserCustomerAppointmentsResponse,
+  GetUserCustomerFinancesParams,
+  UserCustomerFinancesPayment,
+  UserCustomerFinancesChartPoint,
+  GetUserCustomerFinancesResponse,
+  GetUserCustomersStatisticsParams,
+  GetUserCustomersStatisticsResponse,
+  UserCustomersStatisticDelta,
+  UserCustomersStatisticAvgCheck,
+} from "./userCustomer";
 export type {
   WorkingDay,
   WorkingDayBreak,
@@ -78,18 +103,25 @@ export type {
   FinancesIncome,
 } from "./finances";
 export type {
-  ChatRoomTag,
-  ChatRoomMember,
-  ChatLastMessage,
+  ChatRoomInterlocutor,
+  ChatRoomLastMessage,
+  ChatRoomLastMessageOwner,
   ChatRoom,
   PaginationMeta,
   GetChatRoomsParams,
   GetChatRoomsResponse,
-  ChatMessageUser,
-  ChatMessageImageUrl,
+  ChatMessageImage,
+  ChatWidget,
+  ChatWidgetKind,
+  ChatWidgetService,
+  ChatWidgetAppointmentPayload,
   ChatMessageWidgetAppointment,
   ChatMessage,
+  ChatMessageReply,
+  ChatMessageReplyOwner,
   GetChatMessagesResponse,
+  ResourceChannelEvent,
+  RoomChannelEvent,
 } from "./chat";
 export type {
   GalleryPhoto,
@@ -100,3 +132,14 @@ export type {
   UpdateGalleryPhotoPayload,
   GalleryPhotoPositionPayload,
 } from "./galleryPhoto";
+export type {
+  Notification,
+  NotificationKind,
+  NotificationCancelVariant,
+  NotificationPayload,
+  NotificationSubject,
+  GetNotificationsParams,
+  GetNotificationsResponse,
+  MarkNotificationReadResponse,
+  MarkAllNotificationsReadResponse,
+} from "./notification";

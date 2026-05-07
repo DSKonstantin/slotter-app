@@ -1,7 +1,10 @@
-import React from "react";
-import { Image, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Image, Pressable, View } from "react-native";
 import type { MessageImageProps } from "react-native-gifted-chat";
 import type { ChatIMessage } from "@/src/utils/chat/types";
+import ImageViewer, {
+  type ImageItem,
+} from "@/src/components/shared/imageViewer";
 
 const IMAGE_WIDTH = 220;
 const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75;
@@ -9,48 +12,51 @@ const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75;
 const ChatMessageImages = ({
   currentMessage,
 }: MessageImageProps<ChatIMessage>) => {
-  if (!currentMessage) return null;
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
-  const { image_urls, image } = currentMessage;
-  const imageFiles = image_urls?.filter((f) =>
-    f.content_type.startsWith("image/"),
-  );
+  const items = useMemo<ImageItem[]>(() => {
+    if (!currentMessage) return [];
+    const files = currentMessage.images?.filter((f) =>
+      f.content_type.startsWith("image/"),
+    );
+    if (files?.length) {
+      return files.map((f) => ({ id: String(f.id), uri: f.url }));
+    }
+    if (currentMessage.image) {
+      return [{ id: "single", uri: currentMessage.image }];
+    }
+    return [];
+  }, [currentMessage]);
 
-  if (imageFiles?.length) {
-    return (
+  if (!items.length) return null;
+
+  return (
+    <>
       <View style={{ gap: 2, margin: 4 }}>
-        {imageFiles.map((f) => (
-          <Image
-            key={f.id}
-            source={{ uri: f.url }}
-            style={{
-              width: IMAGE_WIDTH,
-              height: IMAGE_HEIGHT,
-              borderRadius: 6,
-            }}
-            resizeMode="cover"
-          />
+        {items.map((item, index) => (
+          <Pressable key={item.id} onPress={() => setViewerIndex(index)}>
+            <Image
+              source={{ uri: item.uri }}
+              style={{
+                width: IMAGE_WIDTH,
+                height: IMAGE_HEIGHT,
+                borderRadius: 6,
+              }}
+              resizeMode="cover"
+            />
+          </Pressable>
         ))}
       </View>
-    );
-  }
 
-  if (image) {
-    return (
-      <Image
-        source={{ uri: image }}
-        style={{
-          width: IMAGE_WIDTH,
-          height: IMAGE_HEIGHT,
-          borderRadius: 6,
-          margin: 4,
-        }}
-        resizeMode="cover"
-      />
-    );
-  }
-
-  return null;
+      {viewerIndex !== null && (
+        <ImageViewer
+          images={items}
+          initialIndex={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
+      )}
+    </>
+  );
 };
 
 export default ChatMessageImages;

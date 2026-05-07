@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Alert, StyleSheet, View, useWindowDimensions } from "react-native";
-import { FormProvider, useFormContext, useWatch } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BottomSheetModal,
   BottomSheetScrollView,
   type BottomSheetBackgroundProps,
 } from "@gorhom/bottom-sheet";
+import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 
-import { BreaksFieldArray } from "@/src/components/shared/timeFields/BreaksFieldArray";
-import { TimeFields } from "@/src/components/shared/timeFields/TimeFields";
+import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import {
   Button,
   Divider,
@@ -25,11 +25,12 @@ import { parseISO } from "date-fns";
 import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
 import { BlurView } from "expo-blur";
+import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (values: CalendarScheduleFormValues) => void | Promise<void>;
   isLoading?: boolean;
 };
 
@@ -43,7 +44,7 @@ export const ScheduleSettingsModal = ({
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const hasBeenPresentedRef = useRef(false);
   const { height } = useWindowDimensions();
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
 
   const { control, setValue } = methods;
@@ -74,10 +75,10 @@ export const ScheduleSettingsModal = ({
 
       if (nextMode === "perDay") {
         selectedEditableDays.forEach(({ index }) => {
-          setValue(`calendarDays.${index}.scheduleStart`, "", {
+          setValue(`calendarDays.${index}.startAt`, "", {
             shouldDirty: true,
           });
-          setValue(`calendarDays.${index}.scheduleEnd`, "", {
+          setValue(`calendarDays.${index}.endAt`, "", {
             shouldDirty: true,
           });
           setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
@@ -97,7 +98,7 @@ export const ScheduleSettingsModal = ({
             onPress: () => {
               setValue(
                 "commonDraft",
-                { scheduleStart: "", scheduleEnd: "", breaks: [] },
+                { startAt: "", endAt: "", breaks: [] },
                 { shouldDirty: true },
               );
               setValue("mode", "bulk", { shouldDirty: true });
@@ -164,129 +165,156 @@ export const ScheduleSettingsModal = ({
       backdropComponent={renderBackdrop}
       onDismiss={onClose}
     >
-      <View className="flex-row items-center mb-4 px-screen pt-4">
-        <IconButton
-          size="sm"
-          buttonClassName="bg-transparent"
-          onPress={onClose}
-          icon={
-            <StSvg name="Close_round" size={20} color={colors.neutral[900]} />
-          }
-        />
-        <Typography weight="semibold" className="text-body text-center flex-1">
-          {totalCount} {pluralize(totalCount, ["день", "дня", "дней"])} выбрано
-        </Typography>
-        <IconButton
-          size="sm"
-          disabled={isLoading || !canSave}
-          onPress={onSave}
-          buttonClassName="bg-transparent"
-          icon={
-            <StSvg
-              name="Done_round"
-              size={20}
-              color={
-                canSave && !isLoading
-                  ? colors.primary.blue[500]
-                  : colors.neutral[500]
-              }
-            />
-          }
-        />
-      </View>
-
-      {blockedDays.length > 0 && (
-        <View className="px-screen py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center mx-5">
-          <StSvg
-            name="Alarm_fill"
-            size={24}
-            color={colors.accent.yellow[700]}
-          />
-          <Typography className="text-caption text-accent-yellow-700">
-            Среди выбранных есть дни с записями
-          </Typography>
-        </View>
-      )}
-
-      {selectedEditableDays.length > 1 && (
-        <View className="mb-4 px-screen">
-          <SegmentedControl
-            options={[
-              { label: "Для всех", value: "bulk" },
-              { label: "По дням", value: "perDay" },
-            ]}
-            value={mode}
-            onChange={switchMode}
-          />
-        </View>
-      )}
-
-      {/* Content */}
-      <FormProvider {...methods}>
-        <BottomSheetScrollView contentContainerStyle={styles.content}>
-          {canSave ? (
-            mode === "bulk" ? (
-              <>
-                <TimeFields
-                  label="Рабочее время"
-                  startName="commonDraft.scheduleStart"
-                  endName="commonDraft.scheduleEnd"
-                />
-                <View className="mt-3 mb-4">
-                  <BreaksFieldArray name="commonDraft.breaks" />
-                </View>
-              </>
-            ) : (
-              <View className="gap-4 mb-4">
-                {selectedEditableDays.map(({ day, index }, i) => (
-                  <View key={day.date}>
-                    {i > 0 && <Divider className="mb-4" />}
-                    <View className="flex-row items-center justify-between mb-2">
-                      <Typography className="text-neutral-500 text-caption">
-                        {`Рабочее время · ${formatDayMonthLong(parseISO(day.date))}`}
-                      </Typography>
-                      <IconButton
-                        size="xs"
-                        buttonClassName="bg-accent-red-500"
-                        onPress={() => removeDay(index)}
-                        icon={
-                          <StSvg
-                            name="Close_square"
-                            size={20}
-                            color={colors.neutral[0]}
-                          />
-                        }
-                      />
-                    </View>
-                    <TimeFields
-                      startName={`calendarDays.${index}.scheduleStart`}
-                      endName={`calendarDays.${index}.scheduleEnd`}
+      <RhfFormProvider methods={methods} offset={16}>
+        {({ setScrollRef, contentRef, scrollToError }) => {
+          const submit = methods.handleSubmit(onSave, scrollToError);
+          return (
+            <>
+              <View className="flex-row items-center mb-4 px-screen pt-4">
+                <IconButton
+                  size="sm"
+                  buttonClassName="bg-transparent"
+                  onPress={onClose}
+                  icon={
+                    <StSvg
+                      name="Close_round"
+                      size={20}
+                      color={colors.neutral[900]}
                     />
-                    <View className="mt-3">
-                      <BreaksFieldArray name={`calendarDays.${index}.breaks`} />
-                    </View>
-                  </View>
-                ))}
+                  }
+                />
+                <Typography
+                  weight="semibold"
+                  className="text-body text-center flex-1"
+                >
+                  {totalCount} {pluralize(totalCount, ["день", "дня", "дней"])}{" "}
+                  выбрано
+                </Typography>
+                <IconButton
+                  size="sm"
+                  disabled={isLoading || !canSave}
+                  onPress={submit}
+                  buttonClassName="bg-transparent"
+                  icon={
+                    <StSvg
+                      name="Done_round"
+                      size={20}
+                      color={
+                        canSave && !isLoading
+                          ? colors.primary.blue[500]
+                          : colors.neutral[500]
+                      }
+                    />
+                  }
+                />
               </View>
-            )
-          ) : (
-            <Typography className="text-caption text-neutral-400 mb-4">
-              Рабочее время для выбранных дат уже установлено. Перейдите к
-              редактированию соответствующих дней.
-            </Typography>
-          )}
 
-          <Button
-            title="Сохранить расписание"
-            loading={isLoading}
-            disabled={isLoading || !canSave}
-            rightIcon={
-              <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-            }
-            onPress={onSave}
-          />
-        </BottomSheetScrollView>
-      </FormProvider>
+              {blockedDays.length > 0 && (
+                <View className="px-screen py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center mx-5">
+                  <StSvg
+                    name="Alarm_fill"
+                    size={24}
+                    color={colors.accent.yellow[700]}
+                  />
+                  <Typography className="text-caption text-accent-yellow-700">
+                    Среди выбранных есть дни с записями
+                  </Typography>
+                </View>
+              )}
+
+              {selectedEditableDays.length > 1 && (
+                <View className="mb-4 px-screen">
+                  <SegmentedControl
+                    options={[
+                      { label: "Для всех", value: "bulk" },
+                      { label: "По дням", value: "perDay" },
+                    ]}
+                    value={mode}
+                    onChange={switchMode}
+                  />
+                </View>
+              )}
+
+              {/* Content */}
+              <BottomSheetScrollView
+                ref={setScrollRef as never}
+                contentContainerStyle={[
+                  styles.content,
+                  { paddingBottom: Math.max(bottom, 16) },
+                ]}
+              >
+                <View ref={contentRef} collapsable={false}>
+                  {canSave ? (
+                    mode === "bulk" ? (
+                      <View className="mb-4">
+                        <WorkingHoursFields
+                          label="Рабочее время"
+                          startName="commonDraft.startAt"
+                          endName="commonDraft.endAt"
+                          breaksName="commonDraft.breaks"
+                          startDefault={DEFAULT_START_AT}
+                          endDefault={DEFAULT_END_AT}
+                        />
+                      </View>
+                    ) : (
+                      <View className="gap-4 mb-4">
+                        {selectedEditableDays.map(({ day, index }, i) => (
+                          <View key={day.date}>
+                            {i > 0 && <Divider className="mb-4" />}
+                            <View className="flex-row items-center justify-between mb-2">
+                              <Typography className="text-neutral-500 text-caption">
+                                {`Рабочее время · ${formatDayMonthLong(parseISO(day.date))}`}
+                              </Typography>
+                              <IconButton
+                                size="xs"
+                                buttonClassName="bg-accent-red-500"
+                                onPress={() => removeDay(index)}
+                                icon={
+                                  <StSvg
+                                    name="Close_square"
+                                    size={20}
+                                    color={colors.neutral[0]}
+                                  />
+                                }
+                              />
+                            </View>
+                            <WorkingHoursFields
+                              startName={`calendarDays.${index}.startAt`}
+                              endName={`calendarDays.${index}.endAt`}
+                              breaksName={`calendarDays.${index}.breaks`}
+                              startDefault={DEFAULT_START_AT}
+                              endDefault={DEFAULT_END_AT}
+                            />
+                          </View>
+                        ))}
+                      </View>
+                    )
+                  ) : (
+                    <Typography className="text-caption text-neutral-400 mb-4">
+                      Рабочее время для выбранных дат уже установлено. Перейдите
+                      к редактированию соответствующих дней.
+                    </Typography>
+                  )}
+
+                  <Button
+                    title="Сохранить расписание"
+                    loading={isLoading}
+                    disabled={isLoading || !canSave}
+                    rightIcon={
+                      <StSvg
+                        name="Save_fill"
+                        size={24}
+                        color={colors.neutral[0]}
+                      />
+                    }
+                    onPress={submit}
+                  />
+                </View>
+              </BottomSheetScrollView>
+            </>
+          );
+        }}
+      </RhfFormProvider>
     </BottomSheetModal>
   );
 };
@@ -309,6 +337,5 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
   },
 });
