@@ -12,6 +12,15 @@ export const maskPhone = (value: string) => {
   return mask(digits, "+7 999 999-99-99");
 };
 
+export const identifierMask = (value: string) => {
+  if (value.includes("@")) return value;
+  if (value.startsWith("+")) return value;
+  if (/^\d/.test(value)) {
+    return value.startsWith("7") ? `+${value}` : `+7${value}`;
+  }
+  return value;
+};
+
 export const formatPhoneDisplay = (value: string) => {
   let digits = value.replace(/\D/g, "");
 
