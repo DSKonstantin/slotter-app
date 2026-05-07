@@ -17,6 +17,7 @@ import { useGetUserCustomersPaginatedInfiniteQuery } from "@/src/store/redux/ser
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { colors } from "@/src/styles/colors";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
@@ -166,7 +167,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
             keyExtractor={(f) => f.label}
             showsHorizontalScrollIndicator={false}
             style={{ flexGrow: 0 }}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+            contentContainerStyle={{ paddingHorizontal: SCREEN_PADDING, gap: 8 }}
             className="pb-3"
             renderItem={({ item: f }) => (
               <Badge
@@ -228,7 +229,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           data={customers}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{
-            paddingHorizontal: 16,
+            paddingHorizontal: SCREEN_PADDING,
             paddingBottom: bottomInset + 16,
             gap: 8,
             flexGrow: customers.length === 0 ? 1 : undefined,

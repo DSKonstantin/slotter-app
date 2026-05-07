@@ -25,8 +25,6 @@ const findFirstErrorPath = (err: unknown, prefix = ""): string | null => {
   if (!err || typeof err !== "object") return null;
   const e = err as Record<string, unknown>;
 
-  // Walk children first (deepest leaf wins) — иначе массив-уровневые
-  // сообщения (например, breaksField test) перехватывают путь раньше времени.
   if (Array.isArray(err)) {
     for (let i = 0; i < err.length; i += 1) {
       if (err[i] == null) continue;
@@ -43,7 +41,6 @@ const findFirstErrorPath = (err: unknown, prefix = ""): string | null => {
     }
   }
 
-  // Если в детях ничего — текущий узел сам лист с сообщением.
   if (typeof e.message === "string") return prefix;
 
   return null;

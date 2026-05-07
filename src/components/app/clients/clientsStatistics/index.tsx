@@ -17,6 +17,7 @@ import { useGetUserCustomersStatisticsQuery } from "@/src/store/redux/services/a
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import PeriodModal, {
   PERIODS,
   CUSTOM_PERIOD_VALUE,
@@ -75,7 +76,7 @@ const ClientsStatistics = () => {
             contentContainerStyle={{
               paddingTop: topInset,
               paddingBottom: bottomInset + 16,
-              paddingHorizontal: 20,
+              paddingHorizontal: SCREEN_PADDING,
             }}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

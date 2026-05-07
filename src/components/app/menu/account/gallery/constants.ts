@@ -1,10 +1,11 @@
 import { Dimensions } from "react-native";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const NUM_COLUMNS = 2;
 export const GAP = 2;
-export const HORIZONTAL_PADDING = 20;
+export const HORIZONTAL_PADDING = SCREEN_PADDING;
 export const MAX_PHOTOS = 20;
 
 export const ITEM_WIDTH =

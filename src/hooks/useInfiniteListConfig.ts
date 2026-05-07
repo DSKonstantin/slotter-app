@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 interface InfiniteListConfig {
   contentContainerStyle: {
@@ -27,7 +28,7 @@ export const useInfiniteListConfig = (
   options: UseInfiniteListConfigOptions = {},
 ): InfiniteListConfig => {
   const {
-    paddingHorizontal = 20,
+    paddingHorizontal = SCREEN_PADDING,
     gap = 8,
     onEndReachedThreshold = 0.8,
     includeFlexGrow = false,

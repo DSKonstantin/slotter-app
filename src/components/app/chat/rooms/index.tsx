@@ -6,6 +6,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useGetChatRoomsQuery } from "@/src/store/redux/services/api/chatRoomsApi";
 import ChatRoomItem from "./ChatRoomItem";
 import ChatRoomsSkeleton from "./ChatRoomsSkeleton";
@@ -77,7 +78,7 @@ export default function ChatRoomsScreen() {
                   contentContainerStyle={{
                     paddingTop: topInset,
                     paddingBottom: bottomInset + 16,
-                    paddingHorizontal: 20,
+                    paddingHorizontal: SCREEN_PADDING,
                   }}
                   refreshControl={
                     <RefreshControl

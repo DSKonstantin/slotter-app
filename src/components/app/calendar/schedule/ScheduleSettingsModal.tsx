@@ -26,6 +26,7 @@ import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
 import { BlurView } from "expo-blur";
 import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 type Props = {
   visible: boolean;
@@ -336,6 +337,6 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: SCREEN_PADDING,
   },
 });

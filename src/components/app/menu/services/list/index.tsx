@@ -6,6 +6,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { Button, IconButton, StModal, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import AdditionalList from "@/src/components/app/menu/services/list/additionalList";
@@ -195,7 +196,7 @@ const AppServices = () => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
                   gap: 24,
-                  paddingHorizontal: 20,
+                  paddingHorizontal: SCREEN_PADDING,
                   paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={

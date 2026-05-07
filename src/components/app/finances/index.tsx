@@ -22,6 +22,7 @@ import {
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { MONTH_NAMES } from "@/src/constants/finances";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import IncomeCard from "@/src/components/shared/cards/incomeCard";
 import StatCard from "@/src/components/shared/cards/statСard";
 import CreateExpenseModal from "./createExpenseModal";
@@ -123,7 +124,7 @@ const FinancesScreen = () => {
           contentContainerStyle={{
             paddingTop: topInset,
             paddingBottom: bottomInset + 16,
-            paddingHorizontal: 20,
+            paddingHorizontal: SCREEN_PADDING,
             gap: 20,
           }}
           refreshControl={

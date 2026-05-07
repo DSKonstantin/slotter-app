@@ -3,8 +3,8 @@ import { View, useWindowDimensions } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
 
 import { colors } from "@/src/styles/colors";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
-const H_PAD = 20;
 const CARD_PAD = 16;
 // 15 (title) + 6 (gap) + 12 (subtitle)
 const INNER_H = 33;
@@ -117,7 +117,7 @@ const SERVICE_CATEGORIES = [
 
 const ServiceListSkeletonComponent = () => {
   const { width } = useWindowDimensions();
-  const contentWidth = width - 40;
+  const contentWidth = width - SCREEN_PADDING * 2;
   const innerWidth = contentWidth - CARD_PAD * 2;
 
   return (
@@ -155,7 +155,7 @@ const ADDITIONAL_CARDS = [
 
 const AdditionalListSkeletonComponent = () => {
   const { width } = useWindowDimensions();
-  const innerWidth = width - H_PAD * 2 - CARD_PAD * 2;
+  const innerWidth = width - SCREEN_PADDING * 2 - CARD_PAD * 2;
 
   return (
     <View

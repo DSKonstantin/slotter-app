@@ -2,9 +2,9 @@ import React from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  H_PAD,
   LEFT_COL,
   RIGHT_GAP,
   HOUR_HEIGHT,
@@ -17,7 +17,7 @@ import {
 const TimeSlotListSkeleton = () => {
   const { width } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
-  const contentWidth = width - H_PAD * 2;
+  const contentWidth = width - SCREEN_PADDING * 2;
   const rightColWidth = contentWidth - LEFT_COL - RIGHT_GAP;
   const totalHeight = HOUR_HEIGHT * SKELETON_ROW_COUNT;
 

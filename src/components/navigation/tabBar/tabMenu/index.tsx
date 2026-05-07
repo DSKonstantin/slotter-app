@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
@@ -69,19 +70,77 @@ const TabMenu = () => {
   if (!isMenuOpen) return null;
 
   return (
-    <View className="absolute inset-0" pointerEvents="box-none">
-      <Pressable
-        className="absolute inset-0 bg-black/40"
-        onPress={handleClose}
-      />
+    <Pressable
+      className="absolute inset-0 bg-black/40 justify-end"
+      style={{
+        paddingBottom: bottom + 8,
+        paddingLeft: leftInset + SCREEN_PADDING,
+        paddingRight: rightInset + SCREEN_PADDING,
+      }}
+      onPress={handleClose}
+    >
+      <View className="flex-row items-end gap-2">
+        <View className="flex-1">
+          <View className="mb-2 items-end">
+            <IconButton
+              onPress={() => {}}
+              icon={
+                <StSvg
+                  name="Setting_alt_fill"
+                  size={28}
+                  color={colors.neutral[900]}
+                />
+              }
+            />
+          </View>
+          <Pressable
+            onPress={() => {}}
+            className="bg-white rounded-[30px] py-2.5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            {MENU_ITEMS.map((item) => {
+              const normalized = item.route ? stripRouteGroups(item.route) : "";
+              const isActive = !!(
+                normalized &&
+                !item.disabled &&
+                (pathname === normalized ||
+                  pathname.startsWith(`${normalized}/`))
+              );
 
-      <View
-        className="absolute"
-        style={{
-          bottom: bottom + 8,
-          right: rightInset + 20,
-        }}
-      >
+              return (
+                <Pressable
+                  key={item.label}
+                  onPress={() => handleNavigate(item.route, isActive)}
+                  disabled={item.disabled}
+                  className={`flex-row items-center gap-3 mx-2.5 px-2 py-3 rounded-[22px] active:opacity-70 ${
+                    isActive ? "bg-[#F9F8F9]" : ""
+                  }`}
+                >
+                  <StSvg
+                    name={item.icon}
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                  <Typography
+                    weight={isActive ? "semibold" : "medium"}
+                    className={`text-body ${
+                      item.disabled ? "text-neutral-300" : "text-neutral-900"
+                    }`}
+                  >
+                    {item.label}
+                  </Typography>
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </View>
+
         <IconButton
           size="lg"
           icon={
@@ -90,69 +149,7 @@ const TabMenu = () => {
           onPress={handleClose}
         />
       </View>
-
-      <View
-        className="absolute"
-        style={{
-          bottom,
-          left: leftInset + 20,
-          right: rightInset + 94,
-        }}
-      >
-        <View className="mb-2 items-end">
-          <IconButton
-            onPress={() => {}}
-            icon={
-              <StSvg
-                name="Setting_alt_fill"
-                size={28}
-                color={colors.neutral[900]}
-              />
-            }
-          />
-        </View>
-        <View
-          className="bg-white rounded-[30px] py-2.5"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 8,
-          }}
-        >
-          {MENU_ITEMS.map((item) => {
-            const normalized = item.route ? stripRouteGroups(item.route) : "";
-            const isActive = !!(
-              normalized &&
-              !item.disabled &&
-              (pathname === normalized || pathname.startsWith(`${normalized}/`))
-            );
-
-            return (
-              <Pressable
-                key={item.label}
-                onPress={() => handleNavigate(item.route, isActive)}
-                disabled={item.disabled}
-                className={`flex-row items-center gap-3 mx-2.5 px-2 py-3 rounded-[22px] active:opacity-70 ${
-                  isActive ? "bg-[#F9F8F9]" : ""
-                }`}
-              >
-                <StSvg name={item.icon} size={24} color={colors.neutral[900]} />
-                <Typography
-                  weight={isActive ? "semibold" : "medium"}
-                  className={`text-body ${
-                    item.disabled ? "text-neutral-300" : "text-neutral-900"
-                  }`}
-                >
-                  {item.label}
-                </Typography>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-    </View>
+    </Pressable>
   );
 };
 

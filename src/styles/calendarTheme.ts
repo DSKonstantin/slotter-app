@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 import { colors } from "@/src/styles/colors";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 export const calendarStyle = StyleSheet.create({
   calendar: {
@@ -19,7 +20,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#FFFFFF",
     paddingTop: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: SCREEN_PADDING,
     paddingBottom: 8,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

@@ -1,5 +1,5 @@
 const TOOLBAR_HEIGHT = 68;
-const TAB_BAR_HEIGHT = 65;
+const TAB_BAR_HEIGHT = 73;
 const BOTTOM_OFFSET = 80;
 const BOTTOM_OFFSET_SMALL = 30;
 

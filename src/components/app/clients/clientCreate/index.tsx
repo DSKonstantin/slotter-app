@@ -29,6 +29,7 @@ import ContactPickerModal, {
 import CreateTagModal from "@/src/components/app/clients/clientCreate/createTagModal";
 import { unMask } from "react-native-mask-text";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 
 type ClientCreateProps = {
@@ -178,7 +179,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                         className="mb-2"
                         contentContainerStyle={{
                           paddingRight: 8,
-                          paddingHorizontal: 20,
+                          paddingHorizontal: SCREEN_PADDING,
                         }}
                         renderItem={({ item }) => (
                           <Badge

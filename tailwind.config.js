@@ -1,4 +1,5 @@
 const colors = require("./src/styles/colorsTailwind");
+const { SCREEN_PADDING } = require("./src/constants/layout");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -33,7 +34,7 @@ module.exports = {
       boxShadow: {},
       opacity: {},
       spacing: {
-        screen: 20,
+        screen: SCREEN_PADDING,
       },
       colors,
     },

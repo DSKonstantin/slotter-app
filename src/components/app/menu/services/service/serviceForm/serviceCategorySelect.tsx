@@ -16,13 +16,14 @@ import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services
 import CreateCategoryModal from "@/src/components/app/menu/services/categories/createCategoryModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 const CATEGORY_SKELETON_WIDTHS = [96, 72, 120, 84, 64];
 
 const CategoriesSkeleton = () => (
   <View
     className="mb-2 flex-row"
-    style={{ paddingHorizontal: 20 }}
+    style={{ paddingHorizontal: SCREEN_PADDING }}
     accessibilityLabel="Loading categories"
     accessible
   >
@@ -162,7 +163,7 @@ const ServiceCategorySelect = () => {
             keyExtractor={(item) => String(item.id)}
             showsHorizontalScrollIndicator={false}
             className="mb-2"
-            contentContainerStyle={{ paddingRight: 8, paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingRight: 8, paddingHorizontal: SCREEN_PADDING }}
             onScrollBeginDrag={() => setHasUserScrolled(true)}
             onMomentumScrollBegin={() => setHasUserScrolled(true)}
             onEndReached={handleEndReached}

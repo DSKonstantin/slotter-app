@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
@@ -186,7 +187,7 @@ const SlotCreate: React.FC = () => {
                 contentContainerStyle={{
                   paddingTop: topInset,
                   paddingBottom: bottomInset + 16,
-                  paddingHorizontal: 20,
+                  paddingHorizontal: SCREEN_PADDING,
                 }}
               >
                 <View ref={contentRef} collapsable={false}>

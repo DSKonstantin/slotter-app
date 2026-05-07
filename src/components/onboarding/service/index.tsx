@@ -49,7 +49,7 @@ const Service = () => {
   );
 
   const [createService, { isLoading }] = useCreateServiceMutation();
-  const [updateUser] = useUpdateUserMutation();
+  const [updateUser, { isLoading: isSkipping }] = useUpdateUserMutation();
 
   const methods = useForm<OnboardingServiceFormValues>({
     resolver: yupResolver(OnboardingServiceSchema),
@@ -70,6 +70,19 @@ const Service = () => {
     );
   }
 
+  const handleSkip = async () => {
+    if (!auth) return;
+    try {
+      await updateUser({
+        id: auth.userId,
+        data: { onboarding_step: "schedule" },
+      }).unwrap();
+      router.push(Routers.onboarding.schedule);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось пропустить шаг"));
+    }
+  };
+
   const onSubmit = async (data: OnboardingServiceFormValues) => {
     if (!auth) return;
 
@@ -83,7 +96,7 @@ const Service = () => {
       const formData = buildServiceFormData({
         name: data.name,
         price: data.price,
-        duration: String(Number(data.duration) * 60),
+        duration: data.duration,
         description: "",
         isAvailableOnline: false,
         isActive: true,
@@ -95,7 +108,10 @@ const Service = () => {
         data: formData,
       }).unwrap();
 
-      await updateUser({ id: auth.userId, data: { onboarding_step: "schedule" } }).unwrap();
+      await updateUser({
+        id: auth.userId,
+        data: { onboarding_step: "schedule" },
+      }).unwrap();
 
       router.push(Routers.onboarding.schedule);
     } catch (error) {
@@ -119,16 +135,18 @@ const Service = () => {
             secondary={{
               title: "Пропустить",
               variant: "clear",
-              disabled: isLoading,
-              onPress: () => {
-                router.push(Routers.onboarding.schedule);
-              },
+              disabled: isLoading || isSkipping,
+              loading: isSkipping,
+              onPress: handleSkip,
             }}
           />
         }
       >
         <View className="mt-4">
-          <StepProgress steps={TOTAL_STEPS} currentStep={STEP_PROGRESS.service!} />
+          <StepProgress
+            steps={TOTAL_STEPS}
+            currentStep={STEP_PROGRESS.service!}
+          />
         </View>
         <View className="mt-8 gap-2">
           <Typography weight="semibold" className="text-display mb-2">
@@ -155,7 +173,7 @@ const Service = () => {
               name="duration"
               label="Время"
               placeholder="1 час"
-              items={HOURS_OPTIONS as any}
+              items={HOURS_OPTIONS}
             />
           </View>
         </View>

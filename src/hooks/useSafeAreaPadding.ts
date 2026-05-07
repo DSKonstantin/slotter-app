@@ -1,4 +1,5 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 export const useSafeAreaPadding = () => {
   const { left, right } = useSafeAreaInsets();
@@ -9,8 +10,8 @@ export const useSafeAreaPadding = () => {
       paddingRight: right,
     },
     horizontalPadding: {
-      paddingLeft: 20 + left,
-      paddingRight: 20 + right,
+      paddingLeft: SCREEN_PADDING + left,
+      paddingRight: SCREEN_PADDING + right,
     },
   };
 };

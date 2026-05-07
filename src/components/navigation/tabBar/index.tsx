@@ -105,13 +105,12 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
           height: TAB_BAR_HEIGHT + insets.bottom,
           paddingLeft: insets.left,
           paddingRight: insets.right,
-          paddingBottom: insets.bottom + 8,
         },
       ]}
     >
       <FadeOverlay
         position="bottom"
-        height={TAB_BAR_HEIGHT + insets.bottom + 8}
+        height={TAB_BAR_HEIGHT + insets.bottom}
       />
       <View className="flex-row items-center justify-between px-screen bg-transparent">
         <View

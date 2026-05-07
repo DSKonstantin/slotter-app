@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { useController, useFormContext } from "react-hook-form";
-import { ItemType } from "react-native-dropdown-picker";
 import { DropDown } from "@/src/components/ui";
+import type { SelectItem } from "@/src/components/ui/fields/DropDown";
 import { useComposedFieldRef } from "@/src/hooks/useScrollToError";
 
 type RHFSelectFieldProps = {
@@ -10,7 +10,7 @@ type RHFSelectFieldProps = {
   placeholder?: string;
   emptyText?: string;
   disabled?: boolean;
-  items: ItemType<string>[];
+  items: readonly SelectItem[];
   endAdornment?: ReactNode;
   onEndAdornmentPress?: () => void;
 };
