@@ -42,6 +42,7 @@ export const ScheduleSettingsModal = ({
 }: Props) => {
   const methods = useFormContext<CalendarScheduleFormValues>();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const hasBeenPresentedRef = useRef(false);
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
   const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
@@ -143,7 +144,8 @@ export const ScheduleSettingsModal = ({
       onClose();
     } else if (visible) {
       bottomSheetRef.current?.present();
-    } else {
+      hasBeenPresentedRef.current = true;
+    } else if (hasBeenPresentedRef.current) {
       bottomSheetRef.current?.dismiss();
     }
   }, [onClose, totalCount, visible]);
