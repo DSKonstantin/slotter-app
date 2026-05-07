@@ -6,11 +6,13 @@ import { useCountDown } from "@/src/hooks/useCountdown";
 type Props = {
   seconds?: number;
   onResend: () => Promise<void> | void;
+  onCallPress?: () => void;
 };
 
 export const ResendCodeButton: React.FC<Props> = ({
   seconds = 30,
   onResend,
+  onCallPress,
 }) => {
   const { seconds: timeLeft, start } = useCountDown({
     seconds,
@@ -34,7 +36,7 @@ export const ResendCodeButton: React.FC<Props> = ({
   }, [isFinished, isSending, onResend, start]);
 
   return (
-    <View className="items-center mt-4">
+    <View className="items-center mt-4 gap-1">
       {!isFinished ? (
         <Typography className="text-center text-caption text-neutral-500">
           Повторить через {timeLeft}с
@@ -48,6 +50,12 @@ export const ResendCodeButton: React.FC<Props> = ({
           onPress={handleResend}
         />
       )}
+      <Button
+        title="Повторить по звонку"
+        size="sm"
+        variant="clear"
+        onPress={onCallPress}
+      />
     </View>
   );
 };

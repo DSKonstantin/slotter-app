@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { View } from "react-native";
@@ -73,7 +73,8 @@ const Verify = () => {
             Твой номер
           </Typography>
           <Typography className="text-body text-neutral-500">
-            Мы отправим код подтверждения
+            {/*Мы отправим код подтверждения*/}
+            Введи телефон, и мы покажем{"\n"}куда позвонить для входа
           </Typography>
 
           <View className="mt-9">
@@ -86,14 +87,18 @@ const Verify = () => {
               keyboardType="number-pad"
             />
             <Typography className="text-caption text-neutral-500 my-2">
-              Мы отправим SMS с кодом подтверждения. Это бесплатно и безопасно
+              {/*Мы отправим SMS с кодом подтверждения. Это бесплатно и безопасно*/}
+              Продолжая, вы соглашаетесь с{" "}
+              <Typography className="text-caption text-black underline">
+                условиями использования
+              </Typography>
             </Typography>
 
-            <Button
-              title="Восстановить вход"
-              variant="clear"
-              onPress={handleRestoreLogin}
-            />
+            {/*<Button*/}
+            {/*  title="Восстановить вход"*/}
+            {/*  variant="clear"*/}
+            {/*  onPress={handleRestoreLogin}*/}
+            {/*/>*/}
           </View>
         </View>
       </AuthScreenLayout>
