@@ -13,6 +13,7 @@ import { UserType } from "@/src/store/redux/services/api-types";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { identifierMask } from "@/src/utils/mask/maskPhone";
 import { useAuth } from "@/src/contexts/AuthContext";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
 
@@ -78,6 +79,7 @@ const Login = () => {
               name="identifier"
               label="Телефон или электронная почта"
               placeholder="+ 7 999 000-00-00"
+              maskFn={identifierMask}
             />
             <RhfTextField
               name="password"
