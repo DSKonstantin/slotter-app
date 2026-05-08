@@ -6,6 +6,7 @@ import { Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatApiDate, formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
+import RetryInline from "@/src/components/shared/retryInline";
 
 const DATE_RANGE_DAYS = 60;
 
@@ -23,7 +24,12 @@ const DatePicker = ({ userId, onPick }: Props) => {
     };
   }, []);
 
-  const { data: workingDaysData, isLoading } = useGetWorkingDaysQuery({
+  const {
+    data: workingDaysData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetWorkingDaysQuery({
     userId,
     ...dateRange,
   });
@@ -41,6 +47,17 @@ const DatePicker = ({ userId, onPick }: Props) => {
     return (
       <View className="items-center py-6">
         <ActivityIndicator color={colors.neutral[400]} />
+      </View>
+    );
+  }
+  if (isError && !workingDaysData) {
+    return (
+      <View className="py-6">
+        <RetryInline
+          text="Не удалось загрузить рабочие дни"
+          onRetry={refetch}
+          layout="column"
+        />
       </View>
     );
   }

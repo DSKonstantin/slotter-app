@@ -8,6 +8,7 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useGetChatRoomsQuery } from "@/src/store/redux/services/api/chatRoomsApi";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import ChatRoomItem from "./ChatRoomItem";
 import ChatRoomsSkeleton from "./ChatRoomsSkeleton";
 import { NewChatSheet } from "./NewChatSheet";
@@ -18,7 +19,8 @@ const RoomSeparator = () => <View className="h-2" />;
 export default function ChatRoomsScreen() {
   const [newChatVisible, setNewChatVisible] = useState(false);
 
-  const { data, isLoading, refetch } = useGetChatRoomsQuery(undefined);
+  const { data, isLoading, isFetching, isError, refetch } =
+    useGetChatRoomsQuery(undefined);
 
   const { refreshing, onRefresh } = useRefresh(refetch);
 
@@ -43,6 +45,12 @@ export default function ChatRoomsScreen() {
         {({ topInset, bottomInset }) =>
           isLoading ? (
             <ChatRoomsSkeleton topInset={topInset} />
+          ) : isError && !data ? (
+            <ErrorScreen
+              title="Не удалось загрузить чаты"
+              isLoading={isFetching}
+              onRetry={refetch}
+            />
           ) : (
             <View className="flex-1">
               {rooms.length === 0 ? (

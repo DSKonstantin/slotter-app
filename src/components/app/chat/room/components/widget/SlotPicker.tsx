@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetAvailableSlotsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import RetryInline from "@/src/components/shared/retryInline";
 
 type Props = {
   userId: number;
@@ -12,7 +13,12 @@ type Props = {
 };
 
 const SlotPicker = ({ userId, date, isSubmitting, onPick }: Props) => {
-  const { data: slots, isLoading } = useGetAvailableSlotsQuery({
+  const {
+    data: slots,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAvailableSlotsQuery({
     userId,
     date,
   });
@@ -21,6 +27,17 @@ const SlotPicker = ({ userId, date, isSubmitting, onPick }: Props) => {
     return (
       <View className="items-center py-6">
         <ActivityIndicator color={colors.neutral[400]} />
+      </View>
+    );
+  }
+  if (isError && !slots) {
+    return (
+      <View className="py-6">
+        <RetryInline
+          text="Не удалось загрузить слоты"
+          onRetry={refetch}
+          layout="column"
+        />
       </View>
     );
   }

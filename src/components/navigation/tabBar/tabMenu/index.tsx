@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Pressable, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { BackHandler, Pressable, View } from "react-native";
 import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -58,11 +58,30 @@ const TabMenu = () => {
     dispatch(setTabMenuOpen(false));
   }, [dispatch]);
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        handleClose();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [handleClose, isMenuOpen]);
+
   const handleNavigate = useCallback(
-    (route?: string, isActive?: boolean) => {
+    (route?: string, isActive?: boolean, isAtRoot?: boolean) => {
       handleClose();
-      if (!route || isActive) return;
-      router.push(route as Href);
+      if (!route) return;
+      if (!isActive) {
+        router.push(route as Href);
+        return;
+      }
+      if (isAtRoot) return;
+      router.dismissTo(route as Href);
     },
     [handleClose],
   );
@@ -112,11 +131,12 @@ const TabMenu = () => {
                 (pathname === normalized ||
                   pathname.startsWith(`${normalized}/`))
               );
+              const isAtRoot = pathname === normalized;
 
               return (
                 <Pressable
                   key={item.label}
-                  onPress={() => handleNavigate(item.route, isActive)}
+                  onPress={() => handleNavigate(item.route, isActive, isAtRoot)}
                   disabled={item.disabled}
                   className={`flex-row items-center gap-3 mx-2.5 px-2 py-3 rounded-[22px] active:opacity-70 ${
                     isActive ? "bg-[#F9F8F9]" : ""

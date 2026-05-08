@@ -4,7 +4,6 @@ import {
   InputToolbarProps,
   IMessage,
 } from "react-native-gifted-chat";
-import { colors } from "@/src/styles/colors";
 
 const ChatInputToolbar = (props: InputToolbarProps<IMessage>) => {
   return (
