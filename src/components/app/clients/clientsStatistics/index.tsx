@@ -23,6 +23,7 @@ import PeriodModal, {
   type Period,
 } from "./periodModal";
 import ClientsStatisticsSkeleton from "./ClientsStatisticsSkeleton";
+import RetryInline from "@/src/components/shared/retryInline";
 
 function deltaTag(
   delta: number | null,
@@ -74,6 +75,7 @@ const ClientsStatistics = () => {
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
+              gap: 20,
               paddingTop: topInset,
               paddingBottom: bottomInset + 16,
               paddingHorizontal: SCREEN_PADDING,
@@ -82,7 +84,7 @@ const ClientsStatistics = () => {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           >
-            <View className="gap-2 mb-6">
+            <View className="gap-2">
               <Typography
                 weight="medium"
                 className="text-caption text-neutral-500"
@@ -111,40 +113,42 @@ const ClientsStatistics = () => {
             {isLoading ? (
               <ClientsStatisticsSkeleton />
             ) : isError || !data ? (
-              <View className="items-center py-10">
-                <Typography className="text-body text-neutral-400">
-                  Не удалось загрузить статистику
-                </Typography>
-              </View>
+              <RetryInline
+                text="Не удалось загрузить статистику"
+                onRetry={refetch}
+                layout="column"
+              />
             ) : (
               <>
-                <View className="flex-row gap-2 mb-2">
-                  <StatCard
-                    value={data.new_clients.count}
-                    label="Новые"
-                    tag={deltaTag(data.new_clients.delta_percent)}
-                  />
-                  <StatCard
-                    value={data.returned_clients.count}
-                    label="Вернувшиеся"
-                    tag={deltaTag(data.returned_clients.delta_percent)}
-                  />
+                <View className="gap-2">
+                  <View className="flex-row gap-2">
+                    <StatCard
+                      value={data.new_clients.count}
+                      label="Новые"
+                      tag={deltaTag(data.new_clients.delta_percent)}
+                    />
+                    <StatCard
+                      value={data.returned_clients.count}
+                      label="Вернувшиеся"
+                      tag={deltaTag(data.returned_clients.delta_percent)}
+                    />
+                  </View>
+
+                  <View className="flex-row gap-2">
+                    <StatCard
+                      value={formatRublesFromCents(data.avg_check.amount_cents)}
+                      label="Средний чек"
+                      tag={deltaTag(data.avg_check.delta_percent)}
+                    />
+                    <StatCard
+                      value={data.lost_clients.count}
+                      label="Потерянные"
+                      tag={deltaTag(data.lost_clients.delta_percent)}
+                    />
+                  </View>
                 </View>
 
-                <View className="flex-row gap-2 mb-6">
-                  <StatCard
-                    value={formatRublesFromCents(data.avg_check.amount_cents)}
-                    label="Средний чек"
-                    tag={deltaTag(data.avg_check.delta_percent)}
-                  />
-                  <StatCard
-                    value={data.lost_clients.count}
-                    label="Потерянные"
-                    tag={deltaTag(data.lost_clients.delta_percent)}
-                  />
-                </View>
-
-                <View className="bg-background-surface rounded-base p-4 gap-4 mb-6">
+                <View className="bg-background-surface rounded-base p-4 gap-4">
                   <Typography
                     weight="semibold"
                     className="text-body text-neutral-900"

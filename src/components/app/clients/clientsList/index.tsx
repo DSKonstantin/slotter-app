@@ -164,7 +164,15 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     <View className="flex-1 gap-4" style={{ paddingTop: topInset }}>
       {!searchMode && (
         <>
-          {isTagsLoading && !tagsData ? (
+          {isTagsError ? (
+            <View className="px-screen h-[36px] justify-center">
+              <RetryInline
+                text="Не удалось загрузить теги"
+                buttonText="Обновить"
+                onRetry={refetchTags}
+              />
+            </View>
+          ) : isTagsLoading && !tagsData ? (
             <ClientsFiltersSkeleton />
           ) : (
             <FlatList
@@ -186,16 +194,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
               )}
             />
           )}
-          {isTagsError && (
-            <View className="px-screen pb-3">
-              <RetryInline
-                text="Не удалось загрузить теги"
-                buttonText="Обновить"
-                onRetry={refetchTags}
-              />
-            </View>
-          )}
-
           <View className="flex-row gap-2.5 px-screen">
             <Button
               title="Статистика"

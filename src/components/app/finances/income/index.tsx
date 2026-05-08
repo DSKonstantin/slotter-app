@@ -107,14 +107,11 @@ const FinancesIncomeScreen = () => {
     );
   }
 
-  if (isIncomeError) {
+  if (true) {
     return (
       <ScreenWithToolbar title="Доходы по периоду">
         {() => (
-          <ErrorScreen
-            title="Не удалось загрузить данные о доходах"
-            onRetry={refetch}
-          />
+          <ErrorScreen title="Не удалось загрузить доходы" onRetry={refetch} />
         )}
       </ScreenWithToolbar>
     );
