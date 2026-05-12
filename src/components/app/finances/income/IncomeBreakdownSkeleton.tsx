@@ -2,6 +2,7 @@ import React from "react";
 import { View, useWindowDimensions } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
 import { colors } from "@/src/styles/colors";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 const RADIUS = 12;
 const SPEED = 1.2;
@@ -13,7 +14,7 @@ const COUNT = 2;
 
 const IncomeBreakdownSkeleton = () => {
   const { width } = useWindowDimensions();
-  const w = width - 40;
+  const w = width - SCREEN_PADDING * 2;
   const totalH = COUNT * ITEM_H + (COUNT - 1) * GAP;
 
   return (

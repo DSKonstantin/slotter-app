@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   TouchableOpacity,
@@ -17,11 +16,14 @@ import { useGetUserCustomersStatisticsQuery } from "@/src/store/redux/services/a
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import PeriodModal, {
   PERIODS,
   CUSTOM_PERIOD_VALUE,
   type Period,
 } from "./periodModal";
+import ClientsStatisticsSkeleton from "./ClientsStatisticsSkeleton";
+import RetryInline from "@/src/components/shared/retryInline";
 
 function deltaTag(
   delta: number | null,
@@ -43,7 +45,7 @@ const ClientsStatistics = () => {
   const queryParams =
     selectedPeriod.value === CUSTOM_PERIOD_VALUE
       ? {
-          period: CUSTOM_PERIOD_VALUE as const,
+          period: CUSTOM_PERIOD_VALUE,
           date_from: (selectedPeriod as { date_from?: string }).date_from,
           date_to: (selectedPeriod as { date_to?: string }).date_to,
         }
@@ -73,15 +75,16 @@ const ClientsStatistics = () => {
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
+              gap: 20,
               paddingTop: topInset,
               paddingBottom: bottomInset + 16,
-              paddingHorizontal: 20,
+              paddingHorizontal: SCREEN_PADDING,
             }}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           >
-            <View className="gap-2 mb-6">
+            <View className="gap-2">
               <Typography
                 weight="medium"
                 className="text-caption text-neutral-500"
@@ -108,55 +111,59 @@ const ClientsStatistics = () => {
             </View>
 
             {isLoading ? (
-              <View className="flex-1 items-center justify-center py-10">
-                <ActivityIndicator />
-              </View>
+              <ClientsStatisticsSkeleton />
             ) : isError || !data ? (
-              <View className="items-center py-10">
-                <Typography className="text-body text-neutral-400">
-                  Не удалось загрузить статистику
-                </Typography>
-              </View>
+              <RetryInline
+                text="Не удалось загрузить статистику"
+                onRetry={refetch}
+                layout="column"
+              />
             ) : (
               <>
-                <View className="flex-row gap-2 mb-2">
-                  <StatCard
-                    value={data.new_clients.count}
-                    label="Новые"
-                    tag={deltaTag(data.new_clients.delta_percent)}
-                  />
-                  <StatCard
-                    value={data.returned_clients.count}
-                    label="Вернувшиеся"
-                    tag={deltaTag(data.returned_clients.delta_percent)}
-                  />
+                <View className="gap-2">
+                  <View className="flex-row gap-2">
+                    <StatCard
+                      value={data.new_clients.count}
+                      label="Новые"
+                      tag={deltaTag(data.new_clients.delta_percent)}
+                    />
+                    <StatCard
+                      value={data.returned_clients.count}
+                      label="Вернувшиеся"
+                      tag={deltaTag(data.returned_clients.delta_percent)}
+                    />
+                  </View>
+
+                  <View className="flex-row gap-2">
+                    <StatCard
+                      value={formatRublesFromCents(data.avg_check.amount_cents)}
+                      label="Средний чек"
+                      tag={deltaTag(data.avg_check.delta_percent)}
+                    />
+                    <StatCard
+                      value={data.lost_clients.count}
+                      label="Потерянные"
+                      tag={deltaTag(data.lost_clients.delta_percent)}
+                    />
+                  </View>
                 </View>
 
-                <View className="flex-row gap-2 mb-6">
-                  <StatCard
-                    value={formatRublesFromCents(data.avg_check.amount_cents)}
-                    label="Средний чек"
-                    tag={deltaTag(data.avg_check.delta_percent)}
-                  />
-                  <StatCard
-                    value={data.lost_clients.count}
-                    label="Потерянные"
-                    tag={deltaTag(data.lost_clients.delta_percent)}
-                  />
-                </View>
+                <View className="bg-background-surface rounded-base p-4 gap-4">
+                  <Typography
+                    weight="semibold"
+                    className="text-body text-neutral-900"
+                  >
+                    Статистика по услугам
+                  </Typography>
 
-                {data.services.length > 0 && (
-                  <View className="bg-background-surface rounded-base p-4 gap-4 mb-6">
-                    <Typography
-                      weight="semibold"
-                      className="text-body text-neutral-900"
-                    >
-                      Статистика по услугам
+                  <Divider />
+
+                  {data.services.length === 0 ? (
+                    <Typography className="text-body text-neutral-400 text-center py-2">
+                      Нет данных за выбранный период
                     </Typography>
-
-                    <Divider />
-
-                    {data.services.map((service, index) => (
+                  ) : (
+                    data.services.map((service, index) => (
                       <React.Fragment key={service.service_id}>
                         <View className="flex-row items-center justify-between">
                           <Typography className="text-body text-neutral-500">
@@ -176,9 +183,9 @@ const ClientsStatistics = () => {
                         </View>
                         {index < data.services.length - 1 && <Divider />}
                       </React.Fragment>
-                    ))}
-                  </View>
-                )}
+                    ))
+                  )}
+                </View>
               </>
             )}
 

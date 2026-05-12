@@ -49,7 +49,7 @@ const AccountNotifications = () => {
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Уведомления">
         {({ topInset }) => (
-          <View style={{ paddingTop: topInset + 16 }} className="px-screen">
+          <View style={{ paddingTop: topInset }} className="px-screen">
             <View className="overflow-hidden gap-2">
               <Item
                 title="Новая запись"

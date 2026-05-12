@@ -122,7 +122,7 @@ const AdditionalServicesList = () => {
   const { refreshing, onRefresh } = useRefresh(refetchServices);
 
   const handleServicePress = useCallback((serviceId: number) => {
-    router.push(Routers.app.menu.services.additionalServices.edit(serviceId));
+    router.push(Routers.app.services.additionalServices.edit(serviceId));
   }, []);
 
   if (!auth) {
@@ -227,7 +227,7 @@ const AdditionalServicesList = () => {
                     variant="clear"
                     onPress={() =>
                       router.push(
-                        Routers.app.menu.services.additionalServices.create,
+                        Routers.app.services.additionalServices.create,
                       )
                     }
                     rightIcon={

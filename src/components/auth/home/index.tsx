@@ -4,6 +4,7 @@ import { Button, Typography } from "@/src/components/ui";
 import { Image } from "expo-image";
 import authHomeImage from "@/assets/images/auth/auth-home.png";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -23,8 +24,7 @@ const AuthHome = () => {
     console.error("Auth home image failed to load:", error);
   }, []);
 
-  // Responsive image size: max 400px or 90% of screen width
-  const maxImageSize = Math.min(width - 40, 400);
+  const maxImageSize = Math.min(width - SCREEN_PADDING * 2, 400);
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>

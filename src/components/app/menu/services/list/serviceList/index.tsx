@@ -5,7 +5,7 @@ import {
   NestableDraggableFlatList,
   RenderItemParams,
 } from "react-native-draggable-flatlist";
-import { Button, Divider, Typography } from "@/src/components/ui";
+import { Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { useReorderServiceCategoriesMutation } from "@/src/store/redux/services/api/serviceCategoriesApi";
@@ -16,6 +16,7 @@ import { Service, ServiceCategory } from "@/src/store/redux/services/api-types";
 import ServiceCategoryItem from "@/src/components/app/menu/services/list/serviceList/serviceCategoryItem";
 import { ServiceListSkeleton } from "@/src/components/app/menu/services/list/listSkeletons";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { colors } from "@/src/styles/colors";
 
 type ServiceListProps = {
   categories: ServiceCategory[];
@@ -74,13 +75,13 @@ const ServiceList = ({
 
   const handleServicePress = useCallback(
     (serviceId: number, categoryId: number) => {
-      router.push(Routers.app.menu.services.edit(serviceId, categoryId));
+      router.push(Routers.app.services.edit(serviceId, categoryId));
     },
     [],
   );
 
   const handleCreateServicePress = useCallback((categoryId: number) => {
-    router.push(Routers.app.menu.services.create(categoryId));
+    router.push(Routers.app.services.create(categoryId));
   }, []);
 
   const handleServicesReorder = useCallback(
@@ -116,13 +117,16 @@ const ServiceList = ({
     return (
       <View className="flex-1 items-center justify-center px-screen gap-4">
         <Text className="text-body text-accent-red-500">
-          Ошибка загрузки категорий.
+          Ошибка загрузки услуг.
         </Text>
         <Button
           title="Повторить"
           onPress={onRefresh}
           loading={isFetching}
           disabled={isFetching}
+          rightIcon={
+            <StSvg name="Refresh_2" size={24} color={colors.neutral[0]} />
+          }
           buttonClassName="w-full"
         />
       </View>

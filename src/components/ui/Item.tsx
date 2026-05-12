@@ -25,12 +25,20 @@ export function Item({
   className,
   titleClassName,
 }: ItemProps) {
+  const Container = onPress ? Pressable : View;
+  const containerProps = onPress
+    ? {
+        onPress,
+        disabled,
+      }
+    : {};
+
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
+    <Container
+      {...containerProps}
       className={twMerge(
-        "flex-row items-center rounded-2xl bg-white p-4 min-h-[60px] border border-background active:opacity-70",
+        "flex-row items-center rounded-2xl bg-white p-4 min-h-[60px] border border-background",
+        onPress && "active:opacity-70",
         disabled && "opacity-50",
         className,
       )}
@@ -55,6 +63,6 @@ export function Item({
       </View>
 
       {right && <View className="ml-2">{right}</View>}
-    </Pressable>
+    </Container>
   );
 }

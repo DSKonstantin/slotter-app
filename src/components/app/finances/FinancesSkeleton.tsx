@@ -2,8 +2,7 @@ import React from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
 import { colors } from "@/src/styles/colors";
-
-const H_PAD = 20;
+import { SCREEN_PADDING } from "@/src/constants/layout";
 const GAP = 20;
 const RADIUS = 12;
 const SPEED = 1.2;
@@ -14,7 +13,7 @@ type Props = { topInset?: number };
 
 const FinancesSkeleton = ({ topInset = 0 }: Props) => {
   const { width } = useWindowDimensions();
-  const w = width - H_PAD * 2;
+  const w = width - SCREEN_PADDING * 2;
 
   // Block positions
   const incomeCardH = 128;
@@ -35,7 +34,7 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
-        paddingHorizontal: H_PAD,
+        paddingHorizontal: SCREEN_PADDING,
         paddingTop: topInset + GAP,
       }}
     >

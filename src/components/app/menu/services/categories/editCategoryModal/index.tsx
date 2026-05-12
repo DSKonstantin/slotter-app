@@ -117,7 +117,7 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   const handleCreateServicePress = () => {
     if (!category?.id) return;
     onClose();
-    router.push(Routers.app.menu.services.create(category.id));
+    router.push(Routers.app.services.create(category.id));
   };
 
   const handleDeleteCategory = () => {

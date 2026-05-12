@@ -80,6 +80,7 @@ const CustomerRow = React.memo(function CustomerRow({
 export function NewChatSheet({ visible, onClose }: Props) {
   const { height } = useWindowDimensions();
   const auth = useRequiredAuth();
+  const userId = auth?.userId;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [creatingId, setCreatingId] = useState<number | null>(null);
@@ -91,10 +92,8 @@ export function NewChatSheet({ visible, onClose }: Props) {
     isError: isCustomersError,
     refetch: refetchCustomers,
   } = useGetUserCustomersQuery(
-    auth
-      ? { userId: auth.userId, query: debouncedSearch || undefined }
-      : { userId: 0 },
-    { skip: !auth },
+    userId ? { userId, query: debouncedSearch || undefined } : { userId: 0 },
+    { skip: !userId },
   );
 
   const { data: roomsData } = useGetChatRoomsQuery(undefined);
@@ -130,7 +129,7 @@ export function NewChatSheet({ visible, onClose }: Props) {
 
   const handleSelect = useCallback(
     async (item: RowItem) => {
-      if (creatingId !== null) return;
+      if (!userId || creatingId !== null) return;
 
       if (item.existingRoom) {
         onClose();
@@ -141,7 +140,7 @@ export function NewChatSheet({ visible, onClose }: Props) {
       setCreatingId(item.id);
       try {
         const result = await createChatRoom({
-          userId: auth.userId,
+          userId,
           customerId: item.id,
         }).unwrap();
         onClose();
@@ -155,16 +154,24 @@ export function NewChatSheet({ visible, onClose }: Props) {
         setCreatingId(null);
       }
     },
-    [creatingId, createChatRoom, onClose],
+    [creatingId, createChatRoom, onClose, userId],
   );
 
   useEffect(() => {
     if (!visible) {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
       setSearch("");
       setDebouncedSearch("");
       setCreatingId(null);
     }
   }, [visible]);
+
+  useEffect(
+    () => () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    },
+    [],
+  );
 
   return (
     <StModal visible={visible} onClose={onClose} horizontalPadding={false}>

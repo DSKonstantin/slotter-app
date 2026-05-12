@@ -1,23 +1,21 @@
-import React from "react";
-import { View } from "react-native";
-import { Tabs } from "expo-router";
-import StTabBar from "@/src/components/navigation/tabBar";
-import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
+import { Stack } from "expo-router";
 
-export default function TabsLayout() {
+export default function AppLayout() {
   return (
-    <View style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{ headerShown: false }}
-        tabBar={(props) => <StTabBar {...props} />}
-      >
-        <Tabs.Screen name="index" />
-        <Tabs.Screen name="calendar" />
-        <Tabs.Screen name="chat" />
-        <Tabs.Screen name="clients" />
-      </Tabs>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="(tabs)" />
 
-      <TabMenu />
-    </View>
+      <Stack.Screen
+        name="chat/[id]"
+        options={{
+          presentation: "card",
+          animation: "slide_from_right",
+        }}
+      />
+    </Stack>
   );
 }

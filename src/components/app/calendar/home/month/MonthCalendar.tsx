@@ -6,6 +6,7 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { calendarTheme, calendarStyle } from "@/src/styles/calendarTheme";
 import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
+import MonthAppointmentsCountSkeleton from "@/src/components/app/calendar/home/month/MonthAppointmentsCountSkeleton";
 
 interface MonthCalendarData {
   progressMap: Record<string, number>;
@@ -50,6 +51,7 @@ const MonthCalendar = ({
         <View className="flex-1 flex-row items-center justify-between pb-4">
           <View className="items-center flex-row gap-4">
             <Pressable
+              className="active:opacity-70"
               disabled={isLoading}
               onPress={() =>
                 handleMonthChange({
@@ -71,6 +73,7 @@ const MonthCalendar = ({
 
             <Pressable
               disabled={isLoading}
+              className="active:opacity-70"
               onPress={() =>
                 handleMonthChange({
                   year: date.getFullYear(),
@@ -85,9 +88,13 @@ const MonthCalendar = ({
               />
             </Pressable>
           </View>
-          <Typography className="text-neutral-500">
-            {isLoading ? "—" : `${appointmentCount} записей`}
-          </Typography>
+          {isLoading ? (
+            <MonthAppointmentsCountSkeleton />
+          ) : (
+            <Typography className="text-neutral-500">
+              {appointmentCount} записей
+            </Typography>
+          )}
         </View>
       );
     },

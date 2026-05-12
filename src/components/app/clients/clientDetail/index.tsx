@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { ActivityIndicator, View, RefreshControl } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, RefreshControl } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { FormProvider, useForm } from "react-hook-form";
+import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import BirthdayBadge from "@/src/components/app/clients/shared/birthdayBadge";
@@ -8,10 +10,11 @@ import {
   Button,
   Card,
   Divider,
-  Input,
+  IconButton,
   StSvg,
   Typography,
 } from "@/src/components/ui";
+import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import ClientInfoCard from "./clientInfoCard";
 import { colors } from "@/src/styles/colors";
 import HomeCard from "@/src/components/shared/cards/homeCard";
@@ -23,27 +26,38 @@ import {
 } from "@/src/store/redux/services/api/userCustomersApi";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
+import { useAppDispatch } from "@/src/store/redux/store";
+import {
+  clearSlotDraft,
+  setSelectedCustomer,
+} from "@/src/store/redux/slices/slotDraftSlice";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ChangeCategoryModal from "./changeCategoryModal";
+import ContactsModal from "./contactsModal";
+import ClientMenuModal from "./clientMenuModal";
+import ClientDetailSkeleton from "./ClientDetailSkeleton";
+
+type NoteFormValues = { note: string };
 
 type Props = { userCustomerId?: number; customerId?: number };
 
 const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
   const {
     data: customerData,
     isLoading: customerLoading,
     isError: customerError,
     refetch: refetchCustomer,
   } = useGetUserCustomerQuery(
-    auth
-      ? { userId: auth.userId, userCustomerId, customerId }
-      : { userId: 0 },
+    auth ? { userId: auth.userId, userCustomerId, customerId } : { userId: 0 },
     {
       skip: !auth || (userCustomerId === undefined && customerId === undefined),
-      refetchOnMountOrArgChange: true,
     },
   );
 
@@ -53,12 +67,19 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
   const userCustomer = customerData?.user_customer;
   const customer = userCustomer?.customer;
-  const note0 = userCustomer?.note ?? "";
+  const savedNote = userCustomer?.note ?? "";
 
   const { refreshing, onRefresh } = useRefresh(refetchCustomer);
 
-  const [note, setNote] = useState(note0);
-  const isDirty = note !== note0;
+  const methods = useForm<NoteFormValues>({
+    defaultValues: { note: "" },
+    values: { note: savedNote },
+  });
+  const {
+    formState: { isDirty },
+  } = methods;
+  const { release } = useFormNavigationGuard(isDirty);
+
   const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
   const handleOpenChangeCategory = useCallback(
     () => setChangeCategoryVisible(true),
@@ -69,14 +90,36 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     [],
   );
 
-  const handleSaveNote = async () => {
-    if (!isDirty || !auth || !userCustomer) return;
-    await updateUserCustomer({
-      userId: auth.userId,
-      id: userCustomer.id,
-      body: { note },
-    });
-  };
+  const [contactsVisible, setContactsVisible] = useState(false);
+  const handleOpenContacts = useCallback(() => setContactsVisible(true), []);
+  const handleCloseContacts = useCallback(() => setContactsVisible(false), []);
+
+  const [menuVisible, setMenuVisible] = useState(false);
+  const handleOpenMenu = useCallback(() => setMenuVisible(true), []);
+  const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
+
+  const handleSaveNote = methods.handleSubmit(async ({ note }) => {
+    if (!auth || !userCustomer) return;
+    try {
+      await updateUserCustomer({
+        userId: auth.userId,
+        id: userCustomer.id,
+        body: { note },
+      }).unwrap();
+      methods.reset({ note });
+      toast.success("Заметка сохранена");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось сохранить заметку"));
+    }
+  });
+
+  const handleBookAppointment = useCallback(() => {
+    if (!customer) return;
+    dispatch(clearSlotDraft());
+    dispatch(setSelectedCustomer({ id: customer.id, name: customer.name }));
+    release();
+    router.push(Routers.app.calendar.slotSelectService());
+  }, [customer, dispatch, release]);
 
   const handleOpenChat = async () => {
     if (!auth || !customer || !userCustomer) return;
@@ -85,29 +128,18 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         userId: auth.userId,
         customerId: customer.id,
       }).unwrap();
-      const chatRoute = Routers.app.chat.room(room.id);
-      const clientRoute = Routers.app.clients.detail(userCustomer.id);
-      router.push({
-        pathname: chatRoute.pathname,
-        params: {
-          ...chatRoute.params,
-          backTo: clientRoute.pathname.replace("[id]", String(userCustomer.id)),
-        },
-      });
-    } catch {}
+      release();
+      router.push(Routers.app.chat.room(room.id));
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось открыть чат"));
+    }
   };
-
-  useEffect(() => {
-    setNote(note0);
-  }, [note0]);
 
   if (customerLoading) {
     return (
       <ScreenWithToolbar title="Карточка клиента">
-        {() => (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator />
-          </View>
+        {({ topInset, bottomInset }) => (
+          <ClientDetailSkeleton topInset={topInset} bottomInset={bottomInset} />
         )}
       </ScreenWithToolbar>
     );
@@ -127,8 +159,22 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   }
 
   return (
-    <>
-      <ScreenWithToolbar title="Карточка клиента">
+    <FormProvider {...methods}>
+      <ScreenWithToolbar
+        title="Карточка клиента"
+        rightButton={
+          <IconButton
+            icon={
+              <StSvg
+                name="Meatballs_menu"
+                size={28}
+                color={colors.neutral[900]}
+              />
+            }
+            onPress={handleOpenMenu}
+          />
+        }
+      >
         {({ topInset, bottomInset }) => (
           <KeyboardAwareScrollView
             showsVerticalScrollIndicator={false}
@@ -139,7 +185,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
             contentContainerStyle={{
               paddingTop: topInset,
               paddingBottom: bottomInset + 16,
-              paddingHorizontal: 20,
+              paddingHorizontal: SCREEN_PADDING,
             }}
           >
             {customer.birthday && <BirthdayBadge />}
@@ -188,6 +234,28 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
             <View className="flex-row gap-2 mb-2">
               <HomeCard
+                className="bg-primary-blue-500"
+                textClassName="text-white"
+                title={"Записать\nклиента"}
+                startAdornment={
+                  <StSvg name="Edit_fill" size={26} color={colors.neutral[0]} />
+                }
+                onPress={handleBookAppointment}
+              />
+              <HomeCard
+                title={"Связаться\n"}
+                startAdornment={
+                  <StSvg
+                    name="Phone_fill"
+                    size={26}
+                    color={colors.neutral[900]}
+                  />
+                }
+                onPress={handleOpenContacts}
+              />
+            </View>
+            <View className="flex-row gap-2">
+              <HomeCard
                 title={"История\nпосещений"}
                 startAdornment={
                   <StSvg
@@ -200,30 +268,6 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   userCustomer &&
                   router.push(Routers.app.clients.history(userCustomer.id))
                 }
-              />
-              <HomeCard
-                title={"Доход\nпо клиенту"}
-                startAdornment={
-                  <StSvg
-                    name="Wallet_fill"
-                    size={26}
-                    color={colors.neutral[900]}
-                  />
-                }
-              />
-            </View>
-
-            <View className="flex-row gap-2">
-              <HomeCard
-                title={"Изменить\nкатегорию"}
-                startAdornment={
-                  <StSvg
-                    name="Edit_fill"
-                    size={26}
-                    color={colors.neutral[900]}
-                  />
-                }
-                onPress={handleOpenChangeCategory}
               />
               <HomeCard
                 disabled
@@ -247,12 +291,11 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               >
                 Заметки
               </Typography>
-              <Input
+              <RhfTextField
+                name="note"
                 multiline
                 numberOfLines={4}
                 placeholder="Добавить заметку о клиенте"
-                value={note}
-                onChangeText={setNote}
               />
               {isDirty && (
                 <Button
@@ -284,7 +327,19 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
           currentTag={userCustomer.customer_tag}
         />
       )}
-    </>
+
+      <ContactsModal
+        visible={contactsVisible}
+        onClose={handleCloseContacts}
+        phone={customer.phone}
+      />
+
+      <ClientMenuModal
+        visible={menuVisible}
+        onClose={handleCloseMenu}
+        onChangeCategory={handleOpenChangeCategory}
+      />
+    </FormProvider>
   );
 };
 

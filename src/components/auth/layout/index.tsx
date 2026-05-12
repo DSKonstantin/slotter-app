@@ -39,7 +39,7 @@ export function AuthScreenLayout({
               },
             })}
       >
-        <View ref={contentRef} collapsable={false}>
+        <View className="flex-1" ref={contentRef} collapsable={false}>
           {children}
         </View>
       </ScrollWrapper>

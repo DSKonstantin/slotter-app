@@ -17,14 +17,12 @@ import { ToolbarContext } from "@/src/components/shared/layout/toolbarContext";
 type ToolbarTopProps = {
   title: string | React.ReactNode;
   showBack?: boolean;
-  onBack?: () => void;
   rightButton?: React.ReactNode;
 };
 
 const ToolbarTop = ({
   title,
   showBack = true,
-  onBack,
   rightButton,
 }: ToolbarTopProps) => {
   const router = useRouter();
@@ -106,7 +104,7 @@ const ToolbarTop = ({
                     color={colors.neutral[900]}
                   />
                 }
-                onPress={() => (onBack ? onBack() : router.back())}
+                onPress={() => router.back()}
               />
             ) : (
               <View className="w-[48px]" />

@@ -1,10 +1,12 @@
-import React, { Ref, useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
+import React, { Ref, useRef } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Dropdown, type IDropdownRef } from "react-native-element-dropdown";
 import { BaseField } from "./BaseField";
 import { FieldError } from "react-hook-form";
 import { colors } from "@/src/styles/colors";
 import { StSvg } from "@/src/components/ui/StSvg";
+
+export type SelectItem = { label: string; value: string };
 
 type SelectFieldProps = {
   label?: string;
@@ -14,7 +16,7 @@ type SelectFieldProps = {
   value: string | null;
   onChange: (val: string | null) => void;
 
-  items: ItemType<string>[];
+  items: readonly SelectItem[];
   placeholder?: string;
   emptyText?: string;
   ref?: Ref<View>;
@@ -35,19 +37,7 @@ export function DropDown({
   onEndAdornmentPress,
   ref,
 }: SelectFieldProps) {
-  const [open, setOpen] = useState(false);
-  const [innerItems, setInnerItems] = useState<ItemType<string>[]>(() => items);
-
-  const translation = useMemo(
-    () => ({ NOTHING_TO_SHOW: emptyText }),
-    [emptyText],
-  );
-
-  useEffect(() => {
-    setInnerItems((current) =>
-      areItemsEqual(current, items) ? current : items,
-    );
-  }, [items]);
+  const dropdownRef = useRef<IDropdownRef>(null);
 
   return (
     <BaseField
@@ -58,75 +48,55 @@ export function DropDown({
       endAdornment={endAdornment}
       onEndAdornmentPress={
         onEndAdornmentPress ??
-        (endAdornment ? () => setOpen((prev) => !prev) : undefined)
+        (endAdornment ? () => dropdownRef.current?.open() : undefined)
       }
       renderControl={({ setFocused }) => (
-        <DropDownPicker
-          open={open}
-          value={value}
-          items={innerItems}
-          theme={"LIGHT"}
-          itemSeparator={true}
-          disableBorderRadius={false}
-          itemSeparatorStyle={{
-            backgroundColor: colors.gray.separators,
-            marginHorizontal: 16,
-          }}
-          TickIconComponent={() => (
-            <StSvg
-              name="Done_round"
-              size={24}
-              color={colors.primary.blue[500]}
-            />
-          )}
-          setOpen={setOpen}
-          setValue={(cb) => {
-            const next = cb(value);
-            onChange(next);
-          }}
-          setItems={setInnerItems}
+        <Dropdown
+          ref={dropdownRef}
+          style={styles.dropdown}
+          containerStyle={styles.panel}
+          placeholderStyle={styles.placeholder}
+          selectedTextStyle={styles.text}
+          itemContainerStyle={styles.itemContainer}
+          itemTextStyle={styles.text}
+          activeColor={colors.background.surface}
+          data={items as SelectItem[]}
+          labelField="label"
+          valueField="value"
           placeholder={placeholder}
-          translation={translation}
-          onOpen={() => setFocused(true)}
-          onClose={() => setFocused(false)}
-          disabled={disabled}
-          ArrowDownIconComponent={() => (
+          value={value}
+          disable={disabled}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(item: SelectItem) => onChange(item?.value ?? null)}
+          renderRightIcon={(visible?: boolean) => (
             <StSvg
-              name="Expand_down_light"
+              name={visible ? "Expand_up_light" : "Expand_down_light"}
               size={24}
               color={colors.neutral[300]}
             />
           )}
-          ArrowUpIconComponent={() => (
-            <StSvg
-              name="Expand_up_light"
-              size={24}
-              color={colors.neutral[300]}
-            />
+          renderItem={(item: SelectItem, selected?: boolean) => (
+            <View className="flex-row items-center justify-between py-2.5">
+              <Text className="font-inter-regular text-body text-neutral-900">
+                {item.label}
+              </Text>
+              {selected && (
+                <StSvg
+                  name="Done_round"
+                  size={24}
+                  color={colors.primary.blue[500]}
+                />
+              )}
+            </View>
           )}
-          style={{ borderWidth: 0, backgroundColor: "transparent", flex: 1 }}
-          dropDownContainerStyle={{
-            borderRadius: 16,
-            borderWidth: 0,
-            marginTop: 4,
+          flatListProps={{
+            ListEmptyComponent: (
+              <Text className="font-inter-regular text-body text-neutral-500 text-center py-4">
+                {emptyText}
+              </Text>
+            ),
           }}
-          labelStyle={{
-            ...styles.text,
-            color: colors.primary.DEFAULT,
-          }}
-          placeholderStyle={{
-            ...styles.text,
-            color: colors.neutral[300],
-          }}
-          listItemContainerStyle={{
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-            height: "auto",
-          }}
-          listItemLabelStyle={{
-            ...styles.text,
-          }}
-          listMode="SCROLLVIEW"
         />
       )}
     />
@@ -134,25 +104,34 @@ export function DropDown({
 }
 
 const styles = StyleSheet.create({
+  dropdown: {
+    flex: 1,
+    minHeight: 48,
+    paddingHorizontal: 16,
+  },
+  panel: {
+    borderRadius: 16,
+    borderWidth: 0,
+    marginTop: 4,
+    backgroundColor: colors.background.surface,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+  },
+  itemContainer: {
+    borderRadius: 0,
+    paddingHorizontal: 16,
+  },
   text: {
     fontFamily: "Inter_400Regular",
     fontSize: 16,
+    color: colors.neutral[900],
+  },
+  placeholder: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 16,
+    color: colors.neutral[300],
   },
 });
-
-function areItemsEqual(current: ItemType<string>[], next: ItemType<string>[]) {
-  if (current === next) return true;
-  if (current.length !== next.length) return false;
-
-  return current.every((item, index) => {
-    const nextItem = next[index];
-
-    return (
-      item.value === nextItem?.value &&
-      item.label === nextItem?.label &&
-      item.disabled === nextItem?.disabled &&
-      item.parent === nextItem?.parent &&
-      item.selectable === nextItem?.selectable
-    );
-  });
-}

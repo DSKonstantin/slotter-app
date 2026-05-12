@@ -9,6 +9,7 @@ type HomeCardProps = {
   onPress?: () => void;
   disabled?: boolean;
   className?: string;
+  textClassName?: string;
 };
 
 const HomeCard = ({
@@ -17,6 +18,7 @@ const HomeCard = ({
   onPress,
   disabled = false,
   className,
+  textClassName,
 }: HomeCardProps) => {
   return (
     <TouchableOpacity
@@ -36,7 +38,7 @@ const HomeCard = ({
       </View>
 
       <View className="mt-3">
-        <Typography weight="semibold" className="text-body">
+        <Typography weight="semibold" className={`text-body ${textClassName}`}>
           {title}
         </Typography>
       </View>

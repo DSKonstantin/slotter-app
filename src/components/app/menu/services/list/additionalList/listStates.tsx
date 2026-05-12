@@ -1,7 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 
-import { Button, Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 
 type AdditionalListErrorStateProps = {
   isFetching: boolean;
@@ -19,10 +20,13 @@ export const AdditionalListErrorState = ({
       accessibilityRole="alert"
     >
       <Typography className="text-body text-accent-red-500">
-        Ошибка загрузки.
+        Ошибка загрузки доп. услуг.
       </Typography>
       <Button
         title="Повторить"
+        rightIcon={
+          <StSvg name="Refresh_2" size={24} color={colors.neutral[0]} />
+        }
         onPress={onRetry}
         loading={isFetching}
         disabled={isFetching}

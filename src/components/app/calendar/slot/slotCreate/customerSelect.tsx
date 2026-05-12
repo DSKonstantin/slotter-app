@@ -17,7 +17,10 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
-import { clearCreatedCustomer } from "@/src/store/redux/slices/slotDraftSlice";
+import {
+  clearCreatedCustomer,
+  clearSelectedCustomer,
+} from "@/src/store/redux/slices/slotDraftSlice";
 import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import RetryInline from "@/src/components/shared/retryInline";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
@@ -28,6 +31,9 @@ const CustomerSelect = () => {
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const createdCustomer = useAppSelector((s) => s.slotDraft.createdCustomer);
+  const selectedCustomerFromDraft = useAppSelector(
+    (s) => s.slotDraft.selectedCustomer,
+  );
   const { setValue } = useFormContext();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -91,6 +97,20 @@ const CustomerSelect = () => {
     setSelectedCustomer(item);
     dispatch(clearCreatedCustomer());
   }, [createdCustomer, dispatch, setValue]);
+
+  useEffect(() => {
+    if (!selectedCustomerFromDraft) return;
+    const item: CustomerOption = {
+      id: String(selectedCustomerFromDraft.id),
+      title: selectedCustomerFromDraft.name,
+    };
+    setValue("customerId", parseInt(item.id, 10) || 0, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setSelectedCustomer(item);
+    dispatch(clearSelectedCustomer());
+  }, [selectedCustomerFromDraft, dispatch, setValue]);
 
   return (
     <>

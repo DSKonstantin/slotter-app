@@ -33,7 +33,7 @@ const chatMessagesApi = api.injectEndpoints({
       ): ChatMessagesCache => ({
         messages: response.items.map(toIMessage),
         nextCursor: response.next_cursor,
-        hasMore: response.items.length === FEED_LIMIT,
+        hasMore: response.next_cursor !== null,
       }),
       serializeQueryArgs: ({ queryArgs }) => ({
         chatRoomId: queryArgs.chatRoomId,
@@ -60,7 +60,8 @@ const chatMessagesApi = api.injectEndpoints({
           await cacheDataLoaded;
 
           subscription.on("message", (data) => {
-            const { user: authUser, resourceType } = (getState() as RootState).auth;
+            const { user: authUser, resourceType } = (getState() as RootState)
+              .auth;
             const currentId =
               authUser && resourceType
                 ? `${resourceType}_${authUser.id}`

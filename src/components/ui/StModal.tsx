@@ -13,6 +13,7 @@ import Modal, { ModalProps } from "react-native-modal";
 import { BlurView } from "expo-blur";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BottomSheetHandle } from "./BottomSheetHandle";
+import {SCREEN_PADDING} from "@/src/constants/layout";
 
 type StModalProps = {
   visible: boolean;
@@ -59,8 +60,8 @@ export const StModal = ({
       ...(fullHeight ? { height: height - top } : { maxHeight: height - top }),
       paddingBottom: bottom + 8,
       ...(horizontalPadding && {
-        paddingLeft: 20 + left,
-        paddingRight: 20 + right,
+        paddingLeft: SCREEN_PADDING + left,
+        paddingRight: SCREEN_PADDING + right,
       }),
     }),
     [bottom, fullHeight, height, horizontalPadding, left, right, top],

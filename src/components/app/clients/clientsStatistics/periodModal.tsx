@@ -17,7 +17,7 @@ export const PERIODS = [
   { label: "Последние 30 дней", value: "last_30_days" },
 ] as const;
 
-export const CUSTOM_PERIOD_VALUE = "custom";
+export const CUSTOM_PERIOD_VALUE = "custom" as const;
 
 const today = formatApiDate(new Date());
 

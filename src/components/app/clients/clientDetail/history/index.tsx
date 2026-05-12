@@ -1,10 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  View,
-  ScrollView,
-  RefreshControl,
-} from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { skipToken } from "@reduxjs/toolkit/query";
 import {
@@ -35,12 +30,14 @@ import {
 } from "@/src/store/redux/services/api/userCustomersApi";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import type { UserCustomerPeriod } from "@/src/store/redux/services/api-types/userCustomer";
+import HistorySkeleton from "@/src/components/app/clients/clientDetail/history/HistorySkeleton";
 
 const FINANCE_PERIODS: { label: string; value: UserCustomerPeriod }[] = [
   { label: "День", value: "today" },
@@ -108,8 +105,8 @@ const ClientHistory = ({ customerId }: Props) => {
     { refetchOnMountOrArgChange: true },
   );
 
-  const userCustomer = customerData?.user_customer;
-  const customer = userCustomer?.customer;
+  const { user_customer: userCustomer } = customerData ?? {};
+  const { customer, stats } = userCustomer ?? {};
 
   const chartData = useMemo(
     () =>
@@ -125,7 +122,7 @@ const ClientHistory = ({ customerId }: Props) => {
     [appointmentsData],
   );
 
-  const lastVisitAt = userCustomer?.stats.last_visit_at;
+  const lastVisitAt = stats?.last_visit_at;
   const lastVisitLabel = lastVisitAt
     ? format(parseISO(lastVisitAt), "d MMM yyyy", { locale: ru })
     : "—";
@@ -162,7 +159,7 @@ const ClientHistory = ({ customerId }: Props) => {
           contentContainerStyle={{
             paddingTop: topInset,
             paddingBottom: bottomInset + 16,
-            paddingHorizontal: 20,
+            paddingHorizontal: SCREEN_PADDING,
           }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -182,9 +179,7 @@ const ClientHistory = ({ customerId }: Props) => {
           </View>
 
           {isLoading ? (
-            <View className="flex-1 items-center justify-center py-10">
-              <ActivityIndicator />
-            </View>
+            <HistorySkeleton filterActive={filterActive} />
           ) : filterActive ? (
             <View className="gap-6">
               {appointmentSections.map((section) => (

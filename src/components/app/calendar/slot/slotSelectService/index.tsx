@@ -230,7 +230,7 @@ const SlotSelectService: React.FC<Props> = ({
   }, []);
 
   const handleCreateService = useCallback(() => {
-    router.push(Routers.app.menu.services.create());
+    router.push(Routers.app.services.create());
   }, []);
 
   const handleNext = useCallback(async () => {

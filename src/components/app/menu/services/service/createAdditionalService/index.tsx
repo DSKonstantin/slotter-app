@@ -15,6 +15,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import EditAdditionalServiceModal from "@/src/components/app/menu/services/service/createAdditionalService/editAdditionalServiceModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
@@ -32,7 +33,7 @@ const SKELETON_CARD_HEIGHT = 64;
 const AdditionalServicesSkeleton = () => (
   <View
     className="flex-row mb-2"
-    style={{ paddingHorizontal: 20 }}
+    style={{ paddingHorizontal: SCREEN_PADDING }}
     accessibilityLabel="Loading additional services"
     accessible
   >
@@ -111,7 +112,7 @@ const CreateAdditionalService = () => {
           buttonClassName="h-[24px] p-0 rounded-none gap-0"
           textClassName="text-[13px] text-neutral-500"
           onPress={() => {
-            router.push(Routers.app.menu.services.additionalServices.root);
+            router.push(Routers.app.services.additionalServices.root);
           }}
           rightIcon={
             <StSvg
@@ -140,7 +141,7 @@ const CreateAdditionalService = () => {
           keyExtractor={(service) => String(service.id)}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
-            paddingHorizontal: 20,
+            paddingHorizontal: SCREEN_PADDING,
             gap: 8,
           }}
           renderItem={({ item: service }) => {

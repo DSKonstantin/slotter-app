@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { ActivityIndicator, SectionList, View } from "react-native";
-import { Card, StSvg, Typography } from "@/src/components/ui";
+import { Button, Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
@@ -17,6 +17,9 @@ const ServicePicker = ({ userId, onSelect }: Props) => {
     data: categoriesData,
     isLoading,
     isError,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
     refetch,
   } = useGetServiceCategoriesInfiniteQuery({
     userId,
@@ -41,7 +44,7 @@ const ServicePicker = ({ userId, onSelect }: Props) => {
       </View>
     );
   }
-  if (isError) {
+  if (isError && !categoriesData) {
     return (
       <View className="py-6">
         <RetryInline
@@ -67,6 +70,17 @@ const ServicePicker = ({ userId, onSelect }: Props) => {
       sections={sections}
       keyExtractor={(item) => String(item.id)}
       scrollEnabled={false}
+      ListFooterComponent={
+        hasNextPage ? (
+          <Button
+            title="Показать ещё"
+            loading={isFetchingNextPage}
+            disabled={isFetchingNextPage}
+            onPress={() => fetchNextPage()}
+            buttonClassName="mt-2"
+          />
+        ) : null
+      }
       renderSectionHeader={({ section: { title } }) => (
         <View className="py-1">
           <Typography className="text-caption text-neutral-400">

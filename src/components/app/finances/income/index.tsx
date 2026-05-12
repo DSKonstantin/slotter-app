@@ -22,6 +22,7 @@ import {
   INCOME_GROUP_OPTIONS,
   MONTH_NAMES_SHORT,
 } from "@/src/constants/finances";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import FinancesIncomeSkeleton from "./FinancesIncomeSkeleton";
 import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
 import IncomeBreakdownServices from "./IncomeBreakdownServices";
@@ -106,14 +107,11 @@ const FinancesIncomeScreen = () => {
     );
   }
 
-  if (isIncomeError) {
+  if (true) {
     return (
       <ScreenWithToolbar title="Доходы по периоду">
         {() => (
-          <ErrorScreen
-            title="Не удалось загрузить данные о доходах"
-            onRetry={refetch}
-          />
+          <ErrorScreen title="Не удалось загрузить доходы" onRetry={refetch} />
         )}
       </ScreenWithToolbar>
     );
@@ -146,7 +144,7 @@ const FinancesIncomeScreen = () => {
           contentContainerStyle={{
             paddingTop: topInset,
             paddingBottom: bottomInset + 16,
-            paddingHorizontal: 20,
+            paddingHorizontal: SCREEN_PADDING,
             gap: 20,
           }}
           refreshControl={

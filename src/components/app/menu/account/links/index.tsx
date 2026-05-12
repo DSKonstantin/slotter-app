@@ -44,7 +44,7 @@ const Links = () => {
               showsVerticalScrollIndicator={false}
               bottomOffset={BOTTOM_OFFSET_SMALL}
               contentContainerStyle={{
-                paddingTop: topInset + 16,
+                paddingTop: topInset,
                 paddingBottom: 16,
               }}
             >

@@ -6,8 +6,8 @@ const ChatMessage = (props: MessageProps<ChatIMessage>) => (
   <Message
     {...props}
     containerStyle={{
-      right: { marginRight: 20 },
-      left: { marginLeft: 20 },
+      right: { marginRight: 16 },
+      left: { marginLeft: 16 },
     }}
   />
 );

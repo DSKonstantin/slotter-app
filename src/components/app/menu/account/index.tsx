@@ -32,39 +32,39 @@ const NAV_GROUPS: NavItem[][] = [
     {
       title: "О специалисте",
       icon: "User_fill",
-      route: () => router.push(Routers.app.menu.account.about),
+      route: () => router.push(Routers.app.account.about),
     },
     {
       title: "Галерея",
       subtitle: "( фото на сайт )",
       icon: "Camera",
-      route: () => router.push(Routers.app.menu.account.gallery),
+      route: () => router.push(Routers.app.account.gallery),
     },
     {
       title: "Ссылки",
       icon: "link_alt",
-      route: () => router.push(Routers.app.menu.account.links),
+      route: () => router.push(Routers.app.account.links),
     },
   ],
   [
     {
       title: "Просмотр страницы",
       icon: "Eye_fill",
-      route: () => router.push(Routers.app.menu.account.preview),
+      route: () => router.push(Routers.app.account.preview),
     },
   ],
   [
     {
       title: "Бронирование",
       icon: "Setting_alt_fill",
-      route: () => router.push(Routers.app.menu.account.booking),
+      route: () => router.push(Routers.app.account.booking),
     },
   ],
   [
     {
       title: "Уведомления",
       icon: "Bell_fill",
-      route: () => router.push(Routers.app.menu.account.notifications),
+      route: () => router.push(Routers.app.account.notifications),
     },
     {
       title: "Поддержка",
@@ -130,7 +130,7 @@ const AccountScreen = () => {
                 />
               }
               onPress={() =>
-                router.push(Routers.app.menu.account.personalInformation)
+                router.push(Routers.app.account.personalInformation)
               }
             />
 

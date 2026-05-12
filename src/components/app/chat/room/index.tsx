@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { router } from "expo-router";
 import { ActivityIndicator, Alert, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
@@ -40,18 +46,21 @@ import {
   ChatAppointmentWidget,
   ChatServiceWidget,
 } from "./components/widget";
-import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
+import {
+  useCancelAppointmentMutation,
+  useCreateAppointmentMutation,
+} from "@/src/store/redux/services/api/appointmentsApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { Service } from "@/src/store/redux/services/api-types";
 
-type Props = { roomId: string; backTo?: string };
+type Props = { roomId: string };
 
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const EMPTY_MESSAGES: ChatIMessage[] = [];
 
-export default function ChatRoom({ roomId, backTo }: Props) {
+export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
   const { bottom: bottomInset } = useSafeAreaInsets();
 
@@ -63,6 +72,7 @@ export default function ChatRoom({ roomId, backTo }: Props) {
   const [isProposing, setIsProposing] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
   const loadingMoreRef = useRef(false);
+  const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
 
   // ── Auth ──────────────────────────────────────────────────────────────
   const { currentUser, resourceType } = useAppSelector(
@@ -119,11 +129,24 @@ export default function ChatRoom({ roomId, backTo }: Props) {
   // ── Mutations ─────────────────────────────────────────────────────────
   const [createMessage] = useCreateChatMessageMutation();
   const [createAppointment] = useCreateAppointmentMutation();
+  const [cancelAppointment] = useCancelAppointmentMutation();
 
-  // ── Mark read on mount ────────────────────────────────────────────────
-  React.useEffect(() => {
+  // ── Mark room read on open ────────────────────────────────────────────
+  useEffect(() => {
     if (id) markRoomRead({ chatRoomId: id });
   }, [id, markRoomRead]);
+
+  // ── Mark incoming messages read ───────────────────────────────────────
+  useEffect(() => {
+    if (!id || !currentGiftedId || messages.length === 0) return;
+
+    const latestIncoming = messages.find((m) => m.user._id !== currentGiftedId);
+    if (!latestIncoming) return;
+    if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
+
+    lastMarkedIncomingIdRef.current = latestIncoming._id;
+    markRoomRead({ chatRoomId: id });
+  }, [currentGiftedId, id, markRoomRead, messages]);
 
   // ── Pagination ────────────────────────────────────────────────────────
   const handleLoadEarlier = useCallback(() => {
@@ -294,59 +317,81 @@ export default function ChatRoom({ roomId, backTo }: Props) {
           },
         }).unwrap();
 
-        createMessage({
-          chatRoomId: id,
-          data: {
-            chat_widget: {
-              kind: "appointment_proposal",
-              widgetable_type: "Appointment",
-              widgetable_id: appointment.id,
-              payload: {
-                start_time: startTime,
-                duration: service.duration,
-                price_cents: service.price_cents,
+        try {
+          await createMessage({
+            chatRoomId: id,
+            data: {
+              chat_widget: {
+                kind: "appointment_proposal",
+                widgetable_type: "Appointment",
+                widgetable_id: appointment.id,
+                payload: {
+                  start_time: startTime,
+                  duration: service.duration,
+                  price_cents: service.price_cents,
+                },
               },
             },
-          },
-          optimistic: {
-            _id: `temp_${Date.now()}`,
-            text: "",
-            createdAt: Date.now(),
-            pending: true,
-            sent: false,
-            reply_to: null,
-            widget: {
-              id: -1,
-              kind: "appointment_proposal",
-              payload: {
-                start_time: startTime,
-                duration: service.duration,
-                price_cents: service.price_cents,
+            optimistic: {
+              _id: `temp_${Date.now()}`,
+              text: "",
+              createdAt: Date.now(),
+              pending: true,
+              sent: false,
+              reply_to: null,
+              widget: {
+                id: -1,
+                kind: "appointment_proposal",
+                payload: {
+                  start_time: startTime,
+                  duration: service.duration,
+                  price_cents: service.price_cents,
+                },
+                created_at: new Date().toISOString(),
+                widgetable: {
+                  id: appointment.id,
+                  status: appointment.status,
+                  start_time: appointment.start_time,
+                  end_time: appointment.end_time,
+                  date: appointment.date,
+                  duration: appointment.duration,
+                  price_cents: appointment.price_cents,
+                  price_currency: appointment.price_currency,
+                },
               },
-              created_at: new Date().toISOString(),
-              widgetable: {
-                id: appointment.id,
-                status: appointment.status,
-                start_time: appointment.start_time,
-                end_time: appointment.end_time,
-                date: appointment.date,
-                duration: appointment.duration,
-                price_cents: appointment.price_cents,
-                price_currency: appointment.price_currency,
-              },
+              user: makeUser(),
             },
-            user: makeUser(),
-          },
-        });
+          }).unwrap();
+        } catch (messageError) {
+          try {
+            await cancelAppointment({
+              id: appointment.id,
+              body: {
+                cancel_reason: "Не удалось отправить предложение в чат",
+              },
+            }).unwrap();
+          } catch {}
+          throw messageError;
+        }
 
         setAttachVisible(false);
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
+        toast.error(
+          getApiErrorMessage(error, "Не удалось отправить предложение"),
+        );
       } finally {
         setIsProposing(false);
       }
     },
-    [id, currentUser, interlocutor, createAppointment, createMessage, makeUser],
+    [
+      id,
+      currentUser,
+      interlocutor,
+      createAppointment,
+      createMessage,
+      cancelAppointment,
+      makeUser,
+    ],
   );
 
   // ── Message actions ───────────────────────────────────────────────────
@@ -389,7 +434,6 @@ export default function ChatRoom({ roomId, backTo }: Props) {
     <>
       <ScreenWithToolbar
         title={titleNode ?? "Чат"}
-        onBack={backTo ? () => router.push(backTo as never) : undefined}
         rightButton={
           <IconButton
             icon={

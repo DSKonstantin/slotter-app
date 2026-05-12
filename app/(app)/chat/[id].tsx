@@ -3,9 +3,11 @@ import { useLocalSearchParams } from "expo-router";
 import ChatRoom from "@/src/components/app/chat/room";
 
 const ChatRoomScreen = () => {
-  const { id, backTo } = useLocalSearchParams<{ id: string; backTo?: string }>();
+  const { id } = useLocalSearchParams<{
+    id: string;
+  }>();
 
-  return <ChatRoom roomId={id} backTo={backTo} />;
+  return <ChatRoom roomId={id} />;
 };
 
 export default ChatRoomScreen;

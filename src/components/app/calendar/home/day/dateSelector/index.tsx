@@ -10,6 +10,7 @@ import { FlatList, TouchableOpacity, View } from "react-native";
 import { format, addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
@@ -19,7 +20,6 @@ import { formatShortDayName } from "@/src/utils/date/formatDate";
 
 const ITEM_WIDTH = 44;
 const ITEM_GAP = 12;
-const HORIZONTAL_PADDING = 20;
 
 interface DateItemProps {
   item: Date;
@@ -177,7 +177,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
         })}
         contentContainerStyle={{
           gap: ITEM_GAP,
-          paddingHorizontal: HORIZONTAL_PADDING,
+          paddingHorizontal: SCREEN_PADDING,
         }}
         style={{ flexGrow: 0 }}
       />

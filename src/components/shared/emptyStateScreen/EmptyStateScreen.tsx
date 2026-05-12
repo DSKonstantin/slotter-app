@@ -39,7 +39,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
         <View className="items-center gap-1">
           <Typography
             weight="semibold"
-            className="text-display text-neutral-900"
+            className="text-display text-neutral-900 text-center mb-1"
           >
             {title}
           </Typography>

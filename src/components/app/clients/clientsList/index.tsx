@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import debounce from "lodash/debounce";
-import { View, FlatList, ActivityIndicator } from "react-native";
+import { View, FlatList } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -17,12 +17,15 @@ import { useGetUserCustomersPaginatedInfiniteQuery } from "@/src/store/redux/ser
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Routers } from "@/src/constants/routers";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { colors } from "@/src/styles/colors";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
+import ClientsListSkeleton from "./ClientsListSkeleton";
+import ClientsFiltersSkeleton from "./ClientsFiltersSkeleton";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   selectClientsSearch,
@@ -83,6 +86,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   const {
     data: tagsData,
+    isLoading: isTagsLoading,
     isError: isTagsError,
     refetch: refetchTags,
   } = useGetCustomerTagsQuery(auth ? { userId: auth.userId } : skipToken);
@@ -157,36 +161,40 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
   }, [data?.pages]);
 
   return (
-    <View className="flex-1" style={{ paddingTop: topInset }}>
+    <View className="flex-1 gap-4" style={{ paddingTop: topInset }}>
       {!searchMode && (
         <>
-          <FlatList
-            horizontal
-            data={filters}
-            keyExtractor={(f) => f.label}
-            showsHorizontalScrollIndicator={false}
-            style={{ flexGrow: 0 }}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
-            className="pb-3"
-            renderItem={({ item: f }) => (
-              <Badge
-                title={f.label}
-                variant={tagId === f.value ? "accent" : "secondary"}
-                onPress={() => handleSetTagId(f.value)}
-              />
-            )}
-          />
-          {isTagsError && (
-            <View className="px-screen pb-3">
+          {isTagsError ? (
+            <View className="px-screen h-[36px] justify-center">
               <RetryInline
                 text="Не удалось загрузить теги"
                 buttonText="Обновить"
                 onRetry={refetchTags}
               />
             </View>
+          ) : isTagsLoading && !tagsData ? (
+            <ClientsFiltersSkeleton />
+          ) : (
+            <FlatList
+              horizontal
+              data={filters}
+              keyExtractor={(f) => f.label}
+              showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0 }}
+              contentContainerStyle={{
+                paddingHorizontal: SCREEN_PADDING,
+                gap: 8,
+              }}
+              renderItem={({ item: f }) => (
+                <Badge
+                  title={f.label}
+                  variant={tagId === f.value ? "accent" : "secondary"}
+                  onPress={() => handleSetTagId(f.value)}
+                />
+              )}
+            />
           )}
-
-          <View className="flex-row gap-2.5 px-screen mb-5">
+          <View className="flex-row gap-2.5 px-screen">
             <Button
               title="Статистика"
               buttonClassName="flex-1"
@@ -214,9 +222,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
       )}
 
       {isLoading && !data ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
+        <ClientsListSkeleton bottomInset={bottomInset} />
       ) : isError && !data ? (
         <ErrorScreen
           title="Не удалось загрузить клиентов"
@@ -228,7 +234,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           data={customers}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{
-            paddingHorizontal: 16,
+            paddingHorizontal: SCREEN_PADDING,
             paddingBottom: bottomInset + 16,
             gap: 8,
             flexGrow: customers.length === 0 ? 1 : undefined,

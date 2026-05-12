@@ -11,6 +11,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 import {
   Badge,
@@ -364,11 +365,10 @@ const Gallery = () => {
                 <ActivityIndicator />
               </View>
             ) : isGalleryError && !photos.length ? (
-              <View className="flex-1 items-center justify-center px-screen">
-                <Typography className="text-center text-error">
-                  Не удалось загрузить галерею
-                </Typography>
-              </View>
+              <ErrorScreen
+                title="Не удалось загрузить галерею"
+                onRetry={refetch}
+              />
             ) : (
               <>
                 <FlashList

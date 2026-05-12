@@ -22,7 +22,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { format } from "date-fns";
 import { getDatesUntilEndOfWeek } from "@/src/utils/schedule/getDatesUntilEndOfWeek";
-import {DEFAULT_END_AT, DEFAULT_START_AT} from "@/src/constants/hoursOptions";
+import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
 import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 
 const Schedule = () => {
@@ -30,7 +30,7 @@ const Schedule = () => {
   const [activeDays, setActiveDays] = useState<string[]>([]);
   const [bulkCreateWorkingDays, { isLoading }] =
     useBulkCreateWorkingDaysMutation();
-  const [updateUser] = useUpdateUserMutation();
+  const [updateUser, { isLoading: isSkipping }] = useUpdateUserMutation();
 
   const methods = useForm({
     resolver: yupResolver(OnboardingScheduleSchema),
@@ -58,6 +58,19 @@ const Schedule = () => {
     });
   };
 
+  const handleSkip = async () => {
+    if (!auth) return;
+    try {
+      await updateUser({
+        id: auth.userId,
+        data: { onboarding_step: "notification" },
+      }).unwrap();
+      router.push(Routers.onboarding.notification);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось пропустить шаг"));
+    }
+  };
+
   const onSubmit = async (data: OnboardingScheduleFormValues) => {
     if (!auth) return;
 
@@ -78,7 +91,10 @@ const Schedule = () => {
       }));
 
     if (!working_days.length) {
-      await updateUser({ id: auth.userId, data: { onboarding_step: "notification" } }).unwrap();
+      await updateUser({
+        id: auth.userId,
+        data: { onboarding_step: "notification" },
+      }).unwrap();
       router.push(Routers.onboarding.notification);
       return;
     }
@@ -89,7 +105,10 @@ const Schedule = () => {
         working_days,
       }).unwrap();
 
-      await updateUser({ id: auth.userId, data: { onboarding_step: "notification" } }).unwrap();
+      await updateUser({
+        id: auth.userId,
+        data: { onboarding_step: "notification" },
+      }).unwrap();
       router.push(Routers.onboarding.notification);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить расписание"));
@@ -113,16 +132,18 @@ const Schedule = () => {
             secondary={{
               title: "Пропустить",
               variant: "clear",
-              disabled: isLoading,
-              onPress: () => {
-                router.push(Routers.onboarding.notification);
-              },
+              disabled: isLoading || isSkipping,
+              loading: isSkipping,
+              onPress: handleSkip,
             }}
           />
         }
       >
         <View className="mt-4">
-          <StepProgress steps={TOTAL_STEPS} currentStep={STEP_PROGRESS.schedule!} />
+          <StepProgress
+            steps={TOTAL_STEPS}
+            currentStep={STEP_PROGRESS.schedule!}
+          />
         </View>
         <View className="mt-8 gap-2">
           <Typography weight="semibold" className="text-display mb-2">

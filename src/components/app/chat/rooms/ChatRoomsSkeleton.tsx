@@ -2,8 +2,7 @@ import React from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import ContentLoader, { Rect, Circle } from "react-content-loader/native";
 import { colors } from "@/src/styles/colors";
-
-const H_PAD = 20;
+import { SCREEN_PADDING } from "@/src/constants/layout";
 const SPEED = 1.2;
 const BG = colors.neutral[100];
 const FG = "#F5F5FA";
@@ -18,7 +17,7 @@ type Props = { topInset?: number };
 
 const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
   const { width } = useWindowDimensions();
-  const w = width - H_PAD * 2;
+  const w = width - SCREEN_PADDING * 2;
   const textX = AVATAR + 12;
   const textW = w - textX;
   const totalH = COUNT * (ITEM_H + GAP);
@@ -27,7 +26,7 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
     <ScrollView
       scrollEnabled={false}
       contentContainerStyle={{
-        paddingHorizontal: H_PAD,
+        paddingHorizontal: SCREEN_PADDING,
         paddingTop: topInset + 12,
       }}
     >

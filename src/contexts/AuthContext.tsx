@@ -7,7 +7,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import NetInfo from "@react-native-community/netinfo";
 import {
   useLazyGetMeQuery,
   useLogoutSessionMutation,
@@ -89,25 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Run auth bootstrap only once on app start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!token || user) return;
-
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      if (!state.isConnected) return;
-      getMe()
-        .unwrap()
-        .catch(async (e) => {
-          if (isAuthError(e)) {
-            await accessTokenStorage.remove();
-            dispatch(logoutAction());
-            await persistor.purge();
-          }
-        });
-    });
-
-    return unsubscribe;
-  }, [token, user, getMe, dispatch]);
 
   const value = useMemo(
     () => ({
