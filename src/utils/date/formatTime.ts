@@ -38,9 +38,13 @@ export const parseTimeString = (value: string): Date | null => {
   return isNaN(d.getTime()) ? null : d;
 };
 
-export const parseTime = (time: string) => {
-  const direct = time.match(/^(\d{2}):(\d{2})/);
+export const parseTime = (time?: string | number | null) => {
+  if (!time) return 0;
+  if (typeof time !== "string") time = String(time);
+
+  const direct = time.match(/^(\d{1,2}):(\d{2})/);
   if (direct) return +direct[1] * 60 + +direct[2];
+
   const iso = time.match(/T(\d{2}):(\d{2})/);
   return iso ? +iso[1] * 60 + +iso[2] : 0;
 };

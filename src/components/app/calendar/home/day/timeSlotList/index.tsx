@@ -1,9 +1,16 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import type {
   Appointment,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { View } from "react-native";
+import { View, Dimensions, Text, InteractionManager } from "react-native";
 import { router } from "expo-router";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
@@ -89,10 +96,95 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     appointments,
   ]);
 
+  const scrollKey = useMemo(() => {
+    return JSON.stringify([
+      date,
+      startAt,
+      endAt,
+      appointments
+        .map((a) => `${a.id}-${a.start_time}-${a.end_time}`)
+        .join("|"),
+      visibleStatuses.join("|"),
+    ]);
+  }, [date, startAt, endAt, appointments, visibleStatuses]);
+
+  const now = new Date();
+
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+    now.getMinutes(),
+  ).padStart(2, "0")}`;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const timelineEnd = parseTime(endAt ?? "23:59");
+
+  const nowOffset = useMemo(() => {
+    let y = 0;
+
+    for (const seg of segments) {
+      const start = seg.segStart;
+      const end = seg.segEnd;
+
+      if (currentMinutes >= start && currentMinutes < end) {
+        y += (currentMinutes - start) * MINUTE_HEIGHT;
+        return y;
+      }
+
+      y += getSegmentHeight(seg);
+    }
+
+    return y;
+  }, [segments, currentMinutes]);
+
+  const isNowInRange =
+    currentMinutes >= effectiveStart && currentMinutes <= timelineEnd;
+
+  const canAutoScroll = segments.length > 0 && isNowInRange;
+
+  const hasScrolledRef = useRef(false);
+
+  useEffect(() => {
+    hasScrolledRef.current = false;
+  }, [scrollKey]);
+
+  useEffect(() => {
+    if (!canAutoScroll) return;
+    if (hasScrolledRef.current) return;
+
+    const runScroll = () => {
+      const screenHeight = Dimensions.get("window").height;
+      const y = Math.max(0, nowOffset - screenHeight / 2);
+
+      onHighlightScroll?.(y);
+      hasScrolledRef.current = true;
+    };
+
+    const task = InteractionManager.runAfterInteractions(runScroll);
+
+    return () => task.cancel();
+  }, [canAutoScroll, nowOffset, scrollKey]);
+
   if (segments.length === 0) return null;
 
   return (
-    <View className="flex-1 pt-4 px-screen">
+    <View className="flex-1 pt-4 px-screen relative">
+      {isNowInRange && (
+        <View
+          pointerEvents="none"
+          className="absolute left-[10px] right-0 z-[100] flex-row items-center"
+          style={{
+            top: nowOffset + 16,
+          }}
+        >
+          <View className="w-[50px] items-center">
+            <View className="w-[52px] h-[28px] rounded-full bg-[#D9D9D9] justify-center items-center">
+              <Text className="text-[12px] font-semibold text-neutral-900">
+                {currentTime}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
       {segments.map((segment) => {
         const { segStart, segEnd, isCompressed, content } = segment;
         return (
