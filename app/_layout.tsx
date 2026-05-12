@@ -4,7 +4,7 @@ import "dayjs/locale/ru";
 import { useEffect } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
-import { Stack, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -41,9 +41,6 @@ function InitialLayout() {
     "TJF-Anomaly": require("@/assets/fonts/TJF-Anomaly-Regular.ttf"),
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
-  const segments = useSegments();
-
-  console.log(segments);
 
   useEffect(() => {
     if (fontsLoaded && !isLoading) {

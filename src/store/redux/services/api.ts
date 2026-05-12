@@ -32,6 +32,7 @@ export const api = createApi({
     "ChatRooms",
     "ChatMessages",
     "Notifications",
+    "UserLinks",
   ],
   endpoints: () => ({}),
 });

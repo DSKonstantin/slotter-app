@@ -1,15 +1,13 @@
-import * as Yup from "yup";
+import * as yup from "yup";
 
-export const AccountLinksSchema = Yup.object({
-  links: Yup.array()
-    .of(
-      Yup.object({
-        url: Yup.string()
-          .url("Введите корректную ссылку")
-          .required("Ссылка не может быть пустой"),
-      }),
-    )
-    .required(),
+export const AccountLinksSchema = yup.object({
+  links: yup.array().of(
+    yup.object({
+      id: yup.number().optional(),
+      title: yup.string().required("Введите название"),
+      url: yup.string().url("Некорректная ссылка").required("Введите ссылку"),
+    }),
+  ),
 });
 
-export type AccountLinksFormValues = Yup.InferType<typeof AccountLinksSchema>;
+export type AccountLinksFormValues = yup.InferType<typeof AccountLinksSchema>;

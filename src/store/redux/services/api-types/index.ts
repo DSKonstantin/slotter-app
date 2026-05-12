@@ -143,3 +143,10 @@ export type {
   MarkNotificationReadResponse,
   MarkAllNotificationsReadResponse,
 } from "./notification";
+export type {
+  UserLink,
+  UserLinksResponse,
+  UserLinkResponse,
+  CreateUserLinkPayload,
+  UpdateUserLinkPayload,
+} from "./userLink";
