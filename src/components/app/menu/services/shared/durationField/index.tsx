@@ -13,7 +13,7 @@ type DurationFieldProps = {
   customDurationTitle?: string;
 };
 
-const defaultPresets: (number | string)[] = [20, 30, 60, 90];
+const defaultPresets: (number | string)[] = [0, 30, 60, 90];
 
 const DurationField = ({
   name = "duration",
