@@ -100,16 +100,16 @@ const AppServices = () => {
 
   const createServiceLink = useCallback(() => {
     setCreateModalVisible(false);
-    router.push(Routers.app.menu.services.create());
+    router.push(Routers.app.services.create());
   }, []);
 
   const createAdditionalServiceLink = useCallback(() => {
     setCreateModalVisible(false);
-    router.push(Routers.app.menu.services.additionalServices.create);
+    router.push(Routers.app.services.additionalServices.create);
   }, []);
 
   const createCategories = useCallback(() => {
-    router.push(Routers.app.menu.services.categories);
+    router.push(Routers.app.services.categories);
   }, []);
 
   const createService = useCallback(() => {

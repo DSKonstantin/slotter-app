@@ -75,13 +75,13 @@ const ServiceList = ({
 
   const handleServicePress = useCallback(
     (serviceId: number, categoryId: number) => {
-      router.push(Routers.app.menu.services.edit(serviceId, categoryId));
+      router.push(Routers.app.services.edit(serviceId, categoryId));
     },
     [],
   );
 
   const handleCreateServicePress = useCallback((categoryId: number) => {
-    router.push(Routers.app.menu.services.create(categoryId));
+    router.push(Routers.app.services.create(categoryId));
   }, []);
 
   const handleServicesReorder = useCallback(

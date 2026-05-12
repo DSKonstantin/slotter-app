@@ -54,13 +54,13 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { Service } from "@/src/store/redux/services/api-types";
 
-type Props = { roomId: string; backTo?: string };
+type Props = { roomId: string };
 
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const EMPTY_MESSAGES: ChatIMessage[] = [];
 
-export default function ChatRoom({ roomId, backTo }: Props) {
+export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
   const { bottom: bottomInset } = useSafeAreaInsets();
 
@@ -434,7 +434,6 @@ export default function ChatRoom({ roomId, backTo }: Props) {
     <>
       <ScreenWithToolbar
         title={titleNode ?? "Чат"}
-        onBack={backTo ? () => router.push(backTo as never) : undefined}
         rightButton={
           <IconButton
             icon={

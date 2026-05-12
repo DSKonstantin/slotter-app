@@ -76,20 +76,18 @@ const CalendarHome = () => {
       >
         {(insets) => (
           <View
-            className="flex-1"
+            className="flex-1 gap-4"
             style={{
               marginTop: insets.topInset,
             }}
           >
-            <View className="flex-1 gap-4">
-              <SegmentedControl
-                className="mx-screen"
-                value={mode}
-                onChange={handleModeChange}
-                options={CALENDAR_VIEW_OPTIONS}
-              />
-              {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
-            </View>
+            <SegmentedControl
+              className="mx-screen"
+              value={mode}
+              onChange={handleModeChange}
+              options={CALENDAR_VIEW_OPTIONS}
+            />
+            {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
           </View>
         )}
       </ScreenWithToolbar>

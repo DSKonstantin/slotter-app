@@ -153,7 +153,7 @@ const FinancesScreen = () => {
 
           <Card
             title="Доходы по периоду"
-            onPress={() => router.push(Routers.app.menu.finances.income)}
+            onPress={() => router.push(Routers.app.finances.income)}
             titleProps={{ style: { color: colors.primary.blue[500] } }}
             subtitle="Динамика по дням/месяцам"
             left={

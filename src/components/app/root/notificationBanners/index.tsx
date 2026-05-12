@@ -72,7 +72,7 @@ const NotificationBanners = () => {
 
   if (banners.length === 0) return null;
 
-  const handleOpenList = () => router.push(Routers.app.menu.notifications);
+  const handleOpenList = () => router.push(Routers.app.history.root);
 
   return (
     <View className="gap-2">

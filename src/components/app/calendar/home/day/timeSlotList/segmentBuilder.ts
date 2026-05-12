@@ -51,8 +51,6 @@ export type CreateSegmentsResult = {
   effectiveStart: number;
 };
 
-
-
 // ── Helpers ──────────────────────────────────────────────────────────
 
 export const getSlotMinHeight = (slot: Appointment) =>

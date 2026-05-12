@@ -14,8 +14,6 @@ import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 import { usePathname } from "expo-router";
 import { CommonActions } from "@react-navigation/native";
 
-const HIDDEN_TAB_BAR_ROUTES = ["/account/preview"];
-
 type Tab = (typeof TABS)[number];
 
 type TabItemProps = {
@@ -90,13 +88,6 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
     dispatch(setTabMenuOpen(!isMenuOpen));
   }, [dispatch, isMenuOpen]);
 
-  if (
-    HIDDEN_TAB_BAR_ROUTES.some((route) => pathname.endsWith(route)) ||
-    /^\/chat\/[^/]+/.test(pathname)
-  ) {
-    return null;
-  }
-
   return (
     <View
       style={[
@@ -108,10 +99,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         },
       ]}
     >
-      <FadeOverlay
-        position="bottom"
-        height={TAB_BAR_HEIGHT + insets.bottom}
-      />
+      <FadeOverlay position="bottom" height={TAB_BAR_HEIGHT + insets.bottom} />
       <View className="flex-row items-center justify-between px-screen bg-transparent">
         <View
           className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1 overflow-hidden"

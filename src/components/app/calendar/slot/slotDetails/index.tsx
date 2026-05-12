@@ -80,15 +80,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         userId: auth.userId,
         customerId: slot.customer.id,
       }).unwrap();
-      const chatRoute = Routers.app.chat.room(room.id);
-      const slotRoute = Routers.app.calendar.slot(slotId);
-      router.push({
-        pathname: chatRoute.pathname,
-        params: {
-          ...chatRoute.params,
-          backTo: slotRoute.pathname.replace("[id]", slotId),
-        },
-      });
+      router.push(Routers.app.chat.room(room.id));
     } catch {
       toast.error("Не удалось открыть чат");
     }
@@ -243,7 +235,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     onPress={() =>
                       slot.customer &&
                       router.push(
-                        Routers.app.clients.detail(
+                        Routers.app.calendar.clientDetail(
                           slot.customer.id,
                           "customer",
                         ),

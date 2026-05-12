@@ -21,29 +21,29 @@ const stripRouteGroups = (route: string) => route.replace(/\/\([^)]+\)/g, "");
 
 const MENU_ITEMS: MenuItem[] = [
   {
-    label: "График",
-    icon: "Date_today",
-    route: Routers.app.menu.schedule,
+    label: "Журнал событий",
+    icon: "Bell_fill",
+    route: Routers.app.history.root,
   },
   {
-    label: "Уведомления",
-    icon: "Bell_fill",
-    route: Routers.app.menu.notifications,
+    label: "График",
+    icon: "Date_today",
+    route: Routers.app.schedule,
   },
   {
     label: "Финансы",
     icon: "Wallet_fill",
-    route: Routers.app.menu.finances.root,
+    route: Routers.app.finances.root,
   },
   {
     label: "Услуги",
     icon: "Desk_alt_fill",
-    route: Routers.app.menu.services.root,
+    route: Routers.app.services.root,
   },
   {
     label: "Аккаунт",
     icon: "User_circle",
-    route: Routers.app.menu.account.root,
+    route: Routers.app.account.root,
   },
   { label: "Акции", icon: "Percent", disabled: true },
 ];

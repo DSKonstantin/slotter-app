@@ -112,7 +112,7 @@ const CreateAdditionalService = () => {
           buttonClassName="h-[24px] p-0 rounded-none gap-0"
           textClassName="text-[13px] text-neutral-500"
           onPress={() => {
-            router.push(Routers.app.menu.services.additionalServices.root);
+            router.push(Routers.app.services.additionalServices.root);
           }}
           rightIcon={
             <StSvg

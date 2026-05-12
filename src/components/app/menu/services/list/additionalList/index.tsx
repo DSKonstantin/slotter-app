@@ -132,7 +132,7 @@ const AdditionalList = ({
   );
 
   const handleServicePress = useCallback((serviceId: number) => {
-    router.push(Routers.app.menu.services.additionalServices.edit(serviceId));
+    router.push(Routers.app.services.additionalServices.edit(serviceId));
   }, []);
 
   if (!auth) return null;
