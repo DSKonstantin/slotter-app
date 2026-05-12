@@ -1,5 +1,5 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useEffect } from "react";
+import { Alert, RefreshControl, View } from "react-native";
 import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -8,17 +8,55 @@ import {
 } from "@/src/validation/schemas/accountLinks.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, IconButton, StSvg } from "@/src/components/ui";
+import { Button, Divider, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
+import {
+  useCreateUserLinkMutation,
+  useDeleteUserLinkMutation,
+  useGetUserLinksQuery,
+  useUpdateUserLinkMutation,
+} from "@/src/store/redux/services/api/userLinksApi";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { skipToken } from "@reduxjs/toolkit/query";
+import map from "lodash/map";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import LinksSkeleton from "@/src/components/app/menu/account/links/LinksSkeleton";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import { router } from "expo-router";
 
 const Links = () => {
+  const auth = useRequiredAuth();
+
+  const {
+    data: userLinks = [],
+    isLoading,
+    error,
+    refetch,
+  } = useGetUserLinksQuery(auth?.userId ?? skipToken);
+
+  const [createUserLink, { isLoading: isCreating }] =
+    useCreateUserLinkMutation();
+  const [updateUserLink, { isLoading: isUpdating }] =
+    useUpdateUserLinkMutation();
+
+  const [deleteUserLink, { isLoading: isDeleting }] =
+    useDeleteUserLinkMutation();
+
   const methods = useForm<AccountLinksFormValues>({
     resolver: yupResolver(AccountLinksSchema),
     defaultValues: {
-      links: [{ url: "" }],
+      links: [
+        {
+          id: undefined,
+          title: "",
+          url: "",
+        },
+      ],
     },
   });
 
@@ -27,13 +65,144 @@ const Links = () => {
     name: "links",
   });
 
-  const watchedLinks = methods.watch("links");
+  const watchedLinks = methods.watch("links") ?? [];
+  const dirtyLinks = methods.formState.dirtyFields.links ?? [];
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
-  const onSubmit = (data: AccountLinksFormValues) => {
-    // TODO: save links
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+    } catch {
+      toast.error("Не удалось обновить ссылки");
+    }
   };
+
+  const { refreshing, onRefresh } = useRefresh(handleRefresh);
+
+  const handleRemove = (index: number) => {
+    if (!auth) return;
+
+    const link = methods.getValues(`links.${index}`);
+
+    if (!link) return;
+
+    Alert.alert(
+      "Удалить ссылку?",
+      "Это действие нельзя отменить",
+      [
+        {
+          text: "Отмена",
+          style: "cancel",
+        },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (link.id) {
+                await deleteUserLink({
+                  userId: auth.userId,
+                  id: link.id,
+                }).unwrap();
+              }
+
+              if (fields.length === 1) {
+                methods.setValue(`links.${index}`, {
+                  id: undefined,
+                  title: "",
+                  url: "",
+                });
+
+                return;
+              }
+              release();
+              remove(index);
+            } catch (error) {
+              toast.error(
+                getApiErrorMessage(error, "Не удалось удалить ссылку"),
+              );
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const onSubmit = async (data: AccountLinksFormValues) => {
+    if (!auth) return;
+
+    try {
+      await Promise.all(
+        map(data.links, async (link, index) => {
+          const isDirty = dirtyLinks[index];
+
+          if (link.id && !isDirty) {
+            return;
+          }
+
+          if (link.id) {
+            return updateUserLink({
+              userId: auth.userId,
+
+              id: link.id,
+
+              data: {
+                name: link.title,
+                link: link.url,
+              },
+            });
+          }
+
+          return createUserLink({
+            userId: auth.userId,
+
+            data: {
+              name: link.title,
+              link: link.url,
+            },
+          });
+        }),
+      );
+      release();
+      router.back();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
+    }
+  };
+
+  useEffect(() => {
+    if (!userLinks.length) return;
+
+    methods.reset({
+      links: userLinks.map((link) => ({
+        id: link.id,
+        title: link.name,
+        url: link.link,
+      })),
+    });
+  }, [methods, userLinks]);
+
+  if (!auth) return null;
+
+  if (isLoading) {
+    return (
+      <ScreenWithToolbar title="Ссылки">
+        {({ topInset }) => <LinksSkeleton topInset={topInset} />}
+      </ScreenWithToolbar>
+    );
+  }
+
+  if (error) {
+    return (
+      <ScreenWithToolbar title="Ссылки">
+        {() => (
+          <ErrorScreen title="Не удалось загрузить ссылки" onRetry={refetch} />
+        )}
+      </ScreenWithToolbar>
+    );
+  }
 
   return (
     <FormProvider {...methods}>
@@ -41,6 +210,9 @@ const Links = () => {
         {({ topInset, bottomInset }) => (
           <>
             <KeyboardAwareScrollView
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
               showsVerticalScrollIndicator={false}
               bottomOffset={BOTTOM_OFFSET_SMALL}
               contentContainerStyle={{
@@ -48,13 +220,18 @@ const Links = () => {
                 paddingBottom: 16,
               }}
             >
-              <View className="px-screen gap-1">
+              <View className="px-screen gap-2">
                 {fields.map((field, index) => (
-                  <View key={field.id}>
+                  <View key={field.id} className="gap-1">
                     <RhfTextField
                       label={`Ссылка №${index + 1}`}
+                      name={`links.${index}.title`}
+                      placeholder="Название ссылки"
+                    />
+
+                    <RhfTextField
                       name={`links.${index}.url`}
-                      placeholder="https://"
+                      placeholder="https://вашассылка.com"
                       autoCapitalize="none"
                       keyboardType="url"
                       startAdornment={
@@ -68,11 +245,9 @@ const Links = () => {
                         watchedLinks[index]?.url ? (
                           <IconButton
                             size="xs"
-                            onPress={() =>
-                              fields.length > 1
-                                ? remove(index)
-                                : methods.setValue(`links.${index}.url`, "")
-                            }
+                            disabled={isDeleting}
+                            loading={isDeleting}
+                            onPress={() => handleRemove(index)}
                             icon={
                               <StSvg
                                 name="close_ring_fill_light"
@@ -84,13 +259,20 @@ const Links = () => {
                         ) : null
                       }
                     />
+
+                    <Divider />
                   </View>
                 ))}
 
                 <Button
                   variant="clear"
                   title="Добавить"
-                  onPress={() => append({ url: "" })}
+                  onPress={() =>
+                    append({
+                      title: "",
+                      url: "",
+                    })
+                  }
                   rightIcon={
                     <StSvg
                       name="Add_ring_fill"
@@ -108,6 +290,8 @@ const Links = () => {
             >
               <Button
                 title="Сохранить изменения"
+                loading={isCreating || isUpdating}
+                disabled={isCreating || isUpdating}
                 onPress={methods.handleSubmit(onSubmit)}
                 rightIcon={
                   <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />

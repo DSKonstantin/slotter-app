@@ -24,10 +24,19 @@ type NavItem = {
   title: string;
   subtitle?: string;
   icon: string;
+  rightIcon?: string;
   route: () => void;
 };
 
 const NAV_GROUPS: NavItem[][] = [
+  [
+    {
+      title: "Оплата",
+      icon: "Credit-card_fill",
+      rightIcon: "External",
+      route: () => {},
+    },
+  ],
   [
     {
       title: "О специалисте",
@@ -36,9 +45,14 @@ const NAV_GROUPS: NavItem[][] = [
     },
     {
       title: "Галерея",
-      subtitle: "( фото на сайт )",
+      subtitle: "(фото на свою страницу)",
       icon: "Camera",
       route: () => router.push(Routers.app.account.gallery),
+    },
+    {
+      title: "Отзывы",
+      icon: "Chat_alt_3_fill",
+      route: () => {},
     },
     {
       title: "Ссылки",
@@ -48,18 +62,27 @@ const NAV_GROUPS: NavItem[][] = [
   ],
   [
     {
-      title: "Просмотр страницы",
-      icon: "Eye_fill",
-      route: () => router.push(Routers.app.account.preview),
-    },
-  ],
-  [
-    {
       title: "Бронирование",
       icon: "Setting_alt_fill",
       route: () => router.push(Routers.app.account.booking),
     },
   ],
+  [
+    {
+      title: "Уведомления клиентам",
+      icon: "Message_fill",
+      rightIcon: "External",
+      route: () => {},
+    },
+  ],
+  [
+    {
+      title: "Просмотр страницы",
+      icon: "Eye_fill",
+      route: () => router.push(Routers.app.account.preview),
+    },
+  ],
+
   [
     {
       title: "Уведомления",
@@ -158,7 +181,9 @@ const AccountScreen = () => {
                         className="border-0 rounded-none"
                         right={
                           <StSvg
-                            name="Expand_right"
+                            name={
+                              item.rightIcon ? item.rightIcon : "Expand_right"
+                            }
                             size={20}
                             color={colors.neutral[400]}
                           />
