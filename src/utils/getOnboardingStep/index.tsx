@@ -29,12 +29,10 @@ const getRedirectPath = (user: User) => {
     return Routers.onboarding.personalInformation;
   }
 
-  if (user.onboarding_step === "completed") {
-    return Routers.app.root;
-  }
-
-  const step = user.onboarding_step as OnboardingStepKey;
-  return ONBOARDING_STEPS[step] ?? Routers.onboarding.personalInformation;
+  return (
+    ONBOARDING_STEPS[user.onboarding_step as OnboardingStepKey] ??
+    Routers.onboarding.personalInformation
+  );
 };
 
 export default getRedirectPath;

@@ -20,7 +20,7 @@ export const Routers = {
     link: "/(onboarding)/link",
   },
   app: {
-    root: "/(app)",
+    root: "/(app)/(tabs)",
     calendar: {
       root: (date?: string, mode?: string) =>
         date
