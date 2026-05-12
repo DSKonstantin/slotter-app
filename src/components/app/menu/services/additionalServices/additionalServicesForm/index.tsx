@@ -57,7 +57,7 @@ const AdditionalServicesForm = ({
           <DurationField
             name="duration"
             placeholder="60"
-            presets={[20, 30, 60, 90]}
+            presets={[0, 30, 60, 90]}
           />
         </View>
       </KeyboardAwareScrollView>
