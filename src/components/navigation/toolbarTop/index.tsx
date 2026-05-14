@@ -11,23 +11,26 @@ import {
 import { colors } from "@/src/styles/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
-import { useRouter } from "expo-router";
+import { Href } from "expo-router";
 import { ToolbarContext } from "@/src/components/shared/layout/toolbarContext";
+import { useSafeBack } from "@/src/hooks/useSafeBack";
 
 type ToolbarTopProps = {
   title: string | React.ReactNode;
   showBack?: boolean;
   rightButton?: React.ReactNode;
+  fallbackHref?: Href;
 };
 
 const ToolbarTop = ({
   title,
   showBack = true,
   rightButton,
+  fallbackHref,
 }: ToolbarTopProps) => {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const toolbar = useContext(ToolbarContext);
+  const safeBack = useSafeBack(fallbackHref);
 
   return (
     <View
@@ -104,7 +107,7 @@ const ToolbarTop = ({
                     color={colors.neutral[900]}
                   />
                 }
-                onPress={() => router.back()}
+                onPress={safeBack}
               />
             ) : (
               <View className="w-[48px]" />

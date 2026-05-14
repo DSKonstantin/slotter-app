@@ -8,6 +8,7 @@ import {
   ToolbarContextValue,
   ToolbarProvider,
 } from "@/src/components/shared/layout/toolbarContext";
+import { Href } from "expo-router";
 
 export type RightButtonProp =
   | ReactNode
@@ -16,6 +17,8 @@ export type RightButtonProp =
 type ScreenWithToolbarProps = {
   title: string | React.ReactNode;
   rightButton?: RightButtonProp;
+  fallbackHref?: Href;
+  showBack?: boolean;
   children:
     | ReactNode
     | ((ctx: { topInset: number; bottomInset: number }) => ReactNode);
@@ -32,6 +35,8 @@ function RightButtonSlot({ rightButton }: { rightButton?: RightButtonProp }) {
 const ScreenWithToolbar = ({
   title,
   rightButton,
+  fallbackHref,
+  showBack = true,
   children,
   className = "flex-1",
   style,
@@ -51,6 +56,8 @@ const ScreenWithToolbar = ({
       <View className="relative flex-1">
         <ToolbarTop
           title={title}
+          showBack={showBack}
+          fallbackHref={fallbackHref}
           rightButton={
             rightButton ? (
               <RightButtonSlot rightButton={rightButton} />

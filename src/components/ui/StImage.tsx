@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Image, type ImageProps, type ImageSource } from "expo-image";
 
 type StImageProps = Omit<ImageProps, "source" | "placeholder"> & {
@@ -17,9 +17,17 @@ export function StImage({
 }: StImageProps) {
   const [error, setError] = useState(false);
 
+  const imageSource = useMemo(() => {
+    if (!uri || error) {
+      return fallback;
+    }
+
+    return uri;
+  }, [uri, error, fallback]);
+
   return (
     <Image
-      source={error ? fallback : uri}
+      source={imageSource}
       placeholder={blurhash ? { blurhash } : undefined}
       onError={() => setError(true)}
       contentFit="cover"

@@ -56,7 +56,10 @@ export function Item({
           {title}
         </Text>
         {subtitle && (
-          <Text className="font-inter-regular text-body text-neutral-400">
+          <Text
+            numberOfLines={1}
+            className="font-inter-regular text-body text-neutral-400"
+          >
             {subtitle}
           </Text>
         )}

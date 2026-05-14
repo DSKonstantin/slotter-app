@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Gallery } from "react-native-zoom-toolkit";
 import ZoomableImage from "./ZoomableImage";
 import ImageViewerHeader from "./ImageViewerHeader";
+import { scheduleOnRN } from "react-native-worklets";
 
 export type ImageItem = { id: string; uri: string };
 
@@ -40,6 +41,21 @@ const ImageViewer = ({
     lastIndex >= 0 ? Math.min(Math.max(currentIndex, 0), lastIndex) : -1;
   const current = safeIndex >= 0 ? images[safeIndex] : null;
 
+  const handleIndexChange = useCallback(
+    (index: number) => {
+      setCurrentIndex(index);
+      onIndexChange?.(index);
+    },
+    [onIndexChange],
+  );
+
+  const keyExtractor = useCallback((item: ImageItem) => item.id, []);
+
+  const renderItem = useCallback(
+    (item: ImageItem) => <ZoomableImage uri={item.uri} />,
+    [],
+  );
+
   // Auto-close when the source set empties; clamp the index when it shrinks.
   useEffect(() => {
     if (images.length === 0) {
@@ -51,19 +67,6 @@ const ImageViewer = ({
       onIndexChange?.(safeIndex);
     }
   }, [currentIndex, images.length, onClose, onIndexChange, safeIndex]);
-
-  const handleIndexChange = useCallback(
-    (index: number) => {
-      setCurrentIndex(index);
-      onIndexChange?.(index);
-    },
-    [onIndexChange],
-  );
-
-  const renderItem = useCallback(
-    (item: ImageItem) => <ZoomableImage uri={item.uri} />,
-    [],
-  );
 
   if (!current) return null;
 
@@ -97,8 +100,16 @@ const ImageViewer = ({
           {headerNode}
           <Gallery
             data={images}
-            keyExtractor={(item) => item.id}
+            keyExtractor={keyExtractor}
             initialIndex={safeIndex}
+            onVerticalPull={(translateY, released) => {
+              "worklet";
+
+              if (released && Math.abs(translateY) > 120) {
+                scheduleOnRN(onClose);
+              }
+            }}
+            allowPinchPanning
             renderItem={renderItem}
             onIndexChange={handleIndexChange}
           />

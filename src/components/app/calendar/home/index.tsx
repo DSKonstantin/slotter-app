@@ -54,6 +54,7 @@ const CalendarHome = () => {
   return (
     <>
       <ScreenWithToolbar
+        showBack={false}
         title={
           mode === "day" && selectedDay
             ? capitalize(formatMonthYear(parseISO(selectedDay)))

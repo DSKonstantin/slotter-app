@@ -33,6 +33,7 @@ export default function ChatRoomsScreen() {
     <>
       <ScreenWithToolbar
         title="Чаты"
+        showBack={false}
         rightButton={
           <IconButton
             icon={

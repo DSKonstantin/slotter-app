@@ -25,7 +25,7 @@ import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
 import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
 import ScheduleSkeleton from "./ScheduleSkeleton";
 
-const CalendarSchedule = () => {
+const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
   const { date } = useLocalSearchParams<{ date?: string }>();
   const [current, setCurrent] = useState(() => {
     if (!date) return new Date();
@@ -158,6 +158,7 @@ const CalendarSchedule = () => {
     <FormProvider {...methods}>
       <ScreenWithToolbar
         title="График"
+        showBack={showBack}
         rightButton={
           <IconButton
             icon={

@@ -11,7 +11,6 @@ import { colors } from "@/src/styles/colors";
 import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
-import { usePathname } from "expo-router";
 import { CommonActions } from "@react-navigation/native";
 
 type Tab = (typeof TABS)[number];
@@ -61,7 +60,6 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
   const dispatch = useAppDispatch();
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const activeRoute = state.routes[state.index]?.name;
-  const pathname = usePathname();
 
   const handleTabPress = useCallback(
     (key: string, isActive: boolean, isAtRoot: boolean) => {

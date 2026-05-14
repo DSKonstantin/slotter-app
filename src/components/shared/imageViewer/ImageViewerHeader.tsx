@@ -19,7 +19,9 @@ const ImageViewerHeader = ({ currentIndex, total, onClose }: Props) => {
     >
       <IconButton
         onPress={onClose}
-        icon={<StSvg name="Close_round" size={24} color={colors.neutral[900]} />}
+        icon={
+          <StSvg name="Close_round" size={24} color={colors.neutral[900]} />
+        }
       />
       <Typography className="text-neutral-0 text-body">
         {currentIndex + 1} из {total}

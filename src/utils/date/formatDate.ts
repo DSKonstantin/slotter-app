@@ -35,3 +35,11 @@ export const subMonths = (date: Date, months: number): Date => {
   d.setMonth(d.getMonth() - months);
   return d;
 };
+
+export const isCurrentDay = (date?: string | null) => {
+  if (!date) {
+    return false;
+  }
+
+  return isToday(new Date(date));
+};

@@ -189,10 +189,7 @@ const ClientsStatistics = () => {
               </>
             )}
 
-            <Button
-              title="Выбрать клиента для просмотра истории"
-              onPress={() => router.back()}
-            />
+            <Button title="Перейти к клиентам" onPress={() => router.back()} />
           </ScrollView>
 
           <PeriodModal

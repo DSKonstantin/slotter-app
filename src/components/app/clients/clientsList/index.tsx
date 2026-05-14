@@ -263,6 +263,7 @@ const ClientsList = () => {
   return (
     <ScreenWithToolbar
       title="Клиенты"
+      showBack={false}
       rightButton={(toolbar) => <ClientsToolbarButton toolbar={toolbar} />}
     >
       {({ topInset, bottomInset }) => (
