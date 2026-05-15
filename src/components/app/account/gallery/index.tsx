@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {memo, useCallback, useMemo, useState} from "react";
 import {
   Alert,
   Pressable,
@@ -85,15 +85,25 @@ type GalleryItemProps = {
   onOpen: (id: string) => void;
 };
 
-const GalleryItem = React.memo(
-  ({ item, index, isEditMode, isSelected, onToggle, onOpen }: GalleryItemProps) => (
+const GalleryItem = memo(
+  ({
+    item,
+    index,
+    isEditMode,
+    isSelected,
+    onToggle,
+    onOpen,
+  }: GalleryItemProps) => (
     <View style={[styles.item, index % 2 === 0 && styles.itemLeftColumn]}>
       <Pressable
         className="active:opacity-70"
         onPress={() => (isEditMode ? onToggle(item.id) : onOpen(item.id))}
         style={StyleSheet.absoluteFill}
       >
-        <StImage uri={item.thumbnailUrl} style={{ width: "100%", height: "100%" }} />
+        <StImage
+          uri={item.thumbnailUrl}
+          style={{ width: "100%", height: "100%" }}
+        />
         {index === 0 && !isEditMode && (
           <View className="absolute top-1.5 left-1.5">
             <Badge title="Главное фото" variant="accent" size="sm" />
@@ -148,13 +158,17 @@ const Gallery = () => {
     [galleryResponse?.gallery_photos],
   );
 
-  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(null);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
+    null,
+  );
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
   const isEditMode = selectedIds !== null;
   const viewerIndex =
-    viewerPhotoId !== null ? photos.findIndex((p) => p.id === viewerPhotoId) : -1;
+    viewerPhotoId !== null
+      ? photos.findIndex((p) => p.id === viewerPhotoId)
+      : -1;
 
   const toggleEditMode = () => {
     setSelectedIds((prev) => (prev === null ? new Set() : null));
@@ -212,7 +226,11 @@ const Gallery = () => {
         userId,
         data: {
           gallery_photos: pending.map((photo) => ({
-            photo: { uri: photo.uri, type: photo.mimeType, name: photo.fileName } as never,
+            photo: {
+              uri: photo.uri,
+              type: photo.mimeType,
+              name: photo.fileName,
+            } as never,
             ...(photo.cropData && {
               crop_data: {
                 x: photo.cropData.originX,

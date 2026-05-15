@@ -19,37 +19,43 @@ type TabItemProps = {
   tab: Tab;
   isActive: boolean;
   isAtRoot: boolean;
+  extendActive?: boolean;
   onPress: (key: string, isActive: boolean, isAtRoot: boolean) => void;
 };
 
-const TabItem = memo(({ tab, isActive, isAtRoot, onPress }: TabItemProps) => {
-  const handlePress = useCallback(() => {
-    onPress(tab.key, isActive, isAtRoot);
-  }, [onPress, tab.key, isActive, isAtRoot]);
+const TabItem = memo(
+  ({ tab, isActive, isAtRoot, extendActive, onPress }: TabItemProps) => {
+    const handlePress = useCallback(() => {
+      onPress(tab.key, isActive, isAtRoot);
+    }, [onPress, tab.key, isActive, isAtRoot]);
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      className={`flex-1 p-1 items-center justify-center
-        h-[58px] gap-0.5
-        rounded-full active:opacity-70 ${isActive ? "bg-neutral-100" : "bg-transparent"}`}
-    >
-      <StSvg
-        name={tab.icon as string}
-        size={32}
-        color={isActive ? colors.neutral[900] : colors.neutral[500]}
-      />
-
-      <Typography
-        weight={isActive ? "semibold" : "medium"}
-        className="text-[10px] leading-none text-center"
-        style={isActive ? styles.labelActive : styles.labelInactive}
+    return (
+      <Pressable
+        onPress={handlePress}
+        className="flex-1 items-center justify-center h-[46px] rounded-full active:opacity-70"
       >
-        {tab.label}
-      </Typography>
-    </Pressable>
-  );
-});
+        {isActive && (
+          <View
+            className={`absolute inset-y-0 rounded-full bg-neutral-100 ${extendActive ? "-inset-x-1" : "inset-x-0"}`}
+          />
+        )}
+        <StSvg
+          name={tab.icon as string}
+          size={24}
+          color={isActive ? colors.neutral[900] : colors.neutral[500]}
+        />
+
+        <Typography
+          weight="semibold"
+          className="text-[10px] leading-none text-center min-w-[64px]"
+          style={isActive ? styles.labelActive : styles.labelInactive}
+        >
+          {tab.label}
+        </Typography>
+      </Pressable>
+    );
+  },
+);
 TabItem.displayName = "TabItem";
 
 const StTabBar: React.FC<BottomTabBarProps> = ({
@@ -91,16 +97,21 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
       style={[
         styles.container,
         {
-          height: TAB_BAR_HEIGHT + insets.bottom,
           paddingLeft: insets.left,
           paddingRight: insets.right,
+          paddingBottom: insets.bottom,
         },
       ]}
     >
       <FadeOverlay position="bottom" height={TAB_BAR_HEIGHT + insets.bottom} />
-      <View className="flex-row items-center justify-between px-screen bg-transparent">
+      <View
+        className="flex-row items-center justify-between px-screen bg-transparent"
+        style={{
+          height: TAB_BAR_HEIGHT,
+        }}
+      >
         <View
-          className="flex-1 mr-3 bg-background-surface rounded-full flex-row items-center justify-between p-1 overflow-hidden"
+          className="flex-1 mr-1.5 bg-background-surface rounded-full flex-row items-center justify-between overflow-hidden border-4 border-background-surface"
           style={styles.topShadow}
         >
           {TABS.map((tab) => {
@@ -114,6 +125,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
                 tab={tab}
                 isActive={activeRoute === tab.key}
                 isAtRoot={isAtRoot}
+                extendActive={tab.key === "calendar"}
                 onPress={handleTabPress}
               />
             );
@@ -122,7 +134,7 @@ const StTabBar: React.FC<BottomTabBarProps> = ({
         <IconButton
           size="lg"
           style={styles.topShadow}
-          icon={<StSvg name="Menu" size={36} color={colors.neutral[900]} />}
+          icon={<StSvg name="Menu" size={24} color={colors.neutral[900]} />}
           onPress={handleMenuPress}
           buttonClassName={isMenuOpen ? "opacity-0" : undefined}
           disabled={isMenuOpen}

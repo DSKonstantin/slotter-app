@@ -5,6 +5,7 @@ import { Gallery } from "react-native-zoom-toolkit";
 import { scheduleOnRN } from "react-native-worklets";
 import ZoomableImage from "@/src/components/shared/imageViewer/ZoomableImage";
 import ImageViewerHeader from "@/src/components/shared/imageViewer/ImageViewerHeader";
+import { BottomGradientBar } from "@/src/components/shared/imageViewer/BottomGradientBar";
 import { CropView } from "../cropView";
 import type { CropData, GalleryPhoto } from "../types";
 import { ViewerToolbar } from "./ViewerToolbar";
@@ -101,14 +102,16 @@ export function GalleryViewer({
               onIndexChange={setCurrentIndex}
             />
             {current && (
-              <ViewerToolbar
-                onSetCover={() => {
-                  onSetCover(current.id);
-                  onClose();
-                }}
-                onEdit={() => setCropVisible(true)}
-                onDelete={() => onDelete(current.id)}
-              />
+              <BottomGradientBar>
+                <ViewerToolbar
+                  onSetCover={() => {
+                    onSetCover(current.id);
+                    onClose();
+                  }}
+                  onEdit={() => setCropVisible(true)}
+                  onDelete={() => onDelete(current.id)}
+                />
+              </BottomGradientBar>
             )}
           </View>
         )}

@@ -1,13 +1,7 @@
 import React from "react";
 import { View, Alert } from "react-native";
-import {
-  FloatingFooter,
-  IconButton,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 type ViewerToolbarProps = {
   onSetCover: () => void;
@@ -28,7 +22,7 @@ export function ViewerToolbar({
   };
 
   return (
-    <FloatingFooter className="flex-row" offset={16}>
+    <View className="flex-row">
       <View className="flex-1 items-center gap-2 basis-[80px]">
         <IconButton
           icon={
@@ -60,6 +54,6 @@ export function ViewerToolbar({
         />
         <Typography className="text-accent-red-500 text-xs">Удалить</Typography>
       </View>
-    </FloatingFooter>
+    </View>
   );
 }

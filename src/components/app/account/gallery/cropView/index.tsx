@@ -1,9 +1,10 @@
 import React, { useRef } from "react";
 import { View, Image, ActivityIndicator } from "react-native";
 import { CropZoom, type CropZoomRefType } from "react-native-zoom-toolkit";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { TopGradientBar } from "@/src/components/shared/imageViewer/TopGradientBar";
+import { BottomGradientBar } from "@/src/components/shared/imageViewer/BottomGradientBar";
 import type { CropData } from "../types";
 import { CropOverlay } from "./CropOverlay";
 import { CROP_SIZE } from "./constants";
@@ -22,7 +23,6 @@ export function CropView({
   onDone,
   onCancel,
 }: CropViewProps) {
-  const insets = useSafeAreaInsets();
   const cropRef = useRef<CropZoomRefType>(null);
   const { resolution, isLoading } = useResolution(originalUri);
 
@@ -39,17 +39,14 @@ export function CropView({
 
   return (
     <View className="flex-1 bg-black">
-      <View
-        className="absolute left-4 right-4 z-10"
-        style={{ top: insets.top + 8 }}
-      >
+      <TopGradientBar>
         <IconButton
           onPress={onCancel}
           icon={
             <StSvg name="Close_round" size={24} color={colors.neutral[900]} />
           }
         />
-      </View>
+      </TopGradientBar>
 
       {isLoading || !resolution ? (
         <View className="flex-1 items-center justify-center">
@@ -71,10 +68,7 @@ export function CropView({
         </View>
       )}
 
-      <View
-        className="absolute left-4 right-4"
-        style={{ bottom: insets.bottom + 16 }}
-      >
+      <BottomGradientBar>
         <Button
           title="Сохранить"
           variant="secondary"
@@ -82,7 +76,7 @@ export function CropView({
           disabled={isSaving}
           loading={isSaving}
         />
-      </View>
+      </BottomGradientBar>
     </View>
   );
 }

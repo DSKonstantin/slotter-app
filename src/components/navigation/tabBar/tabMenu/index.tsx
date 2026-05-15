@@ -92,7 +92,7 @@ const TabMenu = () => {
     <Pressable
       className="absolute inset-0 bg-black/40 justify-end"
       style={{
-        paddingBottom: bottom + 8,
+        paddingBottom: bottom + 4,
         paddingLeft: leftInset + SCREEN_PADDING,
         paddingRight: rightInset + SCREEN_PADDING,
       }}
@@ -164,7 +164,7 @@ const TabMenu = () => {
         <IconButton
           size="lg"
           icon={
-            <StSvg name="Close_round" size={36} color={colors.neutral[900]} />
+            <StSvg name="Close_round" size={24} color={colors.neutral[900]} />
           }
           onPress={handleClose}
         />

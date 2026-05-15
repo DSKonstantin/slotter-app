@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, FlatList, ActivityIndicator } from "react-native";
+import { View, Pressable, FlatList, ActivityIndicator, useWindowDimensions } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { StModal, StSvg, Typography } from "@/src/components/ui";
@@ -52,6 +52,7 @@ const TagPickerModal = ({
   onClose,
   onSelect,
 }: Props) => {
+  const { height: screenHeight } = useWindowDimensions();
   const [createVisible, setCreateVisible] = useState(false);
 
   const { data, isLoading, isError, refetch } = useGetCustomerTagsQuery(
@@ -96,7 +97,7 @@ const TagPickerModal = ({
             data={tags}
             keyExtractor={(item) => String(item.id)}
             showsVerticalScrollIndicator={false}
-            scrollEnabled={false}
+            style={{ maxHeight: screenHeight * 0.5 }}
             renderItem={({ item }) => (
               <TagRow
                 tag={item}

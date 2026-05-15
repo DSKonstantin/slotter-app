@@ -172,14 +172,12 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
           />
         }
       >
-        {({ topInset }) => (
-          <SafeAreaView
-            edges={["left", "right"]}
-            className="flex-1 px-screen"
-            style={{ paddingTop: topInset }}
-          >
+        {({ topInset, bottomInset }) => (
+          <SafeAreaView edges={["left", "right"]} className="flex-1 px-screen">
             {isLoading ? (
-              <ScheduleSkeleton />
+              <View style={{ paddingTop: topInset, flex: 1 }}>
+                <ScheduleSkeleton />
+              </View>
             ) : isError ? (
               <ErrorScreen
                 title="Не удалось загрузить расписание"
@@ -188,7 +186,11 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
             ) : (
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ flexGrow: 1 }}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  paddingTop: topInset,
+                  paddingBottom: bottomInset + 16,
+                }}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}

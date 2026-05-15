@@ -99,28 +99,8 @@ const FinancesIncomeScreen = () => {
     label: formatPeriodLabel(month),
   }));
 
-  if (isIncomeLoading) {
-    return (
-      <ScreenWithToolbar title="Доходы по периоду">
-        {({ topInset }) => <FinancesIncomeSkeleton topInset={topInset} />}
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (true) {
-    return (
-      <ScreenWithToolbar title="Доходы по периоду">
-        {() => (
-          <ErrorScreen title="Не удалось загрузить доходы" onRetry={refetch} />
-        )}
-      </ScreenWithToolbar>
-    );
-  }
-
   const renderBreakdown = () => {
-    if (isFetching) {
-      return <IncomeBreakdownSkeleton />;
-    }
+    if (isFetching) return <IncomeBreakdownSkeleton />;
     if (!data?.breakdown?.length) {
       return (
         <Typography className="text-body text-neutral-400 text-center py-2">
@@ -138,64 +118,75 @@ const FinancesIncomeScreen = () => {
 
   return (
     <ScreenWithToolbar title="Доходы по периоду">
-      {({ topInset, bottomInset }) => (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: topInset,
-            paddingBottom: bottomInset + 16,
-            paddingHorizontal: SCREEN_PADDING,
-            gap: 20,
-          }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <TrendChartCard
-            title="График доходов по месяцам"
-            data={chartData.length > 0 ? chartData : undefined}
-            periods={PERIODS}
-            onPeriodChange={(p) =>
-              setSelectedPeriod(
-                PERIODS.find((pr) => pr.value === p.value) ?? PERIODS[0],
-              )
+      {({ topInset, bottomInset }) => {
+        if (isIncomeLoading)
+          return <FinancesIncomeSkeleton topInset={topInset} />;
+        if (isIncomeError)
+          return (
+            <ErrorScreen
+              title="Не удалось загрузить доходы"
+              onRetry={refetch}
+            />
+          );
+        return (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingTop: topInset,
+              paddingBottom: bottomInset + 16,
+              paddingHorizontal: SCREEN_PADDING,
+              gap: 20,
+            }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
-          />
+          >
+            <TrendChartCard
+              title="График доходов по месяцам"
+              data={chartData.length > 0 ? chartData : undefined}
+              periods={PERIODS}
+              onPeriodChange={(p) =>
+                setSelectedPeriod(
+                  PERIODS.find((pr) => pr.value === p.value) ?? PERIODS[0],
+                )
+              }
+            />
 
-          <Card
-            title={data ? formatRublesFromCents(data.total_cents) : "—"}
-            subtitle="Итого за период"
-            titleProps={{ style: { fontSize: 20 } }}
-          />
+            <Card
+              title={data ? formatRublesFromCents(data.total_cents) : "—"}
+              subtitle="Итого за период"
+              titleProps={{ style: { fontSize: 20 } }}
+            />
 
-          <Divider />
+            <Divider />
 
-          <SegmentedControl
-            value={groupBy}
-            onChange={(v) => setGroupBy(v as typeof groupBy)}
-            options={INCOME_GROUP_OPTIONS}
-          />
+            <SegmentedControl
+              value={groupBy}
+              onChange={(v) => setGroupBy(v as typeof groupBy)}
+              options={INCOME_GROUP_OPTIONS}
+            />
 
-          <View className="gap-3">{renderBreakdown()}</View>
+            <View className="gap-3">{renderBreakdown()}</View>
 
-          <Divider />
+            <Divider />
 
-          <Card
-            title="+ 54%"
-            titleProps={{ style: { color: colors.primary.green[400] } }}
-            subtitle="Тренд за период"
-            left={
-              <View className="mb-[18px]">
-                <StSvg
-                  name="Line_up"
-                  size={24}
-                  color={colors.primary.green[400]}
-                />
-              </View>
-            }
-          />
-        </ScrollView>
-      )}
+            <Card
+              title="+ 54%"
+              titleProps={{ style: { color: colors.primary.green[400] } }}
+              subtitle="Тренд за период"
+              left={
+                <View className="mb-[18px]">
+                  <StSvg
+                    name="Line_up"
+                    size={24}
+                    color={colors.primary.green[400]}
+                  />
+                </View>
+              }
+            />
+          </ScrollView>
+        );
+      }}
     </ScreenWithToolbar>
   );
 };

@@ -41,15 +41,15 @@ const ToolbarTop = ({
         left: 0,
         right: 0,
         zIndex: 100,
-        paddingTop: insets.top + 8,
-        height: TOOLBAR_HEIGHT + insets.top,
+        paddingTop: insets.top,
         backgroundColor: "transparent",
       }}
     >
-      <FadeOverlay position="top" height={TOOLBAR_HEIGHT + insets.top + 8} />
+      <FadeOverlay position="top" height={TOOLBAR_HEIGHT + insets.top} />
       <View
         className="mx-screen flex-row items-center justify-between gap-2"
         style={{
+          height: TOOLBAR_HEIGHT,
           paddingLeft: insets.left,
           paddingRight: insets.right,
         }}

@@ -27,7 +27,7 @@ const HomeHeader = () => {
   }, []);
 
   return (
-    <View className="flex-row items-center justify-between px-screen py-3">
+    <View className="flex-row items-center justify-between px-screen py-2.5">
       <View className="flex-row items-center gap-3 mr-3">
         <Pressable onPress={handleOpenProfile} className="active:opacity-70">
           <Avatar
