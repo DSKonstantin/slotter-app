@@ -1,7 +1,8 @@
 import React from "react";
+import HistoryScreen from "@/src/components/app/history";
 
 const History = () => {
-  return <></>;
+  return <HistoryScreen />;
 };
 
 export default History;
