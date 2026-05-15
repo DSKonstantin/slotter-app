@@ -521,12 +521,18 @@ export default function ChatRoom({ roomId }: Props) {
                       );
                     }
                     if (widget.kind === "appointment_proposal") {
+                      const serviceName = widget.widgetable?.services?.[0]?.name;
                       return (
                         <ChatAppointmentWidget
                           appointment={widget.widgetable}
                           payload={widget.payload}
                           isOwnMessage={isOwnMessage}
                           onLongPress={() => setMenuMessage(msg)}
+                          masterName={msg.user?.name}
+                          masterAvatar={msg.user?.avatar}
+                          customerName={interlocutor?.name}
+                          customerAvatar={interlocutor?.avatar_url}
+                          serviceName={serviceName}
                         />
                       );
                     }
