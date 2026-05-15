@@ -5,7 +5,10 @@ import { format } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
-import type { Notification } from "@/src/store/redux/services/api-types";
+import type {
+  Notification,
+  AppointmentNotificationSubject,
+} from "@/src/store/redux/services/api-types";
 import { pluralize } from "@/src/utils/text/pluralize";
 
 import BannerCard from "./BannerCard";
@@ -48,7 +51,7 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
     iconName: "Close_round_fill",
     match: (n, today) =>
       n.kind === "appointment_cancelled" &&
-      n.subject?.appointment?.date === today,
+      (n.subject as AppointmentNotificationSubject | null)?.date === today,
     buildTitle: (count) =>
       count === 1 ? "Отмена на сегодня" : `${count} отмены на сегодня`,
     actionLabel: "Открыть",

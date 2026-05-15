@@ -1,5 +1,4 @@
 import type { Pagination } from "./common";
-import type { Appointment } from "./appointment";
 
 export type NotificationKind =
   | "appointment_created"
@@ -9,8 +8,11 @@ export type NotificationKind =
   | "appointment_rescheduled"
   | "appointment_reminder"
   | "appointment_customer_confirmed"
+  | "appointment_customer_accepted"
+  | "appointment_customer_declined"
   | "appointment_reschedule_requested"
-  | "rebook_suggestion";
+  | "rebook_suggestion"
+  | "chat_new_activity";
 
 export type NotificationCancelVariant =
   | "with_reason"
@@ -25,10 +27,47 @@ export interface NotificationPayload {
   cancel_variant?: NotificationCancelVariant;
 }
 
-export interface NotificationSubject {
-  type: "Appointment";
-  appointment: Appointment | null;
+export interface NotificationSubjectCustomer {
+  id: number;
+  name: string;
+  avatar_url: string | null;
 }
+
+export interface NotificationSubjectInterlocutor {
+  id: number;
+  type: string;
+  name: string;
+  avatar_url: string | null;
+}
+
+export interface AppointmentNotificationSubject {
+  id: number;
+  date: string;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  status: string;
+  price_cents: number;
+  price_currency: string;
+  payment_method: string;
+  customer: NotificationSubjectCustomer;
+  cancel_reason: string | null;
+  comment: string | null;
+}
+
+export interface ChatNotificationSubject {
+  id: number;
+  interlocutor: NotificationSubjectInterlocutor;
+  unread_count: number;
+  last_activity_at: string;
+  last_message: string | null;
+  last_read_at: string | null;
+  created_at: string;
+}
+
+export type NotificationSubject =
+  | AppointmentNotificationSubject
+  | ChatNotificationSubject;
 
 export interface Notification {
   id: number;

@@ -11,6 +11,7 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
 import { useGetUpcomingAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview from "@/src/components/app/root/homeOverview";
@@ -26,9 +27,18 @@ const Home = () => {
     auth ? { userId: auth.userId } : skipToken,
   );
 
+  const { refetch: refetchNotifications } = useGetNotificationsQuery({
+    per_count: 50,
+  });
+
   const refetchAll = useCallback(
-    () => Promise.all([refetchSchedule(), refetchAppointments()]),
-    [refetchSchedule, refetchAppointments],
+    () =>
+      Promise.all([
+        refetchSchedule(),
+        refetchAppointments(),
+        refetchNotifications(),
+      ]),
+    [refetchSchedule, refetchAppointments, refetchNotifications],
   );
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);

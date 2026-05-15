@@ -1,293 +1,323 @@
-import React, { useState, useMemo } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import React, { memo, useCallback, useMemo } from "react";
+import { ActivityIndicator, Pressable, SectionList, View } from "react-native";
+import { isToday, isYesterday } from "date-fns";
+import { formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { formatTime } from "@/src/utils/date/formatTime";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 import {
   useGetNotificationsPaginatedInfiniteQuery,
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
 } from "@/src/store/redux/services/api/notificationsApi";
+import type {
+  Notification,
+  NotificationKind,
+  AppointmentNotificationSubject,
+  ChatNotificationSubject,
+} from "@/src/store/redux/services/api-types";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import { Avatar, Button, StSvg, Typography } from "@/src/components/ui";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { pluralize } from "@/src/utils/text/pluralize";
+import { colors } from "@/src/styles/colors";
+import { SCREEN_PADDING } from "@/src/constants/layout";
+import HistorySkeleton from "./HistorySkeleton";
 
-import { format, isToday, isYesterday } from "date-fns";
-import { ru } from "date-fns/locale";
+// ── Badge config ─────────────────────────────────────────────────────────────
 
-import { StSvg } from "@/src/components/ui";
-
-type BadgeType = "clock" | "message" | "check" | "warning" | "star";
-
-const BADGE_MAP: Record<BadgeType, { name: string; color: string }> = {
-  clock: { name: "Clock_fill", color: "#007AFF" },
-  message: { name: "Chield_check_fill", color: "#CB30E0" },
-  check: { name: "Check_fill", color: "#34C759" },
-  warning: { name: "Warning_fill", color: "#FF3B30" },
-  star: { name: "Star_fill", color: "#FBB40E" },
+const KIND_BADGE: Record<NotificationKind, { icon: string; color: string }> = {
+  appointment_created: {
+    icon: "Clock_fill",
+    color: colors.primary.blue[500],
+  },
+  appointment_pending_approval: {
+    icon: "Clock_fill",
+    color: colors.primary.blue[500],
+  },
+  appointment_confirmed: {
+    icon: "Check_fill",
+    color: colors.primary.green[700],
+  },
+  appointment_cancelled: {
+    icon: "Warning_fill",
+    color: colors.accent.red[500],
+  },
+  appointment_rescheduled: {
+    icon: "Clock_fill",
+    color: colors.accent.yellow[700],
+  },
+  appointment_reminder: {
+    icon: "Clock_fill",
+    color: colors.primary.blue[500],
+  },
+  appointment_customer_confirmed: {
+    icon: "Check_fill",
+    color: colors.primary.green[700],
+  },
+  appointment_customer_accepted: {
+    icon: "Check_fill",
+    color: colors.primary.green[700],
+  },
+  appointment_customer_declined: {
+    icon: "Warning_fill",
+    color: colors.accent.red[500],
+  },
+  appointment_reschedule_requested: {
+    icon: "Warning_fill",
+    color: colors.accent.yellow[700],
+  },
+  rebook_suggestion: {
+    icon: "Star_fill",
+    color: colors.accent.yellow[700],
+  },
+  chat_new_activity: {
+    icon: "Chat_fill",
+    color: colors.accent.purple[500],
+  },
 };
 
-function BadgeIcon({ type }: { type: BadgeType }) {
-  const icon = BADGE_MAP[type];
+const DEFAULT_BADGE = { icon: "Clock_fill", color: colors.neutral[400] };
 
-  return (
-    <View className="absolute top-7 left-6 w-6 h-6 items-center justify-center bg-white rounded-full">
-      <StSvg name={icon.name} size={20} color={icon.color} />
-    </View>
-  );
+// ── Notification row ──────────────────────────────────────────────────────────
+
+type NotificationRowProps = {
+  item: Notification;
+  onPress: (item: Notification) => void;
+};
+
+function isAppointmentSubject(
+  s: AppointmentNotificationSubject | ChatNotificationSubject,
+): s is AppointmentNotificationSubject {
+  return "customer" in s;
 }
 
-const tabs = ["Все", "Записи", "Отзывы", "Сообщения", "Уведомления"];
+const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
+  const badge = KIND_BADGE[item.kind] ?? DEFAULT_BADGE;
+  const person = item.subject
+    ? isAppointmentSubject(item.subject)
+      ? item.subject.customer
+      : item.subject.interlocutor
+    : undefined;
 
-const getNotificationImage = (n: any) => {
-  const subject = n.subject;
+  return (
+    <Pressable
+      className="flex-row items-start gap-3 p-4 rounded-base bg-white active:opacity-70"
+      onPress={() => onPress(item)}
+    >
+      <View>
+        <Avatar
+          name={person?.name ?? ""}
+          uri={person?.avatar_url ?? undefined}
+          size="md"
+        />
+        <View className="absolute -bottom-1 -right-1 w-[20px] h-[20px] items-center justify-center bg-white rounded-full">
+          <StSvg name={badge.icon} size={18} color={badge.color} />
+        </View>
+      </View>
 
-  if (n.kind === "chat_new_activity") {
-    return subject?.interlocutor?.avatar_url || null;
-  }
+      <View className="flex-1">
+        <View className="flex-row justify-between items-start gap-2">
+          <Typography
+            weight="semibold"
+            className="text-body text-neutral-900 flex-1"
+          >
+            {item.title}
+          </Typography>
+          <View className="flex-row items-center gap-1.5 shrink-0">
+            <Typography className="text-caption text-neutral-400">
+              {formatTime(new Date(item.created_at))}
+            </Typography>
+            {!item.read_at && (
+              <View className="w-2 h-2 rounded-full bg-accent-red-500" />
+            )}
+          </View>
+        </View>
+        <Typography className="text-caption text-neutral-500 mt-1">
+          {item.body}
+        </Typography>
+      </View>
+    </Pressable>
+  );
+});
 
-  return subject?.user?.avatar_url || null;
-};
+NotificationRow.displayName = "NotificationRow";
+
+type Section = { title: string; data: Notification[] };
 
 const HistoryScreen = () => {
-  const [activeTab, setActiveTab] = useState("Уведомления");
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useGetNotificationsPaginatedInfiniteQuery({});
 
-  const auth = useRequiredAuth();
-
-  const { data, refetch } = useGetNotificationsPaginatedInfiniteQuery({});
-
-  const [markAllRead] = useMarkAllNotificationsReadMutation();
+  const [markAllRead, { isLoading: isMarkingAll }] =
+    useMarkAllNotificationsReadMutation();
   const [markRead] = useMarkNotificationReadMutation();
 
-  const notifications = useMemo(() => {
-    return data?.pages?.flatMap((p) => p.notifications) ?? [];
-  }, [data]);
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
-  const unreadCount = useMemo(() => {
-    return notifications.filter((n) => !n.read_at).length;
-  }, [notifications]);
+  const notifications = useMemo(
+    () => data?.pages?.flatMap((p) => p.notifications) ?? [],
+    [data],
+  );
 
-  const filteredNotifications = useMemo(() => {
-    switch (activeTab) {
-      case "Все":
-        return notifications;
+  const unreadCount = data?.pages[0]?.unread_count ?? 0;
 
-      case "Записи":
-        return notifications.filter((n) => n.kind?.startsWith("appointment_"));
+  const sections = useMemo<Section[]>(() => {
+    const groups: Record<string, Notification[]> = {};
 
-      case "Сообщения":
-        return notifications.filter((n) => n.kind?.startsWith("chat_"));
-
-      case "Отзывы":
-        return notifications.filter((n) => n.kind?.startsWith("review_"));
-
-      case "Уведомления":
-        return notifications.filter(
-          (n) =>
-            !n.kind?.startsWith("chat_") &&
-            !n.kind?.startsWith("appointment_") &&
-            !n.kind?.startsWith("review_"),
-        );
-
-      default:
-        return notifications;
-    }
-  }, [notifications, activeTab]);
-
-  const groupedNotifications = useMemo(() => {
-    const groups: Record<string, any[]> = {};
-
-    filteredNotifications.forEach((n) => {
+    notifications.forEach((n) => {
       const date = new Date(n.created_at);
-
-      let key = format(date, "d MMMM", { locale: ru });
+      let key: string;
 
       if (isToday(date)) key = "Сегодня";
       else if (isYesterday(date)) key = "Вчера";
+      else key = formatDayMonthLong(date);
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(n);
     });
 
-    return groups;
-  }, [filteredNotifications]);
+    return Object.entries(groups).map(([title, items]) => ({
+      title,
+      data: items,
+    }));
+  }, [notifications]);
 
-  const handleRefresh = async () => {
+  const handleMarkAllRead = useCallback(async () => {
     try {
-      await refetch();
+      await markAllRead().unwrap();
     } catch {
-      toast.error("Не удалось обновить уведомления");
+      toast.error("Не удалось прочитать все");
     }
-  };
+  }, [markAllRead]);
 
-  const { refreshing, onRefresh } = useRefresh(handleRefresh);
+  const handleMarkRead = useCallback(
+    async (notification: Notification) => {
+      if (notification.read_at) return;
+      try {
+        await markRead(notification.id).unwrap();
+      } catch {
+        // silent — not critical UX
+      }
+    },
+    [markRead],
+  );
 
-  if (!auth) return null;
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <ScreenWithToolbar
       title={
         <View className="items-center">
-          <Text className="text-lg font-semibold">Журнал событий</Text>
-
-          {unreadCount > 0 && (
-            <Text className="text-xs text-neutral-400">
-              {unreadCount} новых
-            </Text>
-          )}
+          <Typography
+            numberOfLines={1}
+            weight="semibold"
+            className="min-w-0 text-body"
+          >
+            Журнал событий
+          </Typography>
+          <Typography
+            numberOfLines={1}
+            className={`min-w-0 text-caption ${unreadCount > 0 ? "text-neutral-400" : "text-transparent"}`}
+          >
+            {unreadCount > 0
+              ? `${unreadCount} ${pluralize(unreadCount, ["новое", "новых", "новых"])}`
+              : " "}
+          </Typography>
         </View>
       }
       rightButton={
-        <TouchableOpacity
-          className="rounded-full bg-white px-3 py-[12px]"
-          onPress={async () => {
-            try {
-              await markAllRead().unwrap();
-            } catch {
-              toast.error("Не удалось прочитать все");
-            }
-          }}
-        >
-          <Text className="text-black text-sm">Прочитать все</Text>
-        </TouchableOpacity>
+        <Button
+          title="Прочитать все"
+          variant="secondary"
+          buttonClassName="h-[48px] px-4 rounded-full"
+          textClassName="text-[13px]"
+          loading={isMarkingAll}
+          disabled={isMarkingAll || unreadCount === 0}
+          onPress={handleMarkAllRead}
+        />
       }
     >
-      {({ topInset, bottomInset }) => (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: topInset + 16,
-            paddingBottom: bottomInset + 16,
-          }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                gap: 10,
-              }}
-            >
-              {tabs.map((tab) => {
-                const active = activeTab === tab;
+      {({ topInset, bottomInset }) => {
+        if (isLoading) {
+          return <HistorySkeleton topInset={topInset} />;
+        }
 
-                return (
-                  <TouchableOpacity
-                    key={tab}
-                    onPress={() => setActiveTab(tab)}
-                    className={`px-4 py-2 rounded-full ${
-                      active ? "bg-blue-500" : "bg-transparent"
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm font-semibold ${
-                        active ? "text-white" : "text-neutral-500"
-                      }`}
-                    >
-                      {tab}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
+        if (isError && !data) {
+          return (
+            <ErrorScreen
+              title="Не удалось загрузить уведомления"
+              isLoading={isFetching}
+              onRetry={onRefresh}
+            />
+          );
+        }
 
-          <View className="px-5 mt-4">
-            {Object.entries(groupedNotifications).length === 0 ? (
-              <Text className="text-neutral-400 text-center mt-10">
-                Нет уведомлений
-              </Text>
-            ) : (
-              Object.entries(groupedNotifications).map(([date, items]) => (
-                <View key={date} className="mb-6">
-                  <Text className="text-black font-semibold mb-3">{date}</Text>
-
-                  <View className="gap-3">
-                    {items.map((n) => {
-                      const badge = {
-                        clock: "clock",
-                        message: "message",
-                        check: "check",
-                        warning: "warning",
-                        star: "star",
-                      } as const;
-
-                      return (
-                        <TouchableOpacity
-                          key={n.id}
-                          onPress={() => markRead(n.id)}
-                          className="p-4 rounded-2xl bg-white"
-                        >
-                          <View className="flex-row items-start gap-3">
-                            <View className="w-11 h-11 rounded-full overflow-hidden bg-[#E5E5EA]">
-                              {getNotificationImage(n) && (
-                                <Image
-                                  source={{
-                                    uri: getNotificationImage(n),
-                                  }}
-                                  className="w-full h-full"
-                                  resizeMode="cover"
-                                />
-                              )}
-                            </View>
-
-                            <BadgeIcon
-                              type={
-                                (badge[
-                                  n.kind as keyof typeof badge
-                                ] as BadgeType) ?? "message"
-                              }
-                            />
-
-                            <View className="flex-1">
-                              <View className="flex-row justify-between items-start">
-                                <Text className="font-semibold text-black flex-1 pr-2">
-                                  {n.title}
-                                </Text>
-
-                                <View className="flex-row items-center gap-2">
-                                  <Text className="text-xs text-neutral-400">
-                                    {new Date(n.created_at).toLocaleTimeString(
-                                      [],
-                                      {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      },
-                                    )}
-                                  </Text>
-
-                                  {!n.read_at && (
-                                    <View className="w-2 h-2 rounded-full bg-accent-red-500" />
-                                  )}
-                                </View>
-                              </View>
-
-                              <Text className="text-neutral-500 mt-1">
-                                {n.body}
-                              </Text>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              ))
+        return (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => String(item.id)}
+            contentContainerStyle={{
+              paddingTop: topInset,
+              paddingBottom: bottomInset + 8,
+              paddingHorizontal: SCREEN_PADDING,
+              flexGrow: 1,
+            }}
+            showsVerticalScrollIndicator={false}
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            renderItem={({ item }) => (
+              <NotificationRow item={item} onPress={handleMarkRead} />
             )}
-          </View>
-        </ScrollView>
-      )}
+            renderSectionHeader={({ section }) => (
+              <Typography
+                weight="semibold"
+                className={`text-body text-neutral-900 pb-2${sections[0]?.title === section.title ? "" : " mt-8"}`}
+              >
+                {section.title}
+              </Typography>
+            )}
+            SectionSeparatorComponent={() => null}
+            ItemSeparatorComponent={() => <View className="h-2" />}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.neutral[400]}
+                  style={{ paddingVertical: 16 }}
+                />
+              ) : null
+            }
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center gap-4">
+                <StSvg
+                  name="Notification_fill"
+                  size={60}
+                  color={colors.neutral[400]}
+                />
+                <Typography className="text-body text-neutral-500 text-center">
+                  Нет уведомлений
+                </Typography>
+              </View>
+            }
+          />
+        );
+      }}
     </ScreenWithToolbar>
   );
 };
