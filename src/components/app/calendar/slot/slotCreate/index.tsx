@@ -87,7 +87,12 @@ const SlotCreate: React.FC = () => {
 
   const { release } = useFormNavigationGuard(methods.formState.isDirty);
 
-  const { handleSubmit, watch, setValue } = methods;
+  const {
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = methods;
   const watchedServices = watch("services");
   const paymentMethod = watch("paymentMethod");
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
@@ -96,6 +101,8 @@ const SlotCreate: React.FC = () => {
     control: methods.control,
     name: "services",
   });
+
+  const servicesError = errors.services?.message;
 
   const handleRemoveAdditional = useCallback(
     (id: number) => {
@@ -170,7 +177,14 @@ const SlotCreate: React.FC = () => {
         toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
       }
     },
-    [auth, draft.additionalServices, createAppointment, dispatch, release],
+    [
+      auth,
+      createAppointment,
+      draft.additionalServices,
+      dispatch,
+      release,
+      methods,
+    ],
   );
 
   return (
@@ -186,17 +200,17 @@ const SlotCreate: React.FC = () => {
                 bottomOffset={BOTTOM_OFFSET}
                 contentContainerStyle={{
                   paddingTop: topInset,
-                  paddingBottom: bottomInset + 16,
+                  paddingBottom: bottomInset + 8,
                   paddingHorizontal: SCREEN_PADDING,
                 }}
               >
                 <View ref={contentRef} collapsable={false}>
-                  {fields.length > 0 && (
-                    <View className="gap-2">
-                      <Typography className="text-caption text-neutral-500">
-                        Услуга
-                      </Typography>
-                      {fields.map((field, index) => (
+                  <View className="gap-2">
+                    <Typography className="text-caption text-neutral-500">
+                      Услуга
+                    </Typography>
+                    {fields.length > 0 ? (
+                      fields.map((field, index) => (
                         <Card
                           key={field.id}
                           title={field.name}
@@ -227,9 +241,35 @@ const SlotCreate: React.FC = () => {
                             />
                           }
                         />
-                      ))}
-                    </View>
-                  )}
+                      ))
+                    ) : (
+                      <Card
+                        title="Услуга не выбрана"
+                        subtitle="Добавьте услугу"
+                        className={
+                          servicesError ? "border-accent-red-500" : undefined
+                        }
+                        onPress={() =>
+                          router.push(
+                            Routers.app.createSlotFlow.selectService(),
+                          )
+                        }
+                        right={
+                          <StSvg
+                            name="Add_round"
+                            size={24}
+                            color={colors.primary.blue[500]}
+                          />
+                        }
+                      />
+                    )}
+
+                    {servicesError && (
+                      <Typography className="text-caption text-accent-red-500 font-inter-medium mt-[2px]">
+                        {servicesError}
+                      </Typography>
+                    )}
+                  </View>
 
                   {draft.additionalServices.length > 0 && (
                     <View className="gap-2 mt-2">

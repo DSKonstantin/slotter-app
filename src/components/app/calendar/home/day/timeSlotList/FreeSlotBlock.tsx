@@ -15,7 +15,7 @@ const FreeSlotBlock: React.FC<Props> = ({ date, time, endTime }) => (
   <TouchableOpacity
     activeOpacity={0.7}
     onPress={() =>
-      router.push(Routers.app.calendar.slotSelectService({ date, time }))
+      router.push(Routers.app.createSlotFlow.selectService({ date, time }))
     }
     className="flex-1 rounded-base flex-row items-center justify-between overflow-hidden border border-neutral-200 bg-background px-4 mb-1"
   >

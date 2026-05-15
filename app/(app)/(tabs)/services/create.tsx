@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocalSearchParams } from "expo-router";
-import AppCreateService from "@/src/components/app/menu/services/service/create";
+import AppCreateService from "@/src/components/app/services/service/create";
 
 const Create = () => {
   const { categoryId } = useLocalSearchParams<{ categoryId?: string }>();

@@ -25,7 +25,7 @@ import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
 import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
 import ScheduleSkeleton from "./ScheduleSkeleton";
 
-const CalendarSchedule = () => {
+const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
   const { date } = useLocalSearchParams<{ date?: string }>();
   const [current, setCurrent] = useState(() => {
     if (!date) return new Date();
@@ -158,6 +158,7 @@ const CalendarSchedule = () => {
     <FormProvider {...methods}>
       <ScreenWithToolbar
         title="График"
+        showBack={showBack}
         rightButton={
           <IconButton
             icon={
@@ -171,14 +172,12 @@ const CalendarSchedule = () => {
           />
         }
       >
-        {({ topInset }) => (
-          <SafeAreaView
-            edges={["left", "right"]}
-            className="flex-1 px-screen"
-            style={{ paddingTop: topInset }}
-          >
+        {({ topInset, bottomInset }) => (
+          <SafeAreaView edges={["left", "right"]} className="flex-1 px-screen">
             {isLoading ? (
-              <ScheduleSkeleton />
+              <View style={{ paddingTop: topInset, flex: 1 }}>
+                <ScheduleSkeleton />
+              </View>
             ) : isError ? (
               <ErrorScreen
                 title="Не удалось загрузить расписание"
@@ -187,7 +186,11 @@ const CalendarSchedule = () => {
             ) : (
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ flexGrow: 1 }}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  paddingTop: topInset,
+                  paddingBottom: bottomInset + 8,
+                }}
                 refreshControl={
                   <RefreshControl
                     refreshing={refreshing}

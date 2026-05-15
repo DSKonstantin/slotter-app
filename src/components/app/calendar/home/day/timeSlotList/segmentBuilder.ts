@@ -165,6 +165,17 @@ const collectTimePoints = (
     if (appointment.end > effectiveStart && appointment.end <= effectiveEnd) {
       timePoints.add(appointment.end);
     }
+
+    // Zero-duration appointments have end === start, so no boundary is created
+    // after them. Add start+1 so the gap following this point can be compressed.
+    if (
+      appointment.slot.duration === 0 &&
+      !isInsideLongerAppointment &&
+      appointment.start + 1 > effectiveStart &&
+      appointment.start + 1 <= effectiveEnd
+    ) {
+      timePoints.add(appointment.start + 1);
+    }
   });
 
   return Array.from(timePoints).sort((a, b) => a - b);

@@ -1,5 +1,5 @@
 import React from "react";
-import AppServices from "@/src/components/app/menu/services/list";
+import AppServices from "@/src/components/app/services/list";
 
 const Services = () => {
   return <AppServices />;

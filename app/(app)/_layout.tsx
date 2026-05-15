@@ -1,21 +1,26 @@
-import { Stack } from "expo-router";
+import React from "react";
+import { View } from "react-native";
+import { Stack, useSegments } from "expo-router";
+import StTabBar from "@/src/components/navigation/tabBar";
+import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
 
 export default function AppLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="(tabs)" />
+  const segments = useSegments() as string[];
+  const showTabBar = segments[1] !== "chat";
 
-      <Stack.Screen
-        name="chat/[id]"
-        options={{
-          presentation: "card",
-          animation: "slide_from_right",
-        }}
-      />
-    </Stack>
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="chat/[id]"
+          options={{ presentation: "card", animation: "slide_from_right" }}
+        />
+        <Stack.Screen name="create-slot-flow" />
+        <Stack.Screen name="create-client" />
+      </Stack>
+      {showTabBar && <StTabBar />}
+      <TabMenu />
+    </View>
   );
 }

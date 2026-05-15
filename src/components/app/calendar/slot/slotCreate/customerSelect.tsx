@@ -129,7 +129,7 @@ const CustomerSelect = () => {
         <Button
           title=" Создать нового клиента"
           variant="clear"
-          onPress={() => router.push(Routers.app.calendar.slotClientCreate)}
+          onPress={() => router.push(Routers.app.createClient)}
           rightIcon={
             <StSvg
               name="Add_round_fill"
@@ -140,19 +140,30 @@ const CustomerSelect = () => {
         />
       </View>
 
-      <StModal visible={modalVisible} onClose={handleClose} keyboardAware>
-        <Typography weight="semibold" className="text-display text-center mb-4">
-          Выбрать клиента
-        </Typography>
-        <Input
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Поиск по имени или телефону"
-          hideErrorText
-          startAdornment={
-            <StSvg name="Search" size={24} color={colors.neutral[500]} />
-          }
-        />
+      <StModal
+        header={
+          <>
+            <Typography
+              weight="semibold"
+              className="text-display text-center mb-4"
+            >
+              Выбрать клиента
+            </Typography>
+            <Input
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Поиск по имени или телефону"
+              hideErrorText
+              startAdornment={
+                <StSvg name="Search" size={24} color={colors.neutral[500]} />
+              }
+            />
+          </>
+        }
+        visible={modalVisible}
+        onClose={handleClose}
+        keyboardAware
+      >
         <View>
           {isCustomersLoading ? (
             <View className="items-center py-6">

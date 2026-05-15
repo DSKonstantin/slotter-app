@@ -45,27 +45,30 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
   }, []);
 
   return (
-    <StModal visible={visible} onClose={onClose}>
-      <View className="gap-6">
-        <Typography weight="semibold" className="text-display text-center">
+    <StModal
+      header={
+        <Typography weight="semibold" className="text-display text-center mb-3">
           Фильтры
         </Typography>
-
-        <View className="gap-2">
-          <Typography className="text-caption text-neutral-500">
-            Показывать:
-          </Typography>
-          {filterOptions.map(({ label, key }) => (
-            <FilterOption
-              key={key}
-              label={label}
-              value={draft[key]}
-              onPress={() => toggleDraft(key)}
-            />
-          ))}
-        </View>
-
-        <Button title="Применить" onPress={handleApply} />
+      }
+      footer={<Button title="Применить" onPress={handleApply} />}
+      visible={visible}
+      onClose={onClose}
+      fullHeight
+      scrollable
+    >
+      <View className="gap-2 mb-4">
+        <Typography className="text-caption text-neutral-500">
+          Показывать:
+        </Typography>
+        {filterOptions.map(({ label, key }) => (
+          <FilterOption
+            key={key}
+            label={label}
+            value={draft[key]}
+            onPress={() => toggleDraft(key)}
+          />
+        ))}
       </View>
     </StModal>
   );

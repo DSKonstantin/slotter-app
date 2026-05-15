@@ -51,7 +51,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
       <View
         className="px-screen"
         style={{
-          marginBottom: (withTabBar ? TAB_BAR_HEIGHT : 0) + bottom + 16,
+          marginBottom: (withTabBar ? TAB_BAR_HEIGHT : 0) + bottom + 8,
         }}
       >
         <Button

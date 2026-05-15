@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
+import { toast } from "@backpackapp-io/react-native-toast";
 
 import {
   StModal,
@@ -14,12 +15,20 @@ import { RHFSelect } from "@/src/components/hookForm/rhf-select";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
+import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
+import { useSendMessageMutation } from "@/src/store/redux/services/api/chatMessagesApi";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 
 type Props = {
   visible: boolean;
   bookingUrl: string;
   onClose: () => void;
+};
+
+type FormValues = {
+  client: string | null;
+  message: string;
 };
 
 const CHANNEL_OPTIONS = [
@@ -31,7 +40,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
   const auth = useRequiredAuth();
   const [channel, setChannel] = useState("slotter");
 
-  const methods = useForm({
+  const methods = useForm<FormValues>({
     defaultValues: { client: null, message: "" },
   });
 
@@ -39,6 +48,9 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
     auth ? { userId: auth.userId, per_count: 100 } : { userId: 0 },
     { skip: !visible || !auth },
   );
+
+  const [createChatRoom] = useCreateChatRoomMutation();
+  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
   const clientItems = useMemo(
     () =>
@@ -62,6 +74,36 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
     onClose();
   };
 
+  const handleSend = methods.handleSubmit(async (values) => {
+    const text = values.message
+      ? `${values.message}\n\n${fullBookingUrl}`
+      : fullBookingUrl;
+
+    if (channel === "telegram") {
+      // const url = `https://t.me/share/url?url=${encodeURIComponent(fullBookingUrl)}${values.message ? `&text=${encodeURIComponent(values.message)}` : ""}`;
+      // await Linking.openURL(url);
+      handleClose();
+      return;
+    }
+
+    if (!values.client) {
+      methods.setError("client", { message: "Выберите клиента" });
+      return;
+    }
+
+    try {
+      const room = await createChatRoom({
+        userId: auth!.userId,
+        customerId: Number(values.client),
+      }).unwrap();
+      await sendMessage({ chatRoomId: room.id, body: text }).unwrap();
+      toast.success("Ссылка отправлена");
+      handleClose();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось отправить"));
+    }
+  });
+
   return (
     <StModal visible={visible} onClose={handleClose} keyboardAware={true}>
       <FormProvider {...methods}>
@@ -70,25 +112,29 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
         </Typography>
 
         <View className="gap-3">
-          <RHFSelect
-            name="client"
-            label="Клиент"
-            placeholder="Кому отправляем"
-            items={clientItems}
-            emptyText={isLoading ? "Загрузка..." : "Нет клиентов"}
-          />
-          {isError && (
-            <RetryInline
-              text="Не удалось загрузить клиентов"
-              onRetry={refetch}
-            />
-          )}
-
           <SegmentedControl
             options={CHANNEL_OPTIONS}
             value={channel}
             onChange={setChannel}
           />
+
+          {channel === "slotter" && (
+            <>
+              <RHFSelect
+                name="client"
+                label="Клиент"
+                placeholder="Кому отправляем"
+                items={clientItems}
+                emptyText={isLoading ? "Загрузка..." : "Нет клиентов"}
+              />
+              {isError && (
+                <RetryInline
+                  text="Не удалось загрузить клиентов"
+                  onRetry={refetch}
+                />
+              )}
+            </>
+          )}
 
           <RhfTextField
             name="message"
@@ -98,10 +144,6 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             numberOfLines={4}
             hideErrorText
           />
-          <Typography className="text-caption text-neutral-500">
-            Отправим в:{" "}
-            {CHANNEL_OPTIONS.find((o) => o.value === channel)?.label}
-          </Typography>
         </View>
 
         <View className="mt-6 gap-3">
@@ -112,7 +154,12 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             textClassName="text-gray-900"
             iconColor={colors.neutral[900]}
           />
-          <Button title="Отправить" onPress={handleClose} />
+          <Button
+            title="Отправить"
+            loading={isSending}
+            disabled={isSending}
+            onPress={handleSend}
+          />
         </View>
       </FormProvider>
     </StModal>

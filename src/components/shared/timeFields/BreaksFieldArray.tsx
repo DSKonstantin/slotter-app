@@ -11,9 +11,15 @@ const MAX_BREAKS = 3;
 
 type Props = {
   name?: string;
+  startDefault?: Date;
+  endDefault?: Date;
 };
 
-export const BreaksFieldArray = ({ name = "breaks" }: Props) => {
+export const BreaksFieldArray = ({
+  name = "breaks",
+  startDefault,
+  endDefault,
+}: Props) => {
   const { control } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
 
@@ -34,6 +40,7 @@ export const BreaksFieldArray = ({ name = "breaks" }: Props) => {
               <RhfDatePicker
                 name={`${name}.${index}.start`}
                 placeholder="12:00"
+                defaultDisplayValue={startDefault}
                 hideErrorText
                 parseValue={parseTimeString}
                 formatValue={formatTime}
@@ -47,6 +54,7 @@ export const BreaksFieldArray = ({ name = "breaks" }: Props) => {
               <RhfDatePicker
                 name={`${name}.${index}.end`}
                 placeholder="13:00"
+                defaultDisplayValue={endDefault}
                 hideErrorText
                 parseValue={parseTimeString}
                 formatValue={formatTime}

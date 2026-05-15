@@ -1,5 +1,5 @@
 import React from "react";
-import AccountPreview from "@/src/components/app/menu/account/preview";
+import AccountPreview from "@/src/components/app/account/preview";
 
 const PreviewPage = () => {
   return <AccountPreview />;

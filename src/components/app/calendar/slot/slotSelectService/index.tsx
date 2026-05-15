@@ -269,7 +269,7 @@ const SlotSelectService: React.FC<Props> = ({
         additionalServices: selectedAdditional,
       }),
     );
-    router.push(Routers.app.calendar.slotCreate());
+    router.push(Routers.app.createSlotFlow.create());
   }, [
     mode,
     selectedServices,
@@ -318,7 +318,7 @@ const SlotSelectService: React.FC<Props> = ({
         {({ topInset, bottomInset }) => (
           <View
             className="flex-1 px-screen"
-            style={{ marginTop: topInset, marginBottom: bottomInset + 16 }}
+            style={{ marginTop: topInset, marginBottom: bottomInset + 8 }}
           >
             {!mode && (
               <SegmentedControl
@@ -383,8 +383,7 @@ const SlotSelectService: React.FC<Props> = ({
                     );
                     const isLastCategory =
                       section.type === "category" &&
-                      section ===
-                        categorySections[categorySections.length - 1];
+                      section === categorySections[categorySections.length - 1];
 
                     if (isLastCategory && hasNextPage) {
                       return (

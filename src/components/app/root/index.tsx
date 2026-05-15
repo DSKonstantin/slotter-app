@@ -39,7 +39,7 @@ const Home = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 16,
+          paddingBottom: TAB_BAR_HEIGHT + bottom + 8,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

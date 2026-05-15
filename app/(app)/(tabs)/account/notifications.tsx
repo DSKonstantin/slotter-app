@@ -1,5 +1,5 @@
 import React from "react";
-import AccountNotifications from "@/src/components/app/menu/account/notifications";
+import AccountNotifications from "@/src/components/app/account/notifications";
 
 const NotificationsPage = () => {
   return <AccountNotifications />;

@@ -33,6 +33,7 @@ export default function ChatRoomsScreen() {
     <>
       <ScreenWithToolbar
         title="Чаты"
+        showBack={false}
         rightButton={
           <IconButton
             icon={
@@ -85,7 +86,7 @@ export default function ChatRoomsScreen() {
                   )}
                   contentContainerStyle={{
                     paddingTop: topInset,
-                    paddingBottom: bottomInset + 16,
+                    paddingBottom: bottomInset + 8,
                     paddingHorizontal: SCREEN_PADDING,
                   }}
                   refreshControl={

@@ -73,11 +73,20 @@ const galleryApi = api.injectEndpoints({
         };
       },
       transformResponse: unwrapGalleryPhoto,
-      invalidatesTags: (_result, _error, arg) => [
-        { type: "GalleryPhotos", id: arg.id },
-        { type: "GalleryPhotos", id: `LIST-${arg.userId}` },
-        "User",
-      ],
+      onQueryStarted: async ({ userId, id }, { dispatch, queryFulfilled }) => {
+        const { data: updatedPhoto } = await queryFulfilled;
+        dispatch(
+          galleryApi.util.updateQueryData(
+            "getGalleryPhotos",
+            { userId },
+            (draft) => {
+              const idx = draft.gallery_photos.findIndex((p) => p.id === id);
+              if (idx !== -1) draft.gallery_photos[idx] = updatedPhoto;
+            },
+          ),
+        );
+      },
+      invalidatesTags: ["User"],
     }),
 
     deleteGalleryPhoto: builder.mutation<void, { userId: number; id: number }>({

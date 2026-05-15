@@ -1,5 +1,5 @@
 import React from "react";
-import AccountScreen from "@/src/components/app/menu/account";
+import AccountScreen from "@/src/components/app/account";
 
 const Account = () => {
   return <AccountScreen />;

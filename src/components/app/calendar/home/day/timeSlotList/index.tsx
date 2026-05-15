@@ -10,7 +10,7 @@ import type {
   Appointment,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { View, Dimensions, Text, InteractionManager } from "react-native";
+import { View, Dimensions } from "react-native";
 import { router } from "expo-router";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
@@ -31,6 +31,8 @@ import {
   getSlotMinHeight,
   slotOccupiesTime,
 } from "./segmentBuilder";
+import CurrentTimeIndicator from "@/src/components/app/calendar/home/day/timeSlotList/CurrentTimeIndicator";
+import { isCurrentDay } from "@/src/utils/date/formatDate";
 
 type TimeSlotListProps = {
   appointments: Appointment[];
@@ -51,6 +53,9 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   date,
   onHighlightScroll,
 }) => {
+  const now = new Date();
+  const isToday = isCurrentDay(date);
+  const hasScrolledRef = useRef(false);
   const dispatch = useAppDispatch();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
   const highlightSlotId = useAppSelector(
@@ -74,28 +79,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const segments = segmentsResult.segments;
   const effectiveStart = segmentsResult.effectiveStart;
 
-  useEffect(() => {
-    if (!highlightSlotId || segments.length === 0) return;
-    const slot = appointments.find((a) => a.id === highlightSlotId);
-    if (slot) {
-      onHighlightScroll?.(
-        Math.max(
-          0,
-          (parseTime(slot.start_time) - effectiveStart) * MINUTE_HEIGHT - 50,
-        ),
-      );
-    }
-    const timer = setTimeout(() => dispatch(clearHighlightSlotId()), 3000);
-    return () => clearTimeout(timer);
-  }, [
-    highlightSlotId,
-    effectiveStart,
-    segments,
-    dispatch,
-    onHighlightScroll,
-    appointments,
-  ]);
-
   const scrollKey = useMemo(() => {
     return JSON.stringify([
       date,
@@ -108,13 +91,8 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     ]);
   }, [date, startAt, endAt, appointments, visibleStatuses]);
 
-  const now = new Date();
-
-  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes(),
-  ).padStart(2, "0")}`;
-
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentTime = formatTime(currentMinutes);
 
   const timelineEnd = parseTime(endAt ?? "23:59");
 
@@ -139,51 +117,76 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const isNowInRange =
     currentMinutes >= effectiveStart && currentMinutes <= timelineEnd;
 
-  const canAutoScroll = segments.length > 0 && isNowInRange;
+  const targetScrollY = useMemo(() => {
+    if (highlightSlotId) {
+      const slot = appointments.find((a) => a.id === highlightSlotId);
 
-  const hasScrolledRef = useRef(false);
+      if (!slot) {
+        return null;
+      }
+
+      return Math.max(
+        0,
+        (parseTime(slot.start_time) - effectiveStart) * MINUTE_HEIGHT - 50,
+      );
+    }
+
+    if (isToday && isNowInRange) {
+      const screenHeight = Dimensions.get("window").height;
+
+      return Math.max(0, nowOffset - screenHeight / 2);
+    }
+
+    return null;
+  }, [
+    highlightSlotId,
+    isToday,
+    isNowInRange,
+    appointments,
+    effectiveStart,
+    nowOffset,
+  ]);
+
+  useEffect(() => {
+    if (targetScrollY == null) {
+      return;
+    }
+
+    if (hasScrolledRef.current) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      onHighlightScroll?.(targetScrollY);
+
+      hasScrolledRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [targetScrollY, onHighlightScroll]);
 
   useEffect(() => {
     hasScrolledRef.current = false;
   }, [scrollKey]);
 
   useEffect(() => {
-    if (!canAutoScroll) return;
-    if (hasScrolledRef.current) return;
+    if (!highlightSlotId) {
+      return;
+    }
 
-    const runScroll = () => {
-      const screenHeight = Dimensions.get("window").height;
-      const y = Math.max(0, nowOffset - screenHeight / 2);
+    const timer = setTimeout(() => {
+      dispatch(clearHighlightSlotId());
+    }, 3000);
 
-      onHighlightScroll?.(y);
-      hasScrolledRef.current = true;
-    };
-
-    const task = InteractionManager.runAfterInteractions(runScroll);
-
-    return () => task.cancel();
-  }, [canAutoScroll, nowOffset, scrollKey]);
+    return () => clearTimeout(timer);
+  }, [highlightSlotId, dispatch]);
 
   if (segments.length === 0) return null;
 
   return (
     <View className="flex-1 pt-4 px-screen relative">
-      {isNowInRange && (
-        <View
-          pointerEvents="none"
-          className="absolute left-[10px] right-0 z-[100] flex-row items-center"
-          style={{
-            top: nowOffset + 16,
-          }}
-        >
-          <View className="w-[50px] items-center">
-            <View className="w-[52px] h-[28px] rounded-full bg-[#D9D9D9] justify-center items-center">
-              <Text className="text-[12px] font-semibold text-neutral-900">
-                {currentTime}
-              </Text>
-            </View>
-          </View>
-        </View>
+      {isToday && isNowInRange && (
+        <CurrentTimeIndicator top={nowOffset + 16} time={currentTime} />
       )}
       {segments.map((segment) => {
         const { segStart, segEnd, isCompressed, content } = segment;

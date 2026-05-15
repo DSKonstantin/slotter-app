@@ -11,23 +11,26 @@ import {
 import { colors } from "@/src/styles/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
-import { useRouter } from "expo-router";
+import { Href } from "expo-router";
 import { ToolbarContext } from "@/src/components/shared/layout/toolbarContext";
+import { useSafeBack } from "@/src/hooks/useSafeBack";
 
 type ToolbarTopProps = {
   title: string | React.ReactNode;
   showBack?: boolean;
   rightButton?: React.ReactNode;
+  fallbackHref?: Href;
 };
 
 const ToolbarTop = ({
   title,
   showBack = true,
   rightButton,
+  fallbackHref,
 }: ToolbarTopProps) => {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const toolbar = useContext(ToolbarContext);
+  const safeBack = useSafeBack(fallbackHref);
 
   return (
     <View
@@ -38,15 +41,15 @@ const ToolbarTop = ({
         left: 0,
         right: 0,
         zIndex: 100,
-        paddingTop: insets.top + 8,
-        height: TOOLBAR_HEIGHT + insets.top,
+        paddingTop: insets.top,
         backgroundColor: "transparent",
       }}
     >
-      <FadeOverlay position="top" height={TOOLBAR_HEIGHT + insets.top + 8} />
+      <FadeOverlay position="top" height={TOOLBAR_HEIGHT + insets.top} />
       <View
         className="mx-screen flex-row items-center justify-between gap-2"
         style={{
+          height: TOOLBAR_HEIGHT,
           paddingLeft: insets.left,
           paddingRight: insets.right,
         }}
@@ -104,7 +107,7 @@ const ToolbarTop = ({
                     color={colors.neutral[900]}
                   />
                 }
-                onPress={() => router.back()}
+                onPress={safeBack}
               />
             ) : (
               <View className="w-[48px]" />

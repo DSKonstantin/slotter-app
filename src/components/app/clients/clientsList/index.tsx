@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import debounce from "lodash/debounce";
-import { View, FlatList } from "react-native";
+import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -232,12 +232,13 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
       ) : (
         <FlatList
           data={customers}
+          style={{ flex: 1 }}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{
             paddingHorizontal: SCREEN_PADDING,
-            paddingBottom: bottomInset + 16,
+            paddingBottom: bottomInset + 8,
             gap: 8,
-            flexGrow: customers.length === 0 ? 1 : undefined,
+            flexGrow: 1,
           }}
           showsVerticalScrollIndicator={false}
           onRefresh={onRefresh}
@@ -245,6 +246,15 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
           renderItem={({ item }) => <ClientRow item={item} />}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator
+                size="small"
+                color={colors.neutral[400]}
+                style={{ paddingVertical: 16 }}
+              />
+            ) : null
+          }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center gap-4">
               <StSvg name="Chat_search" size={60} color={colors.neutral[400]} />
@@ -263,6 +273,7 @@ const ClientsList = () => {
   return (
     <ScreenWithToolbar
       title="Клиенты"
+      showBack={false}
       rightButton={(toolbar) => <ClientsToolbarButton toolbar={toolbar} />}
     >
       {({ topInset, bottomInset }) => (

@@ -8,7 +8,7 @@ export const ServiceItemSchema = Yup.object({
 });
 
 export const SlotCreateSchema = Yup.object({
-  services: Yup.array(ServiceItemSchema).required(),
+  services: Yup.array(ServiceItemSchema).min(1, "Добавьте услугу").required(),
   customerId: Yup.number().required("Выберите клиента"),
   date: Yup.string().required("Укажите дату"),
   time: Yup.string().required("Укажите время"),

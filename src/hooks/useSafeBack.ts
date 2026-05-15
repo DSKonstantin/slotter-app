@@ -1,11 +1,14 @@
 import { Href, router } from "expo-router";
 
-export const useSafeBack = (fallback: Href) => {
+export const useSafeBack = (fallbackHref?: Href) => {
   return () => {
     if (router.canGoBack()) {
       router.back();
-    } else {
-      router.replace(fallback);
+      return;
+    }
+
+    if (fallbackHref) {
+      router.replace(fallbackHref);
     }
   };
 };

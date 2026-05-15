@@ -25,7 +25,7 @@ import { parseISO } from "date-fns";
 import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
 import { BlurView } from "expo-blur";
-import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
+import { DEFAULT_BREAK_END, DEFAULT_BREAK_START, DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 
 type Props = {
@@ -255,6 +255,8 @@ export const ScheduleSettingsModal = ({
                           breaksName="commonDraft.breaks"
                           startDefault={DEFAULT_START_AT}
                           endDefault={DEFAULT_END_AT}
+                          breakStartDefault={DEFAULT_BREAK_START}
+                          breakEndDefault={DEFAULT_BREAK_END}
                         />
                       </View>
                     ) : (
@@ -285,6 +287,8 @@ export const ScheduleSettingsModal = ({
                               breaksName={`calendarDays.${index}.breaks`}
                               startDefault={DEFAULT_START_AT}
                               endDefault={DEFAULT_END_AT}
+                              breakStartDefault={DEFAULT_BREAK_START}
+                              breakEndDefault={DEFAULT_BREAK_END}
                             />
                           </View>
                         ))}

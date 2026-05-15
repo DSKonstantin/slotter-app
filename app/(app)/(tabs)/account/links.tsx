@@ -1,5 +1,5 @@
 import React from "react";
-import Links from "@/src/components/app/menu/account/links";
+import Links from "@/src/components/app/account/links";
 
 const LinksPage = () => {
   return <Links />;

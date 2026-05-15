@@ -77,7 +77,7 @@ const ClientsStatistics = () => {
             contentContainerStyle={{
               gap: 20,
               paddingTop: topInset,
-              paddingBottom: bottomInset + 16,
+              paddingBottom: bottomInset + 8,
               paddingHorizontal: SCREEN_PADDING,
             }}
             refreshControl={
@@ -189,10 +189,7 @@ const ClientsStatistics = () => {
               </>
             )}
 
-            <Button
-              title="Выбрать клиента для просмотра истории"
-              onPress={() => router.back()}
-            />
+            <Button title="Перейти к клиентам" onPress={() => router.back()} />
           </ScrollView>
 
           <PeriodModal

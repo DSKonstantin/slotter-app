@@ -32,7 +32,7 @@ const ClientsListSkeleton = ({ bottomInset = 0 }: Props) => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         paddingHorizontal: SCREEN_PADDING,
-        paddingBottom: bottomInset + 16,
+        paddingBottom: bottomInset + 8,
       }}
     >
       <ContentLoader

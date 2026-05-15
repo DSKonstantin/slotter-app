@@ -24,7 +24,7 @@ const CreateActionModal = ({ visible, onClose }: Props) => {
       onPress: () => {
         onClose();
         dispatch(clearSlotDraft());
-        router.push(Routers.app.calendar.slotSelectService());
+        router.push(Routers.app.createSlotFlow.selectService());
       },
     },
     {
