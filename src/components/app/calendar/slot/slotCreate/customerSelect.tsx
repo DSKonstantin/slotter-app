@@ -129,7 +129,7 @@ const CustomerSelect = () => {
         <Button
           title=" Создать нового клиента"
           variant="clear"
-          onPress={() => router.push(Routers.app.calendar.slotClientCreate)}
+          onPress={() => router.push(Routers.app.createClient)}
           rightIcon={
             <StSvg
               name="Add_round_fill"

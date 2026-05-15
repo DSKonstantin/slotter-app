@@ -189,7 +189,7 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
                 contentContainerStyle={{
                   flexGrow: 1,
                   paddingTop: topInset,
-                  paddingBottom: bottomInset + 16,
+                  paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={
                   <RefreshControl

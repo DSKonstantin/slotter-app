@@ -153,7 +153,7 @@ export function PhotoUploadPreview({
 
           <View
             className="absolute left-4 right-4"
-            style={{ bottom: insets.bottom + 16 }}
+            style={{ bottom: insets.bottom + 8 }}
           >
             {errorMessage && (
               <Typography

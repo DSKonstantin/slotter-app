@@ -35,3 +35,5 @@ export const HOURS_OPTIONS = [
 
 export const DEFAULT_START_AT = new Date(2000, 0, 1, 9, 0);
 export const DEFAULT_END_AT = new Date(2000, 0, 1, 18, 0);
+export const DEFAULT_BREAK_START = new Date(2000, 0, 1, 12, 0);
+export const DEFAULT_BREAK_END = new Date(2000, 0, 1, 13, 0);

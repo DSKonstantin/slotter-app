@@ -286,7 +286,7 @@ const Links = () => {
 
             <View
               className="px-screen"
-              style={{ paddingBottom: bottomInset + 16 }}
+              style={{ paddingBottom: bottomInset + 8 }}
             >
               <Button
                 title="Сохранить изменения"

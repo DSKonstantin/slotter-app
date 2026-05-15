@@ -227,7 +227,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
 
                 <View
                   className="px-screen bg-background"
-                  style={{ paddingTop: 8, paddingBottom: bottomInset + 16 }}
+                  style={{ paddingTop: 8, paddingBottom: bottomInset + 8 }}
                 >
                   <Button
                     title="Создать клиента"

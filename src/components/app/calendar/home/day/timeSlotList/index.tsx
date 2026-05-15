@@ -10,7 +10,7 @@ import type {
   Appointment,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { View, Dimensions, Text, InteractionManager } from "react-native";
+import { View, Dimensions } from "react-native";
 import { router } from "expo-router";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";

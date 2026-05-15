@@ -107,6 +107,17 @@ const chatMessagesApi = api.injectEndpoints({
       },
     }),
 
+    sendMessage: builder.mutation<
+      ChatMessage,
+      { chatRoomId: number; body: string }
+    >({
+      query: ({ chatRoomId, body }) => ({
+        url: `/chat/rooms/${chatRoomId}/messages`,
+        method: "POST",
+        data: { body },
+      }),
+    }),
+
     createChatMessage: builder.mutation<
       ChatMessage,
       {
@@ -164,4 +175,5 @@ export const {
   useGetChatMessagesQuery,
   useLazyGetChatMessagesQuery,
   useCreateChatMessageMutation,
+  useSendMessageMutation,
 } = chatMessagesApi;

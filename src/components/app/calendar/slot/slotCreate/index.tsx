@@ -200,7 +200,7 @@ const SlotCreate: React.FC = () => {
                 bottomOffset={BOTTOM_OFFSET}
                 contentContainerStyle={{
                   paddingTop: topInset,
-                  paddingBottom: bottomInset + 16,
+                  paddingBottom: bottomInset + 8,
                   paddingHorizontal: SCREEN_PADDING,
                 }}
               >
@@ -250,7 +250,9 @@ const SlotCreate: React.FC = () => {
                           servicesError ? "border-accent-red-500" : undefined
                         }
                         onPress={() =>
-                          router.push(Routers.app.calendar.slotSelectService())
+                          router.push(
+                            Routers.app.createSlotFlow.selectService(),
+                          )
                         }
                         right={
                           <StSvg

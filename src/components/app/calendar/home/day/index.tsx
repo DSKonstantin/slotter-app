@@ -191,7 +191,7 @@ const DayCalendarView = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: isEmpty ? 0 : TAB_BAR_HEIGHT + bottom + 80,
+          paddingBottom: isEmpty ? 0 : TAB_BAR_HEIGHT + bottom + 72,
         }}
         onContentSizeChange={() => {
           if (pendingScrollY.current !== null) {

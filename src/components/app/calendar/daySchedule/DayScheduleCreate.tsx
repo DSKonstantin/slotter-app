@@ -84,7 +84,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                 <DayScheduleForm />
               </ScrollView>
             </SafeAreaView>
-            <FloatingFooter offset={TAB_BAR_HEIGHT + 16}>
+            <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
               <Button
                 title="Сохранить изменения"
                 loading={isLoading}

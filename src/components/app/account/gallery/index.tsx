@@ -405,7 +405,7 @@ const Gallery = () => {
                 />
 
                 {isEditMode && selectedIds!.size > 0 && (
-                  <FloatingFooter offset={TAB_BAR_HEIGHT + 16}>
+                  <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
                     <Button
                       buttonClassName="bg-background-surface"
                       title={`Удалить (${selectedIds!.size})`}

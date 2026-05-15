@@ -151,7 +151,7 @@ const PersonalInformation = () => {
 
             <View
               className="px-screen gap-4"
-              style={{ paddingBottom: bottomInset + 16 }}
+              style={{ paddingBottom: bottomInset + 8 }}
             >
               <Button
                 title="Сохранить изменения"

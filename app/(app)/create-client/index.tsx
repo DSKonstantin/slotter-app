@@ -1,8 +1,8 @@
 import React from "react";
 import SlotClientCreate from "@/src/components/app/calendar/slot/slotClientCreate";
 
-const SlotCreateClientScreen = () => {
+const CreateClientScreen = () => {
   return <SlotClientCreate />;
 };
 
-export default SlotCreateClientScreen;
+export default CreateClientScreen;

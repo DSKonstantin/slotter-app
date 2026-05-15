@@ -15,7 +15,7 @@ const CalendarActionButton = ({ mode, title, onPress }: Props) => {
   }, [onPress]);
 
   return (
-    <FloatingFooter className="left-auto" offset={TAB_BAR_HEIGHT + 16}>
+    <FloatingFooter className="left-auto" offset={TAB_BAR_HEIGHT + 8}>
       <Button
         onPress={handlePress}
         title={

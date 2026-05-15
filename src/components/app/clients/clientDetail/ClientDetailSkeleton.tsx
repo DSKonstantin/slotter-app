@@ -46,8 +46,8 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
-        paddingTop: topInset + 8,
-        paddingBottom: bottomInset + 16,
+        paddingTop: topInset,
+        paddingBottom: bottomInset + 8,
         paddingHorizontal: SCREEN_PADDING,
       }}
     >

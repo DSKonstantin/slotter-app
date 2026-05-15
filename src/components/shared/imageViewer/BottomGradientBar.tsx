@@ -16,7 +16,7 @@ export function BottomGradientBar({ children }: Props) {
         right: 0,
         zIndex: 10,
         paddingTop: 24,
-        paddingBottom: bottom + 16,
+        paddingBottom: bottom + 8,
         paddingHorizontal: 16,
       }}
     >

@@ -20,7 +20,12 @@ import {
 import { days } from "@/src/constants/days";
 import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHoursFields";
 import { useScheduleTemplate } from "@/src/hooks/useScheduleTemplate";
-import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
+import {
+  DEFAULT_BREAK_END,
+  DEFAULT_BREAK_START,
+  DEFAULT_END_AT,
+  DEFAULT_START_AT,
+} from "@/src/constants/hoursOptions";
 
 const DayRow = ({ index }: { index: number }) => {
   const { control } = useFormContext<ScheduleTemplateFormValues>();
@@ -46,6 +51,8 @@ const DayRow = ({ index }: { index: number }) => {
           breaksName={`days.${index}.breaks`}
           startDefault={DEFAULT_START_AT}
           endDefault={DEFAULT_END_AT}
+          breakStartDefault={DEFAULT_BREAK_START}
+          breakEndDefault={DEFAULT_BREAK_END}
           spacing="tight"
         />
       )}

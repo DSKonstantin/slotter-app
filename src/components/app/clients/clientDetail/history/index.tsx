@@ -158,7 +158,7 @@ const ClientHistory = ({ customerId }: Props) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingTop: topInset,
-            paddingBottom: bottomInset + 16,
+            paddingBottom: bottomInset + 8,
             paddingHorizontal: SCREEN_PADDING,
           }}
           refreshControl={

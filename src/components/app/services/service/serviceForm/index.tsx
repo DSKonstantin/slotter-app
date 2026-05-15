@@ -63,7 +63,7 @@ const ServiceFormBody = ({
       bottomOffset={BOTTOM_OFFSET}
       contentContainerStyle={{
         paddingTop: insets.topInset,
-        paddingBottom: insets.bottomInset + 16,
+        paddingBottom: insets.bottomInset + 8,
       }}
     >
       <ServiceCategorySelect />

@@ -219,7 +219,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 bottomOffset={BOTTOM_OFFSET}
                 contentContainerStyle={{
                   paddingTop: topInset,
-                  paddingBottom: bottomInset + 16,
+                  paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={
                   <RefreshControl
@@ -315,7 +315,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           derived!.canEdit
                             ? () =>
                                 router.push(
-                                  Routers.app.calendar.slotSelectService({
+                                  Routers.app.createSlotFlow.selectService({
                                     ...derived!.serviceSelectionParams,
                                     mode: "services",
                                   }),
@@ -353,7 +353,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                             derived!.canEdit
                               ? () =>
                                   router.push(
-                                    Routers.app.calendar.slotSelectService({
+                                    Routers.app.createSlotFlow.selectService({
                                       ...derived!.serviceSelectionParams,
                                       mode: "additional",
                                     }),

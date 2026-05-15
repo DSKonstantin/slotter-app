@@ -116,7 +116,7 @@ const AccountScreen = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               paddingTop: topInset + 16,
-              paddingBottom: bottomInset + 16,
+              paddingBottom: bottomInset + 8,
             }}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

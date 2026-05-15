@@ -118,7 +118,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     dispatch(clearSlotDraft());
     dispatch(setSelectedCustomer({ id: customer.id, name: customer.name }));
     release();
-    router.push(Routers.app.calendar.slotSelectService());
+    router.push(Routers.app.createSlotFlow.selectService());
   }, [customer, dispatch, release]);
 
   const handleOpenChat = async () => {
@@ -184,7 +184,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
             }
             contentContainerStyle={{
               paddingTop: topInset,
-              paddingBottom: bottomInset + 16,
+              paddingBottom: bottomInset + 8,
               paddingHorizontal: SCREEN_PADDING,
             }}
           >

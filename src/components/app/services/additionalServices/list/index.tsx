@@ -160,7 +160,7 @@ const AdditionalServicesList = () => {
               contentContainerStyle={{
                 ...listConfig.contentContainerStyle,
                 paddingTop: topInset,
-                paddingBottom: bottomInset + 16,
+                paddingBottom: bottomInset + 8,
               }}
               ListHeaderComponent={
                 <Typography className="text-caption text-neutral-500 mb-2">

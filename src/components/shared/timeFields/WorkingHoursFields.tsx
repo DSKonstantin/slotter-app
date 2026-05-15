@@ -19,6 +19,8 @@ type Props = {
   label?: string;
   startDefault?: Date;
   endDefault?: Date;
+  breakStartDefault?: Date;
+  breakEndDefault?: Date;
   /** Custom node rendered between TimeFields and BreaksFieldArray (e.g. helper text). */
   middleSlot?: ReactNode;
   spacing?: Spacing;
@@ -31,6 +33,8 @@ export const WorkingHoursFields = ({
   label,
   startDefault,
   endDefault,
+  breakStartDefault,
+  breakEndDefault,
   middleSlot,
   spacing = "default",
 }: Props) => (
@@ -43,6 +47,10 @@ export const WorkingHoursFields = ({
       endDefault={endDefault}
     />
     {middleSlot}
-    <BreaksFieldArray name={breaksName} />
+    <BreaksFieldArray
+      name={breaksName}
+      startDefault={breakStartDefault}
+      endDefault={breakEndDefault}
+    />
   </View>
 );

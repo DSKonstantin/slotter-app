@@ -91,7 +91,7 @@ const ClientStatistics = ({ customerId }: Props) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingTop: topInset + 16,
-            paddingBottom: bottomInset + 16,
+            paddingBottom: bottomInset + 8,
             gap: 16,
           }}
           refreshControl={

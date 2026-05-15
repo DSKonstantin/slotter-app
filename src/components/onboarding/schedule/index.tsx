@@ -22,7 +22,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { format } from "date-fns";
 import { getDatesUntilEndOfWeek } from "@/src/utils/schedule/getDatesUntilEndOfWeek";
-import { DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
+import { DEFAULT_BREAK_END, DEFAULT_BREAK_START, DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
 import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 
 const Schedule = () => {
@@ -178,6 +178,8 @@ const Schedule = () => {
             endName="endAt"
             startDefault={DEFAULT_START_AT}
             endDefault={DEFAULT_END_AT}
+            breakStartDefault={DEFAULT_BREAK_START}
+            breakEndDefault={DEFAULT_BREAK_END}
             middleSlot={
               <Typography className="text-caption text-neutral-900">
                 Свободный или сменный график (2/2) можно будет настроить в

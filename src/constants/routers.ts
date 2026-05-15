@@ -56,23 +56,6 @@ export const Routers = {
           pathname: "/(app)/(tabs)/calendar/slot/[id]",
           params: { id: String(id) },
         }) as const,
-      slotSelectService: (params?: {
-        date?: string;
-        time?: string;
-        appointmentId?: string;
-        selectedServiceIds?: string;
-        selectedAdditionalServiceIds?: string;
-        mode?: "services" | "additional";
-      }) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/slot/select-service",
-          params: params ?? {},
-        }) as const,
-      slotCreate: () =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/slot/create",
-        }) as const,
-      slotClientCreate: "/(app)/(tabs)/calendar/slot/create-client" as const,
       clientDetail: (
         id: string | number,
         kind: "customer" | "userCustomer" = "userCustomer",
@@ -85,6 +68,25 @@ export const Routers = {
           },
         }) as const,
     },
+    createSlotFlow: {
+      selectService: (params?: {
+        date?: string;
+        time?: string;
+        appointmentId?: string;
+        selectedServiceIds?: string;
+        selectedAdditionalServiceIds?: string;
+        mode?: "services" | "additional";
+      }) =>
+        ({
+          pathname: "/(app)/create-slot-flow/select-service",
+          params: params ?? {},
+        }) as const,
+      create: () =>
+        ({
+          pathname: "/(app)/create-slot-flow/create",
+        }) as const,
+    },
+    createClient: "/(app)/create-client" as const,
     chat: {
       index: "/(app)/(tabs)/chat" as const,
       room: (id: string | number) =>
