@@ -174,7 +174,12 @@ export function NewChatSheet({ visible, onClose }: Props) {
   );
 
   return (
-    <StModal visible={visible} onClose={onClose} horizontalPadding={false}>
+    <StModal
+      visible={visible}
+      onClose={onClose}
+      horizontalPadding={false}
+      keyboardAware
+    >
       <View className="px-screen pb-3">
         <Typography weight="semibold" className="text-body text-center mb-4">
           Новый чат
