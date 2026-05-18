@@ -11,6 +11,8 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
+import { toast } from "@backpackapp-io/react-native-toast";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const Link = () => {
   const auth = useRequiredAuth();
@@ -26,7 +28,7 @@ const Link = () => {
         message: link,
       });
     } catch (e) {
-      console.log("Share error:", e);
+      console.error("Share error:", e);
     }
   };
 
@@ -43,7 +45,7 @@ const Link = () => {
 
       router.replace(Routers.auth.root);
     } catch (e) {
-      console.log("Update user error:", e);
+      toast.error(getApiErrorMessage(e, "Что-то пошло не так"));
     }
   }, [updateUser, auth]);
 
