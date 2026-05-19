@@ -11,7 +11,7 @@ import {
 } from "@/src/components/ui";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 import RetryInline from "@/src/components/shared/retryInline";
-import { RHFSelect } from "@/src/components/hookForm/rhf-select";
+import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
@@ -120,7 +120,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
 
           {channel === "slotter" && (
             <>
-              <RHFSelect
+              <RHFAutocomplete
                 name="client"
                 label="Клиент"
                 placeholder="Кому отправляем"

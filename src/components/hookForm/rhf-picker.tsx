@@ -1,7 +1,10 @@
 import { useController, useFormContext } from "react-hook-form";
 import { useState } from "react";
-import { View, Pressable, Platform, FlatList } from "react-native";
+import { Platform, View, Pressable } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import RNDateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { BaseField } from "@/src/components/ui/fields/BaseField";
 import { colors } from "@/src/styles/colors";
@@ -14,6 +17,14 @@ const buildDurationItems = (): PickerItem[] =>
     label: String(i * 5),
     value: i * 5,
   }));
+
+const minutesToDate = (minutes: number | null): Date => {
+  const m = typeof minutes === "number" ? minutes : 0;
+  return new Date(0, 0, 0, Math.floor(m / 60), m % 60);
+};
+
+const dateToMinutes = (date: Date): number =>
+  date.getHours() * 60 + date.getMinutes();
 
 type RHFPickerProps = {
   name: string;
@@ -57,6 +68,17 @@ export default function RHFPicker({
     setTempValue(null);
   };
 
+  const handleAndroidChange = (event: DateTimePickerEvent, selected?: Date) => {
+    setModalVisible(false);
+    if (event.type === "set" && selected) {
+      const minutes = dateToMinutes(selected);
+      field.onChange(minutes);
+      onChange?.(minutes);
+    }
+  };
+
+  const currentMinutes = typeof field.value === "number" ? field.value : null;
+
   return (
     <>
       <BaseField
@@ -88,13 +110,25 @@ export default function RHFPicker({
         )}
       />
 
-      <StModal
-        visible={modalVisible}
-        onClose={handleClose}
-        swipeDirection={undefined}
-      >
-        <View>
-          {Platform.OS === "ios" ? (
+      {Platform.OS === "android" && modalVisible && (
+        <RNDateTimePicker
+          value={minutesToDate(currentMinutes)}
+          mode="time"
+          display="spinner"
+          is24Hour
+          minuteInterval={5}
+          themeVariant="light"
+          onChange={handleAndroidChange}
+        />
+      )}
+
+      {Platform.OS === "ios" && (
+        <StModal
+          visible={modalVisible}
+          onClose={handleClose}
+          swipeDirection={undefined}
+        >
+          <View>
             <Picker
               selectedValue={tempValue ?? field.value}
               onValueChange={(value) => setTempValue(value)}
@@ -107,57 +141,14 @@ export default function RHFPicker({
                 />
               ))}
             </Picker>
-          ) : (
-            <FlatList
-              data={resolvedItems}
-              keyExtractor={(item) => String(item.value)}
-              style={{ maxHeight: 180 }}
-              showsVerticalScrollIndicator={false}
-              initialScrollIndex={Math.max(
-                0,
-                resolvedItems.findIndex(
-                  (item) => item.value === (tempValue ?? field.value),
-                ),
-              )}
-              getItemLayout={(_, index) => ({
-                length: 48,
-                offset: 48 * index,
-                index,
-              })}
-              renderItem={({ item }) => {
-                const isSelected = item.value === (tempValue ?? field.value);
-                return (
-                  <Pressable
-                    onPress={() => setTempValue(item.value)}
-                    className="h-[48px] items-center justify-center px-4 rounded-small active:opacity-70"
-                    style={{
-                      backgroundColor: isSelected
-                        ? colors.background.surface
-                        : "transparent",
-                    }}
-                  >
-                    <Typography
-                      className="text-body text-center"
-                      style={{
-                        color: isSelected
-                          ? colors.neutral[900]
-                          : colors.neutral[500],
-                      }}
-                    >
-                      {item.label}
-                    </Typography>
-                  </Pressable>
-                );
-              }}
-            />
-          )}
-        </View>
+          </View>
 
-        <View className="gap-3 mt-4">
-          <Button title="Готово" onPress={handleConfirm} />
-          <Button title="Отмена" variant="secondary" onPress={handleClose} />
-        </View>
-      </StModal>
+          <View className="gap-3 mt-4">
+            <Button title="Готово" onPress={handleConfirm} />
+            <Button title="Отмена" variant="secondary" onPress={handleClose} />
+          </View>
+        </StModal>
+      )}
     </>
   );
 }

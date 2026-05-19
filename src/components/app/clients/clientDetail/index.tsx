@@ -135,48 +135,44 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     }
   };
 
-  if (customerLoading) {
-    return (
-      <ScreenWithToolbar title="Карточка клиента">
-        {({ topInset, bottomInset }) => (
-          <ClientDetailSkeleton topInset={topInset} bottomInset={bottomInset} />
-        )}
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (customerError || !customer) {
-    return (
-      <ScreenWithToolbar title="Карточка клиента">
-        {() => (
-          <ErrorScreen
-            title="Не удалось загрузить клиента"
-            onRetry={refetchCustomer}
-          />
-        )}
-      </ScreenWithToolbar>
-    );
-  }
-
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar
         title="Карточка клиента"
         rightButton={
-          <IconButton
-            icon={
-              <StSvg
-                name="Meatballs_menu"
-                size={28}
-                color={colors.neutral[900]}
-              />
-            }
-            onPress={handleOpenMenu}
-          />
+          customer ? (
+            <IconButton
+              icon={
+                <StSvg
+                  name="Meatballs_menu"
+                  size={28}
+                  color={colors.neutral[900]}
+                />
+              }
+              onPress={handleOpenMenu}
+            />
+          ) : undefined
         }
       >
-        {({ topInset, bottomInset }) => (
-          <KeyboardAwareScrollView
+        {({ topInset, bottomInset }) => {
+          if (customerLoading) {
+            return (
+              <ClientDetailSkeleton
+                topInset={topInset}
+                bottomInset={bottomInset}
+              />
+            );
+          }
+          if (customerError || !customer) {
+            return (
+              <ErrorScreen
+                title="Не удалось загрузить клиента"
+                onRetry={refetchCustomer}
+              />
+            );
+          }
+          return (
+            <KeyboardAwareScrollView
             showsVerticalScrollIndicator={false}
             bottomOffset={BOTTOM_OFFSET}
             refreshControl={
@@ -315,7 +311,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               )}
             </View>
           </KeyboardAwareScrollView>
-        )}
+          );
+        }}
       </ScreenWithToolbar>
 
       {auth && userCustomer && (
@@ -331,7 +328,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
       <ContactsModal
         visible={contactsVisible}
         onClose={handleCloseContacts}
-        phone={customer.phone}
+        phone={customer?.phone}
       />
 
       <ClientMenuModal

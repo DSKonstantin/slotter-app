@@ -186,30 +186,24 @@ const Links = () => {
 
   if (!auth) return null;
 
-  if (isLoading) {
-    return (
-      <ScreenWithToolbar title="Ссылки">
-        {({ topInset }) => <LinksSkeleton topInset={topInset} />}
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (error) {
-    return (
-      <ScreenWithToolbar title="Ссылки">
-        {() => (
-          <ErrorScreen title="Не удалось загрузить ссылки" onRetry={refetch} />
-        )}
-      </ScreenWithToolbar>
-    );
-  }
-
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Ссылки">
-        {({ topInset, bottomInset }) => (
-          <>
-            <KeyboardAwareScrollView
+        {({ topInset, bottomInset }) => {
+          if (isLoading) {
+            return <LinksSkeleton topInset={topInset} />;
+          }
+          if (error) {
+            return (
+              <ErrorScreen
+                title="Не удалось загрузить ссылки"
+                onRetry={refetch}
+              />
+            );
+          }
+          return (
+            <>
+              <KeyboardAwareScrollView
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
@@ -298,8 +292,9 @@ const Links = () => {
                 }
               />
             </View>
-          </>
-        )}
+            </>
+          );
+        }}
       </ScreenWithToolbar>
     </FormProvider>
   );

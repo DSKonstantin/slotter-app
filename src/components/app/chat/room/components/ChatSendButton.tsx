@@ -18,7 +18,10 @@ const ChatSendButton = ({ text, onSend }: SendProps<IMessage>) => {
       onPress={handlePress}
       disabled={!hasText}
       className="self-end justify-center items-center w-[48px] h-[48px] rounded-full active:opacity-70 bg-background-surface"
-      style={!hasText ? { opacity: 0.3 } : undefined}
+      style={{
+        opacity: hasText ? 1 : 0.3,
+        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)",
+      }}
     >
       <StSvg name="Arrow_top" size={20} color={colors.neutral[900]} />
     </Pressable>

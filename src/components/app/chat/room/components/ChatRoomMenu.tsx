@@ -37,7 +37,7 @@ const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
 
   const handleHistory = () => {
     onClose();
-    router.push(Routers.app.clients.history(interlocutor.id));
+    router.push(Routers.app.chat.clientHistory(interlocutor.id));
   };
 
   const { isNotify } = useGetChatRoomsQuery(undefined, {

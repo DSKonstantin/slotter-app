@@ -33,7 +33,7 @@ const CreateActionModal = ({ visible, onClose }: Props) => {
       subtitle: "Добавить в базу",
       onPress: () => {
         onClose();
-        router.push(Routers.app.clients.create);
+        router.push(Routers.app.createClient);
       },
     },
     {

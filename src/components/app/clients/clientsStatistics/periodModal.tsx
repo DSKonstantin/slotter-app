@@ -6,7 +6,13 @@ import {
   formatDayMonthLong,
   formatDayMonthYearLong,
 } from "@/src/utils/date/formatDate";
-import { Divider, Item, StModal, Typography } from "@/src/components/ui";
+import {
+  Button,
+  Divider,
+  Item,
+  StModal,
+  Typography,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { pickerCalendarTheme } from "@/src/styles/calendarTheme";
 
@@ -83,8 +89,12 @@ const PeriodModal = ({
       setCalendarVisible(false);
       setRangeStart(null);
       setRangeEnd(null);
+    } else if (selectedPeriod.value === CUSTOM_PERIOD_VALUE) {
+      setCalendarVisible(true);
+      setRangeStart(selectedPeriod.date_from ?? null);
+      setRangeEnd(selectedPeriod.date_to ?? null);
     }
-  }, [visible]);
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectPeriod = (period: Period) => {
     setCalendarVisible(false);
@@ -115,8 +125,14 @@ const PeriodModal = ({
       dateString < rangeStart
         ? [dateString, rangeStart]
         : [rangeStart, dateString];
+    setRangeStart(start);
     setRangeEnd(end);
-    setCalendarVisible(false);
+  };
+
+  const handleApply = () => {
+    if (!rangeStart) return;
+    const start = rangeStart;
+    const end = rangeEnd ?? rangeStart;
     const label =
       start === end
         ? formatDayMonthYearLong(new Date(start))
@@ -127,6 +143,7 @@ const PeriodModal = ({
       date_from: start,
       date_to: end,
     });
+    onClose();
   };
 
   const markedDates = useMemo(
@@ -160,17 +177,19 @@ const PeriodModal = ({
         />
 
         {calendarVisible && (
-          <View
-            style={{
-              minHeight: 340,
-            }}
-          >
+          <View style={{ minHeight: 340 }}>
             <Calendar
               current={rangeStart ?? formatApiDate(new Date())}
               onDayPress={(day) => handleDayPress(day.dateString)}
               markedDates={markedDates}
               hideExtraDays
               theme={pickerCalendarTheme}
+            />
+            <Button
+              title="Применить"
+              disabled={!rangeStart}
+              onPress={handleApply}
+              buttonClassName="mt-3 w-full"
             />
           </View>
         )}

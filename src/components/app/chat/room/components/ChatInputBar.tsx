@@ -38,6 +38,9 @@ const ChatInputBar = ({
         {...toolbarProps}
         renderActions={() => (
           <IconButton
+            style={{
+              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)",
+            }}
             icon={
               <StSvg name="paper_clip" size={24} color={colors.neutral[900]} />
             }

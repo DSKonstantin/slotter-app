@@ -94,6 +94,11 @@ export const Routers = {
           pathname: "/(app)/chat/[id]",
           params: { id: String(id) },
         }) as const,
+      clientHistory: (customerId: string | number) =>
+        ({
+          pathname: "/(app)/chat/client-history/[id]",
+          params: { id: String(customerId) },
+        }) as const,
     },
     clients: {
       root: "/(app)/(tabs)/clients",

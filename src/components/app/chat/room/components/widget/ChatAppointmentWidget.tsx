@@ -30,8 +30,6 @@ const ChatAppointmentWidget = ({
   onLongPress,
   masterName = "Мастер",
   masterAvatar,
-  customerName,
-  customerAvatar,
   serviceName,
   onAccept,
 }: Props) => {
@@ -42,8 +40,6 @@ const ChatAppointmentWidget = ({
         className="rounded-2xl overflow-hidden px-4 py-4 items-center"
         style={{
           backgroundColor: colors.neutral[0],
-          borderWidth: 1,
-          borderColor: colors.neutral[100],
           width: 280,
           margin: 4,
         }}
@@ -88,11 +84,7 @@ const ChatAppointmentWidget = ({
       }}
     >
       <View className="flex-row items-center gap-3 mb-3">
-        <Avatar
-          name={customerName || masterName}
-          uri={customerAvatar || masterAvatar}
-          size="sm"
-        />
+        <Avatar name={masterName} uri={masterAvatar} size="sm" />
         <Typography className="text-sm text-neutral-500">
           {masterName} предлагает время
         </Typography>

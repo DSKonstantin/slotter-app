@@ -8,7 +8,7 @@ import React, {
 import { router } from "expo-router";
 import { ActivityIndicator, Alert, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { GiftedChat } from "react-native-gifted-chat";
+import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -427,6 +427,102 @@ export default function ChatRoom({ roomId }: Props) {
     [],
   );
 
+  // ── Render callbacks ──────────────────────────────────────────────────
+  const handleCancelReply = useCallback(() => setReplyingTo(null), []);
+  const handleOpenAttach = useCallback(() => setAttachVisible(true), []);
+
+  const renderScrollToBottom = useCallback(() => <ChatScrollBottomButton />, []);
+  const renderMessage = useCallback(
+    (props: React.ComponentProps<typeof ChatMessage>) => (
+      <ChatMessage {...props} />
+    ),
+    [],
+  );
+  const renderMessageImage = useCallback(
+    (props: React.ComponentProps<typeof ChatMessageImages>) => (
+      <ChatMessageImages {...props} />
+    ),
+    [],
+  );
+  const renderSend = useCallback(
+    (props: React.ComponentProps<typeof ChatSendButton>) => (
+      <ChatSendButton {...props} />
+    ),
+    [],
+  );
+  const renderSystemMessage = useCallback(
+    (props: React.ComponentProps<typeof ChatSystemMessage>) => (
+      <ChatSystemMessage {...props} />
+    ),
+    [],
+  );
+  const renderInputToolbar = useCallback(
+    (props: InputToolbarProps<ChatIMessage>) => (
+      <ChatInputBar
+        {...props}
+        replyingTo={replyingTo}
+        onCancelReply={handleCancelReply}
+        onOpenAttachMenu={handleOpenAttach}
+        onHeightChange={setInputBarHeight}
+      />
+    ),
+    [replyingTo, handleCancelReply, handleOpenAttach],
+  );
+  const renderBubble = useCallback(
+    (props: React.ComponentProps<typeof ChatBubble>) => {
+      const msg = (props as { currentMessage?: ChatIMessage }).currentMessage;
+      const widget = msg?.widget;
+      if (widget) {
+        const isOwnMessage = msg.user._id === (currentGiftedId ?? 0);
+        if (widget.kind === "service_card") {
+          return (
+            <ChatServiceWidget
+              service={widget.widgetable}
+              onLongPress={() => setMenuMessage(msg)}
+            />
+          );
+        }
+        if (widget.kind === "appointment_proposal") {
+          const serviceName = widget.widgetable?.services?.[0]?.name;
+          return (
+            <ChatAppointmentWidget
+              appointment={widget.widgetable}
+              payload={widget.payload}
+              isOwnMessage={isOwnMessage}
+              onLongPress={() => setMenuMessage(msg)}
+              masterName={msg.user?.name}
+              masterAvatar={msg.user?.avatar as string | undefined}
+              customerName={interlocutor?.name}
+              customerAvatar={interlocutor?.avatar_url ?? undefined}
+              serviceName={serviceName}
+              onAccept={
+                widget.widgetable
+                  ? () => handleAcceptAppointment(widget.widgetable!.id)
+                  : undefined
+              }
+            />
+          );
+        }
+      }
+      return <ChatBubble {...(props as React.ComponentProps<typeof ChatBubble>)} />;
+    },
+    [currentGiftedId, interlocutor, handleAcceptAppointment],
+  );
+  const renderChatEmpty = useCallback(
+    () =>
+      isLoading ? (
+        <View
+          className="flex-1 items-center justify-center pb-20"
+          style={{ transform: [{ scaleY: -1 }] }}
+        >
+          <ActivityIndicator color={colors.neutral[500]} />
+        </View>
+      ) : (
+        <ChatEmptyState />
+      ),
+    [isLoading],
+  );
+
   // ── Render ────────────────────────────────────────────────────────────
   const titleNode = useMemo(
     () =>
@@ -522,75 +618,15 @@ export default function ChatRoom({ roomId }: Props) {
                   onPress: handleLoadEarlier,
                   label: "Загрузить ранее",
                 }}
-                scrollToBottomComponent={() => <ChatScrollBottomButton />}
+                scrollToBottomComponent={renderScrollToBottom}
                 renderAvatar={null}
-                renderMessage={(props) => <ChatMessage {...props} />}
-                renderBubble={(props) => {
-                  const msg = props.currentMessage as ChatIMessage | undefined;
-                  const widget = msg?.widget;
-                  if (widget) {
-                    const isOwnMessage =
-                      msg.user._id === (currentGiftedId ?? 0);
-                    if (widget.kind === "service_card") {
-                      return (
-                        <ChatServiceWidget
-                          service={widget.widgetable}
-                          onLongPress={() => setMenuMessage(msg)}
-                        />
-                      );
-                    }
-                    if (widget.kind === "appointment_proposal") {
-                      const serviceName =
-                        widget.widgetable?.services?.[0]?.name;
-                      return (
-                        <ChatAppointmentWidget
-                          appointment={widget.widgetable}
-                          payload={widget.payload}
-                          isOwnMessage={isOwnMessage}
-                          onLongPress={() => setMenuMessage(msg)}
-                          masterName={msg.user?.name}
-                          masterAvatar={msg.user?.avatar as string | undefined}
-                          customerName={interlocutor?.name}
-                          customerAvatar={interlocutor?.avatar_url ?? undefined}
-                          serviceName={serviceName}
-                          onAccept={
-                            widget.widgetable
-                              ? () =>
-                                  handleAcceptAppointment(widget.widgetable!.id)
-                              : undefined
-                          }
-                        />
-                      );
-                    }
-                  }
-                  return <ChatBubble {...props} />;
-                }}
-                renderMessageImage={(props) => <ChatMessageImages {...props} />}
-                renderInputToolbar={(props) => (
-                  <ChatInputBar
-                    {...props}
-                    replyingTo={replyingTo}
-                    onCancelReply={() => setReplyingTo(null)}
-                    onOpenAttachMenu={() => setAttachVisible(true)}
-                    onHeightChange={setInputBarHeight}
-                  />
-                )}
-                renderSend={(props) => <ChatSendButton {...props} />}
-                renderSystemMessage={(props) => (
-                  <ChatSystemMessage {...props} />
-                )}
-                renderChatEmpty={() =>
-                  isLoading ? (
-                    <View
-                      className="flex-1 items-center justify-center pb-20"
-                      style={{ transform: [{ scaleY: -1 }] }}
-                    >
-                      <ActivityIndicator color={colors.neutral[500]} />
-                    </View>
-                  ) : (
-                    <ChatEmptyState />
-                  )
-                }
+                renderMessage={renderMessage}
+                renderBubble={renderBubble}
+                renderMessageImage={renderMessageImage}
+                renderInputToolbar={renderInputToolbar}
+                renderSend={renderSend}
+                renderSystemMessage={renderSystemMessage}
+                renderChatEmpty={renderChatEmpty}
                 messagesContainerStyle={{
                   backgroundColor: colors.background.DEFAULT,
                 }}

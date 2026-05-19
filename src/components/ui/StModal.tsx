@@ -8,6 +8,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { Toasts } from "@backpackapp-io/react-native-toast";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
 import { BlurView } from "expo-blur";
@@ -151,6 +152,7 @@ export const StModal = ({
 
         {footer}
       </View>
+      <Toasts overrideDarkMode={true} />
     </Modal>
   );
 };
