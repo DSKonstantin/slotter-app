@@ -23,7 +23,7 @@ const TimeLabels = ({ segStart, segEnd }: TimeLabelsProps) => {
       {hourMinutes.map((hMin) => (
         <Typography
           key={hMin}
-          className="text-caption text-gray-500 absolute"
+          className="text-caption text-neutral-500 absolute"
           style={{
             top: (hMin - segStart) * MINUTE_HEIGHT,
           }}

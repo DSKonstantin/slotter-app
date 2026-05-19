@@ -30,9 +30,14 @@ const servicesSlice = createSlice({
     setEditModeType(state, action: PayloadAction<EditModeType>) {
       state.editModeType = action.payload;
     },
+    resetEditMode(state) {
+      state.isEditMode = false;
+      state.editModeType = "categories";
+    },
   },
 });
 
-export const { toggleEditMode, setEditModeType } = servicesSlice.actions;
+export const { toggleEditMode, setEditModeType, resetEditMode } =
+  servicesSlice.actions;
 
 export default servicesSlice.reducer;

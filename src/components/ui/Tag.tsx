@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleProp, ViewStyle } from "react-native";
 import { ReactNode } from "react";
 
 type TagVariant =
@@ -18,6 +18,8 @@ type TagProps = {
   size?: TagSize;
   icon?: ReactNode;
   onPress?: () => void;
+  containerClassName?: string;
+  containerStyle?: StyleProp<ViewStyle>;
 };
 
 export function Tag({
@@ -26,12 +28,15 @@ export function Tag({
   size = "md",
   icon,
   onPress,
+  containerClassName,
+  containerStyle,
 }: TagProps) {
   const Container = onPress ? Pressable : View;
   return (
     <Container
       onPress={onPress as never}
-      className={`${styles.base} ${styles.sizes[size]} ${styles.variants[variant]}`}
+      className={`${styles.base} ${onPress ? styles.pressable : ""} ${styles.sizes[size]} ${styles.variants[variant]}${containerClassName ? ` ${containerClassName}` : ""}`}
+      style={containerStyle}
     >
       <Text
         className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}
@@ -50,7 +55,8 @@ export function Tag({
 }
 
 const styles = {
-  base: "flex-row items-center justify-center rounded-lg self-start active:opacity-70",
+  base: "flex-row items-center justify-center rounded-lg self-start",
+  pressable: "active:opacity-70",
 
   sizes: {
     sm: "h-[26px] px-2",

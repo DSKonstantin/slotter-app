@@ -21,6 +21,13 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
       <StSvg name="Expand_right" size={16} color={colors.accent.yellow[700]} />
     ),
   },
+  proposed: {
+    label: "Предложено",
+    variant: "info",
+    icon: (
+      <StSvg name="Expand_right" size={16} color={colors.primary.blue[500]} />
+    ),
+  },
   confirmed: {
     label: "Подтверждено",
     variant: "success",
@@ -44,5 +51,9 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
   cancelled: {
     label: "Отменили",
     variant: "secondary",
+  },
+  declined: {
+    label: "Отклонено",
+    variant: "error",
   },
 };

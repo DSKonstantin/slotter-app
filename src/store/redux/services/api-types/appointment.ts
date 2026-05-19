@@ -1,11 +1,13 @@
 export type AppointmentStatus =
   | "pending"
+  | "proposed"
   | "confirmed"
   | "arrived"
   | "completed"
   | "late"
   | "no_show"
-  | "cancelled";
+  | "cancelled"
+  | "declined";
 
 export type PaymentMethod = "cash" | "sbp" | "online_bank";
 

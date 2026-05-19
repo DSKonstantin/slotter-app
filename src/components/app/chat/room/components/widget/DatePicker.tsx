@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { addDays, format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
-import { Card, StSvg, Typography } from "@/src/components/ui";
+import { addDays } from "date-fns";
+import { Calendar } from "react-native-calendars";
+import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { formatApiDate, formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { formatApiDate } from "@/src/utils/date/formatDate";
+import { pickerCalendarTheme } from "@/src/styles/calendarTheme";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import RetryInline from "@/src/components/shared/retryInline";
 
@@ -16,32 +17,34 @@ type Props = {
 };
 
 const DatePicker = ({ userId, onPick }: Props) => {
-  const dateRange = useMemo(() => {
-    const today = new Date();
-    return {
-      date_from: formatApiDate(today),
-      date_to: formatApiDate(addDays(today, DATE_RANGE_DAYS)),
-    };
-  }, []);
+  const today = formatApiDate(new Date());
+
+  const dateRange = useMemo(
+    () => ({
+      date_from: today,
+      date_to: formatApiDate(addDays(new Date(), DATE_RANGE_DAYS)),
+    }),
+    [today],
+  );
 
   const {
     data: workingDaysData,
     isLoading,
     isError,
     refetch,
-  } = useGetWorkingDaysQuery({
-    userId,
-    ...dateRange,
-  });
+  } = useGetWorkingDaysQuery({ userId, ...dateRange });
 
-  const dates = useMemo(() => {
-    if (!workingDaysData) return [];
-    const todayKey = formatApiDate(new Date());
-    return Object.entries(workingDaysData)
-      .filter(([key, wd]) => wd?.is_active && key >= todayKey)
-      .map(([key]) => key)
-      .sort();
-  }, [workingDaysData]);
+  const markedDates = useMemo(() => {
+    if (!workingDaysData) return {};
+    return Object.entries(workingDaysData).reduce<
+      Record<string, { marked: boolean; dotColor: string; disabled?: boolean }>
+    >((acc, [date, wd]) => {
+      if (wd?.is_active && date >= today) {
+        acc[date] = { marked: true, dotColor: colors.primary.blue[500] };
+      }
+      return acc;
+    }, {});
+  }, [workingDaysData, today]);
 
   if (isLoading) {
     return (
@@ -50,6 +53,7 @@ const DatePicker = ({ userId, onPick }: Props) => {
       </View>
     );
   }
+
   if (isError && !workingDaysData) {
     return (
       <View className="py-6">
@@ -61,7 +65,8 @@ const DatePicker = ({ userId, onPick }: Props) => {
       </View>
     );
   }
-  if (dates.length === 0) {
+
+  if (Object.keys(markedDates).length === 0) {
     return (
       <View className="items-center py-6">
         <Typography className="text-neutral-400">
@@ -72,26 +77,18 @@ const DatePicker = ({ userId, onPick }: Props) => {
   }
 
   return (
-    <View className="gap-2">
-      {dates.map((date) => {
-        const d = parseISO(date);
-        return (
-          <Card
-            key={date}
-            title={formatDayMonthLong(d)}
-            subtitle={format(d, "EEEE", { locale: ru })}
-            onPress={() => onPick(date)}
-            right={
-              <StSvg
-                name="Expand_right_light"
-                size={24}
-                color={colors.neutral[500]}
-              />
-            }
-          />
-        );
-      })}
-    </View>
+    <Calendar
+      minDate={today}
+      maxDate={dateRange.date_to}
+      markedDates={markedDates}
+      onDayPress={(day) => {
+        if (markedDates[day.dateString]) {
+          onPick(day.dateString);
+        }
+      }}
+      disableAllTouchEventsForDisabledDays
+      theme={pickerCalendarTheme}
+    />
   );
 };
 

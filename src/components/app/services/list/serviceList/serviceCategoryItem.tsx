@@ -84,6 +84,7 @@ const ServiceCategoryItem = ({
         activeCount={activeServicesCount}
         totalCount={category.services?.length ?? 0}
         isEditMode={isEditMode}
+        isActive={category.is_active}
         onDrag={onDrag}
         isDragActive={isDragActive}
         isExpanded={isExpanded}

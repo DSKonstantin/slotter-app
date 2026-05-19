@@ -168,6 +168,28 @@ const appointmentsApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Appointments"],
     }),
+
+    customerAcceptAppointment: builder.mutation<
+      { appointment: Appointment },
+      number
+    >({
+      query: (id) => ({
+        url: `/appointments/${id}/customer_accept`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Appointments"],
+    }),
+
+    customerDeclineAppointment: builder.mutation<
+      { appointment: Appointment },
+      number
+    >({
+      query: (id) => ({
+        url: `/appointments/${id}/customer_decline`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Appointments"],
+    }),
   }),
 });
 
@@ -187,4 +209,6 @@ export const {
   useRescheduleAppointmentMutation,
   useRemindAppointmentMutation,
   useCancelAppointmentByTokenMutation,
+  useCustomerAcceptAppointmentMutation,
+  useCustomerDeclineAppointmentMutation,
 } = appointmentsApi;

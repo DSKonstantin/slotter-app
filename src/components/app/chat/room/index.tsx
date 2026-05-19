@@ -49,6 +49,7 @@ import {
 import {
   useCancelAppointmentMutation,
   useCreateAppointmentMutation,
+  useCustomerAcceptAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -71,6 +72,7 @@ export default function ChatRoom({ roomId }: Props) {
   const [attachVisible, setAttachVisible] = useState(false);
   const [isProposing, setIsProposing] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
+  const [inputBarHeight, setInputBarHeight] = useState(70);
   const loadingMoreRef = useRef(false);
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
 
@@ -130,6 +132,7 @@ export default function ChatRoom({ roomId }: Props) {
   const [createMessage] = useCreateChatMessageMutation();
   const [createAppointment] = useCreateAppointmentMutation();
   const [cancelAppointment] = useCancelAppointmentMutation();
+  const [customerAcceptAppointment] = useCustomerAcceptAppointmentMutation();
 
   // ── Mark room read on open ────────────────────────────────────────────
   useEffect(() => {
@@ -290,10 +293,12 @@ export default function ChatRoom({ roomId }: Props) {
   const handleProposeAppointment = useCallback(
     async ({
       service,
+      additionalServiceId,
       date,
       startTime,
     }: {
       service: Service;
+      additionalServiceId?: number;
       date: string;
       startTime: string;
     }) => {
@@ -312,6 +317,9 @@ export default function ChatRoom({ roomId }: Props) {
             date,
             start_time: startTime,
             service_ids: [service.id],
+            ...(additionalServiceId && {
+              additional_service_ids: [additionalServiceId],
+            }),
             duration: service.duration,
             price_cents: service.price_cents,
           },
@@ -395,6 +403,17 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Message actions ───────────────────────────────────────────────────
+  const handleAcceptAppointment = useCallback(
+    async (appointmentId: number) => {
+      try {
+        await customerAcceptAppointment(appointmentId).unwrap();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось подтвердить запись"));
+      }
+    },
+    [customerAcceptAppointment],
+  );
+
   const handleReply = useCallback((message: ChatIMessage) => {
     setReplyingTo(message);
   }, []);
@@ -521,7 +540,8 @@ export default function ChatRoom({ roomId }: Props) {
                       );
                     }
                     if (widget.kind === "appointment_proposal") {
-                      const serviceName = widget.widgetable?.services?.[0]?.name;
+                      const serviceName =
+                        widget.widgetable?.services?.[0]?.name;
                       return (
                         <ChatAppointmentWidget
                           appointment={widget.widgetable}
@@ -529,10 +549,16 @@ export default function ChatRoom({ roomId }: Props) {
                           isOwnMessage={isOwnMessage}
                           onLongPress={() => setMenuMessage(msg)}
                           masterName={msg.user?.name}
-                          masterAvatar={msg.user?.avatar}
+                          masterAvatar={msg.user?.avatar as string | undefined}
                           customerName={interlocutor?.name}
-                          customerAvatar={interlocutor?.avatar_url}
+                          customerAvatar={interlocutor?.avatar_url ?? undefined}
                           serviceName={serviceName}
+                          onAccept={
+                            widget.widgetable
+                              ? () =>
+                                  handleAcceptAppointment(widget.widgetable!.id)
+                              : undefined
+                          }
                         />
                       );
                     }
@@ -545,9 +571,8 @@ export default function ChatRoom({ roomId }: Props) {
                     {...props}
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
-                    onAttach={handleAttach}
-                    isUser={resourceType === "user"}
                     onOpenAttachMenu={() => setAttachVisible(true)}
+                    onHeightChange={setInputBarHeight}
                   />
                 )}
                 renderSend={(props) => <ChatSendButton {...props} />}
@@ -571,7 +596,7 @@ export default function ChatRoom({ roomId }: Props) {
                 }}
                 listProps={{
                   contentContainerStyle: {
-                    paddingTop: 70 + bottomInset,
+                    paddingTop: inputBarHeight + bottomInset,
                     paddingBottom: topInset,
                     flexGrow: 1,
                   },
@@ -599,8 +624,10 @@ export default function ChatRoom({ roomId }: Props) {
           onClose={() => setAttachVisible(false)}
           userId={currentUser.id}
           isSubmitting={isProposing}
+          isUser={resourceType === "user"}
           onPickService={handleAttachWidget}
           onProposeAppointment={handleProposeAppointment}
+          onAttachFile={handleAttach}
         />
       )}
 

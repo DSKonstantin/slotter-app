@@ -181,7 +181,7 @@ export function NewChatSheet({ visible, onClose }: Props) {
       keyboardAware
     >
       <View className="px-screen pb-3">
-        <Typography weight="semibold" className="text-body text-center mb-4">
+        <Typography weight="semibold" className="text-display text-center">
           Новый чат
         </Typography>
         <View className="flex-row items-center bg-neutral-100 rounded-xl px-3 gap-2">

@@ -19,10 +19,7 @@ const DateSelectorModal = ({
   return (
     <StModal visible={!!modalDate} onClose={onClose}>
       <View className="gap-3">
-        <Typography
-          weight="semibold"
-          className="mt-2.5 text-display text-center"
-        >
+        <Typography weight="semibold" className="text-display text-center">
           {modalDate ? format(modalDate, "d MMMM yyyy", { locale: ru }) : ""}
         </Typography>
 

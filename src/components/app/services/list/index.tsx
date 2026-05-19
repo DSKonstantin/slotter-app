@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { RefreshControl, View } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { NestableScrollContainer } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Button, IconButton, StModal, StSvg } from "@/src/components/ui";
@@ -14,7 +14,10 @@ import { AdditionalListItem } from "@/src/components/app/services/list/additiona
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
-import { toggleEditMode } from "@/src/store/redux/slices/servicesSlice";
+import {
+  resetEditMode,
+  toggleEditMode,
+} from "@/src/store/redux/slices/servicesSlice";
 import ServiceList from "@/src/components/app/services/list/serviceList";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
@@ -49,6 +52,7 @@ const ServicesToolbarActions = memo(ServicesToolbarActionsComponent);
 const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
 
   const {
     data: categoriesData,
@@ -145,6 +149,14 @@ const AppServices = () => {
     isAdditionalFetchingNextPage,
   ]);
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        dispatch(resetEditMode());
+      };
+    }, [dispatch]),
+  );
+
   if (!auth) {
     return null;
   }
@@ -158,79 +170,74 @@ const AppServices = () => {
           categories.length > 0 ? <ServicesToolbarActions /> : undefined
         }
       >
-        {({ topInset, bottomInset }) => {
-          return (
-            <>
-              <View
-                className="flex-row gap-2.5 px-screen pb-4"
-                style={{ marginTop: topInset }}
-              >
-                <Button
-                  title="Создать услугу"
-                  onPress={createService}
-                  rightIcon={
-                    <StSvg
-                      name="Add_ring_fill"
-                      size={24}
-                      color={colors.neutral[0]}
-                    />
-                  }
-                  buttonClassName="flex-1"
-                />
-                <Button
-                  title="Категории"
-                  variant="secondary"
-                  textVariant="accent"
-                  onPress={createCategories}
-                  buttonClassName="flex-1"
-                  rightIcon={
-                    <StSvg
-                      name="File_dock_search_fill"
-                      size={24}
-                      color={colors.primary.blue[500]}
-                    />
-                  }
-                />
-              </View>
-
-              <NestableScrollContainer
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{
-                  gap: 24,
-                  paddingHorizontal: SCREEN_PADDING,
-                  paddingBottom: bottomInset + 8,
-                }}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
+        {({ topInset, bottomInset }) => (
+          <>
+            <View
+              className="flex-row gap-2.5 px-screen pb-4"
+              style={{ marginTop: topInset }}
+            >
+              <Button
+                title="Создать услугу"
+                onPress={createService}
+                rightIcon={
+                  <StSvg
+                    name="Add_ring_fill"
+                    size={24}
+                    color={colors.neutral[0]}
                   />
                 }
-              >
-                <ServiceList
-                  categories={categories}
-                  isLoading={isCategoriesLoading}
-                  isError={isCategoriesError}
-                  isFetching={isCategoriesFetching}
-                  hasNextPage={hasNextPage}
-                  isFetchingNextPage={isFetchingNextPage}
-                  onRefresh={handleCategoriesRefresh}
-                  onLoadMore={fetchNextPage}
-                />
-                <AdditionalList
-                  services={additionalServices}
-                  isLoading={isAdditionalLoading}
-                  isError={isAdditionalError}
-                  isFetching={isAdditionalFetching}
-                  hasNextPage={hasAdditionalNextPage}
-                  isFetchingNextPage={isAdditionalFetchingNextPage}
-                  onRefresh={handleAdditionalRefresh}
-                  onLoadMore={handleAdditionalLoadMore}
-                />
-              </NestableScrollContainer>
-            </>
-          );
-        }}
+                buttonClassName="flex-1"
+              />
+              <Button
+                title="Категории"
+                variant="secondary"
+                textVariant="accent"
+                onPress={createCategories}
+                buttonClassName="flex-1"
+                rightIcon={
+                  <StSvg
+                    name="File_dock_search_fill"
+                    size={24}
+                    color={colors.primary.blue[500]}
+                  />
+                }
+              />
+            </View>
+
+            <NestableScrollContainer
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                gap: 24,
+                paddingHorizontal: SCREEN_PADDING,
+                paddingBottom: bottomInset + 8,
+              }}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+            >
+              <ServiceList
+                categories={categories}
+                isLoading={isCategoriesLoading}
+                isError={isCategoriesError}
+                isFetching={isCategoriesFetching}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onRefresh={handleCategoriesRefresh}
+                onLoadMore={fetchNextPage}
+              />
+              <AdditionalList
+                services={additionalServices}
+                isLoading={isAdditionalLoading}
+                isError={isAdditionalError}
+                isFetching={isAdditionalFetching}
+                hasNextPage={hasAdditionalNextPage}
+                isFetchingNextPage={isAdditionalFetchingNextPage}
+                onRefresh={handleAdditionalRefresh}
+                onLoadMore={handleAdditionalLoadMore}
+              />
+            </NestableScrollContainer>
+          </>
+        )}
       </ScreenWithToolbar>
       <StModal
         visible={createModalVisible}

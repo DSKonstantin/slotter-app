@@ -3,8 +3,8 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  useState,
   useRef,
+  useState,
 } from "react";
 import type {
   Appointment,
@@ -38,9 +38,11 @@ type TimeSlotListProps = {
   appointments: Appointment[];
   breaks?: WorkingDayBreak[];
   workingDayId?: number;
+  userId?: number;
   startAt?: string;
   endAt?: string;
   date?: string;
+  isActive?: boolean;
   onHighlightScroll?: (y: number) => void;
 };
 
@@ -48,14 +50,20 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointments,
   breaks = [],
   workingDayId,
+  userId,
   startAt,
   endAt,
   date,
+  isActive,
   onHighlightScroll,
 }) => {
   const now = new Date();
   const isToday = isCurrentDay(date);
-  const hasScrolledRef = useRef(false);
+  const onHighlightScrollRef = useRef(onHighlightScroll);
+  useEffect(() => {
+    onHighlightScrollRef.current = onHighlightScroll;
+  });
+
   const dispatch = useAppDispatch();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
   const highlightSlotId = useAppSelector(
@@ -117,14 +125,10 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const isNowInRange =
     currentMinutes >= effectiveStart && currentMinutes <= timelineEnd;
 
-  const targetScrollY = useMemo(() => {
+  const computeTargetScrollY = useCallback(() => {
     if (highlightSlotId) {
       const slot = appointments.find((a) => a.id === highlightSlotId);
-
-      if (!slot) {
-        return null;
-      }
-
+      if (!slot) return null;
       return Math.max(
         0,
         (parseTime(slot.start_time) - effectiveStart) * MINUTE_HEIGHT - 50,
@@ -133,40 +137,29 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
     if (isToday && isNowInRange) {
       const screenHeight = Dimensions.get("window").height;
-
       return Math.max(0, nowOffset - screenHeight / 2);
     }
 
     return null;
   }, [
     highlightSlotId,
-    isToday,
-    isNowInRange,
     appointments,
     effectiveStart,
+    isToday,
+    isNowInRange,
     nowOffset,
   ]);
 
   useEffect(() => {
-    if (targetScrollY == null) {
-      return;
-    }
-
-    if (hasScrolledRef.current) {
-      return;
-    }
+    const y = computeTargetScrollY();
+    if (y == null) return;
 
     const frame = requestAnimationFrame(() => {
-      onHighlightScroll?.(targetScrollY);
-
-      hasScrolledRef.current = true;
+      onHighlightScrollRef.current?.(y);
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [targetScrollY, onHighlightScroll]);
-
-  useEffect(() => {
-    hasScrolledRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollKey]);
 
   useEffect(() => {
@@ -186,7 +179,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   return (
     <View className="flex-1 pt-4 px-screen relative">
       {isToday && isNowInRange && (
-        <CurrentTimeIndicator top={nowOffset + 16} time={currentTime} />
+        <CurrentTimeIndicator top={nowOffset} time={currentTime} />
       )}
       {segments.map((segment) => {
         const { segStart, segEnd, isCompressed, content } = segment;
@@ -231,6 +224,9 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                       date={date}
                       time={formatTime(segStart)}
                       endTime={formatTime(segEnd)}
+                      isActive={isActive}
+                      workingDayId={workingDayId}
+                      userId={userId}
                     />
                   )}
                 </>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
@@ -11,11 +11,13 @@ import FilterOption from "./filterOption";
 const filterOptions: { label: string; key: keyof CalendarFilters }[] = [
   { label: "Подтвержденные", key: "showConfirmed" },
   { label: "Ожидающие подтверждения", key: "showPending" },
+  { label: "Предложенные", key: "showProposed" },
   { label: "Пришли", key: "showArrived" },
   { label: "Опоздали", key: "showLate" },
   { label: "Завершённые", key: "showCompleted" },
   { label: "Не явились", key: "showNoShow" },
   { label: "Отменённые", key: "showCancelled" },
+  { label: "Отклонённые", key: "showDeclined" },
 ];
 
 type CalendarFilterModalProps = {
@@ -54,22 +56,25 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
       footer={<Button title="Применить" onPress={handleApply} />}
       visible={visible}
       onClose={onClose}
-      fullHeight
-      scrollable
     >
-      <View className="gap-2 mb-4">
-        <Typography className="text-caption text-neutral-500">
-          Показывать:
-        </Typography>
-        {filterOptions.map(({ label, key }) => (
-          <FilterOption
-            key={key}
-            label={label}
-            value={draft[key]}
-            onPress={() => toggleDraft(key)}
-          />
-        ))}
-      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ flexShrink: 1 }}
+      >
+        <View className="gap-2 mb-4">
+          <Typography className="text-caption text-neutral-500">
+            Показывать:
+          </Typography>
+          {filterOptions.map(({ label, key }) => (
+            <FilterOption
+              key={key}
+              label={label}
+              value={draft[key]}
+              onPress={() => toggleDraft(key)}
+            />
+          ))}
+        </View>
+      </ScrollView>
     </StModal>
   );
 };
