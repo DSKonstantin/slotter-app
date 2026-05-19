@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 import { RefreshControl, ScrollView, View } from "react-native";
@@ -33,6 +33,10 @@ const DayCalendarView = () => {
 
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
+
+  useEffect(() => {
+    pendingScrollY.current = null;
+  }, [selectedDay]);
 
   const dateRange = useMemo(
     () => ({
@@ -163,9 +167,11 @@ const DayCalendarView = () => {
         appointments={appointments}
         breaks={selectedWorkingDay?.working_day_breaks}
         workingDayId={selectedWorkingDay?.id}
+        userId={auth?.userId}
         startAt={selectedWorkingDay?.start_at}
         endAt={selectedWorkingDay?.end_at}
         date={selectedDay}
+        isActive={selectedWorkingDay?.is_active}
         onHighlightScroll={handleHighlightScroll}
       />
     );

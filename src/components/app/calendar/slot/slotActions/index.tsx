@@ -29,7 +29,7 @@ const SlotActions: React.FC<Props> = ({
   onReschedule,
   onCancel,
 }) => {
-  const canCancel = status === "pending" || status === "confirmed";
+  const canCancel = status === "pending" || status === "confirmed" || status === "proposed";
   const [confirm, { isLoading: isConfirming }] =
     useConfirmAppointmentMutation();
   const [arrive, { isLoading: isArriving }] = useArriveAppointmentMutation();

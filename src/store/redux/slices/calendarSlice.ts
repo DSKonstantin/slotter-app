@@ -7,12 +7,14 @@ export type CalendarMode = "day" | "month";
 
 export interface CalendarFilters {
   showPending: boolean;
+  showProposed: boolean;
   showConfirmed: boolean;
   showArrived: boolean;
   showLate: boolean;
   showCompleted: boolean;
   showNoShow: boolean;
   showCancelled: boolean;
+  showDeclined: boolean;
 }
 
 export type ScheduleIntent =
@@ -37,12 +39,14 @@ const initialState: CalendarState = {
   highlightSlotId: null,
   filters: {
     showPending: true,
+    showProposed: true,
     showConfirmed: true,
     showArrived: true,
     showLate: true,
     showCompleted: true,
     showNoShow: true,
     showCancelled: false,
+    showDeclined: false,
   },
 };
 
@@ -101,12 +105,14 @@ export const selectActiveStatuses = createSelector(
   (filters): AppointmentStatus[] => {
     const map: [boolean, AppointmentStatus][] = [
       [filters.showPending, "pending"],
+      [filters.showProposed, "proposed"],
       [filters.showConfirmed, "confirmed"],
       [filters.showArrived, "arrived"],
       [filters.showLate, "late"],
       [filters.showCompleted, "completed"],
       [filters.showNoShow, "no_show"],
       [filters.showCancelled, "cancelled"],
+      [filters.showDeclined, "declined"],
     ];
     return map.filter(([active]) => active).map(([, status]) => status);
   },

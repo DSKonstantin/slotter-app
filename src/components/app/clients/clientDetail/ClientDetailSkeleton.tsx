@@ -67,7 +67,11 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
           width={w}
           height={INFO_HEIGHT}
         />
-        <Circle cx={CARD_PADDING + AVATAR / 2} cy={infoCenterY} r={AVATAR / 2} />
+        <Circle
+          cx={CARD_PADDING + AVATAR / 2}
+          cy={infoCenterY}
+          r={AVATAR / 2}
+        />
         <Rect
           x={infoTextX}
           y={infoCenterY - 22}
@@ -148,6 +152,14 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
         {/* Home cards row 2 */}
         <Rect
           x={0}
+          y={homeRow2Y}
+          rx={CARD_RADIUS}
+          ry={CARD_RADIUS}
+          width={homeCardW}
+          height={HOMECARD_HEIGHT}
+        />
+        <Rect
+          x={homeCardW + ROW_GAP}
           y={homeRow2Y}
           rx={CARD_RADIUS}
           ry={CARD_RADIUS}

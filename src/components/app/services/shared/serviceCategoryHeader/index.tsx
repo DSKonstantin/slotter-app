@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Pressable, View } from "react-native";
-import { StSvg, Typography } from "@/src/components/ui";
+import { StSvg, Tag, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
 type ServiceCategoryHeaderProps = {
@@ -8,6 +8,7 @@ type ServiceCategoryHeaderProps = {
   activeCount: number;
   totalCount: number;
   isEditMode: boolean;
+  isActive?: boolean;
   isDragActive?: boolean;
   isExpanded?: boolean;
   onDrag?: () => void;
@@ -19,6 +20,7 @@ const ServiceCategoryHeader = ({
   activeCount,
   totalCount,
   isEditMode,
+  isActive = true,
   isDragActive = false,
   isExpanded = true,
   onDrag,
@@ -54,7 +56,6 @@ const ServiceCategoryHeader = ({
           >
             {name}
           </Typography>
-
           <View className="flex-shrink-0">
             <StSvg
               name={isExpanded ? "Expand_up_light" : "Expand_down_light"}
@@ -65,6 +66,9 @@ const ServiceCategoryHeader = ({
             />
           </View>
         </Pressable>
+        {!isActive && (
+          <Tag title="скрыто" size="sm" containerClassName="bg-neutral-100" />
+        )}
       </View>
 
       <Typography

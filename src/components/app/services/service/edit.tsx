@@ -161,40 +161,36 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     });
   }, [categoryId, methods, service]);
 
-  if (isServiceLoading || (isServiceFetching && !service)) {
-    return (
-      <ScreenWithToolbar title="Редактировать услугу">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (!hasValidIds || isServiceError || !service) {
-    return (
-      <ScreenWithToolbar title="Редактировать услугу">
-        <View className="flex-1 items-center justify-center px-screen">
-          <Typography className="text-center text-error">
-            Не удалось загрузить данные услуги
-          </Typography>
-        </View>
-      </ScreenWithToolbar>
-    );
-  }
-
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Редактировать услугу">
-        {(insets) => (
-          <ServiceFormBody
-            insets={insets}
-            loading={isLoading || isDeleting}
-            onSubmit={onSubmit}
-            onDelete={handleDelete}
-            isEdit
-          />
-        )}
+        {(insets) => {
+          if (isServiceLoading || (isServiceFetching && !service)) {
+            return (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator />
+              </View>
+            );
+          }
+          if (!hasValidIds || isServiceError || !service) {
+            return (
+              <View className="flex-1 items-center justify-center px-screen">
+                <Typography className="text-center text-error">
+                  Не удалось загрузить данные услуги
+                </Typography>
+              </View>
+            );
+          }
+          return (
+            <ServiceFormBody
+              insets={insets}
+              loading={isLoading || isDeleting}
+              onSubmit={onSubmit}
+              onDelete={handleDelete}
+              isEdit
+            />
+          );
+        }}
       </ScreenWithToolbar>
     </FormProvider>
   );

@@ -1,11 +1,8 @@
 import React from "react";
-import { View } from "react-native";
+import { LayoutChangeEvent, View } from "react-native";
 import { InputToolbarProps } from "react-native-gifted-chat";
-import type { ImagePickerAsset } from "expo-image-picker";
-import type { DocumentPickerAsset } from "expo-document-picker";
 import { FadeOverlay, IconButton, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import type { ChatIMessage } from "@/src/utils/chat/types";
 import ChatInputToolbar from "./ChatInputToolbar";
 import ChatReplyFooter from "./ChatReplyFooter";
@@ -13,21 +10,26 @@ import ChatReplyFooter from "./ChatReplyFooter";
 type Props = InputToolbarProps<ChatIMessage> & {
   replyingTo: ChatIMessage | null;
   onCancelReply: () => void;
-  onAttach: (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => void;
-  isUser?: boolean;
-  onOpenAttachMenu?: () => void;
+  onOpenAttachMenu: () => void;
+  onHeightChange: (height: number) => void;
 };
 
 const ChatInputBar = ({
   replyingTo,
   onCancelReply,
-  onAttach,
-  isUser,
   onOpenAttachMenu,
+  onHeightChange,
   ...toolbarProps
 }: Props) => {
+  const handleLayout = (e: LayoutChangeEvent) => {
+    onHeightChange(e.nativeEvent.layout.height);
+  };
+
   return (
-    <View className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent">
+    <View
+      className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent"
+      onLayout={handleLayout}
+    >
       <FadeOverlay position="bottom" height={80} />
       {replyingTo && (
         <ChatReplyFooter message={replyingTo} onCancel={onCancelReply} />
@@ -35,36 +37,15 @@ const ChatInputBar = ({
       <ChatInputToolbar
         {...toolbarProps}
         renderActions={() => (
-          <View className="flex-row items-center">
-            <ImagePickerTrigger
-              title="Прикрепить файл"
-              message="Выберите источник"
-              includeFiles
-              options={{ allowsMultipleSelection: true, selectionLimit: 10 }}
-              onPick={onAttach}
-            >
-              <View className="justify-center items-center w-[48px] h-[48px] bg-background-surface rounded-full mr-1">
-                <StSvg
-                  name="paper_clip"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              </View>
-            </ImagePickerTrigger>
-
-            {isUser && onOpenAttachMenu && (
-              <IconButton
-                icon={
-                  <StSvg
-                    name="Meatballs_menu"
-                    size={24}
-                    color={colors.neutral[900]}
-                  />
-                }
-                onPress={onOpenAttachMenu}
-              />
-            )}
-          </View>
+          <IconButton
+            style={{
+              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)",
+            }}
+            icon={
+              <StSvg name="paper_clip" size={24} color={colors.neutral[900]} />
+            }
+            onPress={onOpenAttachMenu}
+          />
         )}
       />
     </View>

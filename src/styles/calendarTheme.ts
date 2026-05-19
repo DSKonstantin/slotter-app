@@ -83,6 +83,14 @@ export const pickerCalendarTheme = {
   },
   "stylesheet.calendar.header": {
     week: styles.week,
+    header: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      paddingLeft: 10,
+      paddingRight: 10,
+      marginTop: 0,
+      alignItems: "center" as const,
+    },
   },
 };
 
@@ -94,5 +102,13 @@ export const scheduleCalendarTheme = {
   },
   "stylesheet.calendar.header": {
     week: styles.scheduleWeek,
+    header: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      paddingLeft: 10,
+      paddingRight: 10,
+      marginTop: 0,
+      alignItems: "center" as const,
+    },
   },
 };

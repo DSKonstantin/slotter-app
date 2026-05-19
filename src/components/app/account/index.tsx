@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { Linking, RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -27,7 +27,7 @@ const NAV_GROUPS: NavItem[][] = [
       title: "Оплата",
       icon: "Credit-card_fill",
       rightIcon: "External",
-      route: () => {},
+      route: () => Linking.openURL("https://slotter.app/payment"),
     },
   ],
   [

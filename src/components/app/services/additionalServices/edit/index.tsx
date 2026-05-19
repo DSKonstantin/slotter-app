@@ -119,40 +119,36 @@ const AdditionalServiceEdit = () => {
 
   if (!auth) return null;
 
-  if (isServiceLoading) {
-    return (
-      <ScreenWithToolbar title="Редактировать доп. услугу">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (isError || !service) {
-    return (
-      <ScreenWithToolbar title="Редактировать доп. услугу">
-        <ErrorScreen
-          title="Не удалось загрузить услугу"
-          isLoading={isFetching}
-          onRetry={refetch}
-        />
-      </ScreenWithToolbar>
-    );
-  }
-
   return (
     <FormProvider {...methods}>
       <ScreenWithToolbar title="Редактировать доп. услугу">
-        {(insets) => (
-          <AdditionalServicesForm
-            insets={insets}
-            loading={isLoading}
-            onSubmit={onSubmit}
-            isEdit
-            onDelete={handleDelete}
-          />
-        )}
+        {(insets) => {
+          if (isServiceLoading) {
+            return (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator />
+              </View>
+            );
+          }
+          if (isError || !service) {
+            return (
+              <ErrorScreen
+                title="Не удалось загрузить услугу"
+                isLoading={isFetching}
+                onRetry={refetch}
+              />
+            );
+          }
+          return (
+            <AdditionalServicesForm
+              insets={insets}
+              loading={isLoading}
+              onSubmit={onSubmit}
+              isEdit
+              onDelete={handleDelete}
+            />
+          );
+        }}
       </ScreenWithToolbar>
     </FormProvider>
   );

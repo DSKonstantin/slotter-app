@@ -1,33 +1,43 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { StModal } from "@/src/components/ui/StModal";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import type { Service } from "@/src/store/redux/services/api-types";
+import type {
+  AdditionalService,
+  Service,
+} from "@/src/store/redux/services/api-types";
+import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import AttachMenu from "./AttachMenu";
 import ServicePicker from "./ServicePicker";
+import AdditionalServicePicker from "./AdditionalServicePicker";
 import DatePicker from "./DatePicker";
 import SlotPicker from "./SlotPicker";
 
 type Mode = "menu" | "service" | "appointment";
-type AppointmentStage = "service" | "date" | "slot";
+type AppointmentStage = "service" | "additional-service" | "date" | "slot";
 
 type WizardState = {
   mode: Mode;
   stage: AppointmentStage;
   selectedService: Service | null;
+  selectedAdditionalService: AdditionalService | null;
   selectedDate: string | null;
+  selectedHour: string | null;
 };
 
 const INITIAL_STATE: WizardState = {
   mode: "menu",
   stage: "service",
   selectedService: null,
+  selectedAdditionalService: null,
   selectedDate: null,
+  selectedHour: null,
 };
 
 export type ProposeData = {
   service: Service;
+  additionalServiceId?: number;
   date: string;
   startTime: string;
 };
@@ -37,12 +47,15 @@ type Props = {
   onClose: () => void;
   userId: number;
   isSubmitting?: boolean;
+  isUser?: boolean;
   onPickService: (service: Service) => void;
   onProposeAppointment: (data: ProposeData) => void;
+  onAttachFile: (assets: PickedAssets) => void;
 };
 
 const STAGE_TITLES: Record<AppointmentStage, string> = {
   service: "Выберите услугу",
+  "additional-service": "Доп. услуга",
   date: "Выберите день",
   slot: "Выберите время",
 };
@@ -52,11 +65,20 @@ const AttachSheet = ({
   onClose,
   userId,
   isSubmitting,
+  isUser,
   onPickService,
   onProposeAppointment,
+  onAttachFile,
 }: Props) => {
   const [state, setState] = useState<WizardState>(INITIAL_STATE);
-  const { mode, stage, selectedService, selectedDate } = state;
+  const {
+    mode,
+    stage,
+    selectedService,
+    selectedAdditionalService,
+    selectedDate,
+    selectedHour,
+  } = state;
 
   const handleBack = useCallback(() => {
     setState((prev) => {
@@ -65,8 +87,14 @@ const AttachSheet = ({
         return prev;
       }
       if (prev.mode === "service") return { ...prev, mode: "menu" };
-      if (prev.stage === "slot") return { ...prev, stage: "date" };
-      if (prev.stage === "date") return { ...prev, stage: "service" };
+      if (prev.stage === "slot") {
+        if (prev.selectedHour) return { ...prev, selectedHour: null };
+        return { ...prev, stage: "date" };
+      }
+      if (prev.stage === "date")
+        return { ...prev, stage: "additional-service" };
+      if (prev.stage === "additional-service")
+        return { ...prev, stage: "service" };
       return { ...prev, mode: "menu" };
     });
   }, [onClose]);
@@ -81,14 +109,38 @@ const AttachSheet = ({
       setState((prev) => ({
         ...prev,
         selectedService: service,
-        stage: "date",
+        stage: "additional-service",
       }));
     },
     [mode, onPickService, onClose],
   );
 
   const handlePickDate = useCallback((date: string) => {
-    setState((prev) => ({ ...prev, selectedDate: date, stage: "slot" }));
+    setState((prev) => ({
+      ...prev,
+      selectedDate: date,
+      selectedHour: null,
+      stage: "slot",
+    }));
+  }, []);
+
+  const handlePickAdditionalService = useCallback(
+    (service: AdditionalService) => {
+      setState((prev) => ({
+        ...prev,
+        selectedAdditionalService: service,
+        stage: "date",
+      }));
+    },
+    [],
+  );
+
+  const handleSkipAdditionalService = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      selectedAdditionalService: null,
+      stage: "date",
+    }));
   }, []);
 
   const handlePickSlot = useCallback(
@@ -96,11 +148,17 @@ const AttachSheet = ({
       if (!selectedService || !selectedDate) return;
       onProposeAppointment({
         service: selectedService,
+        additionalServiceId: selectedAdditionalService?.id,
         date: selectedDate,
         startTime,
       });
     },
-    [onProposeAppointment, selectedService, selectedDate],
+    [
+      onProposeAppointment,
+      selectedService,
+      selectedAdditionalService,
+      selectedDate,
+    ],
   );
 
   const title = useMemo(() => {
@@ -113,10 +171,24 @@ const AttachSheet = ({
     if (mode === "menu") {
       return (
         <AttachMenu
+          isUser={isUser}
           onPickService={() => setState((p) => ({ ...p, mode: "service" }))}
           onProposeAppointment={() =>
             setState((p) => ({ ...p, mode: "appointment", stage: "service" }))
           }
+          onAttachFile={(assets) => {
+            onAttachFile(assets);
+            onClose();
+          }}
+        />
+      );
+    }
+    if (stage === "additional-service") {
+      return (
+        <AdditionalServicePicker
+          userId={userId}
+          onSelect={handlePickAdditionalService}
+          onSkip={handleSkipAdditionalService}
         />
       );
     }
@@ -132,6 +204,10 @@ const AttachSheet = ({
           userId={userId}
           date={selectedDate}
           isSubmitting={isSubmitting}
+          selectedHour={selectedHour}
+          onSelectHour={(hour) =>
+            setState((p) => ({ ...p, selectedHour: hour }))
+          }
           onPick={handlePickSlot}
         />
       );
@@ -151,8 +227,9 @@ const AttachSheet = ({
 
   return (
     <StModal visible={visible} onClose={onClose}>
-      <View className="flex-row items-center mb-4 gap-2">
+      <View className="flex-row items-center mb-2 gap-2">
         <IconButton
+          size="sm"
           icon={
             mode === "menu" ? (
               <StSvg name="Close_round" size={24} color={colors.neutral[900]} />
@@ -168,6 +245,13 @@ const AttachSheet = ({
         >
           {title}
         </Typography>
+        {stage === "additional-service" && (
+          <Pressable onPress={handleSkipAdditionalService} hitSlop={8}>
+            <Typography className="text-caption text-neutral-500">
+              Пропустить
+            </Typography>
+          </Pressable>
+        )}
       </View>
       {renderBody()}
     </StModal>

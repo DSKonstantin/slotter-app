@@ -46,7 +46,15 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
           params: {
             date_from: formatApiDate(fetchMonth),
             date_to: formatApiDate(endOfMonth(fetchMonth)),
-            status: ["pending", "confirmed"],
+            status: [
+              "pending",
+              "proposed",
+              "confirmed",
+              "arrived",
+              "late",
+              "no_show",
+              "completed",
+            ],
           },
         }
       : skipToken,

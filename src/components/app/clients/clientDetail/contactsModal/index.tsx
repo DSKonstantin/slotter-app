@@ -15,7 +15,10 @@ const sanitizePhone = (phone: string) => phone.replace(/[^\d+]/g, "");
 
 const ContactsModal = ({ visible, onClose, phone }: Props) => {
   const cleanPhone = phone ? sanitizePhone(phone) : "";
-  const hasPhone = cleanPhone.length > 0;
+  const digitsOnly = cleanPhone.replace(/\+/g, "");
+  const hasPhone = digitsOnly.length > 0;
+  const whatsappUrl = `https://wa.me/${digitsOnly}`;
+  const telegramUrl = `tg://resolve?phone=${cleanPhone}`;
 
   const open = async (url: string, fallback: string) => {
     try {
@@ -28,10 +31,8 @@ const ContactsModal = ({ visible, onClose, phone }: Props) => {
 
   const handleCall = () =>
     open(`tel:${cleanPhone}`, "Не удалось открыть звонок");
-  const handleWhatsApp = () =>
-    open(`https://wa.me/${cleanPhone}`, "Не удалось открыть WhatsApp");
-  const handleTelegram = () =>
-    open(`https://t.me/+${cleanPhone}`, "Не удалось открыть Telegram");
+  const handleWhatsApp = () => open(whatsappUrl, "Не удалось открыть WhatsApp");
+  const handleTelegram = () => open(telegramUrl, "Не удалось открыть Telegram");
 
   return (
     <StModal visible={visible} onClose={onClose}>

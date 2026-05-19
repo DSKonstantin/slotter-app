@@ -1,5 +1,7 @@
 import React from "react";
-import { View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
+import { router } from "expo-router";
+import { toast } from "@backpackapp-io/react-native-toast";
 import {
   Avatar,
   StModal,
@@ -12,16 +14,32 @@ import {
   useGetChatRoomsQuery,
   useUpdateMembershipMutation,
 } from "@/src/store/redux/services/api/chatRoomsApi";
+import type { ChatRoomInterlocutor } from "@/src/store/redux/services/api-types";
+import { Routers } from "@/src/constants/routers";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   roomId: number;
-  name: string;
-  phone?: string;
+  interlocutor: ChatRoomInterlocutor;
 };
 
-const ChatRoomMenu = ({ visible, onClose, roomId, name, phone }: Props) => {
+const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
+  const { name, phone, avatar_url } = interlocutor;
+
+  const handleCall = () => {
+    if (!phone) return;
+    const clean = phone.replace(/[^\d+]/g, "");
+    Linking.openURL(`tel:${clean}`).catch(() =>
+      toast.error("Не удалось открыть звонок"),
+    );
+  };
+
+  const handleHistory = () => {
+    onClose();
+    router.push(Routers.app.chat.clientHistory(interlocutor.id));
+  };
+
   const { isNotify } = useGetChatRoomsQuery(undefined, {
     selectFromResult: ({ data }) => ({
       isNotify: data?.rooms?.find((r) => r.id === roomId)?.is_notify ?? true,
@@ -33,7 +51,7 @@ const ChatRoomMenu = ({ visible, onClose, roomId, name, phone }: Props) => {
   return (
     <StModal visible={visible} onClose={onClose}>
       <View className="items-center pb-6 gap-1">
-        <Avatar name={name} size="md" />
+        <Avatar name={name} uri={avatar_url ?? undefined} size="md" />
         <Typography weight="semibold" className="text-body">
           {name}
         </Typography>
@@ -45,8 +63,15 @@ const ChatRoomMenu = ({ visible, onClose, roomId, name, phone }: Props) => {
       </View>
 
       <View className="flex-row gap-4 justify-around mb-6">
-        <View className="items-center gap-2">
-          <View className="w-14 h-14 rounded-full bg-background-surface items-center justify-center">
+        <Pressable
+          className="items-center gap-2 active:opacity-70"
+          onPress={handleCall}
+          disabled={!phone}
+        >
+          <View
+            className="w-14 h-14 rounded-full bg-background-surface items-center justify-center"
+            style={{ opacity: phone ? 1 : 0.4 }}
+          >
             <StSvg name="Phone_fill" size={24} color={colors.neutral[900]} />
           </View>
           <Typography
@@ -55,9 +80,12 @@ const ChatRoomMenu = ({ visible, onClose, roomId, name, phone }: Props) => {
           >
             Позвонить
           </Typography>
-        </View>
+        </Pressable>
 
-        <View className="items-center gap-2">
+        <Pressable
+          className="items-center gap-2 active:opacity-70"
+          onPress={handleHistory}
+        >
           <View className="w-14 h-14 rounded-full bg-background-surface items-center justify-center">
             <StSvg
               name="File_dock_search_fill"
@@ -71,7 +99,7 @@ const ChatRoomMenu = ({ visible, onClose, roomId, name, phone }: Props) => {
           >
             История записей
           </Typography>
-        </View>
+        </Pressable>
       </View>
 
       <View className="rounded-2xl bg-white border border-background overflow-hidden">

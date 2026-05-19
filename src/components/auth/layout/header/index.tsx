@@ -36,7 +36,7 @@ export default function AuthHeader({
 
   return (
     <>
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between py-1">
         {showBack && shouldShowBack ? (
           <IconButton
             icon={

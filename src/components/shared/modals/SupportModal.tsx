@@ -1,6 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import { Button, IconButton, StModal, StSvg, Typography } from "@/src/components/ui";
+import {
+  Button,
+  IconButton,
+  StModal,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 
 type Props = {
   visible: boolean;
@@ -13,7 +19,10 @@ const SupportModal = ({ visible, onClose }: Props) => (
       Нужна помощь?
     </Typography>
 
-    <Typography weight="regular" className="text-neutral-500 text-body text-center">
+    <Typography
+      weight="regular"
+      className="text-neutral-500 text-body text-center"
+    >
       Мы на связи, выбери где удобнее:
     </Typography>
 

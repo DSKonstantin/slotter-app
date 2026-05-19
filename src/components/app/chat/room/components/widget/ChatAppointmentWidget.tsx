@@ -20,6 +20,7 @@ type Props = {
   customerName?: string;
   customerAvatar?: string;
   serviceName?: string;
+  onAccept?: () => void;
 };
 
 const ChatAppointmentWidget = ({
@@ -29,9 +30,8 @@ const ChatAppointmentWidget = ({
   onLongPress,
   masterName = "Мастер",
   masterAvatar,
-  customerName,
-  customerAvatar,
   serviceName,
+  onAccept,
 }: Props) => {
   if (!appointment) {
     return (
@@ -40,8 +40,6 @@ const ChatAppointmentWidget = ({
         className="rounded-2xl overflow-hidden px-4 py-4 items-center"
         style={{
           backgroundColor: colors.neutral[0],
-          borderWidth: 1,
-          borderColor: colors.neutral[100],
           width: 280,
           margin: 4,
         }}
@@ -72,8 +70,7 @@ const ChatAppointmentWidget = ({
     return startTime;
   })();
 
-  const isAwaitingCustomer =
-    appointment.status === "pending" && !appointment.customer_confirmed_at;
+  const isAwaitingCustomer = appointment.status === "proposed";
 
   return (
     <Pressable
@@ -87,11 +84,7 @@ const ChatAppointmentWidget = ({
       }}
     >
       <View className="flex-row items-center gap-3 mb-3">
-        <Avatar
-          name={customerName || masterName}
-          uri={customerAvatar || masterAvatar}
-          size="sm"
-        />
+        <Avatar name={masterName} uri={masterAvatar} size="sm" />
         <Typography className="text-sm text-neutral-500">
           {masterName} предлагает время
         </Typography>
@@ -100,21 +93,27 @@ const ChatAppointmentWidget = ({
       <View
         className="rounded-2xl px-4 py-3 mb-3"
         style={{
-          backgroundColor: colors.neutral[100],
+          backgroundColor: colors.background.DEFAULT,
         }}
       >
         <View className="flex-row justify-between items-center gap-3">
           <View className="flex-1">
             <Typography
               weight="semibold"
-              className="text-base text-neutral-900"
+              className="text-body text-neutral-900"
             >
               {[dateLabel, timeLabel].filter(Boolean).join(", ")}
               {duration ? ` · ${duration} мин` : ""}
             </Typography>
             {serviceName && (
-              <Typography className="text-sm text-neutral-500 mt-1">
+              <Typography className="text-caption text-neutral-500">
                 {serviceName}
+              </Typography>
+            )}
+            {!!appointment.additional_services?.length && (
+              <Typography className="text-caption text-neutral-400">
+                {"+ "}
+                {appointment.additional_services.map((s) => s.name).join(", ")}
               </Typography>
             )}
           </View>
@@ -129,42 +128,35 @@ const ChatAppointmentWidget = ({
         </View>
       </View>
       {isAwaitingCustomer && !isOwnMessage ? (
-        <>
-          <Button title="Записаться" onPress={() => {}} />
-          <Pressable className="items-center mt-3 py-2">
-            <Typography className="text-sm text-neutral-500">
-              Предложить другое время
-            </Typography>
-          </Pressable>
-        </>
+        <Button title="Записаться" onPress={() => onAccept?.()} />
       ) : isAwaitingCustomer && isOwnMessage ? (
-        <View className="items-center py-3">
-          <Typography className="text-sm text-neutral-500">
+        <View className="items-center justify-center py-3 h-[50px]">
+          <Typography className="text-caption text-neutral-500">
             Ожидает подтверждения
           </Typography>
         </View>
-      ) : appointment.status === "confirmed" ? (
+      ) : appointment.status === "declined" ||
+        appointment.status === "cancelled" ? (
+        <View className="items-center justify-center py-3 h-[50px]">
+          <Typography
+            weight="semibold"
+            className="text-caption text-neutral-500"
+          >
+            {appointment.status === "declined" ? "Отклонено" : "Отменено"}
+          </Typography>
+        </View>
+      ) : (
         <View
-          className="rounded-2xl flex-row items-center justify-center gap-2 py-3"
+          className="rounded-2xl flex-row items-center justify-center gap-2 py-3 h-[50px]"
           style={{ backgroundColor: "#D4F5E6" }}
         >
           <Typography
             weight="semibold"
-            className="text-base text-primary-green-700"
+            className="text-body text-primary-green-700"
           >
             Записано
           </Typography>
           <StSvg name="Check_fill" size={24} color="#34C759" />
-        </View>
-      ) : (
-        <View className="items-center py-3">
-          <Typography weight="semibold" className="text-sm text-neutral-500">
-            {appointment.status === "declined"
-              ? "Отклонено"
-              : appointment.status === "cancelled"
-                ? "Отменено"
-                : "Записано"}
-          </Typography>
         </View>
       )}
     </Pressable>

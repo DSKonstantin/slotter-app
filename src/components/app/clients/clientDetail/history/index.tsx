@@ -68,26 +68,34 @@ const groupAppointmentsByPeriod = (appointments: Appointment[]) => {
   return sections.filter((s) => s.items.length > 0);
 };
 
-type Props = { customerId: number };
+type Props =
+  | { userCustomerId: number; customerId?: undefined }
+  | { customerId: number; userCustomerId?: undefined };
 
-const ClientHistory = ({ customerId }: Props) => {
+const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const auth = useRequiredAuth();
   const [filterActive, setFilterActive] = useState(false);
   const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[0]);
 
   const { data: customerData } = useGetUserCustomerQuery(
-    auth ? { userId: auth.userId, userCustomerId: customerId } : skipToken,
+    auth
+      ? customerId !== undefined
+        ? { userId: auth.userId, customerId }
+        : { userId: auth.userId, userCustomerId }
+      : skipToken,
   );
+
+  const ucId = customerData?.user_customer?.id;
 
   const {
     data: financesData,
     isLoading: financesLoading,
     refetch: refetchFinances,
   } = useGetUserCustomerFinancesQuery(
-    auth && !filterActive
+    auth && ucId && !filterActive
       ? {
           userId: auth.userId,
-          id: customerId,
+          id: ucId,
           params: { period: financePeriod.value },
         }
       : skipToken,
@@ -99,8 +107,8 @@ const ClientHistory = ({ customerId }: Props) => {
     isLoading: appointmentsLoading,
     refetch: refetchAppointments,
   } = useGetUserCustomerAppointmentsQuery(
-    auth && filterActive
-      ? { userId: auth.userId, id: customerId, params: { sort: "asc" } }
+    auth && ucId && filterActive
+      ? { userId: auth.userId, id: ucId, params: { sort: "asc" } }
       : skipToken,
     { refetchOnMountOrArgChange: true },
   );

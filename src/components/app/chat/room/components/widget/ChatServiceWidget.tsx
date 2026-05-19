@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, View } from "react-native";
-import { StImage, Typography } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import type { ChatWidgetService } from "@/src/store/redux/services/api-types";
@@ -18,8 +18,6 @@ const ChatServiceWidget = ({ service, onLongPress }: Props) => {
         className="rounded-xl overflow-hidden px-4 py-4 items-center"
         style={{
           backgroundColor: colors.neutral[0],
-          borderWidth: 1,
-          borderColor: colors.neutral[100],
           width: 280,
           margin: 4,
         }}
@@ -37,19 +35,10 @@ const ChatServiceWidget = ({ service, onLongPress }: Props) => {
       className="rounded-xl overflow-hidden"
       style={{
         backgroundColor: colors.neutral[0],
-        borderWidth: 1,
-        borderColor: colors.neutral[100],
         width: 280,
         margin: 4,
       }}
     >
-      {service.main_photo_url ? (
-        <StImage
-          uri={service.main_photo_url}
-          style={{ width: "100%", height: 140 }}
-        />
-      ) : null}
-
       <View className="px-4 py-3 gap-1">
         <Typography
           weight="semibold"
