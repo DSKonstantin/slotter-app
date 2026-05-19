@@ -23,6 +23,7 @@ type WizardState = {
   selectedService: Service | null;
   selectedAdditionalService: AdditionalService | null;
   selectedDate: string | null;
+  selectedHour: string | null;
 };
 
 const INITIAL_STATE: WizardState = {
@@ -31,6 +32,7 @@ const INITIAL_STATE: WizardState = {
   selectedService: null,
   selectedAdditionalService: null,
   selectedDate: null,
+  selectedHour: null,
 };
 
 export type ProposeData = {
@@ -75,6 +77,7 @@ const AttachSheet = ({
     selectedService,
     selectedAdditionalService,
     selectedDate,
+    selectedHour,
   } = state;
 
   const handleBack = useCallback(() => {
@@ -84,7 +87,10 @@ const AttachSheet = ({
         return prev;
       }
       if (prev.mode === "service") return { ...prev, mode: "menu" };
-      if (prev.stage === "slot") return { ...prev, stage: "date" };
+      if (prev.stage === "slot") {
+        if (prev.selectedHour) return { ...prev, selectedHour: null };
+        return { ...prev, stage: "date" };
+      }
       if (prev.stage === "date")
         return { ...prev, stage: "additional-service" };
       if (prev.stage === "additional-service")
@@ -110,7 +116,12 @@ const AttachSheet = ({
   );
 
   const handlePickDate = useCallback((date: string) => {
-    setState((prev) => ({ ...prev, selectedDate: date, stage: "slot" }));
+    setState((prev) => ({
+      ...prev,
+      selectedDate: date,
+      selectedHour: null,
+      stage: "slot",
+    }));
   }, []);
 
   const handlePickAdditionalService = useCallback(
@@ -193,6 +204,10 @@ const AttachSheet = ({
           userId={userId}
           date={selectedDate}
           isSubmitting={isSubmitting}
+          selectedHour={selectedHour}
+          onSelectHour={(hour) =>
+            setState((p) => ({ ...p, selectedHour: hour }))
+          }
           onPick={handlePickSlot}
         />
       );
@@ -212,8 +227,9 @@ const AttachSheet = ({
 
   return (
     <StModal visible={visible} onClose={onClose}>
-      <View className="flex-row items-center mb-4 gap-2">
+      <View className="flex-row items-center mb-2 gap-2">
         <IconButton
+          size="sm"
           icon={
             mode === "menu" ? (
               <StSvg name="Close_round" size={24} color={colors.neutral[900]} />

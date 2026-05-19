@@ -2,6 +2,7 @@ export interface ChatRoomInterlocutor {
   id: number;
   type: string;
   name: string;
+  phone?: string;
   avatar_url: string | null;
 }
 

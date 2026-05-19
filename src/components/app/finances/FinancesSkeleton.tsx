@@ -35,7 +35,7 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         paddingHorizontal: SCREEN_PADDING,
-        paddingTop: topInset + GAP,
+        paddingTop: topInset,
       }}
     >
       <ContentLoader

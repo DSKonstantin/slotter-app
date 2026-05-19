@@ -614,7 +614,7 @@ export default function ChatRoom({ roomId }: Props) {
           visible={roomMenuVisible}
           onClose={() => setRoomMenuVisible(false)}
           roomId={id}
-          name={interlocutor.name}
+          interlocutor={interlocutor}
         />
       )}
 

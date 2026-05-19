@@ -55,7 +55,7 @@ const Home = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View className="px-screen flex-1 gap-3 mt-2">
+        <View className="px-screen flex-1 gap-3">
           <HomeOverview />
         </View>
         <View className="px-screen gap-3">
