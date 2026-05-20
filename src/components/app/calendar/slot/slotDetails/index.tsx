@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  Platform,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
@@ -217,12 +218,21 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <KeyboardAwareScrollView
                 showsVerticalScrollIndicator={false}
                 bottomOffset={BOTTOM_OFFSET}
+                contentInset={
+                  Platform.OS === "ios" ? { top: topInset } : undefined
+                }
+                contentOffset={
+                  Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                }
                 contentContainerStyle={{
-                  paddingTop: topInset,
+                  paddingTop: Platform.OS === "ios" ? 0 : topInset,
                   paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={
                   <RefreshControl
+                    progressViewOffset={Platform.select({
+                      android: topInset,
+                    })}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                   />

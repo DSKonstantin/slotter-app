@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, ScrollView, RefreshControl } from "react-native";
+import { View, ScrollView, RefreshControl, Platform } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { skipToken } from "@reduxjs/toolkit/query";
 import {
@@ -164,13 +164,25 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
       {({ topInset, bottomInset }) => (
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentInset={
+            Platform.OS === "ios" ? { top: topInset } : undefined
+          }
+          contentOffset={
+            Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+          }
           contentContainerStyle={{
-            paddingTop: topInset,
+            paddingTop: Platform.OS === "ios" ? 0 : topInset,
             paddingBottom: bottomInset + 8,
             paddingHorizontal: SCREEN_PADDING,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              progressViewOffset={Platform.select({
+                android: topInset,
+              })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
           }
         >
           <View className="items-center mb-5">

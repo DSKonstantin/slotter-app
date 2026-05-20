@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Alert, RefreshControl, View } from "react-native";
+import { Alert, Platform, RefreshControl, View } from "react-native";
 import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -68,7 +68,7 @@ const Links = () => {
   const watchedLinks = methods.watch("links") ?? [];
   const dirtyLinks = methods.formState.dirtyFields.links ?? [];
 
-  const { release } = useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const handleRefresh = async () => {
     try {
@@ -116,8 +116,8 @@ const Links = () => {
 
                 return;
               }
-              release();
               remove(index);
+              methods.reset(methods.getValues());
             } catch (error) {
               toast.error(
                 getApiErrorMessage(error, "Не удалось удалить ссылку"),
@@ -165,7 +165,7 @@ const Links = () => {
           });
         }),
       );
-      release();
+      methods.reset(data);
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
@@ -204,13 +204,23 @@ const Links = () => {
           return (
             <>
               <KeyboardAwareScrollView
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
               showsVerticalScrollIndicator={false}
               bottomOffset={BOTTOM_OFFSET_SMALL}
+              contentInset={
+                Platform.OS === "ios" ? { top: topInset } : undefined
+              }
+              contentOffset={
+                Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+              }
+              refreshControl={
+                <RefreshControl
+                  progressViewOffset={Platform.select({ android: topInset })}
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                />
+              }
               contentContainerStyle={{
-                paddingTop: topInset,
+                paddingTop: Platform.OS === "ios" ? 0 : topInset,
                 paddingBottom: 16,
               }}
             >

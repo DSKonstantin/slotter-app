@@ -1,7 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
-import React, { useRef } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -11,10 +18,12 @@ import {
   useGetWorkingDayQuery,
   useUpdateWorkingDayMutation,
 } from "@/src/store/redux/services/api/workingDaysApi";
+import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { WorkingDay } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatTimeFromISO } from "@/src/utils/date/formatTime";
 import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, Divider, FloatingFooter, StSvg } from "@/src/components/ui";
@@ -34,6 +43,7 @@ type DayScheduleEditProps = {
   userId: number;
   topInset: number;
   bottomInset: number;
+  refetchWorkingDay: () => void;
 };
 
 const DayScheduleEdit = ({
@@ -41,8 +51,18 @@ const DayScheduleEdit = ({
   userId,
   topInset,
   bottomInset,
+  refetchWorkingDay,
 }: DayScheduleEditProps) => {
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
+
+  const { refetch: refetchAppointments } = useGetAppointmentsQuery({
+    userId,
+    params: { date: workingDay.day },
+  });
+
+  const { refreshing, onRefresh } = useRefresh(() =>
+    Promise.all([refetchWorkingDay(), refetchAppointments()]),
+  );
 
   const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
     id: b.id,
@@ -65,6 +85,49 @@ const DayScheduleEdit = ({
 
   const { handleSubmit, control } = methods;
   const isActive = useWatch({ control, name: "isActive" });
+  const prevIsActiveRef = useRef(workingDay.is_active);
+
+  useEffect(() => {
+    const prev = prevIsActiveRef.current;
+    prevIsActiveRef.current = isActive;
+
+    if (prev === true && isActive === false) {
+      Alert.alert(
+        "Сделать день выходным?",
+        "День будет отмечен как нерабочий и сохранён",
+        [
+          {
+            text: "Отмена",
+            style: "cancel",
+            onPress: () => methods.setValue("isActive", true),
+          },
+          {
+            text: "Сохранить",
+            onPress: async () => {
+              try {
+                await updateWorkingDay({
+                  userId,
+                  id: workingDay.id,
+                  data: {
+                    is_active: false,
+                    start_at: workingDay.start_at,
+                    end_at: workingDay.end_at,
+                    working_day_breaks_attributes: (
+                      workingDay.working_day_breaks ?? []
+                    ).map((b) => ({ id: b.id, start_at: b.start_at, end_at: b.end_at })),
+                  },
+                }).unwrap();
+                router.back();
+              } catch (e) {
+                toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
+                methods.setValue("isActive", true);
+              }
+            },
+          },
+        ],
+      );
+    }
+  }, [isActive]);
 
   const onSubmit = async (data: DayScheduleFormValues) => {
     try {
@@ -98,10 +161,21 @@ const DayScheduleEdit = ({
       <SafeAreaView className="flex-1" edges={["left", "right"]}>
         <ScrollView
           className="flex-1 px-screen"
+          contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+          contentOffset={
+            Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+          }
           contentContainerStyle={{
-            paddingTop: topInset,
+            paddingTop: Platform.OS === "ios" ? 0 : topInset,
             paddingBottom: bottomInset + 82,
           }}
+          refreshControl={
+            <RefreshControl
+              progressViewOffset={Platform.select({ android: topInset })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
         >
           <DayScheduleForm />
           <View
@@ -172,6 +246,7 @@ const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
             userId={auth.userId}
             topInset={topInset}
             bottomInset={bottomInset}
+            refetchWorkingDay={refetch}
           />
         );
       }}

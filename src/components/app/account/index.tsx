@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Linking, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Linking,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -24,10 +30,9 @@ type NavItem = {
 const NAV_GROUPS: NavItem[][] = [
   [
     {
-      title: "Оплата",
+      title: "Подписка",
       icon: "Credit-card_fill",
-      rightIcon: "External",
-      route: () => Linking.openURL("https://slotter.app/payment"),
+      route: () => router.push(Routers.app.account.subscription),
     },
   ],
   [
@@ -114,12 +119,22 @@ const AccountScreen = () => {
         {({ topInset, bottomInset }) => (
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset + 16,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
             }}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl
+                progressViewOffset={Platform.select({
+                  android: topInset,
+                })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
             }
           >
             <ProfileAvatar />

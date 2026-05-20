@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, RefreshControl } from "react-native";
+import { View, RefreshControl, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -78,7 +78,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const {
     formState: { isDirty },
   } = methods;
-  const { release } = useFormNavigationGuard(isDirty);
+  useFormNavigationGuard(isDirty);
 
   const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
   const handleOpenChangeCategory = useCallback(
@@ -117,9 +117,9 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     if (!customer) return;
     dispatch(clearSlotDraft());
     dispatch(setSelectedCustomer({ id: customer.id, name: customer.name }));
-    release();
+    methods.reset(methods.getValues());
     router.push(Routers.app.createSlotFlow.selectService());
-  }, [customer, dispatch, release]);
+  }, [customer, dispatch, methods]);
 
   const handleOpenChat = async () => {
     if (!auth || !customer || !userCustomer) return;
@@ -128,7 +128,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         userId: auth.userId,
         customerId: customer.id,
       }).unwrap();
-      release();
+      methods.reset(methods.getValues());
       router.push(Routers.app.chat.room(room.id));
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось открыть чат"));
@@ -173,144 +173,160 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
           }
           return (
             <KeyboardAwareScrollView
-            showsVerticalScrollIndicator={false}
-            bottomOffset={BOTTOM_OFFSET}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            contentContainerStyle={{
-              paddingTop: topInset,
-              paddingBottom: bottomInset + 8,
-              paddingHorizontal: SCREEN_PADDING,
-            }}
-          >
-            {customer.birthday && <BirthdayBadge />}
+              showsVerticalScrollIndicator={false}
+              bottomOffset={BOTTOM_OFFSET}
+              contentInset={
+                Platform.OS === "ios" ? { top: topInset } : undefined
+              }
+              contentOffset={
+                Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+              }
+              refreshControl={
+                <RefreshControl
+                  progressViewOffset={Platform.select({
+                    android: topInset,
+                  })}
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                />
+              }
+              contentContainerStyle={{
+                paddingTop: Platform.OS === "ios" ? 0 : topInset,
+                paddingBottom: bottomInset + 8,
+                paddingHorizontal: SCREEN_PADDING,
+              }}
+            >
+              {customer.birthday && <BirthdayBadge />}
 
-            <View className="gap-2 mt-2">
-              <ClientInfoCard
-                name={customer.name}
-                phone={customer.phone || undefined}
-                avatarUrl={customer.avatar_url ?? undefined}
-                visitsCount={userCustomer?.stats.visits_count ?? 0}
-                totalSpent={formatRublesFromCents(
-                  userCustomer?.stats.total_spent_cents ?? 0,
-                )}
-                tag={userCustomer?.customer_tag ?? undefined}
-              />
+              <View className="gap-2 mt-2">
+                <ClientInfoCard
+                  name={customer.name}
+                  phone={customer.phone || undefined}
+                  avatarUrl={customer.avatar_url ?? undefined}
+                  visitsCount={userCustomer?.stats.visits_count ?? 0}
+                  totalSpent={formatRublesFromCents(
+                    userCustomer?.stats.total_spent_cents ?? 0,
+                  )}
+                  tag={userCustomer?.customer_tag ?? undefined}
+                />
 
-              <Card
-                onPress={handleOpenChat}
-                title="Написать"
-                titleProps={{
-                  style: {
-                    color: colors.primary.blue[500],
-                  },
-                }}
-                subtitle="Перейти в чат"
-                left={
-                  <View className="mb-[18px]">
+                <Card
+                  onPress={handleOpenChat}
+                  title="Написать"
+                  titleProps={{
+                    style: {
+                      color: colors.primary.blue[500],
+                    },
+                  }}
+                  subtitle="Перейти в чат"
+                  left={
+                    <View className="mb-[18px]">
+                      <StSvg
+                        name="Chat_plus_fill"
+                        size={24}
+                        color={colors.primary.blue[500]}
+                      />
+                    </View>
+                  }
+                  right={
                     <StSvg
-                      name="Chat_plus_fill"
+                      name="Expand_right_light"
                       size={24}
-                      color={colors.primary.blue[500]}
-                    />
-                  </View>
-                }
-                right={
-                  <StSvg
-                    name="Expand_right_light"
-                    size={24}
-                    color={colors.neutral[500]}
-                  />
-                }
-              />
-            </View>
-
-            <Divider className="my-6" />
-
-            <View className="flex-row gap-2 mb-2">
-              <HomeCard
-                className="bg-primary-blue-500"
-                textClassName="text-white"
-                title={"Записать\nклиента"}
-                startAdornment={
-                  <StSvg name="Edit_fill" size={26} color={colors.neutral[0]} />
-                }
-                onPress={handleBookAppointment}
-              />
-              <HomeCard
-                title={"Связаться\n"}
-                startAdornment={
-                  <StSvg
-                    name="Phone_fill"
-                    size={26}
-                    color={colors.neutral[900]}
-                  />
-                }
-                onPress={handleOpenContacts}
-              />
-            </View>
-            <View className="flex-row gap-2">
-              <HomeCard
-                title={"История\nпосещений"}
-                startAdornment={
-                  <StSvg
-                    name="Date_fill"
-                    size={26}
-                    color={colors.neutral[900]}
-                  />
-                }
-                onPress={() =>
-                  userCustomer &&
-                  router.push(Routers.app.clients.history(userCustomer.id))
-                }
-              />
-              <HomeCard
-                disabled
-                title={"Сделать\nподарок"}
-                startAdornment={
-                  <StSvg
-                    name="gift_alt_fill"
-                    size={26}
-                    color={colors.neutral[900]}
-                  />
-                }
-              />
-            </View>
-
-            <Divider className="my-6" />
-
-            <View className="gap-2">
-              <Typography
-                weight="medium"
-                className="text-caption text-neutral-500"
-              >
-                Заметки
-              </Typography>
-              <RhfTextField
-                name="note"
-                multiline
-                numberOfLines={4}
-                placeholder="Добавить заметку о клиенте"
-              />
-              {isDirty && (
-                <Button
-                  title="Сохранить"
-                  onPress={handleSaveNote}
-                  loading={isSaving}
-                  disabled={isSaving}
-                  buttonClassName="w-full"
-                  rightIcon={
-                    <StSvg
-                      name="Save_fill"
-                      size={24}
-                      color={colors.neutral[0]}
+                      color={colors.neutral[500]}
                     />
                   }
                 />
-              )}
-            </View>
-          </KeyboardAwareScrollView>
+              </View>
+
+              <Divider className="my-6" />
+
+              <View className="flex-row gap-2 mb-2">
+                <HomeCard
+                  className="bg-primary-blue-500"
+                  textClassName="text-white"
+                  title={"Записать\nклиента"}
+                  startAdornment={
+                    <StSvg
+                      name="Edit_fill"
+                      size={26}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                  onPress={handleBookAppointment}
+                />
+                <HomeCard
+                  title={"Связаться\n"}
+                  startAdornment={
+                    <StSvg
+                      name="Phone_fill"
+                      size={26}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={handleOpenContacts}
+                />
+              </View>
+              <View className="flex-row gap-2">
+                <HomeCard
+                  title={"История\nпосещений"}
+                  startAdornment={
+                    <StSvg
+                      name="Date_fill"
+                      size={26}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={() =>
+                    userCustomer &&
+                    router.push(Routers.app.clients.history(userCustomer.id))
+                  }
+                />
+                <HomeCard
+                  disabled
+                  title={"Сделать\nподарок"}
+                  startAdornment={
+                    <StSvg
+                      name="gift_alt_fill"
+                      size={26}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                />
+              </View>
+
+              <Divider className="my-6" />
+
+              <View className="gap-2">
+                <Typography
+                  weight="medium"
+                  className="text-caption text-neutral-500"
+                >
+                  Заметки
+                </Typography>
+                <RhfTextField
+                  name="note"
+                  multiline
+                  numberOfLines={4}
+                  placeholder="Добавить заметку о клиенте"
+                />
+                {isDirty && (
+                  <Button
+                    title="Сохранить"
+                    onPress={handleSaveNote}
+                    loading={isSaving}
+                    disabled={isSaving}
+                    buttonClassName="w-full"
+                    rightIcon={
+                      <StSvg
+                        name="Save_fill"
+                        size={24}
+                        color={colors.neutral[0]}
+                      />
+                    }
+                  />
+                )}
+              </View>
+            </KeyboardAwareScrollView>
           );
         }}
       </ScreenWithToolbar>

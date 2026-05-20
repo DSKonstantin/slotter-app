@@ -47,7 +47,7 @@ const TabItem = memo(
 
         <Typography
           weight="semibold"
-          className="text-[10px] leading-none text-center min-w-[64px]"
+          className="text-[10px] leading-none text-center min-w-[64px] mt-[2px]"
           style={isActive ? styles.labelActive : styles.labelInactive}
         >
           {tab.label}

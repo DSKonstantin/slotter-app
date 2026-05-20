@@ -40,19 +40,24 @@ export interface NotificationSubjectInterlocutor {
   avatar_url: string | null;
 }
 
+export interface NotificationSubjectUser {
+  id: number;
+  first_name: string;
+  last_name: string;
+  profession: string | null;
+  nickname: string;
+  avatar_url: string | null;
+}
+
 export interface AppointmentNotificationSubject {
   id: number;
   date: string;
   start_time: string;
   end_time: string;
-  duration: number;
   status: string;
-  price_cents: number;
-  price_currency: string;
-  payment_method: string;
+  customer_confirmed_at: string | null;
   customer: NotificationSubjectCustomer;
-  cancel_reason: string | null;
-  comment: string | null;
+  user: NotificationSubjectUser;
 }
 
 export interface ChatNotificationSubject {

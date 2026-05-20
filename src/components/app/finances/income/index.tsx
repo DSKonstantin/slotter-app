@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { Platform, RefreshControl, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import TrendChartCard from "@/src/components/shared/cards/trendChartCard";
@@ -112,7 +112,7 @@ const FinancesIncomeScreen = () => {
     }
     if (groupBy === "services") {
       return <IncomeBreakdownServices items={data.breakdown} />;
-    }
+    }ww
     return <IncomeBreakdownClients items={data.breakdown} />;
   };
 
@@ -131,14 +131,26 @@ const FinancesIncomeScreen = () => {
         return (
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentInset={
+              Platform.OS === "ios" ? { top: topInset } : undefined
+            }
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
               paddingHorizontal: SCREEN_PADDING,
               gap: 20,
             }}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl
+                progressViewOffset={Platform.select({
+                  android: topInset,
+                })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
             }
           >
             <TrendChartCard

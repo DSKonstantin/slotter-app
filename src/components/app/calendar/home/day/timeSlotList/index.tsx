@@ -46,6 +46,8 @@ type TimeSlotListProps = {
   onHighlightScroll?: (y: number) => void;
 };
 
+const PADDING_TOP = 16;
+
 const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointments,
   breaks = [],
@@ -177,9 +179,15 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   if (segments.length === 0) return null;
 
   return (
-    <View className="flex-1 pt-4 px-screen relative">
+    <View
+      className="flex-1 px-screen relative"
+      style={{ paddingTop: PADDING_TOP }}
+    >
       {isToday && isNowInRange && (
-        <CurrentTimeIndicator top={nowOffset} time={currentTime} />
+        <CurrentTimeIndicator
+          top={nowOffset + PADDING_TOP}
+          time={currentTime}
+        />
       )}
       {segments.map((segment) => {
         const { segStart, segEnd, isCompressed, content } = segment;

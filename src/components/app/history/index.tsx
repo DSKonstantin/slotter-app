@@ -1,9 +1,18 @@
 import React, { memo, useCallback, useMemo } from "react";
-import { ActivityIndicator, Pressable, SectionList, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  RefreshControl,
+  SectionList,
+  View,
+} from "react-native";
+import { router } from "expo-router";
 import { isToday, isYesterday } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatTime } from "@/src/utils/date/formatTime";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { Routers } from "@/src/constants/routers";
 
 import {
   useGetNotificationsPaginatedInfiniteQuery,
@@ -28,13 +37,16 @@ import HistorySkeleton from "./HistorySkeleton";
 
 // ── Badge config ─────────────────────────────────────────────────────────────
 
-const KIND_BADGE: Record<NotificationKind, { icon: string; color: string }> = {
+const KIND_BADGE: Record<
+  NotificationKind,
+  { icon: string; color: string; rotate?: number; bgColor?: string }
+> = {
   appointment_created: {
-    icon: "Clock_fill",
+    icon: "Add_round_fill",
     color: colors.primary.blue[500],
   },
   appointment_pending_approval: {
-    icon: "Clock_fill",
+    icon: "Add_round_fill",
     color: colors.primary.blue[500],
   },
   appointment_confirmed: {
@@ -55,19 +67,21 @@ const KIND_BADGE: Record<NotificationKind, { icon: string; color: string }> = {
   },
   appointment_customer_confirmed: {
     icon: "Check_fill",
-    color: colors.primary.green[700],
+    color: colors.primary.green[500],
   },
   appointment_customer_accepted: {
     icon: "Check_fill",
-    color: colors.primary.green[700],
+    color: colors.primary.green[500],
   },
   appointment_customer_declined: {
     icon: "Warning_fill",
     color: colors.accent.red[500],
   },
   appointment_reschedule_requested: {
-    icon: "Warning_fill",
-    color: colors.accent.yellow[700],
+    icon: "Sort_arrow",
+    color: colors.neutral[0],
+    bgColor: colors.accent.orange[500],
+    rotate: 90,
   },
   rebook_suggestion: {
     icon: "Star_fill",
@@ -113,8 +127,20 @@ const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
           uri={person?.avatar_url ?? undefined}
           size="md"
         />
-        <View className="absolute -bottom-1 -right-1 w-[20px] h-[20px] items-center justify-center bg-white rounded-full">
-          <StSvg name={badge.icon} size={18} color={badge.color} />
+        <View
+          className="absolute -bottom-1 -right-1 w-[20px] h-[20px] items-center justify-center rounded-full"
+          style={{ backgroundColor: badge.bgColor ?? "white" }}
+        >
+          <StSvg
+            name={badge.icon}
+            size={18}
+            color={badge.color}
+            style={
+              badge.rotate
+                ? { transform: [{ rotate: `${badge.rotate}deg` }] }
+                : undefined
+            }
+          />
         </View>
       </View>
 
@@ -131,7 +157,7 @@ const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
               {formatTime(new Date(item.created_at))}
             </Typography>
             {!item.read_at && (
-              <View className="w-2 h-2 rounded-full bg-accent-red-500" />
+              <View className="w-[10px] h-[10px] rounded-full bg-accent-red-500" />
             )}
           </View>
         </View>
@@ -201,13 +227,16 @@ const HistoryScreen = () => {
     }
   }, [markAllRead]);
 
-  const handleMarkRead = useCallback(
-    async (notification: Notification) => {
-      if (notification.read_at) return;
-      try {
-        await markRead(notification.id).unwrap();
-      } catch {
-        // silent — not critical UX
+  const handlePress = useCallback(
+    (notification: Notification) => {
+      if (!notification.read_at) {
+        markRead(notification.id);
+      }
+      if (!notification.subject) return;
+      if (isAppointmentSubject(notification.subject)) {
+        router.push(Routers.app.calendar.slot(notification.subject.id));
+      } else {
+        router.push(Routers.app.chat.room(notification.subject.id));
       }
     },
     [markRead],
@@ -270,19 +299,30 @@ const HistoryScreen = () => {
           <SectionList
             sections={sections}
             keyExtractor={(item) => String(item.id)}
+            contentInset={
+              Platform.OS === "ios" ? { top: topInset } : undefined
+            }
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
               paddingHorizontal: SCREEN_PADDING,
               flexGrow: 1,
             }}
             showsVerticalScrollIndicator={false}
-            onRefresh={onRefresh}
-            refreshing={refreshing}
+            refreshControl={
+              <RefreshControl
+                progressViewOffset={Platform.select({ android: topInset })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             renderItem={({ item }) => (
-              <NotificationRow item={item} onPress={handleMarkRead} />
+              <NotificationRow item={item} onPress={handlePress} />
             )}
             renderSectionHeader={({ section }) => (
               <Typography
@@ -305,11 +345,7 @@ const HistoryScreen = () => {
             }
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center gap-4">
-                <StSvg
-                  name="Notification_fill"
-                  size={60}
-                  color={colors.neutral[400]}
-                />
+                <StSvg name="Bell_fill" size={60} color={colors.neutral[400]} />
                 <Typography className="text-body text-neutral-500 text-center">
                   Нет уведомлений
                 </Typography>

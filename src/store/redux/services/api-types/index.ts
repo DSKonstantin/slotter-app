@@ -140,6 +140,7 @@ export type {
   NotificationSubject,
   NotificationSubjectCustomer,
   NotificationSubjectInterlocutor,
+  NotificationSubjectUser,
   AppointmentNotificationSubject,
   ChatNotificationSubject,
   GetNotificationsParams,
@@ -154,3 +155,10 @@ export type {
   CreateUserLinkPayload,
   UpdateUserLinkPayload,
 } from "./userLink";
+export type {
+  SubscriptionPlan,
+  SubscriptionStatus,
+  SubscriptionMembership,
+  CheckoutResponse,
+  SubscriptionQuota,
+} from "./subscription";

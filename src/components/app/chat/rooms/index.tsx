@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { RefreshControl, View } from "react-native";
+import { Platform, RefreshControl, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -84,13 +84,22 @@ export default function ChatRoomsScreen() {
                       }
                     />
                   )}
+                  contentInset={
+                    Platform.OS === "ios" ? { top: topInset } : undefined
+                  }
+                  contentOffset={
+                    Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                  }
                   contentContainerStyle={{
-                    paddingTop: topInset,
+                    paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingBottom: bottomInset + 8,
                     paddingHorizontal: SCREEN_PADDING,
                   }}
                   refreshControl={
                     <RefreshControl
+                      progressViewOffset={Platform.select({
+                        android: topInset,
+                      })}
                       refreshing={refreshing}
                       onRefresh={onRefresh}
                     />

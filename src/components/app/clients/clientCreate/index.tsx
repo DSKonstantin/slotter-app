@@ -57,7 +57,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     control,
     formState: { isDirty },
   } = methods;
-  const { release } = useFormNavigationGuard(isDirty);
+  useFormNavigationGuard(isDirty);
   const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
 
   const [createUserCustomer, { isLoading }] = useCreateUserCustomerMutation();
@@ -78,13 +78,13 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
           },
         }).unwrap();
         onCreated?.(user_customer);
-        release();
+        methods.reset();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать клиента"));
       }
     },
-    [auth, createUserCustomer, onCreated, release],
+    [auth, createUserCustomer, onCreated, methods],
   );
 
   const handleContactsPress = useCallback(async () => {

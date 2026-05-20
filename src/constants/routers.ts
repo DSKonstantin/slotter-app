@@ -176,6 +176,7 @@ export const Routers = {
       preview: "/(app)/(tabs)/account/preview" as const,
       gallery: "/(app)/(tabs)/account/gallery" as const,
       support: "/(app)/(tabs)/account/support" as const,
+      subscription: "/(app)/(tabs)/account/subscription" as const,
     },
   },
 } as const;

@@ -20,23 +20,21 @@ const CurrentTimeIndicator = ({ top, time }: CurrentTimeIndicatorProps) => {
     >
       <View className="w-[50px] items-center">
         <View
-          className="w-[52px] h-[28px] justify-center items-center bg-background"
+          className="w-[52px] h-[28px] justify-center items-center bg-neutral-900"
           style={styles.badge}
         >
-          <Text className="text-caption font-semibold text-neutral-500">
+          <Text className="text-caption font-semibold text-neutral-0">
             {time}
           </Text>
         </View>
       </View>
-      <View className="flex-1 h-[2px] bg-accent-red-500 mr-screen" />
+      <View className="flex-1 h-[2px] bg-neutral-900 mr-screen" />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   badge: {
-    borderWidth: 2,
-    borderColor: colors.accent.red[500],
     borderRadius: 9999,
   },
 });

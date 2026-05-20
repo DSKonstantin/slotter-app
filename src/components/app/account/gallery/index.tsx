@@ -1,6 +1,7 @@
-import React, {memo, useCallback, useMemo, useState} from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -390,14 +391,23 @@ const Gallery = () => {
                   data={photos}
                   numColumns={2}
                   keyExtractor={(item) => item.id}
+                  contentInset={
+                    Platform.OS === "ios" ? { top: topInset } : undefined
+                  }
+                  contentOffset={
+                    Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                  }
                   contentContainerStyle={{
-                    paddingTop: topInset,
+                    paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingHorizontal: HORIZONTAL_PADDING,
                     paddingBottom: bottomInset + (isEditMode ? 80 : 16),
                   }}
                   renderItem={renderItem}
                   refreshControl={
                     <RefreshControl
+                      progressViewOffset={Platform.select({
+                        android: topInset,
+                      })}
                       refreshing={refreshing}
                       onRefresh={onRefresh}
                     />
