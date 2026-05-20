@@ -59,7 +59,7 @@ export default function ChatRoomsScreen() {
                   className="flex-1 items-center justify-center gap-2"
                   style={{
                     paddingTop: topInset,
-                    paddingBottom: bottomInset + 96,
+                    paddingBottom: bottomInset + 49,
                   }}
                 >
                   <Typography

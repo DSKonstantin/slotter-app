@@ -63,7 +63,7 @@ const EMPTY_MESSAGES: ChatIMessage[] = [];
 
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
   // ── Local UI State ─────────────────────────────────────────────────────
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -72,7 +72,7 @@ export default function ChatRoom({ roomId }: Props) {
   const [attachVisible, setAttachVisible] = useState(false);
   const [isProposing, setIsProposing] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
-  const [inputBarHeight, setInputBarHeight] = useState(70);
+  const [inputBarHeight, setInputBarHeight] = useState(0);
   const loadingMoreRef = useRef(false);
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
 
@@ -186,7 +186,10 @@ export default function ChatRoom({ roomId }: Props) {
         },
       });
 
-      if (replyingTo) setReplyingTo(null);
+      if (replyingTo) {
+        setReplyingTo(null);
+        setInputBarHeight(0);
+      }
     },
     [id, currentUser, createMessage, replyingTo, makeUser],
   );
@@ -428,10 +431,16 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Render callbacks ──────────────────────────────────────────────────
-  const handleCancelReply = useCallback(() => setReplyingTo(null), []);
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+    setInputBarHeight(0);
+  }, []);
   const handleOpenAttach = useCallback(() => setAttachVisible(true), []);
 
-  const renderScrollToBottom = useCallback(() => <ChatScrollBottomButton />, []);
+  const renderScrollToBottom = useCallback(
+    () => <ChatScrollBottomButton />,
+    [],
+  );
   const renderMessage = useCallback(
     (props: React.ComponentProps<typeof ChatMessage>) => (
       <ChatMessage {...props} />
@@ -504,7 +513,9 @@ export default function ChatRoom({ roomId }: Props) {
           );
         }
       }
-      return <ChatBubble {...(props as React.ComponentProps<typeof ChatBubble>)} />;
+      return (
+        <ChatBubble {...(props as React.ComponentProps<typeof ChatBubble>)} />
+      );
     },
     [currentGiftedId, interlocutor, handleAcceptAppointment],
   );
@@ -562,7 +573,7 @@ export default function ChatRoom({ roomId }: Props) {
           />
         }
       >
-        {({ topInset }) => (
+        {({ topInset, bottomInset }) => (
           <SafeAreaView className="flex-1" edges={["left", "right"]}>
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
@@ -592,7 +603,7 @@ export default function ChatRoom({ roomId }: Props) {
                 isSendButtonAlwaysVisible
                 minInputToolbarHeight={0}
                 keyboardAvoidingViewProps={{
-                  keyboardVerticalOffset: -bottomInset + 8,
+                  keyboardVerticalOffset: -bottomInsetArea + 8,
                 }}
                 textInputProps={{
                   placeholder: "Сообщение...",

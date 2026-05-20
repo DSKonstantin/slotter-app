@@ -26,7 +26,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
   const hasUnread = unread_count > 0;
 
   const previewText = (() => {
-    if (!last_message) return "";
+    if (!last_message) return "Нет сообщений";
     const isMine =
       !!currentUserId &&
       !!resourceType &&
