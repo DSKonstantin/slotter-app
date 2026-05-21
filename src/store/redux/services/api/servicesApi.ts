@@ -1,3 +1,4 @@
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { api } from "../api";
 import type {
   CreateServicePayload,
@@ -20,6 +21,47 @@ const CATEGORIES_TAG = {
   type: "ServiceCategories" as const,
   id: "LIST" as const,
 };
+
+const SERVICE_SYNC_KEYS = [
+  "name",
+  "description",
+  "duration",
+  "is_active",
+  "is_available_online",
+] as const;
+
+type CategoriesDraft = { pages: PaginatedResponse<ServiceCategory>[] };
+type Dispatch = ThunkDispatch<unknown, unknown, UnknownAction>;
+
+const isPublicProfileQuery = (args: unknown): boolean =>
+  isUserIdArg(args) && args.params?.view === "public_profile";
+
+const findCategoryInPages = (
+  pages: PaginatedResponse<ServiceCategory>[],
+  id: number,
+): ServiceCategory | undefined => {
+  for (const page of pages) {
+    const cat = page.service_categories.find((c) => c.id === id);
+    if (cat) return cat;
+  }
+  return undefined;
+};
+
+function patchCategoriesCache(
+  getState: () => unknown,
+  dispatch: Dispatch,
+  mutator: (draft: CategoriesDraft) => void,
+) {
+  return patchMatchingCaches<"getServiceCategories", CategoriesDraft>(
+    servicesApi,
+    getState,
+    dispatch,
+    CATEGORIES_TAG,
+    "getServiceCategories",
+    isPublicProfileQuery,
+    mutator,
+  );
+}
 
 const servicesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
@@ -85,56 +127,63 @@ const servicesApi = api.injectEndpoints({
         method: "PATCH",
         data: data instanceof FormData ? data : { service: data },
       }),
-      invalidatesTags: (_result, _error, arg) => {
-        if (
-          arg.data instanceof FormData ||
-          (!(arg.data instanceof FormData) && arg.data.service_category_id)
-        ) {
-          return [
-            { type: "Services", id: `LIST-${arg.categoryId}` },
-            CATEGORIES_TAG,
-          ];
-        }
-        return [];
-      },
       async onQueryStarted(
         { categoryId, id, data },
         { dispatch, getState, queryFulfilled },
       ) {
         if (data instanceof FormData) return;
-        if (data.service_category_id) return;
 
-        const patches = patchMatchingCaches(
-          servicesApi,
-          getState,
-          dispatch,
-          CATEGORIES_TAG,
-          "getServiceCategories",
-          (args) => isUserIdArg(args),
-          (draft: { pages: PaginatedResponse<ServiceCategory>[] }) => {
-            for (const page of draft.pages) {
-              const category = page.service_categories.find(
-                (c) => c.id === categoryId,
-              );
-              if (!category?.services) continue;
-              const service = category.services.find((s) => s.id === id);
-              if (service) {
-                if (data.name !== undefined) service.name = data.name;
-                if (data.description !== undefined)
-                  service.description = data.description;
-                if (data.duration !== undefined)
-                  service.duration = data.duration;
-                if (data.is_active !== undefined)
-                  service.is_active = data.is_active;
-                if (data.is_available_online !== undefined)
-                  service.is_available_online = data.is_available_online;
-              }
+        if (data.service_category_id) {
+          const targetCategoryId = data.service_category_id;
+          const patches = patchCategoriesCache(getState, dispatch, (draft) => {
+            const src = findCategoryInPages(draft.pages, categoryId);
+            if (!src?.services) return;
+            const idx = src.services.findIndex((s) => s.id === id);
+            if (idx === -1) return;
+            const [moved] = src.services.splice(idx, 1);
+
+            const dst = findCategoryInPages(draft.pages, targetCategoryId);
+            if (!dst) return;
+            if (!dst.services) dst.services = [];
+            dst.services.push(moved);
+          });
+          await applyWithRollback(patches, queryFulfilled);
+          return;
+        }
+
+        const patches = patchCategoriesCache(getState, dispatch, (draft) => {
+          const category = findCategoryInPages(draft.pages, categoryId);
+          const service = category?.services?.find((s) => s.id === id);
+          if (!service) return;
+          for (const key of SERVICE_SYNC_KEYS) {
+            const value = data[key];
+            if (value !== undefined) {
+              (service as unknown as Record<string, unknown>)[key] = value;
             }
-          },
-        );
+          }
+        });
 
         await applyWithRollback(patches, queryFulfilled);
       },
+    }),
+
+    updateServiceForm: builder.mutation<
+      Service,
+      {
+        categoryId: number;
+        id: number;
+        data: Partial<UpdateServicePayload> | FormData;
+      }
+    >({
+      query: ({ categoryId, id, data }) => ({
+        url: `/service_categories/${categoryId}/services/${id}`,
+        method: "PATCH",
+        data: data instanceof FormData ? data : { service: data },
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Services", id: `LIST-${arg.categoryId}` },
+        CATEGORIES_TAG,
+      ],
     }),
 
     deleteService: builder.mutation<void, { categoryId: number; id: number }>({
@@ -157,37 +206,24 @@ const servicesApi = api.injectEndpoints({
               },
             ),
           ),
-          ...patchMatchingCaches(
-            servicesApi,
-            getState,
-            dispatch,
-            CATEGORIES_TAG,
-            "getServiceCategories",
-            (args) =>
-              isUserIdArg(args) && args.params?.view === "public_profile",
-            (draft: { pages: PaginatedResponse<ServiceCategory>[] }) => {
-              draft.pages.forEach((page) => {
-                const category = page.service_categories.find(
-                  (item) => item.id === categoryId,
-                );
-                if (!category?.services) return;
+          ...patchCategoriesCache(getState, dispatch, (draft) => {
+            const category = findCategoryInPages(draft.pages, categoryId);
+            if (!category?.services) return;
 
-                const index = category.services.findIndex((s) => s.id === id);
-                if (index === -1) return;
+            const index = category.services.findIndex((s) => s.id === id);
+            if (index === -1) return;
 
-                const [removed] = category.services.splice(index, 1);
-                if (
-                  removed?.is_active &&
-                  typeof category.activeServicesCount === "number"
-                ) {
-                  category.activeServicesCount = Math.max(
-                    0,
-                    category.activeServicesCount - 1,
-                  );
-                }
-              });
-            },
-          ),
+            const [removed] = category.services.splice(index, 1);
+            if (
+              removed?.is_active &&
+              typeof category.activeServicesCount === "number"
+            ) {
+              category.activeServicesCount = Math.max(
+                0,
+                category.activeServicesCount - 1,
+              );
+            }
+          }),
         ];
 
         await applyWithRollback(patches, queryFulfilled);
@@ -219,24 +255,11 @@ const servicesApi = api.injectEndpoints({
               },
             ),
           ),
-          ...patchMatchingCaches(
-            servicesApi,
-            getState,
-            dispatch,
-            CATEGORIES_TAG,
-            "getServiceCategories",
-            (args) =>
-              isUserIdArg(args) && args.params?.view === "public_profile",
-            (draft: { pages: PaginatedResponse<ServiceCategory>[] }) => {
-              draft.pages.forEach((page) => {
-                const category = page.service_categories.find(
-                  (item) => item.id === categoryId,
-                );
-                if (!category?.services?.length) return;
-                applyPositionOrder(category.services, positionById);
-              });
-            },
-          ),
+          ...patchCategoriesCache(getState, dispatch, (draft) => {
+            const category = findCategoryInPages(draft.pages, categoryId);
+            if (!category?.services?.length) return;
+            applyPositionOrder(category.services, positionById);
+          }),
         ];
 
         await applyWithRollback(patches, queryFulfilled);
@@ -250,6 +273,7 @@ export const {
   useGetServiceQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
+  useUpdateServiceFormMutation,
   useDeleteServiceMutation,
   useReorderServicesMutation,
 } = servicesApi;

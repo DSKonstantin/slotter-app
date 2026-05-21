@@ -1,19 +1,26 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Alert, LayoutAnimation, Pressable, Text, View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
 import {
   NestableDraggableFlatList,
   RenderItemParams,
 } from "react-native-draggable-flatlist";
-import { Button, Card, Divider, IconButton, StSvg, Tag, Typography } from "@/src/components/ui";
+import {
+  Button,
+  Card,
+  Divider,
+  IconButton,
+  StSvg,
+  Tag,
+  Typography,
+} from "@/src/components/ui";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
-import {
-  useReorderServiceCategoriesMutation,
-} from "@/src/store/redux/services/api/serviceCategoriesApi";
+import { useReorderServiceCategoriesMutation } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import {
   useDeleteServiceMutation,
   useReorderServicesMutation,
+  useUpdateServiceMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector } from "@/src/store/redux/store";
@@ -63,34 +70,20 @@ const ServiceList = ({
   const auth = useRequiredAuth();
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
 
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(
-    () => new Set(categories.map((c) => c.id)),
+  const [reorderKey, setReorderKey] = useState(0);
+  const [collapsedIds, setCollapsedIds] = useState<Set<number>>(
+    () => new Set(),
   );
-  const seenIdsRef = useRef<Set<number>>(
-    new Set(categories.map((c) => c.id)),
-  );
-
-  useEffect(() => {
-    const newIds = categories
-      .map((c) => c.id)
-      .filter((id) => !seenIdsRef.current.has(id));
-    if (newIds.length > 0) {
-      setExpandedIds((prev) => {
-        const next = new Set(prev);
-        newIds.forEach((id) => next.add(id));
-        return next;
-      });
-      newIds.forEach((id) => seenIdsRef.current.add(id));
-    }
-  }, [categories]);
+  const autoCollapsedCategoryRef = useRef<number | null>(null);
 
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const [reorderServices] = useReorderServicesMutation();
+  const [updateService] = useUpdateServiceMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
 
   const handleToggleExpanded = useCallback((categoryId: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedIds((prev) => {
+    setCollapsedIds((prev) => {
       const next = new Set(prev);
       if (next.has(categoryId)) {
         next.delete(categoryId);
@@ -105,7 +98,7 @@ const ServiceList = ({
     const items: FlatItem[] = [];
     for (const category of categories) {
       items.push({ _id: `cat-${category.id}`, type: "category", category });
-      if (expandedIds.has(category.id)) {
+      if (!collapsedIds.has(category.id)) {
         for (const service of category.services ?? []) {
           items.push({
             _id: `svc-${service.id}`,
@@ -117,7 +110,7 @@ const ServiceList = ({
       }
     }
     return items;
-  }, [categories, expandedIds]);
+  }, [categories, collapsedIds]);
 
   const handleDragEnd = useCallback(
     async ({
@@ -134,16 +127,13 @@ const ServiceList = ({
       const movedItem = data[to];
 
       if (movedItem.type === "category") {
-        const newOrder = data.filter(
-          (item): item is FlatCategoryItem => item.type === "category",
-        );
+        const positions = data
+          .filter((item): item is FlatCategoryItem => item.type === "category")
+          .map((item, index) => ({ id: item.category.id, position: index }));
         try {
           await reorderServiceCategories({
             userId: auth.userId,
-            positions: newOrder.map((item, index) => ({
-              id: item.category.id,
-              position: index,
-            })),
+            positions,
           }).unwrap();
         } catch (error) {
           toast.error(
@@ -153,43 +143,59 @@ const ServiceList = ({
         return;
       }
 
-      const { categoryId } = movedItem;
-      const above = to > 0 ? data[to - 1] : null;
-      const below = to < data.length - 1 ? data[to + 1] : null;
+      const { service, categoryId: sourceCategoryId } = movedItem;
 
-      const aboveOk =
-        !above ||
-        (above.type === "category" && above.category.id === categoryId) ||
-        (above.type === "service" && above.categoryId === categoryId);
-      const belowOk =
-        !below ||
-        below.type === "category" ||
-        (below.type === "service" && below.categoryId === categoryId);
+      // Nearest category header at or above the drop position
+      const catIndex = data
+        .slice(0, to + 1)
+        .findLastIndex((item) => item.type === "category");
+      if (catIndex === -1) {
+        setReorderKey((k) => k + 1);
+        return;
+      }
+      const targetCategoryId = (data[catIndex] as FlatCategoryItem).category.id;
 
-      if (!aboveOk || !belowOk) return;
+      // Services between this category header and the next one (or end of list)
+      const nextCatOffset = data
+        .slice(catIndex + 1)
+        .findIndex((item) => item.type === "category");
+      const slotEnd =
+        nextCatOffset === -1 ? data.length : catIndex + 1 + nextCatOffset;
+      const positions = data
+        .slice(catIndex + 1, slotEnd)
+        .filter((item): item is FlatServiceItem => item.type === "service")
+        .map((item, index) => ({ id: item.service.id, position: index }));
 
-      const newServices = data
-        .filter(
-          (item): item is FlatServiceItem =>
-            item.type === "service" && item.categoryId === categoryId,
-        )
-        .map((item) => item.service);
+      if (sourceCategoryId === targetCategoryId) {
+        try {
+          await reorderServices({
+            categoryId: targetCategoryId,
+            positions,
+          }).unwrap();
+        } catch (error) {
+          toast.error(
+            getApiErrorMessage(error, "Не удалось изменить порядок услуг"),
+          );
+        }
+        return;
+      }
 
+      // Cross-category move
       try {
+        await updateService({
+          categoryId: sourceCategoryId,
+          id: service.id,
+          data: { service_category_id: targetCategoryId },
+        }).unwrap();
         await reorderServices({
-          categoryId,
-          positions: newServices.map((service, index) => ({
-            id: service.id,
-            position: index,
-          })),
+          categoryId: targetCategoryId,
+          positions,
         }).unwrap();
       } catch (error) {
-        toast.error(
-          getApiErrorMessage(error, "Не удалось изменить порядок услуг"),
-        );
+        toast.error(getApiErrorMessage(error, "Не удалось перенести услугу"));
       }
     },
-    [auth, reorderServiceCategories, reorderServices],
+    [auth, reorderServiceCategories, reorderServices, updateService],
   );
 
   const handleServicePress = useCallback(
@@ -230,7 +236,7 @@ const ServiceList = ({
     ({ item, drag, isActive, getIndex }: RenderItemParams<FlatItem>) => {
       if (item.type === "category") {
         const { category } = item;
-        const isExpanded = expandedIds.has(category.id);
+        const isExpanded = !collapsedIds.has(category.id);
         const index = getIndex() ?? 0;
 
         return (
@@ -243,7 +249,19 @@ const ServiceList = ({
               totalCount={category.services?.length ?? 0}
               isEditMode={isEditMode}
               isActive={category.is_active}
-              onDrag={isExpanded ? undefined : drag}
+              onDrag={() => {
+                if (isExpanded) {
+                  autoCollapsedCategoryRef.current = category.id;
+                  setCollapsedIds((prev) => {
+                    const next = new Set(prev);
+                    next.add(category.id);
+                    return next;
+                  });
+                  requestAnimationFrame(() => drag());
+                  return;
+                }
+                drag();
+              }}
               isDragActive={isActive}
               isExpanded={isExpanded}
               onPress={() => handleToggleExpanded(category.id)}
@@ -305,6 +323,7 @@ const ServiceList = ({
             }
             pressArea="content"
             onPress={() => handleServicePress(service.id, categoryId)}
+            onLongPress={drag}
           />
         );
       }
@@ -330,7 +349,7 @@ const ServiceList = ({
       );
     },
     [
-      expandedIds,
+      collapsedIds,
       isEditMode,
       isDeleting,
       handleToggleExpanded,
@@ -368,8 +387,21 @@ const ServiceList = ({
     <NestableDraggableFlatList
       data={flatItems}
       keyExtractor={(item) => item._id}
+      extraData={reorderKey}
       showsVerticalScrollIndicator={false}
-      onDragEnd={handleDragEnd}
+      onDragEnd={(params) => {
+        const restoreId = autoCollapsedCategoryRef.current;
+        if (restoreId !== null) {
+          autoCollapsedCategoryRef.current = null;
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setCollapsedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(restoreId);
+            return next;
+          });
+        }
+        void handleDragEnd(params);
+      }}
       accessibilityRole="list"
       ListEmptyComponent={
         <View className="pt-6">
@@ -381,7 +413,7 @@ const ServiceList = ({
       ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       ListFooterComponent={
         categories.length > 0 ? (
-          <View style={{ gap: 24, paddingTop: 24 }}>
+          <View className="gap-6 pt-6">
             {hasNextPage && (
               <Button
                 title="Показать ещё"

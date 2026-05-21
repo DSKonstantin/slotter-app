@@ -23,10 +23,24 @@ import { pluralize } from "@/src/utils/text/pluralize";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { parseISO } from "date-fns";
 import { clearSelectedDay } from "@/src/utils/calendar/scheduleHelpers";
-import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
+import type {
+  CalendarScheduleDayValues,
+  CalendarScheduleFormValues,
+} from "@/src/validation/schemas/calendarSchedule.schema";
 import { BlurView } from "expo-blur";
-import { DEFAULT_BREAK_END, DEFAULT_BREAK_START, DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
+import {
+  DEFAULT_BREAK_END,
+  DEFAULT_BREAK_START,
+  DEFAULT_END_AT,
+  DEFAULT_START_AT,
+} from "@/src/constants/hoursOptions";
 import { SCREEN_PADDING } from "@/src/constants/layout";
+
+const EMPTY_DAYS: CalendarScheduleDayValues[] = [];
+const renderNullBackdrop = () => null;
+const renderBlurBackground = ({ style }: BottomSheetBackgroundProps) => (
+  <BlurView intensity={50} tint="light" style={[style, styles.background]} />
+);
 
 type Props = {
   visible: boolean;
@@ -44,30 +58,30 @@ export const ScheduleSettingsModal = ({
   const methods = useFormContext<CalendarScheduleFormValues>();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const hasBeenPresentedRef = useRef(false);
+  const pendingScrollToErrorRef = useRef<(() => void) | null>(null);
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
   const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
 
   const { control, setValue } = methods;
   const mode = useWatch({ control, name: "mode" }) ?? "bulk";
-  const watchedCalendarDays = useWatch({ control, name: "calendarDays" });
-  const calendarDays = useMemo(
-    () => watchedCalendarDays ?? [],
-    [watchedCalendarDays],
-  );
+  const calendarDays =
+    useWatch({ control, name: "calendarDays" }) ?? EMPTY_DAYS;
 
-  const selectedEditableDays = useMemo(
-    () =>
-      calendarDays
-        .map((day, index) => ({ day, index }))
-        .filter(({ day }) => day.isSelected && !day.isExisting),
-    [calendarDays],
-  );
-  const blockedDays = useMemo(
-    () => calendarDays.filter((day) => day.isSelected && day.isExisting),
-    [calendarDays],
-  );
-  const totalCount = selectedEditableDays.length + blockedDays.length;
+  const { selectedEditableDays, hasBlockedDays, totalCount } = useMemo(() => {
+    const editable: { day: CalendarScheduleDayValues; index: number }[] = [];
+    let blocked = 0;
+    calendarDays.forEach((day, index) => {
+      if (!day.isSelected) return;
+      if (day.isExisting) blocked++;
+      else editable.push({ day, index });
+    });
+    return {
+      selectedEditableDays: editable,
+      hasBlockedDays: blocked > 0,
+      totalCount: editable.length + blocked,
+    };
+  }, [calendarDays]);
   const canSave = selectedEditableDays.length > 0;
 
   const switchMode = useCallback(
@@ -75,14 +89,12 @@ export const ScheduleSettingsModal = ({
       if (nextMode === mode) return;
 
       if (nextMode === "perDay") {
-        selectedEditableDays.forEach(({ index }) => {
-          setValue(`calendarDays.${index}.startAt`, "", {
-            shouldDirty: true,
-          });
-          setValue(`calendarDays.${index}.endAt`, "", {
-            shouldDirty: true,
-          });
-          setValue(`calendarDays.${index}.breaks`, [], { shouldDirty: true });
+        selectedEditableDays.forEach(({ day, index }) => {
+          setValue(
+            `calendarDays.${index}`,
+            { ...day, startAt: "", endAt: "", breaks: [] },
+            { shouldDirty: true },
+          );
         });
         setValue("mode", "perDay", { shouldDirty: true });
         return;
@@ -127,26 +139,17 @@ export const ScheduleSettingsModal = ({
     [calendarDays, selectedEditableDays.length, setValue],
   );
 
-  const renderBackground = useCallback(
-    ({ style }: BottomSheetBackgroundProps) => (
-      <BlurView
-        intensity={50}
-        tint="light"
-        style={[style, styles.background]}
-      />
-    ),
-    [],
-  );
-
-  const renderBackdrop = useCallback(() => null, []);
-
   useEffect(() => {
     if (visible && totalCount === 0) {
       onClose();
-    } else if (visible) {
+      return;
+    }
+    if (visible) {
       bottomSheetRef.current?.present();
       hasBeenPresentedRef.current = true;
-    } else if (hasBeenPresentedRef.current) {
+      return;
+    }
+    if (hasBeenPresentedRef.current) {
       bottomSheetRef.current?.dismiss();
     }
   }, [onClose, totalCount, visible]);
@@ -161,14 +164,27 @@ export const ScheduleSettingsModal = ({
       enableOverDrag={false}
       detached
       style={styles.sheet}
-      backgroundComponent={renderBackground}
+      backgroundComponent={renderBlurBackground}
       handleIndicatorStyle={styles.handle}
-      backdropComponent={renderBackdrop}
+      backdropComponent={renderNullBackdrop}
       onDismiss={onClose}
+      onChange={(index) => {
+        if (
+          index === snapPoints.length - 1 &&
+          pendingScrollToErrorRef.current
+        ) {
+          const run = pendingScrollToErrorRef.current;
+          pendingScrollToErrorRef.current = null;
+          requestAnimationFrame(run);
+        }
+      }}
     >
       <RhfFormProvider methods={methods} offset={16}>
         {({ setScrollRef, contentRef, scrollToError }) => {
-          const submit = methods.handleSubmit(onSave, scrollToError);
+          const submit = methods.handleSubmit(onSave, (errors) => {
+            pendingScrollToErrorRef.current = () => scrollToError(errors);
+            bottomSheetRef.current?.expand();
+          });
           return (
             <>
               <View className="flex-row items-center mb-4 px-screen pt-4">
@@ -210,7 +226,7 @@ export const ScheduleSettingsModal = ({
                 />
               </View>
 
-              {blockedDays.length > 0 && (
+              {hasBlockedDays && (
                 <View className="px-screen py-2.5 bg-accent-yellow-500/50 mb-4 rounded-small flex-row gap-2 items-center mx-5">
                   <StSvg
                     name="Alarm_fill"

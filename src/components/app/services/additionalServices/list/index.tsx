@@ -184,13 +184,13 @@ const AdditionalServicesList = () => {
                 <Card
                   title={item.name}
                   pressArea="content"
+                  onLongPress={drag}
                   active={isActive}
                   className={item.is_active ? "" : "opacity-40"}
                   subtitle={`${item.duration} мин | ${formatRublesFromCents(item.price_cents)}`}
                   left={
                     <Pressable
                       onLongPress={drag}
-                      delayLongPress={100}
                       hitSlop={8}
                       accessibilityLabel="Reorder service"
                       accessibilityRole="button"

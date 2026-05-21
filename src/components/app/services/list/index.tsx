@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
-import { RefreshControl, View } from "react-native";
+import { View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { NestableScrollContainer } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -19,7 +19,6 @@ import {
   toggleEditMode,
 } from "@/src/store/redux/slices/servicesSlice";
 import ServiceList from "@/src/components/app/services/list/serviceList";
-import { useRefresh } from "@/src/hooks/useRefresh";
 
 function ServicesToolbarActionsComponent() {
   const isEditMode = useAppSelector((s) => s.services.isEditMode);
@@ -120,17 +119,6 @@ const AppServices = () => {
     setCreateModalVisible(true);
   }, []);
 
-  const refetchAll = useCallback(
-    () =>
-      Promise.all([
-        refetchServiceCategories({ refetchCachedPages: false }),
-        refetchAdditionalServices({ refetchCachedPages: false }),
-      ]),
-    [refetchServiceCategories, refetchAdditionalServices],
-  );
-
-  const { refreshing, onRefresh } = useRefresh(refetchAll);
-
   const handleCategoriesRefresh = useCallback(() => {
     refetchServiceCategories({ refetchCachedPages: false });
   }, [refetchServiceCategories]);
@@ -151,10 +139,12 @@ const AppServices = () => {
 
   useFocusEffect(
     useCallback(() => {
+      refetchServiceCategories({ refetchCachedPages: false });
+      refetchAdditionalServices({ refetchCachedPages: false });
       return () => {
         dispatch(resetEditMode());
       };
-    }, [dispatch]),
+    }, [dispatch, refetchServiceCategories, refetchAdditionalServices]),
   );
 
   if (!auth) {
@@ -211,9 +201,6 @@ const AppServices = () => {
                 paddingHorizontal: SCREEN_PADDING,
                 paddingBottom: bottomInset + 8,
               }}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
             >
               <ServiceList
                 categories={categories}
