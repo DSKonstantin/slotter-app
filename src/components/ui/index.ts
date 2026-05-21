@@ -24,3 +24,4 @@ export { FadeOverlay } from "./FadeOverlay";
 export { FloatingFooter } from "./FloatingFooter";
 export { StImage } from "./StImage";
 export { PlaceholderSlotter } from "./PlaceholderSlotter";
+export { default as HighlightText } from "./HighlightText";

@@ -4,9 +4,10 @@ import { twMerge } from "tailwind-merge";
 
 type CardProps = {
   title: string;
+  titleNode?: ReactNode;
   titleProps?: TextProps;
   subtitleProps?: TextProps;
-  subtitle?: string;
+  subtitle?: ReactNode;
   caption?: string;
 
   left?: ReactNode;
@@ -21,6 +22,7 @@ type CardProps = {
 
 export const Card = ({
   title,
+  titleNode,
   titleProps,
   subtitleProps,
   subtitle,
@@ -56,23 +58,28 @@ export const Card = ({
         {...(pressContent ? { onPress } : {})}
       >
         <View className="flex-row items-center gap-1">
-          <Text
-            {...titleProps}
-            className={`flex-shrink font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
-          >
-            {title}
-          </Text>
+          {titleNode ?? (
+            <Text
+              {...titleProps}
+              className={`flex-shrink font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
+            >
+              {title}
+            </Text>
+          )}
           {titleAccessory}
         </View>
 
-        {subtitle && (
-          <Text
-            {...subtitleProps}
-            className={"font-inter-medium text-caption text-neutral-500"}
-          >
-            {subtitle}
-          </Text>
-        )}
+        {!!subtitle &&
+          (typeof subtitle === "string" ? (
+            <Text
+              {...subtitleProps}
+              className={"font-inter-medium text-caption text-neutral-500"}
+            >
+              {subtitle}
+            </Text>
+          ) : (
+            subtitle
+          ))}
 
         {caption && (
           <Text className="font-inter-regular text-gray-medium mt-1">

@@ -1,4 +1,10 @@
-import React, { useCallback, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert, FlatList, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -20,8 +26,13 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 import { useGetCustomerTagsQuery } from "@/src/store/redux/services/api/customersApi";
 import { useCreateUserCustomerMutation } from "@/src/store/redux/services/api/userCustomersApi";
+import { useAppDispatch } from "@/src/store/redux/store";
+import { setTagId } from "@/src/store/redux/slices/clientsSlice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import type { UserCustomer } from "@/src/store/redux/services/api-types";
+import type {
+  CustomerTag,
+  UserCustomer,
+} from "@/src/store/redux/services/api-types";
 import { colors } from "@/src/styles/colors";
 import ContactPickerModal, {
   type PickedContact,
@@ -38,11 +49,22 @@ type ClientCreateProps = {
 
 const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
   const [pickerVisible, setPickerVisible] = useState(false);
   const [createTagVisible, setCreateTagVisible] = useState(false);
 
+  const tagsListRef = useRef<FlatList<CustomerTag>>(null);
+  const scrollFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
   const { data: tagsData } = useGetCustomerTagsQuery(
     auth ? { userId: auth.userId } : skipToken,
+  );
+
+  const tags = useMemo(
+    () => tagsData?.customer_tags ?? [],
+    [tagsData?.customer_tags],
   );
   const { isGranted, requestOrOpenSettings } = useContactsPermission();
 
@@ -59,6 +81,27 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   } = methods;
   useFormNavigationGuard(isDirty);
   const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
+
+  useEffect(() => {
+    if (!selectedTag?.id || tags.length === 0) return;
+    const selectedIndex = tags.findIndex((tag) => tag.id === selectedTag.id);
+    if (selectedIndex < 0) return;
+    const timeoutId = setTimeout(() => {
+      tagsListRef.current?.scrollToIndex({
+        index: selectedIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [tags, selectedTag?.id]);
+
+  useEffect(() => {
+    const ref = scrollFallbackTimeoutRef;
+    return () => {
+      if (ref.current) clearTimeout(ref.current);
+    };
+  }, []);
 
   const [createUserCustomer, { isLoading }] = useCreateUserCustomerMutation();
 
@@ -78,13 +121,14 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
           },
         }).unwrap();
         onCreated?.(user_customer);
+        dispatch(setTagId(undefined));
         methods.reset();
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось создать клиента"));
       }
     },
-    [auth, createUserCustomer, onCreated, methods],
+    [auth, createUserCustomer, onCreated, methods, dispatch],
   );
 
   const handleContactsPress = useCallback(async () => {
@@ -172,14 +216,31 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                         Категория
                       </Typography>
                       <FlatList
+                        ref={tagsListRef}
                         horizontal
-                        data={tagsData?.customer_tags ?? []}
+                        data={tags}
                         keyExtractor={(item) => String(item.id)}
                         showsHorizontalScrollIndicator={false}
                         className="mb-2"
                         contentContainerStyle={{
                           paddingRight: 8,
                           paddingHorizontal: SCREEN_PADDING,
+                        }}
+                        onScrollToIndexFailed={({
+                          index,
+                          averageItemLength,
+                        }) => {
+                          tagsListRef.current?.scrollToOffset({
+                            offset: Math.max(0, index * averageItemLength),
+                            animated: true,
+                          });
+                          scrollFallbackTimeoutRef.current = setTimeout(() => {
+                            tagsListRef.current?.scrollToIndex({
+                              index,
+                              animated: true,
+                              viewPosition: 0.5,
+                            });
+                          }, 100);
                         }}
                         renderItem={({ item }) => (
                           <Badge
