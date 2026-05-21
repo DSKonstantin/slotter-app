@@ -3,7 +3,10 @@ import { Animated, PanResponder, View } from "react-native";
 
 import { PaginationDots } from "@/src/components/ui";
 
-import InsightCard, { type InsightCategory } from "./InsightCard";
+import InsightCard, {
+  type InsightCategory,
+  type BodyPart,
+} from "./InsightCard";
 
 const SWIPE_THRESHOLD = 40;
 
@@ -12,7 +15,7 @@ type Insight = {
   category: InsightCategory;
   iconName: string;
   title: string;
-  body: string;
+  body: BodyPart[] | string;
   dismissable?: boolean;
   onPress: () => void;
 };
@@ -25,6 +28,7 @@ const MOCK_INSIGHTS: Insight[] = [
     iconName: "Line_up",
     title: "Лучший месяц — выручка +37%",
     body: "Февраль стал рекордным за всё время",
+    dismissable: true,
     onPress: () => {},
   },
   {
@@ -32,7 +36,10 @@ const MOCK_INSIGHTS: Insight[] = [
     category: "tip",
     iconName: "Pin_fill",
     title: "Настройте перерывы в расписании",
-    body: "Снизьте число отмен на 18%",
+    body: [
+      { text: "Снизьте число отмен на " },
+      { text: "18%", highlight: true },
+    ],
     dismissable: true,
     onPress: () => {},
   },
@@ -50,7 +57,47 @@ const MOCK_INSIGHTS: Insight[] = [
     category: "update",
     iconName: "Check_round_fill",
     title: "Оплата теперь в 2× быстрее",
-    body: "Конверсия в оплату выросла на 22%",
+    body: [
+      { text: "Конверсия в оплату выросла на " },
+      { text: "22%", highlight: true },
+    ],
+    dismissable: true,
+    onPress: () => {},
+  },
+  {
+    id: "offer-payments",
+    category: "offer",
+    iconName: "Star_fill",
+    title: "Продлите подписку со скидкой 20%",
+    body: [
+      { text: "Акция до " },
+      { text: "пятницы ", highlight: true },
+      { text: "экономия 480 ₽ на 3 месяца" },
+    ],
+    dismissable: true,
+    onPress: () => {},
+  },
+  {
+    id: "offer-payments",
+    category: "offer",
+    iconName: "Star_fill",
+    title: "Давай зарабатывать вместе!",
+    body: [
+      {
+        text: "Рекомендуй приложение коллегам и получай до 50% с первой оплаты. ",
+      },
+      { text: "Подробнее...", highlight: true },
+    ],
+    dismissable: true,
+    onPress: () => {},
+  },
+  {
+    id: "event-payments",
+    category: "event",
+    iconName: "Check_round_fill",
+    title: "У вас не прочитано 2 события",
+    body: "Советуем просмотреть, прежде чем событие станет неактуальным",
+    dismissable: true,
     onPress: () => {},
   },
 ];
@@ -84,7 +131,9 @@ const InsightsCarousel = () => {
         onPanResponderRelease: (_, gesture) => {
           if (insights.length < 2) return;
           if (gesture.dx > SWIPE_THRESHOLD) {
-            animateChange(safeIndex === 0 ? insights.length - 1 : safeIndex - 1);
+            animateChange(
+              safeIndex === 0 ? insights.length - 1 : safeIndex - 1,
+            );
           } else if (gesture.dx < -SWIPE_THRESHOLD) {
             animateChange((safeIndex + 1) % insights.length);
           }
