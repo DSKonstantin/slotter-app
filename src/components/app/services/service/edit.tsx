@@ -12,7 +12,7 @@ import { Typography } from "@/src/components/ui";
 import {
   useDeleteServiceMutation,
   useGetServiceQuery,
-  useUpdateServiceMutation,
+  useUpdateServiceFormMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 import { createEmptyPhotoSlot } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
@@ -30,7 +30,7 @@ type EditServiceProps = {
 
 const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
   const router = useRouter();
-  const [updateService, { isLoading }] = useUpdateServiceMutation();
+  const [updateService, { isLoading }] = useUpdateServiceFormMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
   const hasValidIds =
     Number.isFinite(serviceId) &&

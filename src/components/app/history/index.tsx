@@ -54,7 +54,7 @@ const KIND_BADGE: Record<
     color: colors.primary.green[700],
   },
   appointment_cancelled: {
-    icon: "Warning_fill",
+    icon: "Close_round_fill",
     color: colors.accent.red[500],
   },
   appointment_rescheduled: {
@@ -74,7 +74,7 @@ const KIND_BADGE: Record<
     color: colors.primary.green[500],
   },
   appointment_customer_declined: {
-    icon: "Warning_fill",
+    icon: "Close_round_fill",
     color: colors.accent.red[500],
   },
   appointment_reschedule_requested: {
