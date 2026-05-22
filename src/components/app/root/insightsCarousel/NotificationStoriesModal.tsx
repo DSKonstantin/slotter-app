@@ -1,6 +1,10 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Modal, TouchableOpacity, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -165,6 +169,7 @@ const NotificationStoriesModal = ({
       onShow={handleAnimateIn}
       onRequestClose={handleClose}
     >
+      <GestureHandlerRootView style={{ flex: 1 }}>
       <Animated.View
         style={{
           flex: 1,
@@ -259,6 +264,7 @@ const NotificationStoriesModal = ({
           </View>
         </GestureDetector>
       </Animated.View>
+      </GestureHandlerRootView>
     </Modal>
   );
 };
