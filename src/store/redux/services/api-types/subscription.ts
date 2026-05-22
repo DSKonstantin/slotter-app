@@ -27,7 +27,7 @@ export type SubscriptionMembership = {
 
 export type CheckoutResponse = {
   confirmation_url: string;
-  payment_id: number;
+  payment_id: string;
 };
 
 export type SubscriptionPaymentStatus =
@@ -37,7 +37,7 @@ export type SubscriptionPaymentStatus =
   | "refunded";
 
 export type SubscriptionPayment = {
-  id: number;
+  id: string;
   status: SubscriptionPaymentStatus;
   payment_type: "initial" | "renewal" | "grace_retry";
   amount_cents: number;

@@ -1,8 +1,5 @@
-export const PAYMENT_STATUS_ROUTE = "/payment/status";
-
 export const Routers = {
   root: "/",
-  paymentStatus: PAYMENT_STATUS_ROUTE as const,
   auth: {
     root: "/(auth)",
     login: "/(auth)/login",
@@ -167,6 +164,12 @@ export const Routers = {
           },
         }) as const,
     },
+
+    paymentStatus: (paymentId: number) =>
+      ({
+        pathname: "/(app)/payment/status",
+        params: { payment_id: String(paymentId) },
+      }) as const,
 
     account: {
       root: "/(app)/(tabs)/account" as const,

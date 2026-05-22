@@ -1,171 +1,167 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useDispatch } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useAppDispatch } from "@/src/store/redux/store";
+import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { colors } from "@/src/styles/colors";
 import { api } from "@/src/store/redux/services/api";
 import { useGetSubscriptionPaymentQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { Routers } from "@/src/constants/routers";
-import { colors } from "@/src/styles/colors";
 
-export const PAYMENT_ID_KEY = "pending_payment_id";
+type DisplayState = "loading" | "succeeded" | "failed" | "timeout" | "noId";
 
 const POLL_TIMEOUT_MS = 60_000;
-const POLL_INTERVAL_MS = 2_000;
 
 const PaymentStatusScreen = () => {
   const auth = useRequiredAuth();
-  const dispatch = useAppDispatch();
-  const [paymentId, setPaymentId] = useState<number | null>(null);
-  const [shouldPoll, setShouldPoll] = useState(true);
-  const [timedOut, setTimedOut] = useState(false);
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { top, bottom } = useSafeAreaInsets();
+  const { payment_id } = useLocalSearchParams<{ payment_id: string }>();
 
-  useEffect(() => {
-    AsyncStorage.getItem(PAYMENT_ID_KEY).then((val) => {
-      if (val) setPaymentId(parseInt(val, 10));
-    });
-  }, []);
+  const paymentId = payment_id ?? null;
+  const [displayState, setDisplayState] = useState<DisplayState>("loading");
+  const [isPolling, setIsPolling] = useState(true);
 
-  const { data: payment } = useGetSubscriptionPaymentQuery(
-    auth && paymentId && shouldPoll
-      ? { userId: auth.userId, paymentId }
-      : skipToken,
-    { pollingInterval: POLL_INTERVAL_MS },
+  const {
+    data: payment,
+    isError,
+    error,
+  } = useGetSubscriptionPaymentQuery(
+    auth && paymentId ? { userId: auth.userId, paymentId } : skipToken,
+    { pollingInterval: isPolling ? 5000 : 0 },
   );
 
-  useEffect(() => {
-    if (!payment) return;
-    if (payment.status === "succeeded") {
-      setShouldPoll(false);
-      AsyncStorage.removeItem(PAYMENT_ID_KEY);
-      dispatch(api.util.invalidateTags(["SubscriptionMembership"]));
-    } else if (payment.status === "failed") {
-      setShouldPoll(false);
-    }
-  }, [payment?.status, dispatch]);
+  const errorStatus = isError ? (error as { status?: number })?.status : null;
+  const isSucceeded = payment?.status === "succeeded";
+  const isFailed =
+    payment?.status === "failed" ||
+    payment?.status === "refunded" ||
+    (isError && errorStatus !== 404);
+  const noPaymentId = !paymentId || errorStatus === 404;
 
   useEffect(() => {
-    if (!paymentId) return;
-    const timeout = setTimeout(() => {
-      setShouldPoll(false);
-      setTimedOut(true);
+    if (isSucceeded) {
+      setIsPolling(false);
+      setDisplayState("succeeded");
+      dispatch(api.util.invalidateTags(["SubscriptionMembership"]));
+    } else if (isFailed) {
+      setIsPolling(false);
+      setDisplayState("failed");
+    } else if (noPaymentId) {
+      setIsPolling(false);
+      setDisplayState("noId");
+    }
+  }, [isSucceeded, isFailed, noPaymentId, dispatch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPolling(false);
+      setDisplayState((prev) => (prev === "loading" ? "timeout" : prev));
     }, POLL_TIMEOUT_MS);
-    return () => clearTimeout(timeout);
-  }, [paymentId]);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!auth) return null;
 
-  const goToSubscription = () =>
-    router.replace(Routers.app.account.subscription);
+  const isLoading = displayState === "loading";
 
-  if (!paymentId) {
-    return (
-      <ScreenWithToolbar title="Статус оплаты">
-        {() => (
-          <View className="flex-1 items-center justify-center px-screen gap-4">
-            <Typography
-              weight="medium"
-              className="text-body text-center text-neutral-900"
-            >
-              Не удалось определить платёж
-            </Typography>
-            <Button title="Проверить подписку" onPress={goToSubscription} />
-          </View>
-        )}
-      </ScreenWithToolbar>
-    );
-  }
+  const DISPLAY = {
+    loading: {
+      title: "Проверяем оплату",
+      subtitle: "Это займёт несколько секунд",
+      buttonTitle: "Проверить подписку",
+      buttonIcon: "Expand_right",
+    },
+    succeeded: {
+      title: "Оплата прошла!",
+      subtitle: "Подписка Pro активирована",
+      buttonTitle: "Продолжить",
+      buttonIcon: "Expand_right",
+    },
+    failed: {
+      title: "Оплата не прошла",
+      subtitle: "Попробуйте ещё раз или выберите другой способ оплаты",
+      buttonTitle: "Попробовать снова",
+      buttonIcon: "Refresh_2",
+    },
+    timeout: {
+      title: "Платёж в обработке",
+      subtitle: "Подписка активируется автоматически — проверьте позже",
+      buttonTitle: "Проверить подписку",
+      buttonIcon: "Expand_right",
+    },
+    noId: {
+      title: "Не удалось определить платёж",
+      subtitle: "Откройте экран подписки, чтобы проверить статус",
+      buttonTitle: "Проверить подписку",
+      buttonIcon: "Expand_right",
+    },
+  } as const;
 
-  if (payment?.status === "succeeded") {
-    return (
-      <ScreenWithToolbar title="Статус оплаты">
-        {() => (
-          <View className="flex-1 items-center justify-center px-screen gap-4">
-            <StSvg
-              name="Check_round_fill"
-              size={56}
-              color={colors.primary.blue[500]}
-            />
-            <View className="items-center gap-1">
-              <Typography
-                weight="semibold"
-                className="text-heading-sm text-center"
-              >
-                Оплачено!
-              </Typography>
-              <Typography className="text-body text-center text-neutral-500">
-                Pro-доступ активирован
-              </Typography>
-            </View>
-            <Button title="Перейти к подписке" onPress={goToSubscription} />
-          </View>
-        )}
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (payment?.status === "failed") {
-    return (
-      <ScreenWithToolbar title="Статус оплаты">
-        {() => (
-          <View className="flex-1 items-center justify-center px-screen gap-4">
-            <StSvg
-              name="Warning_fill"
-              size={56}
-              color={colors.accent.red[500]}
-            />
-            <View className="items-center gap-1">
-              <Typography
-                weight="semibold"
-                className="text-heading-sm text-center"
-              >
-                Оплата не прошла
-              </Typography>
-              <Typography className="text-body text-center text-neutral-500">
-                Попробуйте ещё раз или выберите другой способ оплаты
-              </Typography>
-            </View>
-            <Button title="Попробовать снова" onPress={goToSubscription} />
-          </View>
-        )}
-      </ScreenWithToolbar>
-    );
-  }
-
-  if (timedOut) {
-    return (
-      <ScreenWithToolbar title="Статус оплаты">
-        {() => (
-          <View className="flex-1 items-center justify-center px-screen gap-4">
-            <Typography
-              weight="medium"
-              className="text-body text-center text-neutral-500"
-            >
-              Платёж в обработке — проверим позже
-            </Typography>
-            <Button title="Перейти к подписке" onPress={goToSubscription} />
-          </View>
-        )}
-      </ScreenWithToolbar>
-    );
-  }
+  const { title, subtitle, buttonTitle, buttonIcon } = DISPLAY[displayState];
 
   return (
-    <ScreenWithToolbar title="Статус оплаты">
-      {() => (
-        <View className="flex-1 items-center justify-center gap-3">
-          <ActivityIndicator size="large" color={colors.primary.blue[500]} />
-          <Typography className="text-body text-neutral-500">
-            Проверяем оплату...
+    <View className="flex-1">
+      <ToolbarTop
+        title="Статус оплаты"
+        fallbackHref={Routers.app.account.subscription}
+      />
+      <View
+        className="flex-1 px-screen"
+        style={{ paddingTop: TOOLBAR_HEIGHT + top, paddingBottom: bottom + 8 }}
+      >
+        <View className="flex-1 justify-center gap-4 pb-4">
+          <View className="justify-center items-center h-[60px]">
+            {displayState === "loading" ? (
+              <ActivityIndicator
+                size="large"
+                color={colors.primary.blue[500]}
+              />
+            ) : displayState === "succeeded" ? (
+              <StSvg
+                name="Check_round_fill"
+                size={60}
+                color={colors.primary.blue[500]}
+              />
+            ) : displayState === "timeout" ? (
+              <StSvg name="Time" size={60} color={colors.neutral[400]} />
+            ) : (
+              <StSvg
+                name="Close_round_fill"
+                size={60}
+                color={colors.accent.red[500]}
+              />
+            )}
+          </View>
+
+          <Typography weight="semibold" className="text-display text-center">
+            {title}
+          </Typography>
+
+          <Typography className="text-body text-neutral-500 text-center">
+            {subtitle}
           </Typography>
         </View>
-      )}
-    </ScreenWithToolbar>
+
+        <View
+          style={{ opacity: isLoading ? 0 : 1 }}
+          pointerEvents={isLoading ? "none" : "auto"}
+        >
+          <Button
+            title={buttonTitle}
+            onPress={() => router.replace(Routers.app.account.subscription)}
+            rightIcon={<StSvg name={buttonIcon} size={20} color="white" />}
+          />
+        </View>
+      </View>
+    </View>
   );
 };
 

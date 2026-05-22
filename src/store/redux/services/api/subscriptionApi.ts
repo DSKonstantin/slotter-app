@@ -60,7 +60,7 @@ const subscriptionApi = api.injectEndpoints({
 
     getSubscriptionPayment: builder.query<
       SubscriptionPayment,
-      { userId: number; paymentId: number }
+      { userId: number; paymentId: string }
     >({
       query: ({ userId, paymentId }) => ({
         url: `/users/${userId}/subscription_payments/${paymentId}`,

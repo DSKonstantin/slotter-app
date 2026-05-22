@@ -1,15 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
-  AppState,
   Linking,
   Platform,
   RefreshControl,
   ScrollView,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
@@ -17,7 +14,6 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import { Badge, Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import SubscriptionSkeleton from "./SubscriptionSkeleton";
-import { PAYMENT_ID_KEY } from "./PaymentStatusScreen";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -25,7 +21,6 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { formatDayMonthYearLong } from "@/src/utils/date/formatDate";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { colors } from "@/src/styles/colors";
-import { Routers } from "@/src/constants/routers";
 import {
   useGetSubscriptionMembershipQuery,
   useGetSubscriptionPlansQuery,
@@ -117,7 +112,6 @@ const SubscriptionScreen = () => {
   const [checkoutLoadingId, setCheckoutLoadingId] = useState<number | null>(
     null,
   );
-  const isPendingPayment = useRef(false);
 
   const {
     data: membership,
@@ -150,9 +144,7 @@ const SubscriptionScreen = () => {
         userId: auth.userId,
         subscriptionPlanId: planId,
       }).unwrap();
-      await AsyncStorage.setItem(PAYMENT_ID_KEY, String(result.payment_id));
       await Linking.openURL(result.confirmation_url);
-      isPendingPayment.current = true;
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось инициировать оплату"));
     } finally {
@@ -189,16 +181,6 @@ const SubscriptionScreen = () => {
       ],
     );
   };
-
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active" && isPendingPayment.current) {
-        isPendingPayment.current = false;
-        router.push(Routers.paymentStatus);
-      }
-    });
-    return () => sub.remove();
-  }, []);
 
   if (!auth) return null;
 
@@ -294,11 +276,10 @@ const SubscriptionScreen = () => {
               </View>
             )}
 
-            {/* Grace banner */}
             {membership?.status === "grace" && (
               <View className="p-4 bg-background-surface rounded-base flex-row gap-3 items-start">
                 <StSvg
-                  name="Warning_fill"
+                  name="Close_round_fill"
                   size={20}
                   color={colors.accent.red[500]}
                 />
@@ -317,7 +298,9 @@ const SubscriptionScreen = () => {
               <>
                 <Divider />
                 <Typography weight="medium" className="text-body">
-                  Выберите тариф
+                  {membership?.status === "grace"
+                    ? "Переоформить подписку"
+                    : "Выберите тариф"}
                 </Typography>
                 {activePlans.map((plan) => (
                   <PlanCard

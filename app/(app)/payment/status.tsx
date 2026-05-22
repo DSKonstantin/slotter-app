@@ -1,6 +1,8 @@
-import React from "react";
 import PaymentStatusScreen from "@/src/components/app/account/subscription/PaymentStatusScreen";
+import React from "react";
 
-export default function PaymentStatusPage() {
+const PaymentStatus = () => {
   return <PaymentStatusScreen />;
-}
+};
+
+export default PaymentStatus;
