@@ -66,7 +66,7 @@ const Home = () => {
       >
         <NotificationBanners />
         {/*// TODO: нижние уведомления */}
-        {/*<InsightsCarousel />*/}
+        <InsightsCarousel />
       </View>
     </SafeAreaView>
   );
