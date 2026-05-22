@@ -33,6 +33,7 @@ export interface ChatRoom {
 
 export type GetChatRoomsParams = {
   per_count?: number;
+  page?: number;
 };
 
 export interface PaginationMeta {

@@ -1,18 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  AppState,
   Linking,
   Platform,
   RefreshControl,
   ScrollView,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Badge, Button, Divider, StSvg, Typography } from "@/src/components/ui";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import SubscriptionSkeleton from "./SubscriptionSkeleton";
+import { PAYMENT_ID_KEY } from "./PaymentStatusScreen";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -20,6 +25,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { formatDayMonthYearLong } from "@/src/utils/date/formatDate";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { colors } from "@/src/styles/colors";
+import { Routers } from "@/src/constants/routers";
 import {
   useGetSubscriptionMembershipQuery,
   useGetSubscriptionPlansQuery,
@@ -111,9 +117,11 @@ const SubscriptionScreen = () => {
   const [checkoutLoadingId, setCheckoutLoadingId] = useState<number | null>(
     null,
   );
+  const isPendingPayment = useRef(false);
 
   const {
     data: membership,
+    isLoading: isMembershipLoading,
     isError,
     refetch: refetchMembership,
   } = useGetSubscriptionMembershipQuery(
@@ -121,7 +129,8 @@ const SubscriptionScreen = () => {
     { refetchOnMountOrArgChange: true },
   );
 
-  const { data: plans } = useGetSubscriptionPlansQuery();
+  const { data: plans, isLoading: isPlansLoading } =
+    useGetSubscriptionPlansQuery();
 
   const { data: quota } = useGetSubscriptionQuotaQuery(
     auth && membership?.plan === "free" ? { userId: auth.userId } : skipToken,
@@ -141,7 +150,9 @@ const SubscriptionScreen = () => {
         userId: auth.userId,
         subscriptionPlanId: planId,
       }).unwrap();
+      await AsyncStorage.setItem(PAYMENT_ID_KEY, String(result.payment_id));
       await Linking.openURL(result.confirmation_url);
+      isPendingPayment.current = true;
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось инициировать оплату"));
     } finally {
@@ -179,24 +190,23 @@ const SubscriptionScreen = () => {
     );
   };
 
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && isPendingPayment.current) {
+        isPendingPayment.current = false;
+        router.push(Routers.paymentStatus);
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   if (!auth) return null;
 
   const activePlans = (plans ?? [])
     .filter((p) => p.is_active)
     .sort((a, b) => a.position - b.position);
-
-  const basePlan = activePlans.find((p) => p.months === 1);
-
-  const getDiscount = (plan: SubscriptionPlan) => {
-    if (!basePlan || plan.months === 1) return 0;
-    return Math.round(
-      (1 - plan.monthly_price_cents / basePlan.monthly_price_cents) * 100,
-    );
-  };
-
   const isProActive =
     membership?.plan === "pro" && membership?.status === "active";
-
   const checkoutButtonTitle =
     membership?.status === "grace" ? "Обновить карту" : "Оплатить";
 
@@ -208,6 +218,15 @@ const SubscriptionScreen = () => {
             <ErrorScreen
               title="Не удалось загрузить данные подписки"
               onRetry={refetchMembership}
+            />
+          );
+        }
+
+        if ((isMembershipLoading || isPlansLoading) && !membership && !plans) {
+          return (
+            <SubscriptionSkeleton
+              topInset={topInset}
+              bottomInset={bottomInset}
             />
           );
         }
@@ -294,7 +313,6 @@ const SubscriptionScreen = () => {
               </View>
             )}
 
-            {/* Plans */}
             {!isProActive && activePlans.length > 0 && (
               <>
                 <Divider />
@@ -305,7 +323,7 @@ const SubscriptionScreen = () => {
                   <PlanCard
                     key={plan.id}
                     plan={plan}
-                    discount={getDiscount(plan)}
+                    discount={plan.discount_percent}
                     loadingId={checkoutLoadingId}
                     onCheckout={handleCheckout}
                     buttonTitle={checkoutButtonTitle}
@@ -326,7 +344,7 @@ const SubscriptionScreen = () => {
                   rightIcon={
                     <StSvg
                       name="Trash"
-                      size={18}
+                      size={24}
                       color={colors.accent.red[500]}
                     />
                   }

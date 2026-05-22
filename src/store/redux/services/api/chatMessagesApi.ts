@@ -7,6 +7,7 @@ import type {
   GetChatMessagesResponse,
 } from "@/src/store/redux/services/api-types";
 import type { RootState } from "@/src/store/redux/store";
+import { chatRoomsApi, removeRoomFromPages } from "./chatRoomsApi";
 
 const FEED_LIMIT = 30;
 
@@ -86,14 +87,18 @@ const chatMessagesApi = api.injectEndpoints({
 
               const readAt = new Date(data.last_read_at).getTime();
               updateCachedData((draft) => {
+                // Messages are sorted newest-first. Iterate forward; once we
+                // find a message of ours older than readAt that's already
+                // marked received, everything older is too — bail out.
                 for (const m of draft.messages) {
+                  if (m.user._id !== currentId) continue;
                   const ts =
                     m.createdAt instanceof Date
                       ? m.createdAt.getTime()
                       : m.createdAt;
-                  if (m.user._id === currentId && ts <= readAt) {
-                    m.received = true;
-                  }
+                  if (ts > readAt) continue;
+                  if (m.received) break;
+                  m.received = true;
                 }
               });
             }
@@ -135,17 +140,19 @@ const chatMessagesApi = api.injectEndpoints({
         { chatRoomId, optimistic },
         { dispatch, queryFulfilled },
       ) {
-        const patch = dispatch(
-          chatMessagesApi.util.updateQueryData(
-            "getChatMessages",
-            { chatRoomId },
-            (draft) => {
-              if (!draft.messages.some((m) => m._id === optimistic._id)) {
-                draft.messages.unshift(optimistic);
-              }
-            },
+        const patches = [
+          dispatch(
+            chatMessagesApi.util.updateQueryData(
+              "getChatMessages",
+              { chatRoomId },
+              (draft) => {
+                if (!draft.messages.some((m) => m._id === optimistic._id)) {
+                  draft.messages.unshift(optimistic);
+                }
+              },
+            ),
           ),
-        );
+        ];
 
         try {
           const { data: result } = await queryFulfilled;
@@ -161,8 +168,35 @@ const chatMessagesApi = api.injectEndpoints({
               },
             ),
           );
+
+          // Promote the room in the rooms list with the new last_message —
+          // don't wait for Pusher echo (avoids stale preview if user navigates
+          // back immediately).
+          dispatch(
+            chatRoomsApi.util.updateQueryData(
+              "getChatRooms",
+              {},
+              (draft) => {
+                const room = removeRoomFromPages(draft, chatRoomId);
+                if (!room) return;
+                room.last_activity_at = result.created_at;
+                room.last_message = {
+                  id: result.id,
+                  body: result.body,
+                  created_at: result.created_at,
+                  owner: {
+                    id: result.owner.id,
+                    type: result.owner.type,
+                    name: result.owner.name,
+                    avatar_url: result.owner.avatar_url,
+                  },
+                };
+                draft.pages[0]?.rooms.unshift(room);
+              },
+            ),
+          );
         } catch {
-          patch.undo();
+          patches.forEach((p) => p.undo());
         }
       },
     }),
@@ -173,7 +207,6 @@ export { chatMessagesApi };
 
 export const {
   useGetChatMessagesQuery,
-  useLazyGetChatMessagesQuery,
   useCreateChatMessageMutation,
   useSendMessageMutation,
 } = chatMessagesApi;

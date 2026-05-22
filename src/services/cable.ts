@@ -92,16 +92,20 @@ type ConnectionEvents = {
 
 function bindTransportStatus(consumer: Consumer) {
   const conn = (
-    consumer as unknown as { connection: { events: ConnectionEvents } }
+    consumer as unknown as {
+      connection?: { events?: Partial<ConnectionEvents> };
+    }
   ).connection;
+  if (!conn?.events) return;
+
   const origOpen = conn.events.open;
   const origClose = conn.events.close;
-  conn.events.open = () => {
-    origOpen();
+  conn.events.open = function () {
+    origOpen?.call(this);
     if (actionCable === consumer) setStatus("connected");
   };
-  conn.events.close = (e) => {
-    origClose(e);
+  conn.events.close = function (e: unknown) {
+    origClose?.call(this, e);
     if (actionCable === consumer) setStatus("reconnecting");
   };
 }

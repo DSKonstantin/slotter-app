@@ -7,6 +7,7 @@ export type SubscriptionPlan = {
   price_currency: string;
   position: number;
   is_active: boolean;
+  discount_percent: number;
 };
 
 export type SubscriptionStatus = "active" | "grace" | "cancelled" | "expired";
@@ -27,6 +28,21 @@ export type SubscriptionMembership = {
 export type CheckoutResponse = {
   confirmation_url: string;
   payment_id: number;
+};
+
+export type SubscriptionPaymentStatus =
+  | "pending"
+  | "succeeded"
+  | "failed"
+  | "refunded";
+
+export type SubscriptionPayment = {
+  id: number;
+  status: SubscriptionPaymentStatus;
+  payment_type: "initial" | "renewal" | "grace_retry";
+  amount_cents: number;
+  amount_currency: string;
+  created_at: string;
 };
 
 export type SubscriptionQuota = {

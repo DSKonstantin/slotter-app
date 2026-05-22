@@ -21,7 +21,7 @@ import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useAppSelector } from "@/src/store/redux/store";
 import {
-  useGetChatRoomsQuery,
+  useGetChatRoomQuery,
   useMarkRoomReadMutation,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import {
@@ -104,13 +104,11 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Queries ───────────────────────────────────────────────────────────
-  // selectFromResult must return an object (RTK Query merges it with the
-  // query state) — returning a primitive or null breaks the typing.
-  const { interlocutor } = useGetChatRoomsQuery(undefined, {
-    selectFromResult: ({ data }) => ({
-      interlocutor: data?.rooms?.find((r) => r.id === id)?.interlocutor ?? null,
-    }),
-  });
+  const { data: roomData } = useGetChatRoomQuery(
+    { chatRoomId: id },
+    { skip: !id },
+  );
+  const interlocutor = roomData?.interlocutor ?? null;
 
   const [markRoomRead] = useMarkRoomReadMutation();
 
@@ -136,7 +134,9 @@ export default function ChatRoom({ roomId }: Props) {
 
   // ── Mark room read on open ────────────────────────────────────────────
   useEffect(() => {
-    if (id) markRoomRead({ chatRoomId: id });
+    if (!id) return;
+    lastMarkedIncomingIdRef.current = null;
+    markRoomRead({ chatRoomId: id });
   }, [id, markRoomRead]);
 
   // ── Mark incoming messages read ───────────────────────────────────────
@@ -147,7 +147,12 @@ export default function ChatRoom({ roomId }: Props) {
     if (!latestIncoming) return;
     if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
 
+    // First time we see incoming messages — initial mark is already handled by
+    // the on-open effect above. Just remember the latest id and bail.
+    const wasUninitialized = lastMarkedIncomingIdRef.current === null;
     lastMarkedIncomingIdRef.current = latestIncoming._id;
+    if (wasUninitialized) return;
+
     markRoomRead({ chatRoomId: id });
   }, [currentGiftedId, id, markRoomRead, messages]);
 
@@ -589,6 +594,7 @@ export default function ChatRoom({ roomId }: Props) {
               </View>
             ) : (
               <GiftedChat<ChatIMessage>
+                isDayAnimationEnabled={false}
                 messages={messages}
                 onSend={onSend}
                 user={{ _id: currentGiftedId ?? 0 }}
@@ -620,6 +626,7 @@ export default function ChatRoom({ roomId }: Props) {
                     marginHorizontal: 4,
                     flex: 1,
                     maxHeight: 120,
+                    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)",
                   },
                 }}
                 onLongPressMessage={onLongPressMessage}
@@ -644,7 +651,7 @@ export default function ChatRoom({ roomId }: Props) {
                 listProps={{
                   contentContainerStyle: {
                     paddingTop: inputBarHeight + bottomInset,
-                    paddingBottom: topInset,
+                    paddingBottom: topInset + 8,
                     flexGrow: 1,
                   },
                   onEndReached: handleLoadEarlier,

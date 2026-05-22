@@ -11,7 +11,7 @@ import {
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import {
-  useGetChatRoomsQuery,
+  useGetChatRoomQuery,
   useUpdateMembershipMutation,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import type { ChatRoomInterlocutor } from "@/src/store/redux/services/api-types";
@@ -40,11 +40,11 @@ const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
     router.push(Routers.app.chat.clientHistory(interlocutor.id));
   };
 
-  const { isNotify } = useGetChatRoomsQuery(undefined, {
-    selectFromResult: ({ data }) => ({
-      isNotify: data?.rooms?.find((r) => r.id === roomId)?.is_notify ?? true,
-    }),
-  });
+  const { data: roomData } = useGetChatRoomQuery(
+    { chatRoomId: roomId },
+    { skip: !roomId },
+  );
+  const isNotify = roomData?.is_notify ?? true;
 
   const [updateMembership] = useUpdateMembershipMutation();
 

@@ -1,5 +1,8 @@
+export const PAYMENT_STATUS_ROUTE = "/payment/status";
+
 export const Routers = {
   root: "/",
+  paymentStatus: PAYMENT_STATUS_ROUTE as const,
   auth: {
     root: "/(auth)",
     login: "/(auth)/login",

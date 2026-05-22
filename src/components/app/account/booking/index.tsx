@@ -64,7 +64,7 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
                 field.value === step.value ? (
                   <StSvg
                     name="Check_fill"
-                    size={20}
+                    size={24}
                     color={colors.primary.blue[500]}
                   />
                 ) : null

@@ -9,6 +9,7 @@ export type PendingPhoto = {
 export type GalleryPhoto = {
   id: string;
   originalUrl: string;
+  blurhash?: string | null;
   photoUrl: string;
   croppedUrl: string | null;
   thumbnailUrl: string;

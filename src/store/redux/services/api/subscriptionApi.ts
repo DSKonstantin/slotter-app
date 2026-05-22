@@ -3,6 +3,7 @@ import type {
   SubscriptionMembership,
   SubscriptionPlan,
   SubscriptionQuota,
+  SubscriptionPayment,
   CheckoutResponse,
 } from "@/src/store/redux/services/api-types";
 
@@ -56,6 +57,16 @@ const subscriptionApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    getSubscriptionPayment: builder.query<
+      SubscriptionPayment,
+      { userId: number; paymentId: number }
+    >({
+      query: ({ userId, paymentId }) => ({
+        url: `/users/${userId}/subscription_payments/${paymentId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -65,4 +76,5 @@ export const {
   useCheckoutMutation,
   useCancelSubscriptionMutation,
   useGetSubscriptionQuotaQuery,
+  useGetSubscriptionPaymentQuery,
 } = subscriptionApi;

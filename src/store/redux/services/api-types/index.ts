@@ -161,4 +161,6 @@ export type {
   SubscriptionMembership,
   CheckoutResponse,
   SubscriptionQuota,
+  SubscriptionPayment,
+  SubscriptionPaymentStatus,
 } from "./subscription";

@@ -22,9 +22,7 @@ const ChatInputBar = ({
   ...toolbarProps
 }: Props) => {
   return (
-    <View
-      className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent"
-    >
+    <View className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent">
       <FadeOverlay position="bottom" height={80} />
       {replyingTo && (
         <View onLayout={(e) => onHeightChange(e.nativeEvent.layout.height)}>

@@ -298,6 +298,7 @@ const HistoryScreen = () => {
         return (
           <SectionList
             sections={sections}
+            stickySectionHeadersEnabled={false}
             keyExtractor={(item) => String(item.id)}
             contentInset={
               Platform.OS === "ios" ? { top: topInset } : undefined

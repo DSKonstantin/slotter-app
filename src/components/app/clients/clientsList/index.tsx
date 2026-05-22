@@ -234,30 +234,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
               )}
             />
           )}
-          <View className="flex-row gap-2.5 px-screen">
-            <Button
-              title="Статистика"
-              buttonClassName="flex-1"
-              rightIcon={
-                <StSvg name="Pipe_fill" size={24} color={colors.neutral[0]} />
-              }
-              onPress={() => router.push(Routers.app.clients.statistics)}
-            />
-            <Button
-              title="Рассылка"
-              disabled
-              variant="clear"
-              buttonClassName="flex-1"
-              rightIcon={
-                <StSvg
-                  name="Message_alt_fill"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              }
-              onPress={() => {}}
-            />
-          </View>
         </>
       )}
 
@@ -285,6 +261,38 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           refreshing={refreshing}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
+          ListHeaderComponent={
+            !searchMode ? (
+              <View className="flex-row gap-2.5 pb-2">
+                <Button
+                  title="Статистика"
+                  buttonClassName="flex-1"
+                  rightIcon={
+                    <StSvg
+                      name="Pipe_fill"
+                      size={24}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                  onPress={() => router.push(Routers.app.clients.statistics)}
+                />
+                <Button
+                  title="Рассылка"
+                  disabled
+                  variant="clear"
+                  buttonClassName="flex-1"
+                  rightIcon={
+                    <StSvg
+                      name="Message_alt_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={() => {}}
+                />
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => (
             <ClientRow item={item} highlight={debouncedSearch || undefined} />
           )}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Image, Pressable, View } from "react-native";
 import type { MessageImageProps } from "react-native-gifted-chat";
 import type { ChatIMessage } from "@/src/utils/chat/types";
@@ -59,4 +59,4 @@ const ChatMessageImages = ({
   );
 };
 
-export default ChatMessageImages;
+export default memo(ChatMessageImages);

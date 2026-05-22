@@ -299,7 +299,7 @@ const SlotCreate: React.FC = () => {
 
                   {(fields.length > 0 ||
                     draft.additionalServices.length > 0) && (
-                    <View className="flex-row justify-between items-center mt-3">
+                    <View className="flex-row justify-between items-center mt-3 mb-5">
                       <Typography className="text-body text-neutral-500">
                         Итого
                       </Typography>

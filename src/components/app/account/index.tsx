@@ -30,8 +30,9 @@ type NavItem = {
 const NAV_GROUPS: NavItem[][] = [
   [
     {
-      title: "Подписка",
+      title: "Оплата",
       icon: "Credit-card_fill",
+      rightIcon: "External",
       route: () => router.push(Routers.app.account.subscription),
     },
   ],
