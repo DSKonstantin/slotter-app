@@ -44,6 +44,17 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     onPress: () => onStoryPress("analytics-best-month"),
   },
   {
+    id: "education-payments",
+    category: "education",
+    iconName: "Star_alt_fill",
+    title: "Как работать с приложением",
+    body: [{ text: "Изучите основные разделы для работы" }],
+    dismissable: true,
+    stories: MOCK_NOTIFICATION_STORIES["education-payments"],
+    notificationLabel: INSIGHT_CATEGORY_CONFIG.education.label,
+    onPress: () => onStoryPress("education-payments"),
+  },
+  {
     id: "tip-breaks",
     category: "tip",
     iconName: "Pin_fill",

@@ -10,7 +10,8 @@ export type InsightCategory =
   | "reminder"
   | "update"
   | "offer"
-  | "event";
+  | "event"
+  | "education";
 
 const CATEGORY_STYLES: Record<
   InsightCategory,
@@ -32,6 +33,12 @@ const CATEGORY_STYLES: Record<
     pillBg: "bg-accent-purple-100",
     pillText: "text-accent-purple-500",
     iconColor: colors.accent.purple[500],
+  },
+  education: {
+    label: "Обучение",
+    pillBg: "bg-primary-green-500",
+    pillText: "text-primary-green-700",
+    iconColor: colors.primary.green[500],
   },
   reminder: {
     label: "Напоминание",

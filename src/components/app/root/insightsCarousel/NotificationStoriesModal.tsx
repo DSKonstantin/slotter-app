@@ -22,10 +22,7 @@ export type StoryCategory =
 export type Story = {
   id: string;
   category: StoryCategory;
-  iconName?: string;
-  title: string;
-  description?: string;
-  image?: string;
+  customScreen: React.ReactNode | ((onNext: () => void) => React.ReactNode);
 };
 
 export type StoriesData = Record<StoryCategory, Story[]>;
@@ -170,100 +167,71 @@ const NotificationStoriesModal = ({
       onRequestClose={handleClose}
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
-      <Animated.View
-        style={{
-          flex: 1,
-          backgroundColor: colors.background.surface,
-          opacity,
-        }}
-      >
-        <GestureDetector gesture={panGesture}>
-          <View style={{ flex: 1 }}>
-            <LinearGradient
-              colors={["#B0B0B099", "#B0B0B000"]}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 200,
-                pointerEvents: "none",
-              }}
-            />
+        <Animated.View
+          style={{
+            flex: 1,
+            backgroundColor: colors.background.surface,
+            opacity,
+          }}
+        >
+          <GestureDetector gesture={panGesture}>
+            <View style={{ flex: 1 }}>
+              <LinearGradient
+                colors={["#B0B0B099", "#B0B0B000"]}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 200,
+                  pointerEvents: "none",
+                }}
+              />
 
-            <View style={{ paddingTop: top + 16, paddingHorizontal: 16 }}>
-              <View className="flex-row gap-1">
-                {allStories.map((_, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() => setStoryIndex(idx)}
-                    activeOpacity={0.7}
-                    className="flex-1"
-                  >
-                    <View className="h-1.5 bg-neutral-300 rounded-full overflow-hidden">
-                      {idx <= currentIndex && (
-                        <View className="h-full bg-neutral-0" />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View className="flex-row items-center gap-3 pl-6 pb-6 pt-6">
-              {showIcon && (
-                <View
-                  className="rounded-full p-2"
-                  style={{ backgroundColor: displayColor }}
-                >
-                  <StSvg name={displayIcon} size={20} color={colors.neutral[0]} />
+              <View style={{ paddingTop: top + 16, paddingHorizontal: 16 }}>
+                <View className="flex-row gap-1">
+                  {allStories.map((_, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      onPress={() => setStoryIndex(idx)}
+                      activeOpacity={0.7}
+                      className="flex-1"
+                    >
+                      <View className="h-1.5 bg-neutral-300 rounded-full overflow-hidden">
+                        {idx <= currentIndex && (
+                          <View className="h-full bg-neutral-0" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
-              <View className="gap-1">
-                <Typography className="text-caption text-neutral-500">
-                  {displayLabel}
-                </Typography>
               </View>
-              <View className="flex-1" />
-              <TouchableOpacity
-                onPress={handleClose}
-                hitSlop={8}
-                className="active:opacity-70 pr-2"
-              >
-                <View className="bg-neutral-300 rounded-full p-2">
-                  <StSvg
-                    name="Close_round"
-                    size={24}
-                    color={colors.background.surface}
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
 
-            <View className="flex-1 justify-center px-6">
-              <View className="gap-6">
-                <Typography
-                  weight="semibold"
-                  className="text-4xl text-neutral-900"
-                  numberOfLines={5}
+              <View className="flex-row items-center gap-3 pl-6 pb-6 pt-6">
+                <View className="flex-1" />
+                <TouchableOpacity
+                  onPress={handleClose}
+                  hitSlop={8}
+                  className="active:opacity-70 pr-2"
                 >
-                  {currentStory.title}
-                </Typography>
+                  <View className="bg-neutral-300 rounded-full p-2">
+                    <StSvg
+                      name="Close_round"
+                      size={24}
+                      color={colors.background.surface}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
 
-                {currentStory.description && (
-                  <Typography
-                    weight="regular"
-                    className="text-body text-neutral-500"
-                    numberOfLines={3}
-                  >
-                    {currentStory.description}
-                  </Typography>
-                )}
+              <View className="flex-1">
+                {typeof currentStory.customScreen === "function"
+                  ? currentStory.customScreen(() => handleSwipe("left"))
+                  : currentStory.customScreen}
               </View>
             </View>
-          </View>
-        </GestureDetector>
-      </Animated.View>
+          </GestureDetector>
+        </Animated.View>
       </GestureHandlerRootView>
     </Modal>
   );
