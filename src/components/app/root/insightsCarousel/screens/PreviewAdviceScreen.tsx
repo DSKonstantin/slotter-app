@@ -8,9 +8,9 @@ type Props = {
 const PreviewAdviceScreen = ({ onNext }: Props) => (
   <View style={{ flex: 1 }}>
     <Image
-      source={require("@/assets/images/history/img.png")}
+      source={require("@/assets/images/history/education.png")}
       style={{ flex: 1, width: "100%" }}
-      resizeMode="contain"
+      resizeMode="stretch"
     />
   </View>
 );

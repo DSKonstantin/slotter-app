@@ -66,38 +66,38 @@ export const MOCK_NOTIFICATION_STORIES: Record<string, StoriesData> = {
     // ],
   },
   "education-payments": {
-    // training: [
-    //   {
-    //     id: "1",
-    //     category: "training",
-    //     customScreen: (onNext: () => void) =>
-    //       React.createElement(PreviewAdviceScreen, { onNext }),
-    //   },
-    //   {
-    //     id: "2",
-    //     category: "training",
-    //     customScreen: React.createElement(ScheduleStoryScreen),
-    //   },
-    //   {
-    //     id: "3",
-    //     category: "training",
-    //     customScreen: React.createElement(FinanceStoryScreen),
-    //   },
-    //   {
-    //     id: "4",
-    //     category: "training",
-    //     customScreen: React.createElement(ServicesStoryScreen),
-    //   },
-    //   {
-    //     id: "5",
-    //     category: "training",
-    //     customScreen: React.createElement(AccountStoryScreen),
-    //   },
-    //   {
-    //     id: "6",
-    //     category: "training",
-    //     customScreen: React.createElement(EventsStoryScreen),
-    //   },
-    // ],
+    training: [
+      {
+        id: "1",
+        category: "training",
+        customScreen: (onNext: () => void) =>
+          React.createElement(PreviewAdviceScreen, { onNext }),
+      },
+      {
+        id: "2",
+        category: "training",
+        customScreen: React.createElement(ScheduleStoryScreen),
+      },
+      {
+        id: "3",
+        category: "training",
+        customScreen: React.createElement(FinanceStoryScreen),
+      },
+      {
+        id: "4",
+        category: "training",
+        customScreen: React.createElement(ServicesStoryScreen),
+      },
+      {
+        id: "5",
+        category: "training",
+        customScreen: React.createElement(AccountStoryScreen),
+      },
+      {
+        id: "6",
+        category: "training",
+        customScreen: React.createElement(EventsStoryScreen),
+      },
+    ],
   },
 };
