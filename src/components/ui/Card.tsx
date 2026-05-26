@@ -4,9 +4,10 @@ import { twMerge } from "tailwind-merge";
 
 type CardProps = {
   title: string;
+  titleNode?: ReactNode;
   titleProps?: TextProps;
   subtitleProps?: TextProps;
-  subtitle?: string;
+  subtitle?: ReactNode;
   caption?: string;
 
   left?: ReactNode;
@@ -15,12 +16,14 @@ type CardProps = {
 
   active?: boolean;
   onPress?: () => void;
+  onLongPress?: () => void;
   pressArea?: "card" | "content";
   className?: string;
 };
 
 export const Card = ({
   title,
+  titleNode,
   titleProps,
   subtitleProps,
   subtitle,
@@ -30,10 +33,11 @@ export const Card = ({
   titleAccessory,
   active,
   onPress,
+  onLongPress,
   pressArea = "card",
   className,
 }: CardProps) => {
-  const isPressable = Boolean(onPress);
+  const isPressable = Boolean(onPress) || Boolean(onLongPress);
   const pressCard = isPressable && pressArea === "card";
   const pressContent = isPressable && pressArea === "content";
   const CardRootComponent = pressCard ? Pressable : View;
@@ -41,7 +45,7 @@ export const Card = ({
 
   return (
     <CardRootComponent
-      {...(pressCard ? { onPress } : {})}
+      {...(pressCard ? { onPress, onLongPress } : {})}
       className={twMerge(
         "flex-row items-center rounded-base bg-background-surface p-4 border border-transparent",
         active && "border-neutral-200",
@@ -53,26 +57,31 @@ export const Card = ({
 
       <ContentComponent
         className="grow shrink basis-auto min-w-0"
-        {...(pressContent ? { onPress } : {})}
+        {...(pressContent ? { onPress, onLongPress } : {})}
       >
         <View className="flex-row items-center gap-1">
-          <Text
-            {...titleProps}
-            className={`flex-shrink font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
-          >
-            {title}
-          </Text>
+          {titleNode ?? (
+            <Text
+              {...titleProps}
+              className={`flex-shrink font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
+            >
+              {title}
+            </Text>
+          )}
           {titleAccessory}
         </View>
 
-        {subtitle && (
-          <Text
-            {...subtitleProps}
-            className={"font-inter-medium text-caption text-neutral-500"}
-          >
-            {subtitle}
-          </Text>
-        )}
+        {!!subtitle &&
+          (typeof subtitle === "string" ? (
+            <Text
+              {...subtitleProps}
+              className={"font-inter-medium text-caption text-neutral-500"}
+            >
+              {subtitle}
+            </Text>
+          ) : (
+            subtitle
+          ))}
 
         {caption && (
           <Text className="font-inter-regular text-gray-medium mt-1">

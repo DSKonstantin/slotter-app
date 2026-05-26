@@ -1,20 +1,23 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
-import { format } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import { useAppSelector } from "@/src/store/redux/store";
 import type {
   Notification,
   AppointmentNotificationSubject,
 } from "@/src/store/redux/services/api-types";
+import { formatApiDate } from "@/src/utils/date/formatDate";
 import { pluralize } from "@/src/utils/text/pluralize";
 
 import BannerCard from "./BannerCard";
 import type { BannerVariant } from "./BannerCard";
 
-const PER_COUNT = 50;
+const SUBSCRIPTION_EXPIRY_DAYS = 33;
+
 const MAX_BANNERS = 4;
 
 type NotificationBannerConfig = {
@@ -59,11 +62,15 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
 ];
 
 const NotificationBanners = () => {
-  const { data } = useGetNotificationsQuery({ per_count: PER_COUNT });
+  const membership = useAppSelector(
+    (s) => s.auth.user?.subscription_membership,
+  );
+
+  const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
 
   const banners = useMemo(() => {
     const items = data?.notifications.filter((n) => n.read_at === null) ?? [];
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = formatApiDate(new Date());
 
     return NOTIFICATION_BANNERS.map((b) => ({
       ...b,
@@ -73,12 +80,55 @@ const NotificationBanners = () => {
       .slice(0, MAX_BANNERS);
   }, [data]);
 
-  if (banners.length === 0) return null;
+  const subscriptionEnded = useMemo(() => {
+    if (membership?.plan !== "pro" || membership.pro_access) return false;
+    if (!membership.period_ends_at) return true;
+    return (
+      differenceInDays(new Date(), parseISO(membership.period_ends_at)) <=
+      SUBSCRIPTION_EXPIRY_DAYS
+    );
+  }, [membership]);
+
+  const expiryDaysLeft = useMemo(() => {
+    if (subscriptionEnded) return null;
+    if (!membership?.period_ends_at || membership.plan !== "pro") return null;
+    const days = differenceInDays(
+      parseISO(membership.period_ends_at),
+      new Date(),
+    );
+    return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
+  }, [membership, subscriptionEnded]);
 
   const handleOpenList = () => router.push(Routers.app.history.root);
+  const handleOpenSubscription = () => router.push(Routers.app.account.root);
+
+  if (banners.length === 0 && expiryDaysLeft === null && !subscriptionEnded)
+    return null;
 
   return (
     <View className="gap-2">
+      {subscriptionEnded && (
+        <BannerCard
+          variant="error"
+          iconName="Alarm_fill"
+          title="Подписка закончилась"
+          actionLabel="Продлить"
+          onPress={handleOpenSubscription}
+        />
+      )}
+      {expiryDaysLeft !== null && (
+        <BannerCard
+          variant="warning"
+          iconName="Hhourglass_move_light_fill"
+          title={
+            expiryDaysLeft === 0
+              ? "Подписка истекает сегодня"
+              : `Подписка истекает через ${expiryDaysLeft} ${pluralize(expiryDaysLeft, ["день", "дня", "дней"])}`
+          }
+          actionLabel="Продлить"
+          onPress={handleOpenSubscription}
+        />
+      )}
       {banners.map((b) => (
         <BannerCard
           key={b.key}

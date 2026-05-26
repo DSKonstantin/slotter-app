@@ -14,7 +14,7 @@ import Modal, { ModalProps } from "react-native-modal";
 import { BlurView } from "expo-blur";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BottomSheetHandle } from "./BottomSheetHandle";
-import {SCREEN_PADDING} from "@/src/constants/layout";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 
 type StModalProps = {
   visible: boolean;
@@ -152,7 +152,8 @@ export const StModal = ({
 
         {footer}
       </View>
-      <Toasts overrideDarkMode={true} />
+
+      {visible && <Toasts overrideDarkMode={true} />}
     </Modal>
   );
 };

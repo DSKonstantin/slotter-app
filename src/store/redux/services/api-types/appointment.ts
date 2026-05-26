@@ -18,6 +18,7 @@ export interface AppointmentCustomer {
   email: string | null;
   telegram_id: string | null;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
   customer_tag: { id: number; name: string; color: string } | null;
   note: string | null;
 }
@@ -28,6 +29,8 @@ export interface AppointmentService {
   duration: number;
   price_cents: number;
   price_currency: string;
+  main_photo_url?: string | null;
+  main_photo_blurhash?: string | null;
 }
 
 export interface Appointment {
@@ -64,6 +67,7 @@ export interface UpcomingAppointmentCustomer {
   id: number;
   name: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface UpcomingAppointment {

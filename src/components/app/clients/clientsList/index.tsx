@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import debounce from "lodash/debounce";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
@@ -9,6 +15,7 @@ import {
   Badge,
   Button,
   Card,
+  HighlightText,
   StSvg,
   Typography,
 } from "@/src/components/ui";
@@ -38,20 +45,42 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 const ClientRow = React.memo(function ClientRow({
   item,
+  highlight,
 }: {
   item: UserCustomer;
+  highlight?: string;
 }) {
   return (
     <Card
       title={item.customer.name}
+      titleNode={
+        highlight ? (
+          <HighlightText
+            text={item.customer.name}
+            highlight={highlight}
+            className="flex-shrink font-inter-medium text-body text-neutral-900"
+          />
+        ) : undefined
+      }
       titleProps={{
         numberOfLines: 2,
       }}
-      subtitle={item.customer.phone || undefined}
+      subtitle={
+        highlight && item.customer.phone ? (
+          <HighlightText
+            text={item.customer.phone}
+            highlight={highlight}
+            className="font-inter-medium text-caption text-neutral-500"
+          />
+        ) : (
+          item.customer.phone || undefined
+        )
+      }
       left={
         <Avatar
           name={item.customer.name}
           uri={item.customer.avatar_url ?? undefined}
+          blurhash={item.customer.avatar_blurhash}
           size="md"
         />
       }
@@ -102,6 +131,8 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     [tagsData?.customer_tags],
   );
 
+  const savedTagIdRef = useRef<number | undefined>(undefined);
+
   const { searchMode } = useToolbarSearch({
     placeholder: "Имя или телефон",
     onChange: (value) => {
@@ -112,6 +143,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
       debouncedSetSearch.cancel();
       dispatch(setSearch(""));
       setDebouncedSearch("");
+      dispatch(setTagId(savedTagIdRef.current));
     },
   });
 
@@ -160,6 +192,15 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     return [...unique.values()];
   }, [data?.pages]);
 
+  useEffect(() => {
+    if (searchMode) {
+      savedTagIdRef.current = tagId;
+      dispatch(setTagId(undefined));
+    }
+    // tagId intentionally excluded: capture only at the moment search opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchMode, dispatch]);
+
   return (
     <View className="flex-1 gap-4" style={{ paddingTop: topInset }}>
       {!searchMode && (
@@ -194,30 +235,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
               )}
             />
           )}
-          <View className="flex-row gap-2.5 px-screen">
-            <Button
-              title="Статистика"
-              buttonClassName="flex-1"
-              rightIcon={
-                <StSvg name="Pipe_fill" size={24} color={colors.neutral[0]} />
-              }
-              onPress={() => router.push(Routers.app.clients.statistics)}
-            />
-            <Button
-              title="Рассылка"
-              disabled
-              variant="clear"
-              buttonClassName="flex-1"
-              rightIcon={
-                <StSvg
-                  name="Message_alt_fill"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              }
-              onPress={() => {}}
-            />
-          </View>
         </>
       )}
 
@@ -245,7 +262,41 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           refreshing={refreshing}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
-          renderItem={({ item }) => <ClientRow item={item} />}
+          ListHeaderComponent={
+            !searchMode ? (
+              <View className="flex-row gap-2.5 pb-2">
+                <Button
+                  title="Статистика"
+                  buttonClassName="flex-1"
+                  rightIcon={
+                    <StSvg
+                      name="Pipe_fill"
+                      size={24}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                  onPress={() => router.push(Routers.app.clients.statistics)}
+                />
+                <Button
+                  title="Рассылка"
+                  disabled
+                  variant="clear"
+                  buttonClassName="flex-1"
+                  rightIcon={
+                    <StSvg
+                      name="Message_alt_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={() => {}}
+                />
+              </View>
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <ClientRow item={item} highlight={debouncedSearch || undefined} />
+          )}
           ListFooterComponent={
             isFetchingNextPage ? (
               <ActivityIndicator

@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 import { RefreshControl, ScrollView, View } from "react-native";
@@ -177,13 +183,18 @@ const DayCalendarView = () => {
     );
   }, [
     hasError,
-    isLoading,
-    isEmpty,
     isRetrying,
     handleRetry,
+    isLoading,
+    isEmpty,
     handleEmptyPress,
     appointments,
-    selectedWorkingDay,
+    selectedWorkingDay?.working_day_breaks,
+    selectedWorkingDay?.id,
+    selectedWorkingDay?.start_at,
+    selectedWorkingDay?.end_at,
+    selectedWorkingDay?.is_active,
+    auth?.userId,
     selectedDay,
     handleHighlightScroll,
   ]);

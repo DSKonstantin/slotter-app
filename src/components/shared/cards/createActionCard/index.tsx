@@ -20,6 +20,7 @@ const CreateActionCard = ({
   return (
     <TouchableOpacity
       activeOpacity={0.7}
+      disabled={disabled}
       style={{
         ...(disabled && { opacity: 0.4 }),
       }}
@@ -27,7 +28,7 @@ const CreateActionCard = ({
       onPress={onPress}
     >
       {leftIcon}
-      <View>
+      <View className="flex-1">
         <Typography weight="semibold" className="text-body">
           {title}
         </Typography>

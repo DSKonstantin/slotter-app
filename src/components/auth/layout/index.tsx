@@ -10,6 +10,7 @@ type AuthScreenLayoutProps = {
 
   avoidKeyboard?: boolean;
   contentBottomPadding?: number;
+  disableHorizontalPadding?: boolean;
 
   scrollRef?: (ref: any) => void;
   contentRef?: Ref<View>;
@@ -20,6 +21,7 @@ export function AuthScreenLayout({
   children,
   footer,
   avoidKeyboard = false,
+  disableHorizontalPadding = false,
   scrollRef,
   contentRef,
 }: AuthScreenLayoutProps) {
@@ -30,7 +32,7 @@ export function AuthScreenLayout({
       <View className="px-screen py-2 bg-background">{header}</View>
       <ScrollWrapper
         ref={scrollRef as never}
-        className="flex-1 px-screen"
+        className={`flex-1${disableHorizontalPadding ? "" : " px-screen"}`}
         {...(avoidKeyboard
           ? { bottomOffset: 20 }
           : {

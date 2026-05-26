@@ -27,7 +27,7 @@ const AuthHome = () => {
       />
       <SafeAreaView className="flex-1">
         <View className="px-screen">
-          <AuthHeader showBack={false} />
+          <AuthHeader showBack={false} title="slotter" />
         </View>
         <View className="flex-1 justify-between gap-8">
           <View className="flex-1 justify-end items-center px-screen">

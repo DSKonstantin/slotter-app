@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { View, Pressable } from "react-native";
 
 import { Card, StSvg, Switch } from "@/src/components/ui";
@@ -25,12 +25,12 @@ const CategoryItemCard = ({
       title={item.name}
       pressArea="content"
       active={isActive}
+      onLongPress={drag}
       className={item.is_active ? "" : "opacity-40"}
       subtitle={`${item.activeServicesCount ?? item.services?.length ?? 0} услуг`}
       left={
         <Pressable
           onLongPress={drag}
-          delayLongPress={100}
           hitSlop={8}
           accessibilityLabel="Reorder category"
           accessibilityRole="button"
@@ -57,4 +57,4 @@ const CategoryItemCard = ({
   );
 };
 
-export default React.memo(CategoryItemCard);
+export default memo(CategoryItemCard);

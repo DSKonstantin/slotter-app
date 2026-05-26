@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import {
+  Platform,
   RefreshControl,
   ScrollView,
   TouchableOpacity,
@@ -74,14 +75,26 @@ const ClientsStatistics = () => {
         <>
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentInset={
+              Platform.OS === "ios" ? { top: topInset } : undefined
+            }
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
               gap: 20,
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
               paddingHorizontal: SCREEN_PADDING,
             }}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl
+                progressViewOffset={Platform.select({
+                  android: topInset,
+                })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
             }
           >
             <View className="gap-2">

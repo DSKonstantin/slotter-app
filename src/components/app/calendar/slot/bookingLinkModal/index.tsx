@@ -10,11 +10,9 @@ import {
   SegmentedControl,
 } from "@/src/components/ui";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
-import RetryInline from "@/src/components/shared/retryInline";
-import { RHFAutocomplete } from "@/src/components/hookForm/rhf-autocomplete";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
+import CustomerSelect from "@/src/components/app/calendar/slot/slotCreate/customerSelect";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useSendMessageMutation } from "@/src/store/redux/services/api/chatMessagesApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -27,13 +25,14 @@ type Props = {
 };
 
 type FormValues = {
-  client: string | null;
+  customerId: number;
   message: string;
 };
 
 const CHANNEL_OPTIONS = [
-  { label: "Чат Slotter", value: "slotter" },
-  { label: "Чат Telegram", value: "telegram" },
+  { label: "Slotter", value: "slotter" },
+  { label: "WhatsApp", value: "whatsapp" },
+  { label: "Telegram", value: "telegram" },
 ];
 
 const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
@@ -41,31 +40,20 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
   const [channel, setChannel] = useState("slotter");
 
   const methods = useForm<FormValues>({
-    defaultValues: { client: null, message: "" },
+    defaultValues: { customerId: 0, message: "" },
   });
-
-  const { data, isLoading, isError, refetch } = useGetUserCustomersQuery(
-    auth ? { userId: auth.userId, per_count: 100 } : { userId: 0 },
-    { skip: !visible || !auth },
-  );
 
   const [createChatRoom] = useCreateChatRoomMutation();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
-  const clientItems = useMemo(
-    () =>
-      (data?.user_customers ?? []).map((uc) => ({
-        label: uc.customer.phone
-          ? `${uc.customer.name} · ${uc.customer.phone}`
-          : uc.customer.name,
-        value: String(uc.customer.id),
-      })),
-    [data],
-  );
-
   const fullBookingUrl = useMemo(
     () => `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${bookingUrl}`,
     [bookingUrl],
+  );
+
+  const channelLabel = useMemo(
+    () => CHANNEL_OPTIONS.find((o) => o.value === channel)?.label ?? "",
+    [channel],
   );
 
   const handleClose = () => {
@@ -80,21 +68,48 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
       : fullBookingUrl;
 
     if (channel === "telegram") {
-      // const url = `https://t.me/share/url?url=${encodeURIComponent(fullBookingUrl)}${values.message ? `&text=${encodeURIComponent(values.message)}` : ""}`;
-      // await Linking.openURL(url);
-      handleClose();
+      const params = new URLSearchParams({ url: fullBookingUrl });
+      if (values.message) params.set("text", values.message);
+      const shareUrl = `https://t.me/share/url?${params.toString()}`;
+      try {
+        const canOpen = await Linking.canOpenURL(shareUrl);
+        if (!canOpen) {
+          toast.error("Telegram не установлен");
+          return;
+        }
+        await Linking.openURL(shareUrl);
+        handleClose();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось открыть Telegram"));
+      }
       return;
     }
 
-    if (!values.client) {
-      methods.setError("client", { message: "Выберите клиента" });
+    if (channel === "whatsapp") {
+      const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      try {
+        const canOpen = await Linking.canOpenURL(shareUrl);
+        if (!canOpen) {
+          toast.error("WhatsApp не установлен");
+          return;
+        }
+        await Linking.openURL(shareUrl);
+        handleClose();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось открыть WhatsApp"));
+      }
+      return;
+    }
+
+    if (!values.customerId) {
+      methods.setError("customerId", { message: "Выберите клиента" });
       return;
     }
 
     try {
       const room = await createChatRoom({
         userId: auth!.userId,
-        customerId: Number(values.client),
+        customerId: values.customerId,
       }).unwrap();
       await sendMessage({ chatRoomId: room.id, body: text }).unwrap();
       toast.success("Ссылка отправлена");
@@ -118,23 +133,7 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             onChange={setChannel}
           />
 
-          {channel === "slotter" && (
-            <>
-              <RHFAutocomplete
-                name="client"
-                label="Клиент"
-                placeholder="Кому отправляем"
-                items={clientItems}
-                emptyText={isLoading ? "Загрузка..." : "Нет клиентов"}
-              />
-              {isError && (
-                <RetryInline
-                  text="Не удалось загрузить клиентов"
-                  onRetry={refetch}
-                />
-              )}
-            </>
-          )}
+          {channel === "slotter" && <CustomerSelect showCreateButton={false} />}
 
           <RhfTextField
             name="message"
@@ -144,6 +143,10 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             numberOfLines={4}
             hideErrorText
           />
+
+          <Typography className="text-caption text-neutral-500">
+            Отправим в: {channelLabel}
+          </Typography>
         </View>
 
         <View className="mt-6 gap-3">

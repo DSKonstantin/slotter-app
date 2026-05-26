@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import { Pressable } from "react-native";
 
 import { Card, IconButton, StSvg, Switch } from "@/src/components/ui";
@@ -52,6 +52,7 @@ const AdditionalServiceItem = ({
     <Card
       title={item.name}
       subtitle={`${item.duration} мин | ${formattedPrice}`}
+      onLongPress={onDrag}
       active={isDragActive}
       className={item.is_active ? "" : "opacity-40"}
       pressArea="content"
@@ -89,4 +90,4 @@ const AdditionalServiceItem = ({
   );
 };
 
-export default React.memo(AdditionalServiceItem);
+export default memo(AdditionalServiceItem);

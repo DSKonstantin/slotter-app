@@ -1,18 +1,20 @@
 import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { IconButton, StSvg } from "@/src/components/ui";
+import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
 import { colors } from "@/src/styles/colors";
 
 type AuthHeaderProps = {
   showBack?: boolean;
   showSupport?: boolean;
+  title?: string;
 };
 
 export default function AuthHeader({
   showBack = true,
   showSupport = true,
+  title,
 }: AuthHeaderProps) {
   const router = useRouter();
   const [supportVisible, setSupportVisible] = useState(false);
@@ -44,11 +46,17 @@ export default function AuthHeader({
             }
             onPress={handleBack}
           />
+        ) : title ? (
+          <Typography weight="bold" className="text-[24px] text-neutral-0">
+            {title}
+          </Typography>
         ) : (
           <View className="w-10" />
         )}
 
-        {showSupport && (
+        {}
+
+        {showSupport ? (
           <IconButton
             icon={
               <StSvg
@@ -59,6 +67,8 @@ export default function AuthHeader({
             }
             onPress={openSupport}
           />
+        ) : (
+          <View className="w-10" />
         )}
       </View>
       <SupportModal visible={supportVisible} onClose={closeSupport} />

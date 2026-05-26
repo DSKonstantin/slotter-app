@@ -10,23 +10,60 @@ import type {
   RoomChannelEvent,
 } from "@/src/store/redux/services/api-types";
 import type { RootState } from "@/src/store/redux/store";
+import { applyWithRollback } from "./utils/cacheUtils";
 
 type RoomSub = ReturnType<typeof subscribeToChatRoom>;
+type PagedRooms = { pages: { rooms: ChatRoom[] }[] };
+
+const RECONCILE_INTERVAL_MS = 3000;
+
+export const findRoomInPages = (
+  draft: PagedRooms,
+  id: number,
+): ChatRoom | undefined => {
+  for (const page of draft.pages) {
+    const room = page.rooms.find((r) => r.id === id);
+    if (room) return room;
+  }
+  return undefined;
+};
+
+export const removeRoomFromPages = (
+  draft: PagedRooms,
+  id: number,
+): ChatRoom | undefined => {
+  for (const page of draft.pages) {
+    const idx = page.rooms.findIndex((r) => r.id === id);
+    if (idx !== -1) {
+      const [removed] = page.rooms.splice(idx, 1);
+      return removed;
+    }
+  }
+  return undefined;
+};
 
 export const chatRoomsApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
-    getChatRooms: builder.query<
+    getChatRooms: builder.infiniteQuery<
       GetChatRoomsResponse,
-      GetChatRoomsParams | void
+      Omit<GetChatRoomsParams, "page">,
+      number
     >({
-      query: (params) => ({
+      query: ({ queryArg, pageParam }) => ({
         url: "/chat/rooms",
         method: "GET",
-        params: params ?? undefined,
+        params: { ...queryArg, page: pageParam },
       }),
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+          const { page, pages } = lastPage.pagination;
+          return page < pages ? page + 1 : undefined;
+        },
+      },
       async onCacheEntryAdded(
-        _arg,
+        arg,
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState },
       ) {
         const token = (getState() as RootState).auth.token;
@@ -50,51 +87,82 @@ export const chatRoomsApi = api.injectEndpoints({
                 ? `${resourceType}_${authUser.id}`
                 : null;
             const ownerId = `${data.payload.owner.type.toLowerCase()}_${data.payload.owner.id}`;
-            if (ownerId === currentId) return;
+            const isOwn = ownerId === currentId;
 
             updateCachedData((draft) => {
-              const r = draft.rooms.find((r) => r.id === room.id);
-              if (!r) return;
-              r.unread_count += 1;
-              r.last_activity_at = data.payload.created_at;
-              draft.rooms.sort((a, b) =>
-                b.last_activity_at.localeCompare(a.last_activity_at),
-              );
+              const movedRoom = removeRoomFromPages(draft, room.id);
+              if (!movedRoom) return;
+              if (!isOwn) movedRoom.unread_count += 1;
+              movedRoom.last_activity_at = data.payload.created_at;
+              movedRoom.last_message = {
+                id: data.payload.id,
+                body: data.payload.body,
+                created_at: data.payload.created_at,
+                owner: {
+                  id: data.payload.owner.id,
+                  type: data.payload.owner.type,
+                  name: data.payload.owner.name,
+                  avatar_url: data.payload.owner.avatar_url,
+                  avatar_blurhash: data.payload.owner.avatar_blurhash,
+                },
+              };
+              draft.pages[0]?.rooms.unshift(movedRoom);
             });
           });
         };
 
+        // Reconcile subscriptions with the current cache — picks up rooms
+        // loaded via fetchNextPage (cacheDataLoaded only fires once on initial).
+        const reconcile = () => {
+          const cacheData = chatRoomsApi.endpoints.getChatRooms.select(arg)(
+            getState() as RootState,
+          ).data;
+          if (!cacheData) return;
+          for (const page of cacheData.pages) {
+            for (const room of page.rooms) {
+              subscribeRoom(room);
+            }
+          }
+        };
+
+        const reconcileInterval = setInterval(
+          reconcile,
+          RECONCILE_INTERVAL_MS,
+        );
+
         try {
           const { data } = await cacheDataLoaded;
 
-          for (const room of data.rooms) {
-            subscribeRoom(room);
+          for (const page of data.pages) {
+            for (const room of page.rooms) {
+              subscribeRoom(room);
+            }
           }
 
-          resourceSub.on("message", (data) => {
-            if (data.type !== "chat_room.created") return;
+          resourceSub.on("message", (event) => {
+            if (event.type !== "chat_room.created") return;
 
             updateCachedData((draft) => {
-              const idx = draft.rooms.findIndex(
-                (r) => r.id === data.payload.id,
-              );
-              if (idx !== -1) {
-                draft.rooms[idx] = data.payload;
-              } else {
-                draft.rooms.unshift(data.payload);
-              }
-              draft.rooms.sort((a, b) =>
-                b.last_activity_at.localeCompare(a.last_activity_at),
-              );
+              // Preserve local state (unread_count, is_notify) when overlapping
+              const existing = removeRoomFromPages(draft, event.payload.id);
+              const merged: ChatRoom = existing
+                ? {
+                    ...event.payload,
+                    unread_count: existing.unread_count,
+                    is_notify: existing.is_notify,
+                  }
+                : event.payload;
+              draft.pages[0]?.rooms.unshift(merged);
             });
 
-            subscribeRoom(data.payload);
+            subscribeRoom(event.payload);
           });
         } catch {
           // no-op: cacheEntryRemoved resolved before cacheDataLoaded
         }
 
         await cacheEntryRemoved;
+        clearInterval(reconcileInterval);
         resourceSub.disconnect();
         for (const sub of roomSubs.values()) sub?.disconnect();
         roomSubs.clear();
@@ -117,6 +185,24 @@ export const chatRoomsApi = api.injectEndpoints({
         method: "POST",
         data: { user_id: userId, customer_id: customerId },
       }),
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data: newRoom } = await queryFulfilled;
+          dispatch(
+            chatRoomsApi.util.updateQueryData(
+              "getChatRooms",
+              {},
+              (draft) => {
+                // Dedup: Pusher (chat_room.created) may have already added it
+                if (findRoomInPages(draft, newRoom.id)) return;
+                draft.pages[0]?.rooms.unshift(newRoom);
+              },
+            ),
+          );
+        } catch {
+          // Mutation failed — nothing to patch
+        }
+      },
     }),
 
     markRoomRead: builder.mutation<void, { chatRoomId: number }>({
@@ -125,21 +211,24 @@ export const chatRoomsApi = api.injectEndpoints({
         method: "PATCH",
       }),
       async onQueryStarted({ chatRoomId }, { dispatch, queryFulfilled }) {
-        const patch = dispatch(
-          chatRoomsApi.util.updateQueryData(
-            "getChatRooms",
-            undefined,
-            (draft) => {
-              const room = draft.rooms.find((r) => r.id === chatRoomId);
+        const patches = [
+          dispatch(
+            chatRoomsApi.util.updateQueryData("getChatRooms", {}, (draft) => {
+              const room = findRoomInPages(draft, chatRoomId);
               if (room) room.unread_count = 0;
-            },
+            }),
           ),
-        );
-        try {
-          await queryFulfilled;
-        } catch {
-          patch.undo();
-        }
+          dispatch(
+            chatRoomsApi.util.updateQueryData(
+              "getChatRoom",
+              { chatRoomId },
+              (draft) => {
+                draft.unread_count = 0;
+              },
+            ),
+          ),
+        ];
+        await applyWithRollback(patches, queryFulfilled);
       },
     }),
 
@@ -156,28 +245,31 @@ export const chatRoomsApi = api.injectEndpoints({
         { chatRoomId, is_notify },
         { dispatch, queryFulfilled },
       ) {
-        const patch = dispatch(
-          chatRoomsApi.util.updateQueryData(
-            "getChatRooms",
-            undefined,
-            (draft) => {
-              const room = draft.rooms.find((r) => r.id === chatRoomId);
+        const patches = [
+          dispatch(
+            chatRoomsApi.util.updateQueryData("getChatRooms", {}, (draft) => {
+              const room = findRoomInPages(draft, chatRoomId);
               if (room) room.is_notify = is_notify;
-            },
+            }),
           ),
-        );
-        try {
-          await queryFulfilled;
-        } catch {
-          patch.undo();
-        }
+          dispatch(
+            chatRoomsApi.util.updateQueryData(
+              "getChatRoom",
+              { chatRoomId },
+              (draft) => {
+                draft.is_notify = is_notify;
+              },
+            ),
+          ),
+        ];
+        await applyWithRollback(patches, queryFulfilled);
       },
     }),
   }),
 });
 
 export const {
-  useGetChatRoomsQuery,
+  useGetChatRoomsInfiniteQuery,
   useGetChatRoomQuery,
   useCreateChatRoomMutation,
   useMarkRoomReadMutation,

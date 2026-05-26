@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Linking, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Linking,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -12,6 +18,7 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ProfileAvatar from "@/src/components/app/account/ProfileAvatar";
+import { useAppSelector } from "@/src/store/redux/store";
 
 type NavItem = {
   title: string;
@@ -21,79 +28,11 @@ type NavItem = {
   route: () => void;
 };
 
-const NAV_GROUPS: NavItem[][] = [
-  [
-    {
-      title: "Оплата",
-      icon: "Credit-card_fill",
-      rightIcon: "External",
-      route: () => Linking.openURL("https://slotter.app/payment"),
-    },
-  ],
-  [
-    {
-      title: "О специалисте",
-      icon: "User_fill",
-      route: () => router.push(Routers.app.account.about),
-    },
-    {
-      title: "Галерея",
-      subtitle: "(фото на сайт)",
-      icon: "Camera",
-      route: () => router.push(Routers.app.account.gallery),
-    },
-    {
-      title: "Отзывы",
-      icon: "Chat_alt_3_fill",
-      route: () => {},
-    },
-    {
-      title: "Ссылки",
-      icon: "link_alt",
-      route: () => router.push(Routers.app.account.links),
-    },
-  ],
-  [
-    {
-      title: "Бронирование",
-      icon: "Setting_alt_fill",
-      route: () => router.push(Routers.app.account.booking),
-    },
-  ],
-  [
-    {
-      title: "Уведомления клиентам",
-      icon: "Message_fill",
-      rightIcon: "External",
-      route: () => {},
-    },
-  ],
-  [
-    {
-      title: "Просмотр страницы",
-      icon: "Eye_fill",
-      route: () => router.push(Routers.app.account.preview),
-    },
-  ],
-
-  [
-    {
-      title: "Уведомления",
-      icon: "Bell_fill",
-      route: () => router.push(Routers.app.account.notifications),
-    },
-    {
-      title: "Поддержка",
-      icon: "Chat_alt_2_fill",
-      route: () => {},
-    },
-  ],
-];
-
 const AccountScreen = () => {
   const auth = useRequiredAuth();
   const { logout } = useAuth();
   const [supportVisible, setSupportVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [triggerGetMe] = useLazyGetMeQuery();
 
   const handleRefresh = async () => {
@@ -106,7 +45,80 @@ const AccountScreen = () => {
 
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
+  const token = useAppSelector((state) => state.auth.token);
+
   if (!auth) return null;
+
+  const NAV_GROUPS: NavItem[][] = [
+    [
+      {
+        title: "Оплата",
+        icon: "Credit-card_fill",
+        rightIcon: "External",
+        route: () =>
+          Linking.openURL(
+            `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
+          ),
+      },
+    ],
+    [
+      {
+        title: "О специалисте",
+        icon: "User_fill",
+        route: () => router.push(Routers.app.account.about),
+      },
+      {
+        title: "Галерея",
+        subtitle: "(фото на сайт)",
+        icon: "Camera",
+        route: () => router.push(Routers.app.account.gallery),
+      },
+      {
+        title: "Отзывы",
+        icon: "Chat_alt_3_fill",
+        route: () => {},
+      },
+      {
+        title: "Ссылки",
+        icon: "link_alt",
+        route: () => router.push(Routers.app.account.links),
+      },
+    ],
+    [
+      {
+        title: "Бронирование",
+        icon: "Setting_alt_fill",
+        route: () => router.push(Routers.app.account.booking),
+      },
+    ],
+    [
+      {
+        title: "Уведомления клиентам",
+        icon: "Message_fill",
+        rightIcon: "External",
+        route: () => {},
+      },
+    ],
+    [
+      {
+        title: "Просмотр страницы",
+        icon: "Eye_fill",
+        route: () => router.push(Routers.app.account.preview),
+      },
+    ],
+    [
+      {
+        title: "Уведомления",
+        icon: "Bell_fill",
+        route: () => router.push(Routers.app.account.notifications),
+      },
+      {
+        title: "Поддержка",
+        icon: "Chat_alt_2_fill",
+        route: () => {},
+      },
+    ],
+  ];
 
   return (
     <>
@@ -114,12 +126,22 @@ const AccountScreen = () => {
         {({ topInset, bottomInset }) => (
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset + 16,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
             }}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl
+                progressViewOffset={Platform.select({
+                  android: topInset,
+                })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
             }
           >
             <ProfileAvatar />
@@ -171,7 +193,12 @@ const AccountScreen = () => {
               <Button
                 title="Выйти"
                 variant="clear"
-                onPress={logout}
+                loading={isLoggingOut}
+                disabled={isLoggingOut}
+                onPress={async () => {
+                  setIsLoggingOut(true);
+                  await logout();
+                }}
                 textClassName="text-accent-red-500"
                 rightIcon={
                   <StSvg

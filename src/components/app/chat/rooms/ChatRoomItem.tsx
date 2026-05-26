@@ -26,7 +26,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
   const hasUnread = unread_count > 0;
 
   const previewText = (() => {
-    if (!last_message) return "";
+    if (!last_message) return "Нет сообщений";
     const isMine =
       !!currentUserId &&
       !!resourceType &&
@@ -47,6 +47,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
       <Avatar
         name={interlocutor.name}
         uri={interlocutor.avatar_url ?? undefined}
+        blurhash={interlocutor.avatar_blurhash}
         size="md"
       />
 

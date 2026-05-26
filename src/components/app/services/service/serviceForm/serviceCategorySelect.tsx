@@ -163,7 +163,10 @@ const ServiceCategorySelect = () => {
             keyExtractor={(item) => String(item.id)}
             showsHorizontalScrollIndicator={false}
             className="mb-2"
-            contentContainerStyle={{ paddingRight: 8, paddingHorizontal: SCREEN_PADDING }}
+            contentContainerStyle={{
+              paddingRight: 8,
+              paddingHorizontal: SCREEN_PADDING,
+            }}
             onScrollBeginDrag={() => setHasUserScrolled(true)}
             onMomentumScrollBegin={() => setHasUserScrolled(true)}
             onEndReached={handleEndReached}

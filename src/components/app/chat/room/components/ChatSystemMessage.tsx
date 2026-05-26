@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { View } from "react-native";
 import { SystemMessageProps } from "react-native-gifted-chat";
 import { Typography } from "@/src/components/ui";
@@ -20,4 +20,4 @@ const ChatSystemMessage = ({
   );
 };
 
-export default ChatSystemMessage;
+export default memo(ChatSystemMessage);

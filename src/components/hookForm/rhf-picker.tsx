@@ -1,10 +1,7 @@
 import { useController, useFormContext } from "react-hook-form";
 import { useState } from "react";
-import { Platform, View, Pressable } from "react-native";
+import { Platform, View, Pressable, TextInput } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import RNDateTimePicker, {
-  type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { BaseField } from "@/src/components/ui/fields/BaseField";
 import { colors } from "@/src/styles/colors";
@@ -17,14 +14,6 @@ const buildDurationItems = (): PickerItem[] =>
     label: String(i * 5),
     value: i * 5,
   }));
-
-const minutesToDate = (minutes: number | null): Date => {
-  const m = typeof minutes === "number" ? minutes : 0;
-  return new Date(0, 0, 0, Math.floor(m / 60), m % 60);
-};
-
-const dateToMinutes = (date: Date): number =>
-  date.getHours() * 60 + date.getMinutes();
 
 type RHFPickerProps = {
   name: string;
@@ -54,6 +43,33 @@ export default function RHFPicker({
   const [modalVisible, setModalVisible] = useState(false);
   const [tempValue, setTempValue] = useState<number | string | null>(null);
 
+  if (Platform.OS === "android") {
+    return (
+      <BaseField
+        ref={setRef}
+        label={label}
+        error={error}
+        renderControl={() => (
+          <TextInput
+            value={field.value != null ? String(field.value) : ""}
+            onChangeText={(text) => {
+              const num = parseInt(text, 10);
+              const val = isNaN(num) ? null : num;
+              field.onChange(val);
+              if (val !== null) onChange?.(val);
+            }}
+            onBlur={field.onBlur}
+            keyboardType="numeric"
+            placeholder={placeholder}
+            placeholderTextColor={colors.neutral[300]}
+            className="flex-1 px-4 min-h-[48px] text-body"
+            style={{ color: colors.neutral[900] }}
+          />
+        )}
+      />
+    );
+  }
+
   const handleClose = () => {
     setModalVisible(false);
     setTempValue(null);
@@ -67,17 +83,6 @@ export default function RHFPicker({
     setModalVisible(false);
     setTempValue(null);
   };
-
-  const handleAndroidChange = (event: DateTimePickerEvent, selected?: Date) => {
-    setModalVisible(false);
-    if (event.type === "set" && selected) {
-      const minutes = dateToMinutes(selected);
-      field.onChange(minutes);
-      onChange?.(minutes);
-    }
-  };
-
-  const currentMinutes = typeof field.value === "number" ? field.value : null;
 
   return (
     <>
@@ -110,45 +115,31 @@ export default function RHFPicker({
         )}
       />
 
-      {Platform.OS === "android" && modalVisible && (
-        <RNDateTimePicker
-          value={minutesToDate(currentMinutes)}
-          mode="time"
-          display="spinner"
-          is24Hour
-          minuteInterval={5}
-          themeVariant="light"
-          onChange={handleAndroidChange}
-        />
-      )}
+      <StModal
+        visible={modalVisible}
+        onClose={handleClose}
+        swipeDirection={undefined}
+      >
+        <View>
+          <Picker
+            selectedValue={tempValue ?? field.value}
+            onValueChange={(value) => setTempValue(value)}
+          >
+            {resolvedItems.map((item) => (
+              <Picker.Item
+                key={item.value}
+                label={String(item.label)}
+                value={item.value}
+              />
+            ))}
+          </Picker>
+        </View>
 
-      {Platform.OS === "ios" && (
-        <StModal
-          visible={modalVisible}
-          onClose={handleClose}
-          swipeDirection={undefined}
-        >
-          <View>
-            <Picker
-              selectedValue={tempValue ?? field.value}
-              onValueChange={(value) => setTempValue(value)}
-            >
-              {resolvedItems.map((item) => (
-                <Picker.Item
-                  key={item.value}
-                  label={String(item.label)}
-                  value={item.value}
-                />
-              ))}
-            </Picker>
-          </View>
-
-          <View className="gap-3 mt-4">
-            <Button title="Готово" onPress={handleConfirm} />
-            <Button title="Отмена" variant="secondary" onPress={handleClose} />
-          </View>
-        </StModal>
-      )}
+        <View className="gap-3 mt-4">
+          <Button title="Готово" onPress={handleConfirm} />
+          <Button title="Отмена" variant="secondary" onPress={handleClose} />
+        </View>
+      </StModal>
     </>
   );
 }

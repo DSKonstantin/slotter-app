@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { Typography } from "@/src/components/ui";
 import { MINUTE_HEIGHT } from "./constants";
 import { formatTime } from "./utils";
@@ -35,4 +35,4 @@ const TimeLabels = ({ segStart, segEnd }: TimeLabelsProps) => {
   );
 };
 
-export default React.memo(TimeLabels);
+export default memo(TimeLabels);

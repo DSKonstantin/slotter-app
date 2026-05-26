@@ -1,6 +1,12 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useFocusEffect, router, useLocalSearchParams } from "expo-router";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
@@ -186,13 +192,22 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
             ) : (
               <ScrollView
                 showsVerticalScrollIndicator={false}
+                contentInset={
+                  Platform.OS === "ios" ? { top: topInset } : undefined
+                }
+                contentOffset={
+                  Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                }
                 contentContainerStyle={{
                   flexGrow: 1,
-                  paddingTop: topInset,
+                  paddingTop: Platform.OS === "ios" ? 0 : topInset,
                   paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={
                   <RefreshControl
+                    progressViewOffset={Platform.select({
+                      android: topInset,
+                    })}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                   />

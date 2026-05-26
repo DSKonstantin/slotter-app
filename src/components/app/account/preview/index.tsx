@@ -1,5 +1,5 @@
-import React, { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Share, View } from "react-native";
+import React, { useCallback, useRef } from "react";
+import { ActivityIndicator, Share, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { useAppSelector } from "@/src/store/redux/store";
 import { colors } from "@/src/styles/colors";
@@ -12,7 +12,6 @@ const AccountPreview = () => {
   const id = useAppSelector((s) => s.auth.user?.id);
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   const shareUrl = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${id}`;
   const previewUrl = `${shareUrl}?preview=mobile`;
@@ -48,17 +47,20 @@ const AccountPreview = () => {
         <WebView
           ref={webViewRef}
           source={{ uri: previewUrl }}
-          onLoadEnd={() => setIsLoading(false)}
+          startInLoadingState
+          renderLoading={() => (
+            <View
+              style={StyleSheet.absoluteFill}
+              className="items-center justify-center bg-background"
+            >
+              <ActivityIndicator size="large" color={colors.neutral[400]} />
+            </View>
+          )}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           allowsBackForwardNavigationGestures={false}
           onShouldStartLoadWithRequest={(req) => req.navigationType !== "click"}
         />
-        {isLoading && (
-          <View className="absolute inset-0 items-center justify-center bg-background">
-            <ActivityIndicator size="large" color={colors.neutral[400]} />
-          </View>
-        )}
       </View>
     </View>
   );

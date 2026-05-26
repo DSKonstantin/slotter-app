@@ -6,7 +6,7 @@ import ZoomableImage from "./ZoomableImage";
 import ImageViewerHeader from "./ImageViewerHeader";
 import { scheduleOnRN } from "react-native-worklets";
 
-export type ImageItem = { id: string; uri: string };
+export type ImageItem = { id: string; uri: string; blurhash?: string | null };
 
 export type ImageViewerSlotContext = {
   currentIndex: number;

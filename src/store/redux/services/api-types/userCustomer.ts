@@ -8,6 +8,7 @@ export interface UserCustomerPerson {
   phone: string;
   email: string | null;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
   birthday?: string | null;
 }
 

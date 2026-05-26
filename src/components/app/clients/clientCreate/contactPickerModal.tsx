@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
   Pressable,
   ActivityIndicator,
   useWindowDimensions,
 } from "react-native";
+import { KeyboardEvents } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import * as Contacts from "expo-contacts";
 
 import { Avatar, Input, StModal, StSvg, Typography } from "@/src/components/ui";
@@ -29,34 +31,49 @@ type ContactItem = {
   phone: string;
 };
 
-const ContactRow = ({
+const ContactRow = React.memo(function ContactRow({
   item,
   onPress,
 }: {
   item: ContactItem;
   onPress: (item: ContactItem) => void;
-}) => (
-  <Pressable
-    className="flex-row items-center px-screen py-3 gap-3 active:opacity-70"
-    onPress={() => onPress(item)}
-  >
-    <Avatar name={item.name} size="sm" />
-    <View className="flex-1">
-      <Text className="font-inter-semibold text-body text-neutral-900">
-        {item.name}
-      </Text>
-      <Text className="font-inter-regular text-caption text-neutral-500">
-        {item.phone}
-      </Text>
-    </View>
-  </Pressable>
-);
+}) {
+  return (
+    <Pressable
+      className="flex-row items-center px-screen py-3 gap-3 active:opacity-70"
+      onPress={() => onPress(item)}
+    >
+      <Avatar name={item.name} size="sm" />
+      <View className="flex-1">
+        <Text className="font-inter-semibold text-body text-neutral-900">
+          {item.name}
+        </Text>
+        <Text className="font-inter-regular text-caption text-neutral-500">
+          {item.phone}
+        </Text>
+      </View>
+    </Pressable>
+  );
+});
+
+const Separator = () => <View className="mx-screen h-px bg-background" />;
+
+const LIST_MAX_HEIGHT = 400;
+const LIST_MIN_HEIGHT = 200;
 
 const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
   const { height } = useWindowDimensions();
+  const { top, bottom } = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [contacts, setContacts] = useState<ContactItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+
+  const available = height - top - bottom - keyboardHeight;
+  const listHeight = Math.max(
+    LIST_MIN_HEIGHT,
+    Math.min(available * 0.5, LIST_MAX_HEIGHT),
+  );
 
   const loadContacts = useCallback(async () => {
     setLoading(true);
@@ -76,7 +93,7 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
             name: c.name,
             phone: pn.number,
           });
-          break; // only first phone number per contact
+          break;
         }
       }
       setContacts(items);
@@ -101,73 +118,101 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
     [onSelect, onClose],
   );
 
+  const renderItem = useCallback<ListRenderItem<ContactItem>>(
+    ({ item }) => <ContactRow item={item} onPress={handleSelect} />,
+    [handleSelect],
+  );
+
+  const keyExtractor = useCallback((item: ContactItem) => item.id, []);
+
   useEffect(() => {
     if (visible) {
       setSearch("");
       loadContacts();
+    } else {
+      setKeyboardHeight(0);
     }
   }, [visible, loadContacts]);
 
+  useEffect(() => {
+    const show = KeyboardEvents.addListener("keyboardWillShow", (e) =>
+      setKeyboardHeight(e.height),
+    );
+    const hide = KeyboardEvents.addListener("keyboardWillHide", () =>
+      setKeyboardHeight(0),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
   return (
     <StModal visible={visible} onClose={onClose} horizontalPadding={false}>
-      <View className="px-screen pb-3">
-        <Typography weight="semibold" className="text-display text-center">
-          Выбрать контакт
-        </Typography>
-      </View>
-
-      <View className="px-screen pb-3">
-        <Input
-          placeholder="Поиск"
-          value={search}
-          onChangeText={setSearch}
-          returnKeyType="search"
-          autoFocus
-          hideErrorText
-          startAdornment={
-            <StSvg name="Search" size={20} color={colors.neutral[400]} />
-          }
-          endAdornment={
-            search.length > 0 ? (
-              <Pressable onPress={() => setSearch("")}>
-                <StSvg
-                  name="close_ring_fill_light"
-                  size={20}
-                  color={colors.neutral[400]}
-                />
-              </Pressable>
-            ) : undefined
-          }
-        />
-      </View>
-
-      {loading ? (
-        <View className="items-center justify-center py-10">
-          <ActivityIndicator />
+      <View style={{ paddingBottom: keyboardHeight }}>
+        <View className="px-screen pb-3">
+          <Typography weight="semibold" className="text-display text-center">
+            Выбрать контакт
+          </Typography>
         </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          style={{ maxHeight: height * 0.55 }}
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
-            <ContactRow item={item} onPress={handleSelect} />
-          )}
-          ItemSeparatorComponent={() => (
-            <View className="mx-screen h-px bg-background" />
-          )}
-          ListEmptyComponent={
-            <View className="items-center justify-center pt-10 gap-2">
-              <StSvg name="User_fill" size={40} color={colors.neutral[300]} />
-              <Typography className="text-body text-neutral-400">
-                {search ? "Контакты не найдены" : "Нет контактов"}
-              </Typography>
-            </View>
-          }
-        />
-      )}
+
+        <View className="px-screen pb-3">
+          <Input
+            placeholder="Поиск"
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+            autoFocus
+            hideErrorText
+            startAdornment={
+              <StSvg name="Search" size={20} color={colors.neutral[400]} />
+            }
+            endAdornment={
+              search.length > 0 ? (
+                <Pressable onPress={() => setSearch("")}>
+                  <StSvg
+                    name="close_ring_fill_light"
+                    size={20}
+                    color={colors.neutral[400]}
+                  />
+                </Pressable>
+              ) : undefined
+            }
+          />
+        </View>
+
+        {loading ? (
+          <View
+            className="items-center justify-center"
+            style={{ height: LIST_MIN_HEIGHT }}
+          >
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <View style={{ height: listHeight }}>
+            <FlashList
+              data={filtered}
+              keyExtractor={keyExtractor}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              renderItem={renderItem}
+              ItemSeparatorComponent={Separator}
+              ListEmptyComponent={
+                <View className="flex-1 items-center justify-center pt-10 gap-2">
+                  <StSvg
+                    name="User_fill"
+                    size={40}
+                    color={colors.neutral[300]}
+                  />
+                  <Typography className="text-body text-neutral-400">
+                    {search ? "Контакты не найдены" : "Нет контактов"}
+                  </Typography>
+                </View>
+              }
+            />
+          </View>
+        )}
+      </View>
     </StModal>
   );
 };

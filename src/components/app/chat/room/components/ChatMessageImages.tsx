@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import React, { memo, useMemo, useState } from "react";
+import { Pressable, View } from "react-native";
+import { Image } from "expo-image";
 import type { MessageImageProps } from "react-native-gifted-chat";
 import type { ChatIMessage } from "@/src/utils/chat/types";
 import ImageViewer, {
@@ -20,7 +21,7 @@ const ChatMessageImages = ({
       f.content_type.startsWith("image/"),
     );
     if (files?.length) {
-      return files.map((f) => ({ id: String(f.id), uri: f.url }));
+      return files.map((f) => ({ id: String(f.id), uri: f.url, blurhash: f.blurhash }));
     }
     if (currentMessage.image) {
       return [{ id: "single", uri: currentMessage.image }];
@@ -37,12 +38,13 @@ const ChatMessageImages = ({
           <Pressable key={item.id} onPress={() => setViewerIndex(index)}>
             <Image
               source={{ uri: item.uri }}
+              placeholder={item.blurhash ? { blurhash: item.blurhash } : undefined}
+              contentFit="cover"
               style={{
                 width: IMAGE_WIDTH,
                 height: IMAGE_HEIGHT,
                 borderRadius: 6,
               }}
-              resizeMode="cover"
             />
           </Pressable>
         ))}
@@ -59,4 +61,4 @@ const ChatMessageImages = ({
   );
 };
 
-export default ChatMessageImages;
+export default memo(ChatMessageImages);

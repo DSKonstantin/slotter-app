@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "slotter",
+    "name": "Slotter",
     "slug": "slotter",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,11 +14,11 @@
         "CFBundleLocalizations": ["ru", "en"],
         "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании"
       },
-      "bundleIdentifier": "com.anonymous.slotter"
+      "bundleIdentifier": "com.slotter.application"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#232323",
         "foregroundImage": "./assets/images/app-icon/android-icon-foreground.png",
         "backgroundImage": "./assets/images/app-icon/android-icon-background.png",
         "monochromeImage": "./assets/images/app-icon/android-icon-monochrome.png"
@@ -26,7 +26,7 @@
       "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.slotter"
+      "package": "com.slotter.application"
     },
     "web": {
       "bundler": "metro",
@@ -43,7 +43,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#ffffff"
           }
         }
       ],

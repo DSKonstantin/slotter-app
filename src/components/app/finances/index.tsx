@@ -1,7 +1,13 @@
 import React, { useCallback, useState } from "react";
 import { useFocusEffect, router } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { Routers } from "@/src/constants/routers";
@@ -115,14 +121,26 @@ const FinancesScreen = () => {
           <>
             <ScrollView
               showsVerticalScrollIndicator={false}
+              contentInset={
+                Platform.OS === "ios" ? { top: topInset } : undefined
+              }
+              contentOffset={
+                Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+              }
               contentContainerStyle={{
-                paddingTop: topInset,
+                paddingTop: Platform.OS === "ios" ? 0 : topInset,
                 paddingBottom: bottomInset + 8,
                 paddingHorizontal: SCREEN_PADDING,
                 gap: 20,
               }}
               refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                <RefreshControl
+                  progressViewOffset={Platform.select({
+                    android: topInset,
+                  })}
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                />
               }
             >
               <IncomeCard

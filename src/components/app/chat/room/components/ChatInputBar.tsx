@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutChangeEvent, View } from "react-native";
+import { View } from "react-native";
 import { InputToolbarProps } from "react-native-gifted-chat";
 import { FadeOverlay, IconButton, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -21,18 +21,13 @@ const ChatInputBar = ({
   onHeightChange,
   ...toolbarProps
 }: Props) => {
-  const handleLayout = (e: LayoutChangeEvent) => {
-    onHeightChange(e.nativeEvent.layout.height);
-  };
-
   return (
-    <View
-      className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent"
-      onLayout={handleLayout}
-    >
+    <View className="absolute bottom-0 left-0 right-0 px-screen pb-safe bg-transparent">
       <FadeOverlay position="bottom" height={80} />
       {replyingTo && (
-        <ChatReplyFooter message={replyingTo} onCancel={onCancelReply} />
+        <View onLayout={(e) => onHeightChange(e.nativeEvent.layout.height)}>
+          <ChatReplyFooter message={replyingTo} onCancel={onCancelReply} />
+        </View>
       )}
       <ChatInputToolbar
         {...toolbarProps}

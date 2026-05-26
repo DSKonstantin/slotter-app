@@ -48,6 +48,7 @@ const ServiceCategoryHeader = ({
         <Pressable
           className="flex-shrink min-w-0 flex-row items-center gap-1"
           onPress={onPress}
+          onLongPress={isEditMode ? onDrag : undefined}
         >
           <Typography
             weight="regular"

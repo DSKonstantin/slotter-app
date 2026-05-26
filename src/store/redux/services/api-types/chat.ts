@@ -4,6 +4,7 @@ export interface ChatRoomInterlocutor {
   name: string;
   phone?: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface ChatRoomLastMessageOwner {
@@ -11,6 +12,7 @@ export interface ChatRoomLastMessageOwner {
   type: string;
   name: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface ChatRoomLastMessage {
@@ -33,6 +35,7 @@ export interface ChatRoom {
 
 export type GetChatRoomsParams = {
   per_count?: number;
+  page?: number;
 };
 
 export interface PaginationMeta {
@@ -101,6 +104,7 @@ export interface ChatWidgetService {
   price_cents: number;
   price_currency: string;
   main_photo_url: string | null;
+  main_photo_blurhash: string | null;
 }
 
 export type ChatWidgetKind = "service_card" | "appointment_proposal";
@@ -132,6 +136,7 @@ export interface ChatMessageReplyOwner {
   type: string;
   name: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface ChatMessageReply {

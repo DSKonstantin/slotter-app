@@ -29,7 +29,7 @@ const AdditionalServiceCreate = () => {
     },
   });
 
-  const { release } = useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     if (!auth?.userId) return;
@@ -46,7 +46,7 @@ const AdditionalServiceCreate = () => {
         },
       }).unwrap();
 
-      release();
+      methods.reset(values);
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось создать доп. услугу"));

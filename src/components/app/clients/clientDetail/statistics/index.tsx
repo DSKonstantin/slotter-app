@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ActivityIndicator,
+  Platform,
   ScrollView,
   RefreshControl,
 } from "react-native";
@@ -89,13 +90,23 @@ const ClientStatistics = ({ customerId }: Props) => {
       {({ topInset, bottomInset }) => (
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentInset={
+            Platform.OS === "ios" ? { top: topInset } : undefined
+          }
+          contentOffset={
+            Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+          }
           contentContainerStyle={{
-            paddingTop: topInset + 16,
+            paddingTop: Platform.OS === "ios" ? 16 : topInset + 16,
             paddingBottom: bottomInset + 8,
             gap: 16,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              progressViewOffset={Platform.select({ android: topInset })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
           }
         >
           <View className="px-screen flex-row gap-2">

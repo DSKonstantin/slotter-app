@@ -12,7 +12,7 @@ import { Typography } from "@/src/components/ui";
 import {
   useDeleteServiceMutation,
   useGetServiceQuery,
-  useUpdateServiceMutation,
+  useUpdateServiceFormMutation,
 } from "@/src/store/redux/services/api/servicesApi";
 import { createEmptyPhotoSlot } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
@@ -30,7 +30,7 @@ type EditServiceProps = {
 
 const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
   const router = useRouter();
-  const [updateService, { isLoading }] = useUpdateServiceMutation();
+  const [updateService, { isLoading }] = useUpdateServiceFormMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
   const hasValidIds =
     Number.isFinite(serviceId) &&
@@ -69,7 +69,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     },
   });
 
-  const { release } = useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
@@ -91,7 +91,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
         id: serviceId,
         data: formData,
       }).unwrap();
-      release();
+      methods.reset(values);
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
@@ -113,7 +113,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
               id: serviceId,
             }).unwrap();
 
-            release();
+            methods.reset(methods.getValues());
             router.back();
           } catch (error) {
             toast.error(getApiErrorMessage(error, "Не удалось удалить услугу"));

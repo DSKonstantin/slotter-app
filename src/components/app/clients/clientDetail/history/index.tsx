@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, ScrollView, RefreshControl } from "react-native";
+import { View, ScrollView, RefreshControl, Platform } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { skipToken } from "@reduxjs/toolkit/query";
 import {
@@ -164,13 +164,23 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
       {({ topInset, bottomInset }) => (
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+          contentOffset={
+            Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+          }
           contentContainerStyle={{
-            paddingTop: topInset,
+            paddingTop: Platform.OS === "ios" ? 0 : topInset,
             paddingBottom: bottomInset + 8,
             paddingHorizontal: SCREEN_PADDING,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              progressViewOffset={Platform.select({
+                android: topInset,
+              })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
           }
         >
           <View className="items-center mb-5">
@@ -179,6 +189,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                 size="xs"
                 name={customer?.name}
                 uri={customer?.avatar_url ?? undefined}
+                blurhash={customer?.avatar_blurhash}
               />
               <Typography className="text-body">
                 {customer?.name ?? ""}
@@ -203,6 +214,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                       const name =
                         item.services.map((s) => s.name).join(" + ") ||
                         "Запись";
+                      const firstService = item.services[0];
                       return (
                         <View
                           style={{
@@ -211,10 +223,19 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                           }}
                         >
                           <ServiceCard
-                            service={{ name }}
+                            service={{
+                              name,
+                              main_photo_url: firstService?.main_photo_url,
+                              main_photo_blurhash:
+                                firstService?.main_photo_blurhash,
+                            }}
                             date={formatDayMonth(item.date)}
                             onPress={() =>
-                              router.push(Routers.app.calendar.slot(item.id))
+                              router.push(
+                                userCustomerId !== undefined
+                                  ? Routers.app.clients.slot(userCustomerId, item.id)
+                                  : Routers.app.calendar.slot(item.id),
+                              )
                             }
                           />
                         </View>
@@ -264,7 +285,9 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                     subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
                     onPress={() =>
                       router.push(
-                        Routers.app.calendar.slot(payment.appointment_id),
+                        userCustomerId !== undefined
+                          ? Routers.app.clients.slot(userCustomerId, payment.appointment_id)
+                          : Routers.app.calendar.slot(payment.appointment_id),
                       )
                     }
                     right={

@@ -57,7 +57,7 @@ export const getSlotMinHeight = (slot: Appointment) =>
   slot.duration > 29 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
 
 export const slotOccupiesTime = (slot: Appointment) =>
-  slot.status !== "cancelled" && slot.duration > 0;
+  slot.status !== "cancelled" && slot.status !== "declined" && slot.duration > 0;
 
 const occupiesTime = ({ blocksTime, slot }: ParsedAppointment) =>
   blocksTime && slot.duration > 0;
@@ -84,7 +84,7 @@ const parseAppointments = (
       start,
       end: start + slot.duration,
       slot,
-      blocksTime: slot.status !== "cancelled",
+      blocksTime: slot.status !== "cancelled" && slot.status !== "declined",
       isVisible: visibleStatusesSet.has(slot.status),
     };
   });

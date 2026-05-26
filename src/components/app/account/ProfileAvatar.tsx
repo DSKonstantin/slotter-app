@@ -9,7 +9,7 @@ const ProfileAvatar = () => {
   const user = useAppSelector((s) => s.auth.user);
 
   return (
-    <View className="items-center justify-center">
+    <View className="items-center justify-center pt-4">
       <Pressable
         onPress={() => {
           router.push(Routers.app.account.personalInformation);

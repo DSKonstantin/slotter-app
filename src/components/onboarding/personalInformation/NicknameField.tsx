@@ -96,7 +96,7 @@ export function NicknameField() {
             value={val != null ? String(val) : ""}
             onChangeText={onChange}
             label="Никнейм"
-            placeholder="ivan.ivanov"
+            placeholder="ivan_ivanov"
             hideErrorText
             inputClassName="pl-0"
             success={isAvailable}
@@ -149,7 +149,7 @@ export function NicknameField() {
               : checking
                 ? "Проверяем доступность..."
                 : focused
-                  ? "Только латиница, цифры, точка и подчёркивание"
+                  ? "Только латиница, цифры и подчёркивание"
                   : "Уникальная ссылка на ваш профиль"}
           </Typography>
         )}

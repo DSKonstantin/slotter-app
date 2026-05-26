@@ -103,6 +103,7 @@ const TabMenu = () => {
           <View className="mb-2 items-end">
             <IconButton
               onPress={() => {}}
+              disabled={true}
               icon={
                 <StSvg
                   name="Setting_alt_fill"

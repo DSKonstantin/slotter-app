@@ -6,7 +6,7 @@ import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
 
 export default function AppLayout() {
   const segments = useSegments() as string[];
-  const showTabBar = segments[1] !== "chat";
+  const showTabBar = segments[1] !== "chat" && segments[1] !== "payment";
 
   return (
     <View style={{ flex: 1 }}>
@@ -22,6 +22,7 @@ export default function AppLayout() {
         />
         <Stack.Screen name="create-slot-flow" />
         <Stack.Screen name="create-client" />
+        <Stack.Screen name="payment/status" />
       </Stack>
       {showTabBar && <StTabBar />}
       <TabMenu />

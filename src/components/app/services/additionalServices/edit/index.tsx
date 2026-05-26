@@ -53,7 +53,7 @@ const AdditionalServiceEdit = () => {
 
   const [deleteAdditionalService] = useDeleteAdditionalServiceMutation();
 
-  const { release } = useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const handleDelete = () => {
     if (!auth?.userId) return;
@@ -70,7 +70,7 @@ const AdditionalServiceEdit = () => {
               id,
             }).unwrap();
 
-            release();
+            methods.reset(methods.getValues());
             router.back();
           } catch (error) {
             toast.error(
@@ -98,7 +98,7 @@ const AdditionalServiceEdit = () => {
         },
       }).unwrap();
 
-      release();
+      methods.reset(values);
       router.back();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось изменить доп. услугу"));

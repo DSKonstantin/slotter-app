@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  Platform,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
@@ -183,9 +184,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
             return (
               <View
                 className="flex-1 items-center justify-center"
-                style={{ marginTop: topInset }}
+                style={{ marginTop: topInset, marginBottom: bottomInset }}
               >
-                <ActivityIndicator color={colors.neutral[400]} />
+                <ActivityIndicator size="large" color={colors.neutral[400]} />
               </View>
             );
           }
@@ -217,12 +218,21 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <KeyboardAwareScrollView
                 showsVerticalScrollIndicator={false}
                 bottomOffset={BOTTOM_OFFSET}
+                contentInset={
+                  Platform.OS === "ios" ? { top: topInset } : undefined
+                }
+                contentOffset={
+                  Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                }
                 contentContainerStyle={{
-                  paddingTop: topInset,
+                  paddingTop: Platform.OS === "ios" ? 0 : topInset,
                   paddingBottom: bottomInset + 8,
                 }}
                 refreshControl={
                   <RefreshControl
+                    progressViewOffset={Platform.select({
+                      android: topInset,
+                    })}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                   />
@@ -245,6 +255,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       <Avatar
                         name={slot.customer?.name ?? undefined}
                         uri={slot.customer?.avatar_url ?? undefined}
+                        blurhash={slot.customer?.avatar_blurhash}
                         size="sm"
                       />
                     }

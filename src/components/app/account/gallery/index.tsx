@@ -1,6 +1,7 @@
-import React, {memo, useCallback, useMemo, useState} from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -48,6 +49,7 @@ import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 const toUiPhoto = (p: ApiGalleryPhoto): GalleryPhoto => ({
   id: String(p.id),
   originalUrl: p.original_photo_url,
+  blurhash: p.blurhash,
   photoUrl: p.cropped_photo_url ?? p.photo_url,
   croppedUrl: p.cropped_photo_url ?? null,
   thumbnailUrl: p.cropped_photo_url ?? p.thumbnail_photo_url,
@@ -85,15 +87,15 @@ type GalleryItemProps = {
   onOpen: (id: string) => void;
 };
 
-const GalleryItem = memo(
-  ({
-    item,
-    index,
-    isEditMode,
-    isSelected,
-    onToggle,
-    onOpen,
-  }: GalleryItemProps) => (
+const GalleryItem = memo(function GalleryItem({
+  item,
+  index,
+  isEditMode,
+  isSelected,
+  onToggle,
+  onOpen,
+}: GalleryItemProps) {
+  return (
     <View style={[styles.item, index % 2 === 0 && styles.itemLeftColumn]}>
       <Pressable
         className="active:opacity-70"
@@ -102,6 +104,7 @@ const GalleryItem = memo(
       >
         <StImage
           uri={item.thumbnailUrl}
+          blurhash={item.blurhash}
           style={{ width: "100%", height: "100%" }}
         />
         {index === 0 && !isEditMode && (
@@ -127,8 +130,8 @@ const GalleryItem = memo(
         )}
       </Pressable>
     </View>
-  ),
-);
+  );
+});
 
 const Gallery = () => {
   const auth = useRequiredAuth();
@@ -390,14 +393,23 @@ const Gallery = () => {
                   data={photos}
                   numColumns={2}
                   keyExtractor={(item) => item.id}
+                  contentInset={
+                    Platform.OS === "ios" ? { top: topInset } : undefined
+                  }
+                  contentOffset={
+                    Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                  }
                   contentContainerStyle={{
-                    paddingTop: topInset,
+                    paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingHorizontal: HORIZONTAL_PADDING,
                     paddingBottom: bottomInset + (isEditMode ? 80 : 16),
                   }}
                   renderItem={renderItem}
                   refreshControl={
                     <RefreshControl
+                      progressViewOffset={Platform.select({
+                        android: topInset,
+                      })}
                       refreshing={refreshing}
                       onRefresh={onRefresh}
                     />

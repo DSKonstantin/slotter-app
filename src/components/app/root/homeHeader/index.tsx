@@ -32,6 +32,7 @@ const HomeHeader = () => {
         <Pressable onPress={handleOpenProfile} className="active:opacity-70">
           <Avatar
             uri={user?.avatar_url ?? undefined}
+            blurhash={user?.avatar_blurhash}
             name={fullName}
             size="md"
           />

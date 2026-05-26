@@ -11,7 +11,7 @@ import {
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import {
-  useGetChatRoomsQuery,
+  useGetChatRoomQuery,
   useUpdateMembershipMutation,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import type { ChatRoomInterlocutor } from "@/src/store/redux/services/api-types";
@@ -25,7 +25,7 @@ type Props = {
 };
 
 const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
-  const { name, phone, avatar_url } = interlocutor;
+  const { name, phone, avatar_url, avatar_blurhash } = interlocutor;
 
   const handleCall = () => {
     if (!phone) return;
@@ -40,18 +40,18 @@ const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
     router.push(Routers.app.chat.clientHistory(interlocutor.id));
   };
 
-  const { isNotify } = useGetChatRoomsQuery(undefined, {
-    selectFromResult: ({ data }) => ({
-      isNotify: data?.rooms?.find((r) => r.id === roomId)?.is_notify ?? true,
-    }),
-  });
+  const { data: roomData } = useGetChatRoomQuery(
+    { chatRoomId: roomId },
+    { skip: !roomId },
+  );
+  const isNotify = roomData?.is_notify ?? true;
 
   const [updateMembership] = useUpdateMembershipMutation();
 
   return (
     <StModal visible={visible} onClose={onClose}>
       <View className="items-center pb-6 gap-1">
-        <Avatar name={name} uri={avatar_url ?? undefined} size="md" />
+        <Avatar name={name} uri={avatar_url ?? undefined} blurhash={avatar_blurhash} size="md" />
         <Typography weight="semibold" className="text-body">
           {name}
         </Typography>

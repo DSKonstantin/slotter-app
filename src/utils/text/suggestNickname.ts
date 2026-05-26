@@ -1,7 +1,7 @@
 import { transliterate } from "./transliterate";
 
 const sanitize = (val: string) =>
-  transliterate(val.trim()).replace(/[^a-z0-9._]/g, "");
+  transliterate(val.trim()).replace(/[^a-z0-9_]/g, "");
 
 export function suggestNicknames(
   name?: string | null,
@@ -13,10 +13,9 @@ export function suggestNicknames(
   const p = sanitize(profession ?? "");
 
   const candidates = [
-    n && s ? `${n}.${s}` : "",
-    n && s ? `${s}.${n}` : "",
-    n && p ? `${p}.${n}` : "",
     n && s ? `${n}_${s}` : "",
+    n && s ? `${s}_${n}` : "",
+    n && p ? `${p}_${n}` : "",
     n || "",
     p || "",
   ];

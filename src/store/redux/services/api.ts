@@ -33,6 +33,9 @@ export const api = createApi({
     "ChatMessages",
     "Notifications",
     "UserLinks",
+    "SubscriptionMembership",
+    "SubscriptionPlans",
+    "PaymentMethods",
   ],
   endpoints: () => ({}),
 });

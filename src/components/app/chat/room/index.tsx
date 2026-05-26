@@ -21,7 +21,7 @@ import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useAppSelector } from "@/src/store/redux/store";
 import {
-  useGetChatRoomsQuery,
+  useGetChatRoomQuery,
   useMarkRoomReadMutation,
 } from "@/src/store/redux/services/api/chatRoomsApi";
 import {
@@ -63,7 +63,7 @@ const EMPTY_MESSAGES: ChatIMessage[] = [];
 
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
   // ── Local UI State ─────────────────────────────────────────────────────
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -72,7 +72,7 @@ export default function ChatRoom({ roomId }: Props) {
   const [attachVisible, setAttachVisible] = useState(false);
   const [isProposing, setIsProposing] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
-  const [inputBarHeight, setInputBarHeight] = useState(70);
+  const [inputBarHeight, setInputBarHeight] = useState(0);
   const loadingMoreRef = useRef(false);
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
 
@@ -104,13 +104,11 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Queries ───────────────────────────────────────────────────────────
-  // selectFromResult must return an object (RTK Query merges it with the
-  // query state) — returning a primitive or null breaks the typing.
-  const { interlocutor } = useGetChatRoomsQuery(undefined, {
-    selectFromResult: ({ data }) => ({
-      interlocutor: data?.rooms?.find((r) => r.id === id)?.interlocutor ?? null,
-    }),
-  });
+  const { data: roomData } = useGetChatRoomQuery(
+    { chatRoomId: id },
+    { skip: !id },
+  );
+  const interlocutor = roomData?.interlocutor ?? null;
 
   const [markRoomRead] = useMarkRoomReadMutation();
 
@@ -136,7 +134,9 @@ export default function ChatRoom({ roomId }: Props) {
 
   // ── Mark room read on open ────────────────────────────────────────────
   useEffect(() => {
-    if (id) markRoomRead({ chatRoomId: id });
+    if (!id) return;
+    lastMarkedIncomingIdRef.current = null;
+    markRoomRead({ chatRoomId: id });
   }, [id, markRoomRead]);
 
   // ── Mark incoming messages read ───────────────────────────────────────
@@ -147,7 +147,12 @@ export default function ChatRoom({ roomId }: Props) {
     if (!latestIncoming) return;
     if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
 
+    // First time we see incoming messages — initial mark is already handled by
+    // the on-open effect above. Just remember the latest id and bail.
+    const wasUninitialized = lastMarkedIncomingIdRef.current === null;
     lastMarkedIncomingIdRef.current = latestIncoming._id;
+    if (wasUninitialized) return;
+
     markRoomRead({ chatRoomId: id });
   }, [currentGiftedId, id, markRoomRead, messages]);
 
@@ -186,7 +191,10 @@ export default function ChatRoom({ roomId }: Props) {
         },
       });
 
-      if (replyingTo) setReplyingTo(null);
+      if (replyingTo) {
+        setReplyingTo(null);
+        setInputBarHeight(0);
+      }
     },
     [id, currentUser, createMessage, replyingTo, makeUser],
   );
@@ -281,6 +289,7 @@ export default function ChatRoom({ roomId }: Props) {
               price_cents: service.price_cents,
               price_currency: service.price_currency,
               main_photo_url: service.main_photo_url ?? null,
+              main_photo_blurhash: service.main_photo_blurhash ?? null,
             },
           },
           user: makeUser(),
@@ -428,10 +437,16 @@ export default function ChatRoom({ roomId }: Props) {
   );
 
   // ── Render callbacks ──────────────────────────────────────────────────
-  const handleCancelReply = useCallback(() => setReplyingTo(null), []);
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+    setInputBarHeight(0);
+  }, []);
   const handleOpenAttach = useCallback(() => setAttachVisible(true), []);
 
-  const renderScrollToBottom = useCallback(() => <ChatScrollBottomButton />, []);
+  const renderScrollToBottom = useCallback(
+    () => <ChatScrollBottomButton />,
+    [],
+  );
   const renderMessage = useCallback(
     (props: React.ComponentProps<typeof ChatMessage>) => (
       <ChatMessage {...props} />
@@ -504,7 +519,9 @@ export default function ChatRoom({ roomId }: Props) {
           );
         }
       }
-      return <ChatBubble {...(props as React.ComponentProps<typeof ChatBubble>)} />;
+      return (
+        <ChatBubble {...(props as React.ComponentProps<typeof ChatBubble>)} />
+      );
     },
     [currentGiftedId, interlocutor, handleAcceptAppointment],
   );
@@ -531,6 +548,7 @@ export default function ChatRoom({ roomId }: Props) {
           <Avatar
             name={interlocutor.name}
             uri={interlocutor.avatar_url ?? undefined}
+            blurhash={interlocutor.avatar_blurhash}
             size="xs"
           />
           <Typography
@@ -562,7 +580,7 @@ export default function ChatRoom({ roomId }: Props) {
           />
         }
       >
-        {({ topInset }) => (
+        {({ topInset, bottomInset }) => (
           <SafeAreaView className="flex-1" edges={["left", "right"]}>
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
@@ -578,6 +596,7 @@ export default function ChatRoom({ roomId }: Props) {
               </View>
             ) : (
               <GiftedChat<ChatIMessage>
+                isDayAnimationEnabled={false}
                 messages={messages}
                 onSend={onSend}
                 user={{ _id: currentGiftedId ?? 0 }}
@@ -592,7 +611,7 @@ export default function ChatRoom({ roomId }: Props) {
                 isSendButtonAlwaysVisible
                 minInputToolbarHeight={0}
                 keyboardAvoidingViewProps={{
-                  keyboardVerticalOffset: -bottomInset + 8,
+                  keyboardVerticalOffset: -bottomInsetArea + 8,
                 }}
                 textInputProps={{
                   placeholder: "Сообщение...",
@@ -609,6 +628,7 @@ export default function ChatRoom({ roomId }: Props) {
                     marginHorizontal: 4,
                     flex: 1,
                     maxHeight: 120,
+                    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)",
                   },
                 }}
                 onLongPressMessage={onLongPressMessage}
@@ -633,7 +653,7 @@ export default function ChatRoom({ roomId }: Props) {
                 listProps={{
                   contentContainerStyle: {
                     paddingTop: inputBarHeight + bottomInset,
-                    paddingBottom: topInset,
+                    paddingBottom: topInset + 8,
                     flexGrow: 1,
                   },
                   onEndReached: handleLoadEarlier,

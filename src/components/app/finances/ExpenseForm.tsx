@@ -27,7 +27,7 @@ const ExpenseForm = ({
   onDelete,
 }: Props) => (
   <FormProvider {...methods}>
-    <View className="gap-1">
+    <View className="gap-1 flex-1">
       <Typography weight="semibold" className="text-display text-center">
         {title}
       </Typography>

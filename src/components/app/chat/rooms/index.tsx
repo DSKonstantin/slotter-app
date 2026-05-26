@@ -1,5 +1,10 @@
-import React, { useMemo, useState } from "react";
-import { RefreshControl, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
+  View,
+} from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -7,7 +12,7 @@ import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
-import { useGetChatRoomsQuery } from "@/src/store/redux/services/api/chatRoomsApi";
+import { useGetChatRoomsInfiniteQuery } from "@/src/store/redux/services/api/chatRoomsApi";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import ChatRoomItem from "./ChatRoomItem";
 import ChatRoomsSkeleton from "./ChatRoomsSkeleton";
@@ -19,15 +24,31 @@ const RoomSeparator = () => <View className="h-2" />;
 export default function ChatRoomsScreen() {
   const [newChatVisible, setNewChatVisible] = useState(false);
 
-  const { data, isLoading, isFetching, isError, refetch } =
-    useGetChatRoomsQuery(undefined);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useGetChatRoomsInfiniteQuery({});
 
   const { refreshing, onRefresh } = useRefresh(refetch);
 
   const rooms = useMemo(
-    () => (data?.rooms ?? []).filter((r) => r.interlocutor != null),
+    () =>
+      (data?.pages.flatMap((p) => p.rooms) ?? []).filter(
+        (r) => r.interlocutor != null,
+      ),
     [data],
   );
+
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <>
@@ -59,7 +80,7 @@ export default function ChatRoomsScreen() {
                   className="flex-1 items-center justify-center gap-2"
                   style={{
                     paddingTop: topInset,
-                    paddingBottom: bottomInset + 96,
+                    paddingBottom: bottomInset + 49,
                   }}
                 >
                   <Typography
@@ -84,18 +105,39 @@ export default function ChatRoomsScreen() {
                       }
                     />
                   )}
+                  maintainVisibleContentPosition={{
+                    disabled: true,
+                  }}
+                  contentInset={
+                    Platform.OS === "ios" ? { top: topInset } : undefined
+                  }
+                  contentOffset={
+                    Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                  }
                   contentContainerStyle={{
-                    paddingTop: topInset,
+                    paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingBottom: bottomInset + 8,
                     paddingHorizontal: SCREEN_PADDING,
                   }}
                   refreshControl={
                     <RefreshControl
+                      progressViewOffset={Platform.select({
+                        android: topInset,
+                      })}
                       refreshing={refreshing}
                       onRefresh={onRefresh}
                     />
                   }
                   ItemSeparatorComponent={RoomSeparator}
+                  onEndReached={handleEndReached}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={
+                    isFetchingNextPage ? (
+                      <View className="py-4 items-center">
+                        <ActivityIndicator color={colors.neutral[400]} />
+                      </View>
+                    ) : null
+                  }
                 />
               )}
             </View>

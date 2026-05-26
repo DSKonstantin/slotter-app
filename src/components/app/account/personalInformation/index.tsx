@@ -57,7 +57,7 @@ const PersonalInformation = () => {
     },
   });
 
-  const { release } = useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(methods.formState.isDirty);
 
   const avatar = methods.watch("avatar");
 
@@ -76,13 +76,13 @@ const PersonalInformation = () => {
       try {
         const formData = buildUserFormData(data);
         await updateUser({ id: auth.userId, data: formData }).unwrap();
-        release();
+        methods.reset(data);
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser, release],
+    [auth, updateUser, methods],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -90,12 +90,12 @@ const PersonalInformation = () => {
     try {
       await deleteUser(auth.userId).unwrap();
       setDeleteModalVisible(false);
-      release();
+      methods.reset(methods.getValues());
       await logout();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось удалить профиль"));
     }
-  }, [auth, deleteUser, logout, release]);
+  }, [auth, deleteUser, logout, methods]);
 
   if (!auth) return null;
 
@@ -121,6 +121,7 @@ const PersonalInformation = () => {
                     <Avatar
                       size="xl"
                       uri={avatar?.uri ?? user?.avatar_url ?? undefined}
+                      blurhash={avatar ? undefined : user?.avatar_blurhash}
                       showPhotoIcon={true}
                       fallbackIcon={
                         <StSvg
