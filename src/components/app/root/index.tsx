@@ -15,6 +15,7 @@ import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notific
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview from "@/src/components/app/root/homeOverview";
+import InsightsCarousel from "@/src/components/app/root/insightsCarousel";
 import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const Home = () => {
@@ -49,7 +50,7 @@ const Home = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 8,
+          paddingBottom: 8,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -58,10 +59,15 @@ const Home = () => {
         <View className="px-screen flex-1 gap-3">
           <HomeOverview />
         </View>
-        <View className="px-screen gap-3">
-          <NotificationBanners />
-        </View>
       </ScrollView>
+      <View
+        className="px-screen gap-3"
+        style={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 8 }}
+      >
+        <NotificationBanners />
+        {/*// TODO: нижние уведомления */}
+        <InsightsCarousel />
+      </View>
     </SafeAreaView>
   );
 };

@@ -1,10 +1,17 @@
 import React from "react";
-import { Pressable, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
-export type InsightCategory = "analytics" | "tip" | "reminder" | "update";
+export type InsightCategory =
+  | "analytics"
+  | "tip"
+  | "reminder"
+  | "update"
+  | "offer"
+  | "event"
+  | "education";
 
 const CATEGORY_STYLES: Record<
   InsightCategory,
@@ -27,6 +34,12 @@ const CATEGORY_STYLES: Record<
     pillText: "text-accent-purple-500",
     iconColor: colors.accent.purple[500],
   },
+  education: {
+    label: "Обучение",
+    pillBg: "bg-primary-green-500",
+    pillText: "text-primary-green-700",
+    iconColor: colors.primary.green[500],
+  },
   reminder: {
     label: "Напоминание",
     pillBg: "bg-accent-orange-100",
@@ -35,17 +48,34 @@ const CATEGORY_STYLES: Record<
   },
   update: {
     label: "Обновление",
-    pillBg: "bg-primary-green-100",
+    pillBg: "bg-primary-green-500",
     pillText: "text-primary-green-700",
-    iconColor: colors.primary.green[400],
+    iconColor: colors.primary.green[500],
   },
+  offer: {
+    label: "Предложение",
+    pillBg: "bg-accent-indigo-500",
+    pillText: "text-primary-blue-100",
+    iconColor: colors.accent.indigo[500],
+  },
+  event: {
+    label: "Новое событие",
+    pillBg: "bg-accent-mint-500",
+    pillText: "text-neutral-0",
+    iconColor: colors.accent.mint[500],
+  },
+};
+
+export type BodyPart = {
+  text: string;
+  highlight?: boolean;
 };
 
 type Props = {
   category: InsightCategory;
   iconName: string;
   title: string;
-  body: string;
+  body: BodyPart[] | string;
   onPress: () => void;
   onDismiss?: () => void;
 };
@@ -61,58 +91,81 @@ const InsightCard = ({
   const styles = CATEGORY_STYLES[category];
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      className="bg-background-surface rounded-base p-4 gap-3"
-    >
-      <View className="flex-row items-center justify-between">
-        <View
-          className={`flex-row items-center gap-1.5 px-2 py-1 rounded-full ${styles.pillBg}`}
-        >
-          <StSvg name={iconName} size={14} color={styles.iconColor} />
-          <Typography
-            weight="medium"
-            className={`text-caption ${styles.pillText}`}
+    <View className="relative">
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={onPress}
+        className="bg-background-surface rounded-base p-4 gap-3"
+      >
+        <View className="flex-row items-center gap-2">
+          <StSvg name={iconName} size={20} color={styles.iconColor} />
+          <View
+            className={`flex-row items-center gap-1.5 px-2 py-1 rounded-full ${styles.pillBg}`}
           >
-            {styles.label}
-          </Typography>
+            <Typography
+              weight="medium"
+              className={`text-caption ${styles.pillText}`}
+            >
+              {styles.label}
+            </Typography>
+          </View>
         </View>
-        {onDismiss && (
-          <Pressable
-            hitSlop={8}
-            onPress={onDismiss}
-            className="active:opacity-70"
-          >
-            <StSvg name="Close_round" size={20} color={colors.neutral[400]} />
-          </Pressable>
-        )}
-      </View>
 
-      <View className="flex-row items-center gap-2">
-        <View className="flex-1 gap-1">
-          <Typography
-            weight="semibold"
-            className="text-body text-neutral-900"
-            numberOfLines={2}
-          >
-            {title}
-          </Typography>
-          <Typography
-            weight="regular"
-            className="text-caption text-neutral-500"
-            numberOfLines={2}
-          >
-            {body}
-          </Typography>
+        <View className="flex-row items-center gap-2">
+          <View className="flex-1 gap-1">
+            <Typography
+              weight="semibold"
+              className="text-body text-neutral-900"
+              numberOfLines={2}
+            >
+              {title}
+            </Typography>
+            <Text numberOfLines={2}>
+              {Array.isArray(body) ? (
+                body.map((part, idx) => (
+                  <Typography
+                    key={idx}
+                    weight="regular"
+                    className={`text-caption ${part.highlight ? "text-neutral-900" : "text-neutral-500"}`}
+                  >
+                    {part.text}
+                  </Typography>
+                ))
+              ) : (
+                <Typography
+                  weight="regular"
+                  className="text-caption text-neutral-500"
+                >
+                  {body}
+                </Typography>
+              )}
+            </Text>
+          </View>
+          <StSvg
+            name="Expand_right_light"
+            size={20}
+            color={colors.neutral[500]}
+          />
         </View>
-        <StSvg
-          name="Expand_right_light"
-          size={20}
-          color={colors.neutral[500]}
-        />
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      {onDismiss && (
+        <Pressable
+          hitSlop={8}
+          onPress={onDismiss}
+          className="active:opacity-70"
+          style={{
+            position: "absolute",
+            top: -10,
+            right: -10,
+            zIndex: 10,
+          }}
+        >
+          <View className="bg-neutral-100 rounded-full p-1">
+            <StSvg name="Close_round" size={20} color={colors.neutral[400]} />
+          </View>
+        </Pressable>
+      )}
+    </View>
   );
 };
 
