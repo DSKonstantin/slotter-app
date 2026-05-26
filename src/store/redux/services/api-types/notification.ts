@@ -31,6 +31,7 @@ export interface NotificationSubjectCustomer {
   id: number;
   name: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface NotificationSubjectInterlocutor {
@@ -38,6 +39,7 @@ export interface NotificationSubjectInterlocutor {
   type: string;
   name: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface NotificationSubjectUser {
@@ -47,6 +49,7 @@ export interface NotificationSubjectUser {
   profession: string | null;
   nickname: string;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
 }
 
 export interface AppointmentNotificationSubject {
@@ -88,6 +91,7 @@ export interface Notification {
 export interface GetNotificationsParams {
   per_count?: number;
   page?: number;
+  is_read?: boolean;
 }
 
 export interface GetNotificationsResponse {

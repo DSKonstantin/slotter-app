@@ -22,12 +22,19 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { format } from "date-fns";
 import { getDatesUntilEndOfWeek } from "@/src/utils/schedule/getDatesUntilEndOfWeek";
-import { DEFAULT_BREAK_END, DEFAULT_BREAK_START, DEFAULT_END_AT, DEFAULT_START_AT } from "@/src/constants/hoursOptions";
+import {
+  DEFAULT_BREAK_END,
+  DEFAULT_BREAK_START,
+  DEFAULT_END_AT,
+  DEFAULT_START_AT,
+} from "@/src/constants/hoursOptions";
 import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
+import { SchedulePresets, type SchedulePreset } from "./SchedulePresets";
 
 const Schedule = () => {
   const auth = useRequiredAuth();
   const [activeDays, setActiveDays] = useState<string[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [bulkCreateWorkingDays, { isLoading }] =
     useBulkCreateWorkingDaysMutation();
   const [updateUser, { isLoading: isSkipping }] = useUpdateUserMutation();
@@ -42,7 +49,16 @@ const Schedule = () => {
     },
   });
 
+  const handlePresetSelect = (preset: SchedulePreset) => {
+    setSelectedPresetId(preset.id);
+    setActiveDays(preset.days);
+    methods.setValue("workingDays", preset.days, { shouldValidate: true });
+    methods.setValue("startAt", preset.startAt, { shouldValidate: true });
+    methods.setValue("endAt", preset.endAt, { shouldValidate: true });
+  };
+
   const toggleDay = (id: string) => {
+    setSelectedPresetId(null);
     setActiveDays((prev) => {
       const next = prev.includes(id)
         ? prev.filter((day) => day !== id)
@@ -118,6 +134,7 @@ const Schedule = () => {
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
+        disableHorizontalPadding
         header={<AuthHeader />}
         avoidKeyboard
         footer={
@@ -139,21 +156,28 @@ const Schedule = () => {
           />
         }
       >
-        <View className="mt-4">
+        <View className="mt-4 px-screen">
           <StepProgress
             steps={TOTAL_STEPS}
             currentStep={STEP_PROGRESS.schedule!}
           />
         </View>
-        <View className="mt-8 gap-2">
-          <Typography weight="semibold" className="text-display mb-2">
-            Дни работы
-          </Typography>
-          <Typography className="text-body text-neutral-500">
-            Нажми на дни, когда ты принимаешь
-          </Typography>
+        <View className="mt-8">
+          <View className="px-screen gap-1">
+            <Typography weight="semibold" className="text-display">
+              Дни работы
+            </Typography>
+            <Typography className="text-body text-neutral-500 mb-5">
+              Нажми на дни, когда ты принимаешь
+            </Typography>
+          </View>
 
-          <View className="flex-row mt-5 gap-2">
+          <SchedulePresets
+            selectedId={selectedPresetId}
+            onSelect={handlePresetSelect}
+          />
+
+          <View className="flex-row mt-5 gap-2 px-screen">
             {days.map((day) => (
               <Button
                 key={day.id}
@@ -164,7 +188,7 @@ const Schedule = () => {
               />
             ))}
           </View>
-          <View className="min-h-[20px]">
+          <View className="min-h-[20px] px-screen">
             {methods.formState.errors.workingDays && (
               <Typography className="text-accent-red-500 text-caption mt-[2px]">
                 {methods.formState.errors.workingDays.message as string}
@@ -172,21 +196,23 @@ const Schedule = () => {
             )}
           </View>
 
-          <WorkingHoursFields
-            label="Время работы"
-            startName="startAt"
-            endName="endAt"
-            startDefault={DEFAULT_START_AT}
-            endDefault={DEFAULT_END_AT}
-            breakStartDefault={DEFAULT_BREAK_START}
-            breakEndDefault={DEFAULT_BREAK_END}
-            middleSlot={
-              <Typography className="text-caption text-neutral-900">
-                Свободный или сменный график (2/2) можно будет настроить в
-                календаре позже
-              </Typography>
-            }
-          />
+          <View className="px-screen mt-2">
+            <WorkingHoursFields
+              label="Время работы"
+              startName="startAt"
+              endName="endAt"
+              startDefault={DEFAULT_START_AT}
+              endDefault={DEFAULT_END_AT}
+              breakStartDefault={DEFAULT_BREAK_START}
+              breakEndDefault={DEFAULT_BREAK_END}
+              middleSlot={
+                <Typography className="text-caption text-neutral-900">
+                  Свободный или сменный график (2/2) можно будет настроить в
+                  календаре позже
+                </Typography>
+              }
+            />
+          </View>
         </View>
       </AuthScreenLayout>
     </FormProvider>

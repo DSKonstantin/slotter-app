@@ -121,6 +121,7 @@ const PersonalInformation = () => {
                     <Avatar
                       size="xl"
                       uri={avatar?.uri ?? user?.avatar_url ?? undefined}
+                      blurhash={avatar ? undefined : user?.avatar_blurhash}
                       showPhotoIcon={true}
                       fallbackIcon={
                         <StSvg

@@ -6,7 +6,8 @@ import { colors } from "@/src/styles/colors";
 
 type Props = {
   service: {
-    main_photo_url?: string;
+    main_photo_url?: string | null;
+    main_photo_blurhash?: string | null;
     name: string;
   };
   date?: string;
@@ -23,6 +24,7 @@ const ServiceCard = ({ service, date, onPress }: Props) => {
               ? { uri: service.main_photo_url }
               : require("@/assets/images/placeholders/placeholder-slotter.png")
           }
+          placeholder={service.main_photo_blurhash ? { blurhash: service.main_photo_blurhash } : undefined}
           style={{ width: "100%", height: "100%", borderRadius: 20 }}
           contentFit="cover"
         />

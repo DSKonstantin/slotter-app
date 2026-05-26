@@ -15,6 +15,7 @@ export interface Customer {
   note: string | null;
   customer_tag: CustomerTag | null;
   avatar_url?: string | null;
+  avatar_blurhash?: string | null;
   created_at: string;
 }
 

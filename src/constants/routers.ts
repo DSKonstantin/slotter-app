@@ -120,11 +120,21 @@ export const Routers = {
           pathname: "/(app)/(tabs)/clients/[id]/history",
           params: { id: String(id) },
         }) as const,
+      slot: (clientId: string | number, slotId: string | number) =>
+        ({
+          pathname: "/(app)/(tabs)/clients/[id]/slot/[slotId]",
+          params: { id: String(clientId), slotId: String(slotId) },
+        }) as const,
     },
 
     schedule: "/(app)/(tabs)/schedule",
     history: {
       root: "/(app)/(tabs)/history" as const,
+      slot: (id: string | number) =>
+        ({
+          pathname: "/(app)/(tabs)/history/slot/[id]",
+          params: { id },
+        }) as const,
     },
     finances: {
       root: "/(app)/(tabs)/finances",

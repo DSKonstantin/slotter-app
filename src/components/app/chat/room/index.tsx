@@ -289,6 +289,7 @@ export default function ChatRoom({ roomId }: Props) {
               price_cents: service.price_cents,
               price_currency: service.price_currency,
               main_photo_url: service.main_photo_url ?? null,
+              main_photo_blurhash: service.main_photo_blurhash ?? null,
             },
           },
           user: makeUser(),
@@ -547,6 +548,7 @@ export default function ChatRoom({ roomId }: Props) {
           <Avatar
             name={interlocutor.name}
             uri={interlocutor.avatar_url ?? undefined}
+            blurhash={interlocutor.avatar_blurhash}
             size="xs"
           />
           <Typography

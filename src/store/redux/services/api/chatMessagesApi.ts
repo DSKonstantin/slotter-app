@@ -189,6 +189,7 @@ const chatMessagesApi = api.injectEndpoints({
                     type: result.owner.type,
                     name: result.owner.name,
                     avatar_url: result.owner.avatar_url,
+                    avatar_blurhash: result.owner.avatar_blurhash,
                   },
                 };
                 draft.pages[0]?.rooms.unshift(room);

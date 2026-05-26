@@ -203,6 +203,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   name={customer.name}
                   phone={customer.phone || undefined}
                   avatarUrl={customer.avatar_url ?? undefined}
+                  avatarBlurhash={customer.avatar_blurhash}
                   visitsCount={userCustomer?.stats.visits_count ?? 0}
                   totalSpent={formatRublesFromCents(
                     userCustomer?.stats.total_spent_cents ?? 0,

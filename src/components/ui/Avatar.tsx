@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, View, Text } from "react-native";
+import { Image } from "expo-image";
+import { View, Text } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { colors } from "@/src/styles/colors";
@@ -14,6 +15,7 @@ const SIZE_MAP = {
 
 type AvatarProps = {
   uri?: string;
+  blurhash?: string | null;
   name?: string;
   showPhotoIcon?: boolean;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -22,6 +24,7 @@ type AvatarProps = {
 
 export function Avatar({
   uri,
+  blurhash,
   name,
   size = "md",
   showPhotoIcon = false,
@@ -49,6 +52,8 @@ export function Avatar({
       {uri ? (
         <Image
           source={{ uri }}
+          placeholder={blurhash ? { blurhash } : undefined}
+          contentFit="cover"
           style={{
             width: dimension,
             height: dimension,

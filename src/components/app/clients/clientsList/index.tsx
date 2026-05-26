@@ -80,6 +80,7 @@ const ClientRow = React.memo(function ClientRow({
         <Avatar
           name={item.customer.name}
           uri={item.customer.avatar_url ?? undefined}
+          blurhash={item.customer.avatar_blurhash}
           size="md"
         />
       }

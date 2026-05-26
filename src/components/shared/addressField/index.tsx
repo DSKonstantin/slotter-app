@@ -52,13 +52,13 @@ export function AddressField() {
           />
         )}
       />
-      <Item
-        title="Скрыть адрес"
-        left={
-          <StSvg name="View_hide_fill" size={24} color={colors.neutral[900]} />
-        }
-        right={<RHFSwitch name="hideAddress" />}
-      />
+      {/*<Item*/}
+      {/*  title="Скрыть адрес"*/}
+      {/*  left={*/}
+      {/*    <StSvg name="View_hide_fill" size={24} color={colors.neutral[900]} />*/}
+      {/*  }*/}
+      {/*  right={<RHFSwitch name="hideAddress" />}*/}
+      {/*/>*/}
     </View>
   );
 }

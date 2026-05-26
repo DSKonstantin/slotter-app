@@ -45,10 +45,15 @@ export interface Service {
   position: number;
 
   main_photo_url?: string | null;
+  main_photo_blurhash?: string | null;
   additional_photo_first_url?: string | null;
+  additional_photo_first_blurhash?: string | null;
   additional_photo_second_url?: string | null;
+  additional_photo_second_blurhash?: string | null;
   additional_photo_third_url?: string | null;
+  additional_photo_third_blurhash?: string | null;
   additional_photo_fourth_url?: string | null;
+  additional_photo_fourth_blurhash?: string | null;
   additional_photos_urls?: string[];
   created_at?: string;
   additional_services?: AdditionalService[];

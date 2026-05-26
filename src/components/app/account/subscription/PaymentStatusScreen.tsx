@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { ActivityIndicator, Linking, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { useDispatch } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,15 +12,16 @@ import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { colors } from "@/src/styles/colors";
 import { api } from "@/src/store/redux/services/api";
 import { useGetSubscriptionPaymentQuery } from "@/src/store/redux/services/api/subscriptionApi";
-import { Routers } from "@/src/constants/routers";
+import { useAppSelector } from "@/src/store/redux/store";
 
 type DisplayState = "loading" | "succeeded" | "failed" | "timeout" | "noId";
 
+const POLL_INTERVAL_MS = 2_000;
 const POLL_TIMEOUT_MS = 60_000;
 
 const PaymentStatusScreen = () => {
   const auth = useRequiredAuth();
-  const router = useRouter();
+  const token = useAppSelector((state) => state.auth.token);
   const dispatch = useDispatch();
   const { top, bottom } = useSafeAreaInsets();
   const { payment_id } = useLocalSearchParams<{ payment_id: string }>();
@@ -35,7 +36,7 @@ const PaymentStatusScreen = () => {
     error,
   } = useGetSubscriptionPaymentQuery(
     auth && paymentId ? { userId: auth.userId, paymentId } : skipToken,
-    { pollingInterval: isPolling ? 5000 : 0 },
+    { pollingInterval: isPolling ? POLL_INTERVAL_MS : 0 },
   );
 
   const errorStatus = isError ? (error as { status?: number })?.status : null;
@@ -109,10 +110,7 @@ const PaymentStatusScreen = () => {
 
   return (
     <View className="flex-1">
-      <ToolbarTop
-        title="Статус оплаты"
-        fallbackHref={Routers.app.account.subscription}
-      />
+      <ToolbarTop title="Статус оплаты" />
       <View
         className="flex-1 px-screen"
         style={{ paddingTop: TOOLBAR_HEIGHT + top, paddingBottom: bottom + 8 }}
@@ -156,7 +154,11 @@ const PaymentStatusScreen = () => {
         >
           <Button
             title={buttonTitle}
-            onPress={() => router.replace(Routers.app.account.subscription)}
+            onPress={() =>
+              Linking.openURL(
+                `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
+              )
+            }
             rightIcon={<StSvg name={buttonIcon} size={20} color="white" />}
           />
         </View>

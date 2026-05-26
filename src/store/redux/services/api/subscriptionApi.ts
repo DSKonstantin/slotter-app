@@ -5,6 +5,7 @@ import type {
   SubscriptionQuota,
   SubscriptionPayment,
   CheckoutResponse,
+  RenewWithCardResponse,
 } from "@/src/store/redux/services/api-types";
 
 const subscriptionApi = api.injectEndpoints({
@@ -67,6 +68,36 @@ const subscriptionApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    toggleAutoRenew: builder.mutation<
+      SubscriptionMembership,
+      { userId: number; isAutoRenew: boolean }
+    >({
+      query: ({ userId, isAutoRenew }) => ({
+        url: `/users/${userId}/subscription_membership/toggle_auto_renew`,
+        method: "POST",
+        data: { is_auto_renew: isAutoRenew },
+      }),
+      invalidatesTags: ["SubscriptionMembership"],
+    }),
+
+    changeCard: builder.mutation<CheckoutResponse, { userId: number }>({
+      query: ({ userId }) => ({
+        url: `/users/${userId}/subscription_membership/change_card`,
+        method: "POST",
+      }),
+    }),
+
+    renewWithCard: builder.mutation<
+      RenewWithCardResponse,
+      { userId: number; paymentMethodId: number }
+    >({
+      query: ({ userId, paymentMethodId }) => ({
+        url: `/users/${userId}/subscription_membership/renew_with_card`,
+        method: "POST",
+        data: { payment_method_id: paymentMethodId },
+      }),
+    }),
   }),
 });
 
@@ -77,4 +108,7 @@ export const {
   useCancelSubscriptionMutation,
   useGetSubscriptionQuotaQuery,
   useGetSubscriptionPaymentQuery,
+  useToggleAutoRenewMutation,
+  useChangeCardMutation,
+  useRenewWithCardMutation,
 } = subscriptionApi;

@@ -125,6 +125,7 @@ const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
         <Avatar
           name={person?.name ?? ""}
           uri={person?.avatar_url ?? undefined}
+          blurhash={person?.avatar_blurhash}
           size="md"
         />
         <View
@@ -234,7 +235,7 @@ const HistoryScreen = () => {
       }
       if (!notification.subject) return;
       if (isAppointmentSubject(notification.subject)) {
-        router.push(Routers.app.calendar.slot(notification.subject.id));
+        router.push(Routers.app.history.slot(notification.subject.id));
       } else {
         router.push(Routers.app.chat.room(notification.subject.id));
       }
@@ -300,9 +301,7 @@ const HistoryScreen = () => {
             sections={sections}
             stickySectionHeadersEnabled={false}
             keyExtractor={(item) => String(item.id)}
-            contentInset={
-              Platform.OS === "ios" ? { top: topInset } : undefined
-            }
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
             contentOffset={
               Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
             }

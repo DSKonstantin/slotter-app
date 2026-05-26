@@ -103,6 +103,7 @@ export const chatRoomsApi = api.injectEndpoints({
                   type: data.payload.owner.type,
                   name: data.payload.owner.name,
                   avatar_url: data.payload.owner.avatar_url,
+                  avatar_blurhash: data.payload.owner.avatar_blurhash,
                 },
               };
               draft.pages[0]?.rooms.unshift(movedRoom);

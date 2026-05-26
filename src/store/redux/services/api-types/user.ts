@@ -1,5 +1,6 @@
 // src/store/redux/services/api-types/user.ts
 import type { GalleryPhoto } from "./galleryPhoto";
+import type { SubscriptionMembership } from "./subscription";
 
 export type AppointmentStep =
   | "five_minutes"
@@ -25,6 +26,7 @@ export interface User {
   profession: string | null;
   experience: string | null;
   avatar_url: string | null;
+  avatar_blurhash: string | null;
   is_home_work: boolean;
   is_online_work: boolean;
   is_out_call: boolean;
@@ -37,6 +39,7 @@ export interface User {
   is_notify_customer_cancel: boolean;
   is_notify_reminders: boolean;
   gallery_photos: GalleryPhoto[];
+  subscription_membership: SubscriptionMembership;
 }
 
 export interface AuthResponse {

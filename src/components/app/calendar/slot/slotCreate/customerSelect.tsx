@@ -34,7 +34,10 @@ import RetryInline from "@/src/components/shared/retryInline";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 
-type CustomerOption = AutocompleteItem & { avatarUrl?: string | null };
+type CustomerOption = AutocompleteItem & {
+  avatarUrl?: string | null;
+  avatarBlurhash?: string | null;
+};
 
 const LIST_MAX_HEIGHT = 400;
 const LIST_MIN_HEIGHT = 200;
@@ -51,7 +54,7 @@ const CustomerRow = React.memo(function CustomerRow({
       className="flex-row items-center gap-3 py-3 px-2 active:opacity-70"
       onPress={() => onPress(item)}
     >
-      <Avatar uri={item.avatarUrl ?? undefined} name={item.title} size="sm" />
+      <Avatar uri={item.avatarUrl ?? undefined} blurhash={item.avatarBlurhash} name={item.title} size="sm" />
       <Typography className="text-body text-neutral-900">
         {item.title}
       </Typography>
@@ -101,6 +104,7 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
         id: String(uc.customer.id),
         title: uc.customer.name,
         avatarUrl: uc.customer.avatar_url,
+        avatarBlurhash: uc.customer.avatar_blurhash,
       })),
     [customersData],
   );

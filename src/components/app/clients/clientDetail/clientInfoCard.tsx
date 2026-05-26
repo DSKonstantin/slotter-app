@@ -6,6 +6,7 @@ type Props = {
   name: string;
   phone?: string;
   avatarUrl?: string;
+  avatarBlurhash?: string | null;
   visitsCount: number;
   totalSpent: string;
   tag?: { name: string; color: string };
@@ -15,6 +16,7 @@ const ClientInfoCard = ({
   name,
   phone,
   avatarUrl,
+  avatarBlurhash,
   visitsCount,
   totalSpent,
   tag,
@@ -22,7 +24,7 @@ const ClientInfoCard = ({
   return (
     <View className="flex-row rounded-base bg-background-surface p-4">
       <View className="mr-3">
-        <Avatar name={name} size="md" uri={avatarUrl} />
+        <Avatar name={name} size="md" uri={avatarUrl} blurhash={avatarBlurhash} />
       </View>
 
       <View className="flex-1">

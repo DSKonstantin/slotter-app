@@ -10,6 +10,17 @@ export type SubscriptionPlan = {
   discount_percent: number;
 };
 
+export type SubscriptionPaymentMethod = {
+  id: number;
+  card_last4: string | null;
+  card_brand: string | null;
+  card_expiry_month: string | null;
+  card_expiry_year: string | null;
+  is_default: boolean;
+  saved_at: string;
+  last_used_at: string | null;
+};
+
 export type SubscriptionStatus = "active" | "grace" | "cancelled" | "expired";
 
 export type SubscriptionMembership = {
@@ -21,13 +32,20 @@ export type SubscriptionMembership = {
   period_ends_at: string | null;
   cancelled_at: string | null;
   grace_retry_count: number;
+  is_auto_renew: boolean;
   pro_access: boolean;
   subscription_plan: SubscriptionPlan | null;
+  default_payment_method: SubscriptionPaymentMethod | null;
 };
 
 export type CheckoutResponse = {
   confirmation_url: string;
-  payment_id: string;
+  payment_id: number;
+};
+
+export type RenewWithCardResponse = {
+  payment_id: number;
+  confirmation_url: string | null;
 };
 
 export type SubscriptionPaymentStatus =
@@ -37,7 +55,7 @@ export type SubscriptionPaymentStatus =
   | "refunded";
 
 export type SubscriptionPayment = {
-  id: string;
+  id: number;
   status: SubscriptionPaymentStatus;
   payment_type: "initial" | "renewal" | "grace_retry";
   amount_cents: number;

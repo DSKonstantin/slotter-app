@@ -5,12 +5,14 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useFocusEffect } from "expo-router";
 
 import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
 import { useGetUpcomingAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
@@ -29,7 +31,20 @@ const Home = () => {
 
   const { refetch: refetchNotifications } = useGetNotificationsQuery({
     per_count: 50,
+    is_read: false,
   });
+
+  const [triggerGetMe] = useLazyGetMeQuery();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (auth) {
+        refetchSchedule();
+        refetchAppointments();
+        refetchNotifications();
+      }
+    }, [auth, refetchSchedule, refetchAppointments, refetchNotifications]),
+  );
 
   const refetchAll = useCallback(
     () =>
@@ -37,8 +52,9 @@ const Home = () => {
         refetchSchedule(),
         refetchAppointments(),
         refetchNotifications(),
+        triggerGetMe(),
       ]),
-    [refetchSchedule, refetchAppointments, refetchNotifications],
+    [refetchSchedule, refetchAppointments, refetchNotifications, triggerGetMe],
   );
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);

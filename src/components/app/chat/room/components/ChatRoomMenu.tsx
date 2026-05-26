@@ -25,7 +25,7 @@ type Props = {
 };
 
 const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
-  const { name, phone, avatar_url } = interlocutor;
+  const { name, phone, avatar_url, avatar_blurhash } = interlocutor;
 
   const handleCall = () => {
     if (!phone) return;
@@ -51,7 +51,7 @@ const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
   return (
     <StModal visible={visible} onClose={onClose}>
       <View className="items-center pb-6 gap-1">
-        <Avatar name={name} uri={avatar_url ?? undefined} size="md" />
+        <Avatar name={name} uri={avatar_url ?? undefined} blurhash={avatar_blurhash} size="md" />
         <Typography weight="semibold" className="text-body">
           {name}
         </Typography>

@@ -47,6 +47,7 @@ const ChatRoomItem = ({ room, onPress }: Props) => {
       <Avatar
         name={interlocutor.name}
         uri={interlocutor.avatar_url ?? undefined}
+        blurhash={interlocutor.avatar_blurhash}
         size="md"
       />
 

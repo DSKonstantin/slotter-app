@@ -35,6 +35,7 @@ export const api = createApi({
     "UserLinks",
     "SubscriptionMembership",
     "SubscriptionPlans",
+    "PaymentMethods",
   ],
   endpoints: () => ({}),
 });

@@ -184,9 +184,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
             return (
               <View
                 className="flex-1 items-center justify-center"
-                style={{ marginTop: topInset }}
+                style={{ marginTop: topInset, marginBottom: bottomInset }}
               >
-                <ActivityIndicator color={colors.neutral[400]} />
+                <ActivityIndicator size="large" color={colors.neutral[400]} />
               </View>
             );
           }
@@ -255,6 +255,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       <Avatar
                         name={slot.customer?.name ?? undefined}
                         uri={slot.customer?.avatar_url ?? undefined}
+                        blurhash={slot.customer?.avatar_blurhash}
                         size="sm"
                       />
                     }

@@ -157,9 +157,11 @@ export type {
 } from "./userLink";
 export type {
   SubscriptionPlan,
+  SubscriptionPaymentMethod,
   SubscriptionStatus,
   SubscriptionMembership,
   CheckoutResponse,
+  RenewWithCardResponse,
   SubscriptionQuota,
   SubscriptionPayment,
   SubscriptionPaymentStatus,
