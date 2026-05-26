@@ -18,7 +18,7 @@ import type { BannerVariant } from "./BannerCard";
 
 const SUBSCRIPTION_EXPIRY_DAYS = 33;
 
-const MAX_BANNERS = 4;
+const MAX_BANNERS = 3;
 
 type NotificationBannerConfig = {
   key: string;

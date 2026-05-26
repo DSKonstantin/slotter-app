@@ -8,8 +8,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { StSvg, Typography } from "@/src/components/ui";
+import { StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { HORIZONTAL_PADDING } from "@/src/components/app/account/gallery/constants";
 
 export type StoryCategory =
   | "training"
@@ -27,92 +28,42 @@ export type Story = {
 
 export type StoriesData = Record<StoryCategory, Story[]>;
 
-export const CATEGORY_ICONS: Record<StoryCategory, string> = {
-  training: "Book_fill",
-  account: "User_fill",
-  schedule: "Calendar_fill",
-  services: "Briefcase_fill",
-  events: "Clock_fill",
-  finance: "Wallet_fill",
-};
-
-export const CATEGORY_COLORS: Record<StoryCategory, string> = {
-  training: colors.accent.purple[500],
-  account: colors.primary.blue[500],
-  schedule: colors.primary.green[500],
-  services: colors.accent.orange[500],
-  events: colors.accent.mint[500],
-  finance: colors.accent.indigo[500],
-};
-
-export const CATEGORY_NAMES: Record<StoryCategory, string> = {
-  training: "Обучение",
-  account: "Аккаунт",
-  schedule: "График",
-  services: "Услуги",
-  events: "События",
-  finance: "Финансы",
-};
-
 const SWIPE_THRESHOLD = 40;
 
 type Props = {
   isVisible: boolean;
   onClose: () => void;
   stories: Partial<StoriesData>;
-  notificationLabel?: string;
-  notificationIcon?: string;
-  notificationColor?: string;
-  showIcon?: boolean;
 };
 
-const NotificationStoriesModal = ({
-  isVisible,
-  onClose,
-  stories,
-  notificationLabel,
-  notificationIcon,
-  notificationColor,
-  showIcon = true,
-}: Props) => {
+const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   const { top } = useSafeAreaInsets();
   const [storyIndex, setStoryIndex] = useState(0);
   const opacity = useRef(new Animated.Value(0)).current;
 
-  const allStories = useMemo(() => {
-    const flat: { category: StoryCategory; story: Story }[] = [];
-    Object.entries(stories).forEach(([cat, storyList]) => {
-      storyList.forEach((story) => {
-        flat.push({ category: cat as StoryCategory, story });
-      });
-    });
-    return flat;
-  }, [stories]);
-
-  const currentIndex = storyIndex;
-  const currentStoryData = allStories[currentIndex];
-  const currentCategory = currentStoryData?.category || "training";
-  const currentStory = currentStoryData?.story;
-  const safeStoryIndex = Math.min(
-    currentIndex,
-    Math.max(0, allStories.length - 1),
+  const allStories = useMemo(
+    () =>
+      Object.entries(stories).flatMap(([cat, storyList]) =>
+        storyList.map((story) => ({ category: cat as StoryCategory, story })),
+      ),
+    [stories],
   );
 
-  const handleSwipe = useCallback(
-    (direction: "left" | "right") => {
-      if (allStories.length < 2) return;
+  const storyIndexRef = useRef(storyIndex);
+  const allStoriesLengthRef = useRef(allStories.length);
+  storyIndexRef.current = storyIndex;
+  allStoriesLengthRef.current = allStories.length;
 
-      if (direction === "right") {
-        const nextIndex =
-          safeStoryIndex === 0 ? allStories.length - 1 : safeStoryIndex - 1;
-        setStoryIndex(nextIndex);
-      } else {
-        const nextIndex = (safeStoryIndex + 1) % allStories.length;
-        setStoryIndex(nextIndex);
-      }
-    },
-    [allStories.length, safeStoryIndex],
-  );
+  const currentStory = allStories[storyIndex]?.story;
+
+  const handleSwipe = useCallback((direction: "left" | "right") => {
+    const len = allStoriesLengthRef.current;
+    if (len < 2) return;
+    const idx = storyIndexRef.current;
+    setStoryIndex(
+      direction === "right" ? (idx === 0 ? len - 1 : idx - 1) : (idx + 1) % len,
+    );
+  }, []);
 
   const panGesture = useMemo(
     () =>
@@ -120,16 +71,13 @@ const NotificationStoriesModal = ({
         .activeOffsetX([-10, 10])
         .runOnJS(true)
         .onEnd((event) => {
-          if (event.translationX > SWIPE_THRESHOLD) {
-            handleSwipe("right");
-          } else if (event.translationX < -SWIPE_THRESHOLD) {
-            handleSwipe("left");
-          }
+          if (event.translationX > SWIPE_THRESHOLD) handleSwipe("right");
+          else if (event.translationX < -SWIPE_THRESHOLD) handleSwipe("left");
         }),
     [handleSwipe],
   );
 
-  const handleAnimateIn = () => {
+  const handleAnimateIn = useCallback(() => {
     setStoryIndex(0);
     opacity.setValue(0);
     Animated.timing(opacity, {
@@ -137,26 +85,17 @@ const NotificationStoriesModal = ({
       duration: 300,
       useNativeDriver: true,
     }).start();
-  };
+  }, [opacity]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     Animated.timing(opacity, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => {
-      onClose();
-    });
-  };
+    }).start(() => onClose());
+  }, [opacity, onClose]);
 
   if (!currentStory) return null;
-
-  const displayColor =
-    notificationColor !== undefined
-      ? notificationColor
-      : CATEGORY_COLORS[currentCategory];
-  const displayIcon = notificationIcon || CATEGORY_ICONS[currentCategory];
-  const displayLabel = notificationLabel || CATEGORY_NAMES[currentCategory];
 
   return (
     <Modal
@@ -175,9 +114,12 @@ const NotificationStoriesModal = ({
           }}
         >
           <GestureDetector gesture={panGesture}>
-            <View style={{ flex: 1 }}>
+            <View className="flex-1">
               <LinearGradient
-                colors={["#B0B0B099", "#B0B0B000"]}
+                colors={[
+                  `${colors.neutral[400]}99`,
+                  `${colors.neutral[400]}00`,
+                ]}
                 style={{
                   position: "absolute",
                   top: 0,
@@ -188,7 +130,12 @@ const NotificationStoriesModal = ({
                 }}
               />
 
-              <View style={{ paddingTop: top + 16, paddingHorizontal: 16 }}>
+              <View
+                style={{
+                  paddingTop: top + 16,
+                  paddingHorizontal: HORIZONTAL_PADDING,
+                }}
+              >
                 <View className="flex-row gap-1">
                   {allStories.map((_, idx) => (
                     <TouchableOpacity
@@ -198,7 +145,7 @@ const NotificationStoriesModal = ({
                       className="flex-1"
                     >
                       <View className="h-1.5 bg-neutral-300 rounded-full overflow-hidden">
-                        {idx <= currentIndex && (
+                        {idx <= storyIndex && (
                           <View className="h-full bg-neutral-0" />
                         )}
                       </View>
@@ -207,12 +154,11 @@ const NotificationStoriesModal = ({
                 </View>
               </View>
 
-              <View className="flex-row items-center gap-3 pl-6 pb-6 pt-6">
-                <View className="flex-1" />
+              <View className="items-end pr-4 pt-6 pb-6">
                 <TouchableOpacity
                   onPress={handleClose}
                   hitSlop={8}
-                  className="active:opacity-70 pr-2"
+                  className="active:opacity-70"
                 >
                   <View className="bg-neutral-300 rounded-full p-2">
                     <StSvg

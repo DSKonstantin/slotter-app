@@ -1,8 +1,10 @@
 import React from "react";
-import { Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
 
-import { StSvg, Typography } from "@/src/components/ui";
+import { Badge, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+
+import { INSIGHT_CATEGORY_CONFIG } from "./config";
 
 export type InsightCategory =
   | "analytics"
@@ -12,59 +14,6 @@ export type InsightCategory =
   | "offer"
   | "event"
   | "education";
-
-const CATEGORY_STYLES: Record<
-  InsightCategory,
-  {
-    label: string;
-    pillBg: string;
-    pillText: string;
-    iconColor: string;
-  }
-> = {
-  analytics: {
-    label: "Аналитика",
-    pillBg: "bg-primary-blue-100",
-    pillText: "text-primary-blue-500",
-    iconColor: colors.primary.blue[500],
-  },
-  tip: {
-    label: "Совет",
-    pillBg: "bg-accent-purple-100",
-    pillText: "text-accent-purple-500",
-    iconColor: colors.accent.purple[500],
-  },
-  education: {
-    label: "Обучение",
-    pillBg: "bg-primary-green-500",
-    pillText: "text-primary-green-700",
-    iconColor: colors.primary.green[500],
-  },
-  reminder: {
-    label: "Напоминание",
-    pillBg: "bg-accent-orange-100",
-    pillText: "text-accent-orange-500",
-    iconColor: colors.accent.orange[500],
-  },
-  update: {
-    label: "Обновление",
-    pillBg: "bg-primary-green-500",
-    pillText: "text-primary-green-700",
-    iconColor: colors.primary.green[500],
-  },
-  offer: {
-    label: "Предложение",
-    pillBg: "bg-accent-indigo-500",
-    pillText: "text-primary-blue-100",
-    iconColor: colors.accent.indigo[500],
-  },
-  event: {
-    label: "Новое событие",
-    pillBg: "bg-accent-mint-500",
-    pillText: "text-neutral-0",
-    iconColor: colors.accent.mint[500],
-  },
-};
 
 export type BodyPart = {
   text: string;
@@ -88,27 +37,23 @@ const InsightCard = ({
   onPress,
   onDismiss,
 }: Props) => {
-  const styles = CATEGORY_STYLES[category];
+  const styles = INSIGHT_CATEGORY_CONFIG[category];
 
   return (
     <View className="relative">
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onPress}
-        className="bg-background-surface rounded-base p-4 gap-3"
+        className="bg-background-surface rounded-base p-4 gap-2 min-h-[132px]"
       >
         <View className="flex-row items-center gap-2">
-          <StSvg name={iconName} size={20} color={styles.iconColor} />
-          <View
-            className={`flex-row items-center gap-1.5 px-2 py-1 rounded-full ${styles.pillBg}`}
-          >
-            <Typography
-              weight="medium"
-              className={`text-caption ${styles.pillText}`}
-            >
-              {styles.label}
-            </Typography>
-          </View>
+          <StSvg name={iconName} size={28} color={styles.color} />
+          <Badge
+            title={styles.label}
+            size="sm"
+            className={styles.pillBg}
+            textStyle={{ color: styles.pillTextColor }}
+          />
         </View>
 
         <View className="flex-row items-center gap-2">
@@ -120,26 +65,25 @@ const InsightCard = ({
             >
               {title}
             </Typography>
-            <Text numberOfLines={2}>
-              {Array.isArray(body) ? (
-                body.map((part, idx) => (
-                  <Typography
-                    key={idx}
-                    weight="regular"
-                    className={`text-caption ${part.highlight ? "text-neutral-900" : "text-neutral-500"}`}
-                  >
-                    {part.text}
-                  </Typography>
-                ))
-              ) : (
-                <Typography
-                  weight="regular"
-                  className="text-caption text-neutral-500"
-                >
-                  {body}
-                </Typography>
-              )}
-            </Text>
+            <Typography
+              className="text-caption text-neutral-500"
+              numberOfLines={2}
+            >
+              {Array.isArray(body)
+                ? body.map((p, i) =>
+                    p.highlight ? (
+                      <Typography
+                        key={i}
+                        className="text-caption text-neutral-900"
+                      >
+                        {p.text}
+                      </Typography>
+                    ) : (
+                      p.text
+                    ),
+                  )
+                : body}
+            </Typography>
           </View>
           <StSvg
             name="Expand_right_light"
@@ -155,8 +99,8 @@ const InsightCard = ({
           className="active:opacity-70"
           style={{
             position: "absolute",
-            top: -10,
-            right: -10,
+            top: -8,
+            right: -8,
             zIndex: 10,
           }}
         >
