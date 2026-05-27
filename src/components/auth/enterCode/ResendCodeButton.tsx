@@ -50,12 +50,6 @@ export const ResendCodeButton: React.FC<Props> = ({
           onPress={handleResend}
         />
       )}
-      <Button
-        title="Повторить по звонку"
-        size="sm"
-        variant="clear"
-        onPress={onCallPress}
-      />
     </View>
   );
 };

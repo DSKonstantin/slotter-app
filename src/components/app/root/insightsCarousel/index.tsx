@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import usePersistentStorage from "@/src/hooks/usePersistentStorage";
 import { Animated, PanResponder, View } from "react-native";
 
 import { PaginationDots } from "@/src/components/ui";
@@ -128,7 +129,10 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
 
 const InsightsCarousel = () => {
   const [index, setIndex] = useState(0);
-  const [dismissed, setDismissed] = useState<Set<Insight["id"]>>(new Set());
+  const [dismissedIds, setDismissedIds] = usePersistentStorage<
+    (string | number)[]
+  >("insights_dismissed", []);
+  const dismissed = useMemo(() => new Set(dismissedIds), [dismissedIds]);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -197,13 +201,9 @@ const InsightsCarousel = () => {
   currentRef.current = current;
 
   const handleDismiss = useCallback(() => {
-    setDismissed((prev) => {
-      const next = new Set(prev);
-      next.add(currentRef.current!.id);
-      return next;
-    });
+    setDismissedIds((prev) => [...prev, currentRef.current!.id]);
     setIndex(0);
-  }, []);
+  }, [setDismissedIds]);
 
   if (!current) return null;
 

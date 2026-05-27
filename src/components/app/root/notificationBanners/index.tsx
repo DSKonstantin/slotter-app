@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { differenceInDays, parseISO } from "date-fns";
@@ -12,11 +12,12 @@ import type {
 } from "@/src/store/redux/services/api-types";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { pluralize } from "@/src/utils/text/pluralize";
+import usePersistentStorage from "@/src/hooks/usePersistentStorage";
 
 import BannerCard from "./BannerCard";
 import type { BannerVariant } from "./BannerCard";
 
-const SUBSCRIPTION_EXPIRY_DAYS = 33;
+const SUBSCRIPTION_EXPIRY_DAYS = 7;
 
 const MAX_BANNERS = 3;
 
@@ -99,6 +100,15 @@ const NotificationBanners = () => {
     return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
   }, [membership, subscriptionEnded]);
 
+  const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
+    "banner_subscription_ended",
+    false,
+  );
+
+  useEffect(() => {
+    if (!subscriptionEnded && subBannerClosed) setSubBannerClosed(false);
+  }, [subscriptionEnded, subBannerClosed, setSubBannerClosed]);
+
   const handleOpenList = () => router.push(Routers.app.history.root);
   const handleOpenSubscription = () => router.push(Routers.app.account.root);
 
@@ -107,13 +117,14 @@ const NotificationBanners = () => {
 
   return (
     <View className="gap-2">
-      {subscriptionEnded && (
+      {subscriptionEnded && !subBannerClosed && (
         <BannerCard
           variant="error"
           iconName="Alarm_fill"
           title="Подписка закончилась"
           actionLabel="Продлить"
           onPress={handleOpenSubscription}
+          onDismiss={() => setSubBannerClosed(true)}
         />
       )}
       {expiryDaysLeft !== null && (

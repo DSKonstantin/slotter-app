@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import debounce from "lodash/debounce";
 import { ActivityIndicator, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import debounce from "lodash/debounce";
+import { toast } from "@backpackapp-io/react-native-toast";
 import { Controller, useFormContext } from "react-hook-form";
+
 import { Input } from "@/src/components/ui/fields/Input";
 import { Button, StSvg, Tag, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -11,11 +13,21 @@ import { suggestNicknames } from "@/src/utils/text/suggestNickname";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 export function NicknameField() {
-  const { control, watch, setValue } = useFormContext();
+  const {
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
+
   const [
     checkNickname,
     { data, isFetching, isError, error: queryError, reset },
   ] = useLazyCheckNicknameQuery();
+
+  const [focused, setFocused] = useState(false);
+  const [pending, setPending] = useState(false);
+
   const checkNicknameRef = useRef(checkNickname);
   checkNicknameRef.current = checkNickname;
 
@@ -24,9 +36,6 @@ export function NicknameField() {
     [],
   );
 
-  const [focused, setFocused] = useState(false);
-  const [checking, setChecking] = useState(false);
-
   const [value, name, surname, profession] = watch([
     "nickname",
     "name",
@@ -34,23 +43,44 @@ export function NicknameField() {
     "profession",
   ]) as string[];
 
-  const hasProfileData = !!(name && surname && profession);
-  const suggestions = useMemo(
-    () => suggestNicknames(name, surname, profession),
-    [name, surname, profession],
-  );
-  const showSuggestions = !value && hasProfileData && suggestions.length > 0;
-
-  const hasValue = value?.length >= 3 && !checking && !isFetching;
-  const isAvailable = hasValue && !isError && data?.available === true;
+  const nicknameError = errors.nickname;
+  const loading = pending || isFetching;
+  const hasValue = (value?.length ?? 0) >= 3 && !loading;
+  const isAvailable =
+    hasValue && !isError && !nicknameError && data?.available === true;
   const isTaken = hasValue && data?.available === false;
   const showQueryError = hasValue && isError;
 
-  const endAdornment = useMemo(() => {
-    if (isFetching) {
-      return <ActivityIndicator size="small" color={colors.neutral[400]} />;
+  const hasProfileData = !!(name && surname && profession);
+  const suggestions = useMemo(
+    () => (hasProfileData ? suggestNicknames(name, surname, profession) : []),
+    [name, surname, profession, hasProfileData],
+  );
+
+  useEffect(() => {
+    if (!value || value.length < 3) {
+      debouncedCheck.cancel();
+      setPending(false);
+      reset();
+      return () => debouncedCheck.cancel();
     }
-    if (isAvailable) {
+    setPending(true);
+    debouncedCheck(value);
+    return () => debouncedCheck.cancel();
+  }, [value, debouncedCheck, reset]);
+
+  useEffect(() => {
+    if (!isFetching) setPending(false);
+  }, [isFetching]);
+
+  const endAdornment = useMemo(() => {
+    if (loading)
+      return <ActivityIndicator size="small" color={colors.neutral[400]} />;
+    if (nicknameError || isTaken || showQueryError)
+      return (
+        <StSvg name="Alarm_light" size={24} color={colors.accent.red[500]} />
+      );
+    if (isAvailable)
       return (
         <StSvg
           name="check_ring_round_light"
@@ -58,30 +88,16 @@ export function NicknameField() {
           color={colors.primary.green[700]}
         />
       );
-    }
-    if (isTaken || showQueryError) {
-      return (
-        <StSvg name="Alarm_light" size={24} color={colors.accent.red[500]} />
-      );
-    }
     return null;
-  }, [isFetching, isAvailable, isTaken, showQueryError]);
+  }, [loading, isAvailable, isTaken, showQueryError, nicknameError]);
 
-  useEffect(() => {
-    if (!value || value.length < 3) {
-      debouncedCheck.cancel();
-      setChecking(false);
-      reset();
-      return;
-    }
-    setChecking(true);
-    debouncedCheck(value);
-    return () => debouncedCheck.cancel();
-  }, [value, debouncedCheck, reset]);
-
-  useEffect(() => {
-    if (!isFetching) setChecking(false);
-  }, [isFetching]);
+  const helperText = useMemo(() => {
+    if (showQueryError)
+      return getApiErrorMessage(queryError, "Ошибка проверки никнейма");
+    if (loading) return "Проверяем доступность...";
+    if (focused) return "Только латиница, цифры и подчёркивание";
+    return "Уникальная ссылка на ваш профиль";
+  }, [showQueryError, loading, focused, queryError]);
 
   return (
     <View className="gap-2">
@@ -121,17 +137,19 @@ export function NicknameField() {
           />
         )}
       />
+
       <View className="gap-2.5 min-h-[26px]">
         {isAvailable ? (
           <Tag
             variant="mint"
             size="sm"
             title={`${process.env.EXPO_PUBLIC_BOOKING_DISPLAY_URL}/${value}`}
-            onPress={() =>
-              Clipboard.setStringAsync(
+            onPress={async () => {
+              await Clipboard.setStringAsync(
                 `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${value}`,
-              )
-            }
+              );
+              toast.success("Ссылка скопирована");
+            }}
             icon={
               <StSvg
                 name="link_alt"
@@ -144,16 +162,11 @@ export function NicknameField() {
           <Typography
             className={`text-caption ${showQueryError ? "text-accent-red-500" : "text-neutral-500"}`}
           >
-            {showQueryError
-              ? getApiErrorMessage(queryError, "Ошибка проверки никнейма")
-              : checking
-                ? "Проверяем доступность..."
-                : focused
-                  ? "Только латиница, цифры и подчёркивание"
-                  : "Уникальная ссылка на ваш профиль"}
+            {helperText}
           </Typography>
         )}
-        {showSuggestions && (
+
+        {!value && suggestions.length > 0 && (
           <View className="flex-row flex-wrap gap-2 items-center">
             <Typography className="text-caption text-neutral-500">
               Попробуйте:

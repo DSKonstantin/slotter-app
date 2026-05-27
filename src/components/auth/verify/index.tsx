@@ -1,13 +1,14 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { View } from "react-native";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, Typography } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { Routers } from "@/src/constants/routers";
 import {
   VerifySchema,
@@ -27,6 +28,7 @@ const Verify = () => {
     resolver: yupResolver(VerifySchema),
     defaultValues: {
       phone: "",
+      promoCode: "",
     },
   });
 
@@ -73,11 +75,11 @@ const Verify = () => {
             Твой номер
           </Typography>
           <Typography className="text-body text-neutral-500">
-            {/*Мы отправим код подтверждения*/}
-            Введи телефон, и мы покажем{"\n"}куда позвонить для входа
+            Отправим код через SMS, Telegram или WhatsApp
           </Typography>
 
           <View className="mt-9">
+
             <RhfTextField
               name="phone"
               placeholder="+ 7 999 000-00-00"
@@ -86,19 +88,25 @@ const Verify = () => {
               hideErrorText
               keyboardType="number-pad"
             />
-            <Typography className="text-caption text-neutral-500 my-2">
-              {/*Мы отправим SMS с кодом подтверждения. Это бесплатно и безопасно*/}
+            <Typography className="text-caption text-neutral-500 mt-2 mb-9">
               Продолжая, вы соглашаетесь с{" "}
-              <Typography className="text-caption text-black underline">
+              <Typography
+                className="text-caption text-black underline"
+                onPress={() =>
+                  WebBrowser.openBrowserAsync(
+                    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                  )
+                }
+              >
                 условиями использования
               </Typography>
             </Typography>
-
-            {/*<Button*/}
-            {/*  title="Восстановить вход"*/}
-            {/*  variant="clear"*/}
-            {/*  onPress={handleRestoreLogin}*/}
-            {/*/>*/}
+            <RhfTextField
+              name="promoCode"
+              label="Если вас пригласили или вы попали на акцию"
+              placeholder="Промокод"
+              autoCapitalize="characters"
+            />
           </View>
         </View>
       </AuthScreenLayout>

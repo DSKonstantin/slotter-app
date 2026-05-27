@@ -65,7 +65,7 @@ const EnterCode = () => {
           Введите код
         </Typography>
         <Typography className="text-body text-neutral-500">
-          Мы отправили SMS на {phone}
+          Отправили код на {phone} через SMS, Telegram или WhatsApp
         </Typography>
 
         <View className="mt-8">
