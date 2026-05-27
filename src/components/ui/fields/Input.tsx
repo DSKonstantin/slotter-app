@@ -7,6 +7,7 @@ import { BaseField, FieldSize } from "./BaseField";
 
 type InputProps = {
   label?: string;
+  labelRight?: ReactNode;
   error?: FieldError;
   success?: boolean;
   disabled?: boolean;
@@ -22,6 +23,7 @@ type InputProps = {
 
 export function Input({
   label,
+  labelRight,
   error,
   success,
   hideErrorText,
@@ -38,6 +40,7 @@ export function Input({
     <BaseField
       ref={ref}
       label={label}
+      labelRight={labelRight}
       error={error}
       success={success}
       hideErrorText={hideErrorText}

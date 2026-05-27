@@ -6,6 +6,11 @@ export const Routers = {
     restoreLogin: "/(auth)/restore-login",
     verify: "/(auth)/verify",
     enterCode: "/(auth)/enter-code",
+    resetPassword: {
+      root: "/(auth)/reset-password",
+      verify: "/(auth)/reset-password/verify",
+      newPassword: "/(auth)/reset-password/new-password",
+    },
   },
   onboarding: {
     root: "/(onboarding)",

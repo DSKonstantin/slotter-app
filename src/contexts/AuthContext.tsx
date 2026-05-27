@@ -78,6 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 await persistor.purge();
               }
             });
+        } else {
+          dispatch(logoutAction());
         }
       } finally {
         setIsInitialLoading(false);

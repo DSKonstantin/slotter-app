@@ -8,6 +8,7 @@ import { useComposedFieldRef } from "@/src/hooks/useScrollToError";
 type RHFTextFieldProps = {
   name: string;
   label?: string;
+  labelRight?: ReactNode;
   hideErrorText?: boolean;
   disabled?: boolean;
   size?: FieldSize;
@@ -20,6 +21,7 @@ type RHFTextFieldProps = {
 export function RhfTextField({
   name,
   label,
+  labelRight,
   startAdornment,
   endAdornment,
   onEndAdornmentPress,
@@ -44,6 +46,7 @@ export function RhfTextField({
         onChange(maskedValue);
       }}
       label={label}
+      labelRight={labelRight}
       error={error}
       hideErrorText={hideErrorText}
       size={size}

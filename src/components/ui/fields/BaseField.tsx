@@ -7,6 +7,7 @@ export type FieldSize = "md" | "sm" | "xs";
 
 type BaseFieldProps = {
   label?: string;
+  labelRight?: ReactNode;
   hideErrorText?: boolean;
   error?: FieldError;
   success?: boolean;
@@ -29,6 +30,7 @@ type BaseFieldProps = {
 
 export function BaseField({
   label,
+  labelRight,
   error,
   success,
   disabled,
@@ -45,7 +47,12 @@ export function BaseField({
 
   return (
     <View ref={ref} collapsable={false} className="flex-grow">
-      {label && <Text className={styles.label}>{label}</Text>}
+      {(label || labelRight) && (
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className={styles.label}>{label}</Text>
+          {labelRight}
+        </View>
+      )}
 
       <View
         className={twMerge(
@@ -85,7 +92,7 @@ export function BaseField({
 }
 
 const styles = {
-  label: "mb-2 font-inter-medium text-neutral-500 text-caption",
+  label: "font-inter-medium text-neutral-500 text-caption",
 
   base: "flex-row rounded-small bg-background-surface border border-transparent",
   baseCenter: "items-center",

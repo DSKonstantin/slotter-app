@@ -18,21 +18,7 @@ import {
 } from "@/src/validation/schemas/changePassword.schema";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
-
-const EyeToggle = ({
-  visible,
-  onPress,
-}: {
-  visible: boolean;
-  onPress: () => void;
-}) => (
-  <StSvg
-    name={visible ? "View_hide_fill" : "Eye_fill"}
-    size={20}
-    color={colors.neutral[900]}
-    onPress={onPress}
-  />
-);
+import EyeToggle from "@/src/components/shared/EyeToggle";
 
 const ChangePassword = () => {
   const auth = useRequiredAuth();
