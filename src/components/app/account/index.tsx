@@ -103,6 +103,11 @@ const AccountScreen = () => {
     ],
     [
       {
+        title: "Безопасность",
+        icon: "Chield_alt_fill",
+        route: () => router.push(Routers.app.account.security.root),
+      },
+      {
         title: "Уведомления",
         icon: "Bell_fill",
         route: () => router.push(Routers.app.account.notifications),

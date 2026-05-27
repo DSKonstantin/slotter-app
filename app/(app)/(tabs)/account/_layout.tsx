@@ -9,6 +9,7 @@ export default function AccountLayout() {
       <Stack.Screen name="links" />
       <Stack.Screen name="booking" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="security" />
       <Stack.Screen name="preview" />
       <Stack.Screen name="gallery" />
       <Stack.Screen name="support" />

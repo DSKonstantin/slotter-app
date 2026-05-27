@@ -189,6 +189,12 @@ export const Routers = {
       links: "/(app)/(tabs)/account/links" as const,
       booking: "/(app)/(tabs)/account/booking" as const,
       notifications: "/(app)/(tabs)/account/notifications" as const,
+      security: {
+        root: "/(app)/(tabs)/account/security" as const,
+        changePassword:
+          "/(app)/(tabs)/account/security/change-password" as const,
+        email: "/(app)/(tabs)/account/security/email" as const,
+      },
       preview: "/(app)/(tabs)/account/preview" as const,
       gallery: "/(app)/(tabs)/account/gallery" as const,
       support: "/(app)/(tabs)/account/support" as const,

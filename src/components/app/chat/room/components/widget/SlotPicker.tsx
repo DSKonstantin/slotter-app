@@ -4,8 +4,8 @@ import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetAvailableSlotsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import RetryInline from "@/src/components/shared/retryInline";
-import { useAppSelector } from "@/src/store/redux/store";
-import { appointmentStepToMinutes } from "@/src/utils/schedule/appointmentStepToMinutes";
+import { useSlotStep } from "@/src/hooks/useSlotStep";
+import { groupSlotsByHour } from "@/src/utils/schedule/groupSlotsByHour";
 
 const SLOT_BTN_CLASS =
   "px-4 py-3 rounded-base bg-background-surface items-center active:opacity-70";
@@ -28,11 +28,7 @@ const SlotPicker = ({
   onSelectHour,
   onPick,
 }: Props) => {
-  const appointmentStep = useAppSelector((s) => s.auth.user?.appointment_step);
-  const stepMinutes = appointmentStep
-    ? appointmentStepToMinutes(appointmentStep)
-    : 60;
-  const useHourGrouping = stepMinutes < 60;
+  const { stepMinutes, useHourGrouping } = useSlotStep();
 
   const {
     data: slots,
@@ -41,16 +37,10 @@ const SlotPicker = ({
     refetch,
   } = useGetAvailableSlotsQuery({ userId, date, step: stepMinutes });
 
-  const slotsByHour = useMemo(() => {
-    const map = new Map<string, string[]>();
-    if (!slots) return map;
-    for (const slot of slots) {
-      const hour = slot.split(":")[0];
-      if (!map.has(hour)) map.set(hour, []);
-      map.get(hour)!.push(slot);
-    }
-    return map;
-  }, [slots]);
+  const slotsByHour = useMemo(
+    () => groupSlotsByHour(slots ?? []),
+    [slots],
+  );
 
   if (isLoading) {
     return (
