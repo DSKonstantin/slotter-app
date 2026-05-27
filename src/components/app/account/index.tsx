@@ -1,11 +1,6 @@
 import React, { useState } from "react";
-import {
-  Linking,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  View,
-} from "react-native";
+import { Platform, RefreshControl, ScrollView, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -56,7 +51,7 @@ const AccountScreen = () => {
         icon: "Credit-card_fill",
         rightIcon: "External",
         route: () =>
-          Linking.openURL(
+          WebBrowser.openBrowserAsync(
             `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
           ),
       },
@@ -107,6 +102,11 @@ const AccountScreen = () => {
       },
     ],
     [
+      {
+        title: "Безопасность",
+        icon: "Chield_alt_fill",
+        route: () => router.push(Routers.app.account.security.root),
+      },
       {
         title: "Уведомления",
         icon: "Bell_fill",

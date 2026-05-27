@@ -71,15 +71,7 @@ export function OtpConfirm({
         )}
       />
 
-      <ResendCodeButton
-        seconds={60}
-        onResend={onResend}
-        onCallPress={() => setCallModalVisible(true)}
-      />
-      <CallModal
-        visible={callModalVisible}
-        onClose={() => setCallModalVisible(false)}
-      />
+      <ResendCodeButton seconds={60} onResend={onResend} />
     </>
   );
 }

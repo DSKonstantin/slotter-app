@@ -3,7 +3,8 @@ import { Pressable, View } from "react-native";
 import { Button, Typography, Avatar, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import { format, isToday, isTomorrow } from "date-fns";
+import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { formatTimeFromISO } from "@/src/utils/date/formatTime";
 import { ru } from "date-fns/locale";
 import type {
   ChatMessageWidgetAppointment,
@@ -55,7 +56,9 @@ const ChatAppointmentWidget = ({
   const duration = payload.duration ?? appointment.duration;
   const priceCents = payload.price_cents ?? appointment.price_cents;
 
-  const dateObj = appointment.date ? new Date(appointment.date) : null;
+  // parseISO("2026-05-27") → local midnight, isToday/isTomorrow работают корректно.
+  // new Date("2026-05-27") парсирует как UTC midnight → неверно в западных таймзонах.
+  const dateObj = appointment.date ? parseISO(appointment.date) : null;
   let dateLabel = "";
   if (dateObj) {
     if (isToday(dateObj)) dateLabel = "Сегодня";
@@ -63,12 +66,9 @@ const ChatAppointmentWidget = ({
     else dateLabel = format(dateObj, "d MMMM", { locale: ru });
   }
 
-  const timeLabel = (() => {
-    if (!startTime) return "";
-    const d = new Date(startTime);
-    if (!isNaN(d.getTime())) return format(d, "HH:mm");
-    return startTime;
-  })();
+  // start_time из blueprint — ISO-строка с dummy-датой ("2000-01-01T14:00:00.000Z").
+  // formatTimeFromISO вытаскивает HH:MM из T-части без конвертации timezone.
+  const timeLabel = startTime ? formatTimeFromISO(startTime) : "";
 
   const isAwaitingCustomer = appointment.status === "proposed";
 

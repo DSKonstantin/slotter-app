@@ -1,6 +1,7 @@
-import React, { useCallback } from "react";
-import { View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Pressable, View } from "react-native";
 import { Typography } from "@/src/components/ui";
+import EyeToggle from "@/src/components/shared/EyeToggle";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { FormProvider, useForm } from "react-hook-form";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
@@ -16,10 +17,13 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { identifierMask } from "@/src/utils/mask/maskPhone";
 import { useAuth } from "@/src/contexts/AuthContext";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
+import { Routers } from "@/src/constants/routers";
 
 const Login = () => {
   const [loginMutation, { isLoading }] = useLoginMutation();
   const { login } = useAuth();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const methods = useForm({
     resolver: yupResolver(loginSchema),
@@ -84,8 +88,24 @@ const Login = () => {
             <RhfTextField
               name="password"
               label="Пароль"
+              labelRight={
+                <Pressable
+                  className="active:opacity-70"
+                  onPress={() => router.push(Routers.auth.resetPassword.root)}
+                >
+                  <Typography className="text-caption text-neutral-500 underline">
+                    Забыли пароль?
+                  </Typography>
+                </Pressable>
+              }
               placeholder="••••••••"
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              endAdornment={
+                <EyeToggle
+                  visible={showPassword}
+                  onPress={() => setShowPassword((v) => !v)}
+                />
+              }
             />
           </View>
         </View>

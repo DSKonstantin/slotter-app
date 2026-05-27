@@ -6,6 +6,11 @@ export const Routers = {
     restoreLogin: "/(auth)/restore-login",
     verify: "/(auth)/verify",
     enterCode: "/(auth)/enter-code",
+    resetPassword: {
+      root: "/(auth)/reset-password",
+      verify: "/(auth)/reset-password/verify",
+      newPassword: "/(auth)/reset-password/new-password",
+    },
   },
   onboarding: {
     root: "/(onboarding)",
@@ -189,6 +194,12 @@ export const Routers = {
       links: "/(app)/(tabs)/account/links" as const,
       booking: "/(app)/(tabs)/account/booking" as const,
       notifications: "/(app)/(tabs)/account/notifications" as const,
+      security: {
+        root: "/(app)/(tabs)/account/security" as const,
+        changePassword:
+          "/(app)/(tabs)/account/security/change-password" as const,
+        email: "/(app)/(tabs)/account/security/email" as const,
+      },
       preview: "/(app)/(tabs)/account/preview" as const,
       gallery: "/(app)/(tabs)/account/gallery" as const,
       support: "/(app)/(tabs)/account/support" as const,

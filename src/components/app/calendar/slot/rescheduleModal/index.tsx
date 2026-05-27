@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Pressable } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { StModal, Button, Typography, Card, StSvg } from "@/src/components/ui";
@@ -19,11 +19,10 @@ import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useAppSelector } from "@/src/store/redux/store";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import RetryInline from "@/src/components/shared/retryInline";
-import { appointmentStepToMinutes } from "@/src/utils/schedule/appointmentStepToMinutes";
-import HourPickerModal from "./HourPickerModal";
+import { useSlotStep } from "@/src/hooks/useSlotStep";
+import { groupSlotsByHour } from "@/src/utils/schedule/groupSlotsByHour";
 
 type Props = {
   visible: boolean;
@@ -39,11 +38,7 @@ const RescheduleModal = ({
   onClose,
 }: Props) => {
   const auth = useRequiredAuth();
-  const appointmentStep = useAppSelector((s) => s.auth.user?.appointment_step);
-  const stepMinutes = appointmentStep
-    ? appointmentStepToMinutes(appointmentStep)
-    : 60;
-  const useHourGrouping = stepMinutes < 60;
+  const { stepMinutes, useHourGrouping } = useSlotStep();
 
   const [hourPickerOpen, setHourPickerOpen] = useState<string | null>(null);
 
@@ -84,16 +79,10 @@ const RescheduleModal = ({
     },
   );
 
-  const slotsByHour = useMemo(() => {
-    const map = new Map<string, string[]>();
-    if (!availableSlots) return map;
-    for (const slot of availableSlots) {
-      const hour = slot.split(":")[0];
-      if (!map.has(hour)) map.set(hour, []);
-      map.get(hour)!.push(slot);
-    }
-    return map;
-  }, [availableSlots]);
+  const slotsByHour = useMemo(
+    () => groupSlotsByHour(availableSlots ?? []),
+    [availableSlots],
+  );
 
   const hourPickerSlots = hourPickerOpen
     ? (slotsByHour.get(hourPickerOpen) ?? [])
@@ -130,48 +119,70 @@ const RescheduleModal = ({
   };
 
   return (
-    <>
-      <StModal
-        visible={visible}
-        onClose={handleClose}
-        keyboardAware
-        keyboardAwareBottomOffset={BOTTOM_OFFSET}
-      >
-        <FormProvider {...methods}>
-          <Typography
-            weight="semibold"
-            className="text-display text-center mb-5"
-          >
-            Перенести запись с {formatDayMonth(defaultDate)}
-          </Typography>
+    <StModal
+      visible={visible}
+      onClose={handleClose}
+      keyboardAware
+      keyboardAwareBottomOffset={BOTTOM_OFFSET}
+    >
+      <FormProvider {...methods}>
+        <Typography weight="semibold" className="text-display text-center mb-5">
+          Перенести запись с {formatDayMonth(defaultDate)}
+        </Typography>
 
-          <View>
-            <RhfCalendarDatePicker
-              name="date"
-              label="Новая дата"
-              placeholder="дд.мм"
-              hideErrorText={true}
-              displayFormat={(iso) => formatDayMonthLong(parseISO(iso))}
-              endAdornment={
-                <StSvg
-                  name="Date_today"
-                  size={24}
-                  color={colors.neutral[500]}
-                />
-              }
-            />
+        <View>
+          <RhfCalendarDatePicker
+            name="date"
+            label="Новая дата"
+            placeholder="дд.мм"
+            hideErrorText={true}
+            displayFormat={(iso) => formatDayMonthLong(parseISO(iso))}
+            endAdornment={
+              <StSvg name="Date_today" size={24} color={colors.neutral[500]} />
+            }
+          />
 
-            {isFetchingSlots && (
-              <View className="items-center mt-5">
-                <ActivityIndicator color={colors.neutral[400]} />
-              </View>
-            )}
+          {isFetchingSlots && (
+            <View className="items-center mt-5">
+              <ActivityIndicator color={colors.neutral[400]} />
+            </View>
+          )}
 
-            {!isFetchingSlots &&
-              availableSlots &&
-              availableSlots.length > 0 && (
-                <View className="mt-5 gap-5">
-                  <View className="gap-2">
+          {!isFetchingSlots && availableSlots && availableSlots.length > 0 && (
+            <View className="mt-5 gap-5">
+              <View className="gap-2">
+                {useHourGrouping && hourPickerOpen ? (
+                  <>
+                    <Pressable
+                      className="flex-row items-center gap-1 active:opacity-70 self-start"
+                      onPress={() => setHourPickerOpen(null)}
+                    >
+                      <StSvg
+                        name="Expand_left"
+                        size={18}
+                        color={colors.neutral[500]}
+                      />
+                      <Typography className="text-caption text-neutral-500">
+                        {hourPickerOpen}:00
+                      </Typography>
+                    </Pressable>
+                    <View className="flex-row flex-wrap gap-2">
+                      {hourPickerSlots.map((slot) => {
+                        const isSelected = selectedTime === slot;
+                        return (
+                          <Button
+                            key={slot}
+                            title={slot}
+                            variant={isSelected ? "accent" : "secondary"}
+                            buttonClassName="rounded-small px-3"
+                            onPress={() => setValue("start_time", slot)}
+                          />
+                        );
+                      })}
+                    </View>
+                  </>
+                ) : (
+                  <>
                     <Typography className="text-caption text-neutral-500">
                       Новое время
                       {useHourGrouping && selectedTime ? (
@@ -210,73 +221,58 @@ const RescheduleModal = ({
                             );
                           })}
                     </View>
-                  </View>
-
-                  <RhfTextField
-                    name="reason"
-                    label="Причина переноса"
-                    placeholder="Будет отправлено клиенту"
-                    hideErrorText={true}
-                    multiline={true}
-                    numberOfLines={4}
-                  />
-
-                  <Card
-                    title="Отправить уведомление"
-                    left={
-                      <StSvg
-                        name="Bell"
-                        size={24}
-                        color={colors.neutral[600]}
-                      />
-                    }
-                    right={<RHFSwitch name="send_notification" />}
-                  />
-                </View>
-              )}
-
-            {!isFetchingSlots && isSlotsError && (
-              <View className="mt-5">
-                <RetryInline
-                  text="Не удалось загрузить слоты"
-                  onRetry={refetchSlots}
-                />
+                  </>
+                )}
               </View>
+
+              <RhfTextField
+                name="reason"
+                label="Причина переноса"
+                placeholder="Будет отправлено клиенту"
+                hideErrorText={true}
+                multiline={true}
+                numberOfLines={4}
+              />
+
+              <Card
+                title="Отправить уведомление"
+                left={
+                  <StSvg name="Bell" size={24} color={colors.neutral[600]} />
+                }
+                right={<RHFSwitch name="send_notification" />}
+              />
+            </View>
+          )}
+
+          {!isFetchingSlots && isSlotsError && (
+            <View className="mt-5">
+              <RetryInline
+                text="Не удалось загрузить слоты"
+                onRetry={refetchSlots}
+              />
+            </View>
+          )}
+
+          {!isFetchingSlots &&
+            !isSlotsError &&
+            isValidDate &&
+            availableSlots?.length === 0 && (
+              <Typography className="text-caption text-neutral-400 mt-5 text-center">
+                Нет доступных слотов на эту дату
+              </Typography>
             )}
+        </View>
 
-            {!isFetchingSlots &&
-              !isSlotsError &&
-              isValidDate &&
-              availableSlots?.length === 0 && (
-                <Typography className="text-caption text-neutral-400 mt-5 text-center">
-                  Нет доступных слотов на эту дату
-                </Typography>
-              )}
-          </View>
-
-          <View className="mt-6 gap-3">
-            <Button
-              title="Перенести"
-              onPress={handleSubmit}
-              loading={isLoading}
-            />
-            <Button title="Отмена" variant="secondary" onPress={handleClose} />
-          </View>
-        </FormProvider>
-      </StModal>
-
-      <HourPickerModal
-        visible={hourPickerOpen !== null}
-        hour={hourPickerOpen}
-        slots={hourPickerSlots}
-        selectedTime={selectedTime}
-        onSelect={(slot) => {
-          setValue("start_time", slot);
-          setHourPickerOpen(null);
-        }}
-        onClose={() => setHourPickerOpen(null)}
-      />
-    </>
+        <View className="mt-6 gap-3">
+          <Button
+            title="Перенести"
+            onPress={handleSubmit}
+            loading={isLoading}
+          />
+          <Button title="Отмена" variant="secondary" onPress={handleClose} />
+        </View>
+      </FormProvider>
+    </StModal>
   );
 };
 

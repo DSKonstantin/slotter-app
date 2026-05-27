@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
 
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -11,7 +11,6 @@ export type BannerVariant =
   | "alert"
   | "error"
   | "critical";
-
 
 const VARIANTS: Record<
   BannerVariant,
@@ -49,6 +48,7 @@ type Props = {
   title: string;
   actionLabel: string;
   onPress: () => void;
+  onDismiss?: () => void;
 };
 
 const BannerCard = ({
@@ -57,34 +57,49 @@ const BannerCard = ({
   title,
   actionLabel,
   onPress,
+  onDismiss,
 }: Props) => {
   const styles = VARIANTS[variant];
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      className={`flex-row items-center gap-3 rounded-base p-4 ${styles.container}`}
-    >
-      <StSvg name={iconName} size={32} color={styles.iconColor} />
-      <View className="flex-1 min-w-0">
-        <Typography
-          weight="semibold"
-          className="text-body text-neutral-900"
-          numberOfLines={2}
-        >
-          {title}
-        </Typography>
-      </View>
-      <Button
-        size="sm"
-        variant="secondary"
-        buttonClassName="rounded-xl h-[34px]"
-        title={actionLabel}
+    <View className="relative">
+      <TouchableOpacity
+        activeOpacity={0.7}
         onPress={onPress}
-        textClassName="text-caption"
-      />
-    </TouchableOpacity>
+        className={`flex-row items-center gap-3 rounded-base p-4 ${styles.container}`}
+      >
+        <StSvg name={iconName} size={32} color={styles.iconColor} />
+        <View className="flex-1 min-w-0">
+          <Typography
+            weight="semibold"
+            className="text-body text-neutral-900"
+            numberOfLines={2}
+          >
+            {title}
+          </Typography>
+        </View>
+        <Button
+          size="sm"
+          variant="secondary"
+          buttonClassName="rounded-xl h-[34px]"
+          title={actionLabel}
+          onPress={onPress}
+          textClassName="text-caption"
+        />
+      </TouchableOpacity>
+      {onDismiss && (
+        <Pressable
+          hitSlop={8}
+          onPress={onDismiss}
+          className="active:opacity-70"
+          style={{ position: "absolute", top: -8, right: -8, zIndex: 10 }}
+        >
+          <View className="bg-neutral-100 rounded-full p-1">
+            <StSvg name="Close_round" size={20} color={colors.neutral[400]} />
+          </View>
+        </Pressable>
+      )}
+    </View>
   );
 };
 

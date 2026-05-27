@@ -59,6 +59,7 @@ export const ScheduleSettingsModal = ({
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const hasBeenPresentedRef = useRef(false);
   const pendingScrollToErrorRef = useRef<(() => void) | null>(null);
+  const currentSnapIndexRef = useRef(-1);
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
   const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
@@ -169,6 +170,7 @@ export const ScheduleSettingsModal = ({
       backdropComponent={renderNullBackdrop}
       onDismiss={onClose}
       onChange={(index) => {
+        currentSnapIndexRef.current = index;
         if (
           index === snapPoints.length - 1 &&
           pendingScrollToErrorRef.current
@@ -182,8 +184,12 @@ export const ScheduleSettingsModal = ({
       <RhfFormProvider methods={methods} offset={16}>
         {({ setScrollRef, contentRef, scrollToError }) => {
           const submit = methods.handleSubmit(onSave, (errors) => {
-            pendingScrollToErrorRef.current = () => scrollToError(errors);
-            bottomSheetRef.current?.expand();
+            if (currentSnapIndexRef.current === snapPoints.length - 1) {
+              requestAnimationFrame(() => scrollToError(errors));
+            } else {
+              pendingScrollToErrorRef.current = () => scrollToError(errors);
+              bottomSheetRef.current?.expand();
+            }
           });
           return (
             <>

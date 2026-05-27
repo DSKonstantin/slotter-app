@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import usePersistentStorage from "@/src/hooks/usePersistentStorage";
 import { Animated, PanResponder, View } from "react-native";
 
 import { PaginationDots } from "@/src/components/ui";
@@ -10,10 +11,7 @@ import InsightCard, {
 import NotificationStoriesModal, {
   type StoriesData,
 } from "./NotificationStoriesModal";
-import {
-  MOCK_NOTIFICATION_STORIES,
-  INSIGHT_CATEGORY_CONFIG,
-} from "./mockStories";
+import { MOCK_NOTIFICATION_STORIES } from "./mockStories";
 
 const SWIPE_THRESHOLD = 40;
 
@@ -25,7 +23,6 @@ type Insight = {
   body: BodyPart[] | string;
   dismissable?: boolean;
   stories?: Partial<StoriesData>;
-  notificationLabel?: string;
   onPress: () => void;
 };
 
@@ -35,12 +32,12 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
   {
     id: "analytics-best-month",
     category: "analytics",
-    iconName: "Line_up",
+    iconName: "Chart_alt_fill",
     title: "Лучший месяц — выручка +37%",
     body: "Февраль стал рекордным за всё время",
     dismissable: true,
     stories: MOCK_NOTIFICATION_STORIES["analytics-best-month"],
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.analytics.label,
+
     onPress: () => onStoryPress("analytics-best-month"),
   },
   {
@@ -51,13 +48,12 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     body: [{ text: "Изучите основные разделы для работы" }],
     dismissable: true,
     stories: MOCK_NOTIFICATION_STORIES["education-payments"],
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.education.label,
     onPress: () => onStoryPress("education-payments"),
   },
   {
     id: "tip-breaks",
     category: "tip",
-    iconName: "Pin_fill",
+    iconName: "Lamp_fill",
     title: "Настройте перерывы в расписании",
     body: [
       { text: "Снизьте число отмен на " },
@@ -65,24 +61,22 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     ],
     dismissable: true,
     stories: MOCK_NOTIFICATION_STORIES["tip-breaks"],
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.tip.label,
     onPress: () => onStoryPress("tip-breaks"),
   },
   {
     id: "reminder-prices",
     category: "reminder",
-    iconName: "Bell_fill",
+    iconName: "Bell_pin_fill",
     title: "Заполните прайс",
     body: "Клиенты не видят стоимость услуг — это снижает конверсию в запись",
     dismissable: true,
     stories: MOCK_NOTIFICATION_STORIES["reminder-prices"],
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.reminder.label,
     onPress: () => onStoryPress("reminder-prices"),
   },
   {
     id: "update-payments",
     category: "update",
-    iconName: "Check_round_fill",
+    iconName: "slotter_fill",
     title: "Оплата теперь в 2× быстрее",
     body: [
       { text: "Конверсия в оплату выросла на " },
@@ -90,7 +84,6 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     ],
     dismissable: true,
     stories: {},
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.update.label,
     onPress: () => onStoryPress("update-payments"),
   },
   {
@@ -105,7 +98,6 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     ],
     dismissable: true,
     stories: {},
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.offer.label,
     onPress: () => onStoryPress("offer-payments"),
   },
   {
@@ -121,42 +113,49 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     ],
     dismissable: true,
     stories: {},
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.offer.label,
     onPress: () => onStoryPress("offer-referral"),
   },
   {
     id: "event-new",
     category: "event",
-    iconName: "Check_round_fill",
+    iconName: "Status",
     title: "У вас не прочитано 2 события",
     body: "Советуем просмотреть, прежде чем событие станет неактуальным",
     dismissable: true,
     stories: {},
-    notificationLabel: INSIGHT_CATEGORY_CONFIG.event.label,
     onPress: () => onStoryPress("event-new"),
   },
 ];
 
 const InsightsCarousel = () => {
   const [index, setIndex] = useState(0);
-  const [dismissed, setDismissed] = useState<Set<Insight["id"]>>(new Set());
+  const [dismissedIds, setDismissedIds] = usePersistentStorage<
+    (string | number)[]
+  >("insights_dismissed", []);
+  const dismissed = useMemo(() => new Set(dismissedIds), [dismissedIds]);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
   const opacity = useRef(new Animated.Value(1)).current;
 
-  const handleStoryPress = (id: string) => {
+  const handleStoryPress = useCallback((id: string) => {
     setSelectedStoryId(id);
-  };
+  }, []);
 
-  const handleCloseStories = () => {
+  const handleCloseStories = useCallback(() => {
     setSelectedStoryId(null);
-  };
+  }, []);
 
   const insights = useMemo(
     () => getMockInsights(handleStoryPress).filter((i) => !dismissed.has(i.id)),
-    [dismissed],
+    [dismissed, handleStoryPress],
   );
 
   const safeIndex = Math.min(index, Math.max(0, insights.length - 1));
+  const current = safeIndex >= 0 ? insights[safeIndex] : null;
+
+  const selectedInsight = useMemo(
+    () => insights.find((i) => i.id === selectedStoryId) ?? null,
+    [insights, selectedStoryId],
+  );
 
   const animateChange = useCallback(
     (next: number) => {
@@ -171,40 +170,42 @@ const InsightsCarousel = () => {
     [opacity],
   );
 
+  const safeIndexRef = useRef(safeIndex);
+  const insightsLengthRef = useRef(insights.length);
+  safeIndexRef.current = safeIndex;
+  insightsLengthRef.current = insights.length;
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 10,
         onPanResponderRelease: (_, gesture) => {
-          if (insights.length < 2) return;
+          if (insightsLengthRef.current < 2) return;
           if (gesture.dx > SWIPE_THRESHOLD) {
             animateChange(
-              safeIndex === 0 ? insights.length - 1 : safeIndex - 1,
+              safeIndexRef.current === 0
+                ? insightsLengthRef.current - 1
+                : safeIndexRef.current - 1,
             );
           } else if (gesture.dx < -SWIPE_THRESHOLD) {
-            animateChange((safeIndex + 1) % insights.length);
+            animateChange(
+              (safeIndexRef.current + 1) % insightsLengthRef.current,
+            );
           }
         },
       }),
-    [animateChange, insights.length, safeIndex],
+    [animateChange],
   );
 
-  if (insights.length === 0) return null;
+  const currentRef = useRef(current);
+  currentRef.current = current;
 
-  const current = insights[safeIndex];
-  const selectedInsight = insights.find((i) => i.id === selectedStoryId);
+  const handleDismiss = useCallback(() => {
+    setDismissedIds((prev) => [...prev, currentRef.current!.id]);
+    setIndex(0);
+  }, [setDismissedIds]);
 
-  const handleDismiss = current.dismissable
-    ? () => {
-        // TODO: dispatchInsightDismiss(current.id) → POST /insights/:id/dismiss
-        setDismissed((prev) => {
-          const next = new Set(prev);
-          next.add(current.id);
-          return next;
-        });
-        setIndex(0);
-      }
-    : undefined;
+  if (!current) return null;
 
   return (
     <>
@@ -216,7 +217,7 @@ const InsightsCarousel = () => {
             title={current.title}
             body={current.body}
             onPress={current.onPress}
-            onDismiss={handleDismiss}
+            onDismiss={current.dismissable ? handleDismiss : undefined}
           />
         </Animated.View>
 
@@ -236,12 +237,6 @@ const InsightsCarousel = () => {
           isVisible={selectedStoryId !== null}
           onClose={handleCloseStories}
           stories={selectedInsight.stories ?? {}}
-          notificationLabel={selectedInsight.notificationLabel}
-          notificationIcon={selectedInsight.iconName}
-          notificationColor={
-            INSIGHT_CATEGORY_CONFIG[selectedInsight.category].color
-          }
-          showIcon={INSIGHT_CATEGORY_CONFIG[selectedInsight.category].show}
         />
       )}
     </>

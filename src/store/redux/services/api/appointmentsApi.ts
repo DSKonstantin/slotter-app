@@ -60,8 +60,15 @@ const appointmentsApi = api.injectEndpoints({
       query: ({ userId, date, step = 15, appointment_id }) => ({
         url: `/users/${userId}/available_slots`,
         method: "GET",
-        params: { date, step, ...(appointment_id && { appointment_id }) },
+        params: {
+          date,
+          step,
+          ...(appointment_id && { appointment_id }),
+        },
       }),
+      transformResponse: (
+        raw: string[] | { available_slots: string[] },
+      ): string[] => (Array.isArray(raw) ? raw : (raw.available_slots ?? [])),
     }),
 
     createAppointment: builder.mutation<
