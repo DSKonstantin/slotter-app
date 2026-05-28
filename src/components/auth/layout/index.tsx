@@ -1,4 +1,4 @@
-import { ReactNode, Ref } from "react";
+import { ReactNode, Ref, RefCallback } from "react";
 import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -12,7 +12,7 @@ type AuthScreenLayoutProps = {
   contentBottomPadding?: number;
   disableHorizontalPadding?: boolean;
 
-  scrollRef?: (ref: any) => void;
+  scrollRef?: RefCallback<ScrollView>;
   contentRef?: Ref<View>;
 };
 

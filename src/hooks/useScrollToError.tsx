@@ -8,9 +8,13 @@ import {
 } from "react";
 import { View } from "react-native";
 
+type Scrollable = {
+  scrollTo: (options: { y: number; animated: boolean }) => void;
+};
+
 type Measurable = {
   measureLayout: (
-    relativeToNativeNode: any,
+    relativeToNativeNode: View,
     onSuccess: (x: number, y: number, w: number, h: number) => void,
     onFail?: () => void,
   ) => void;
@@ -47,11 +51,11 @@ const findFirstErrorPath = (err: unknown, prefix = ""): string | null => {
 };
 
 export const useScrollToError = (offset = 80) => {
-  const scrollRef = useRef<any>(null);
+  const scrollRef = useRef<Scrollable | null>(null);
   const contentRef = useRef<View>(null);
   const fieldRefs = useRef<Record<string, Measurable | null>>({});
 
-  const setScrollRef = useCallback((ref: any) => {
+  const setScrollRef = useCallback((ref: Scrollable | null) => {
     scrollRef.current = ref;
   }, []);
 

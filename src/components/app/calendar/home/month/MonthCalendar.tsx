@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { View, TouchableOpacity, Pressable } from "react-native";
 import { Calendar } from "react-native-calendars";
+import type { DateData } from "react-native-calendars";
 import { formatApiDate, formatMonthYear } from "@/src/utils/date/formatDate";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -38,7 +39,7 @@ const MonthCalendar = ({
   } = data;
 
   const handleMonthChange = useCallback(
-    (month: any) => {
+    (month: { year: number; month: number }) => {
       const date = new Date(month.year, month.month - 1, 1);
       onMonthChange(date);
     },
@@ -46,7 +47,7 @@ const MonthCalendar = ({
   );
 
   const renderHeader = useCallback(
-    (date: any) => {
+    (date: Date) => {
       return (
         <View className="flex-1 flex-row items-center justify-between pb-4">
           <View className="items-center flex-row gap-4">
@@ -102,14 +103,14 @@ const MonthCalendar = ({
   );
 
   const handleDayPress = useCallback(
-    (day: any) => {
+    (day: DateData) => {
       onSelectDate(new Date(day.dateString));
     },
     [onSelectDate],
   );
 
   const renderDay = useCallback(
-    ({ date, state }: any) => {
+    ({ date, state }: { date?: DateData; state?: string }) => {
       const isToday = state === "today";
       const isDisabled = state === "disabled";
       const isNonWorking =
@@ -122,7 +123,7 @@ const MonthCalendar = ({
 
       return (
         <TouchableOpacity
-          onPress={() => handleDayPress(date)}
+          onPress={() => date && handleDayPress(date)}
           className="relative items-center justify-center w-[44px] h-[44px]"
           disabled={!date}
         >

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
+import type { DateData } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
 import { ru } from "date-fns/locale";
 import { FormProvider } from "react-hook-form";
@@ -104,7 +105,7 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
   );
 
   const renderDay = useCallback(
-    ({ date, state }: any) => {
+    ({ date, state }: { date?: DateData; state?: string }) => {
       const isToday = state === "today";
       const dayData = date ? calendarDaysMap[date.dateString] : undefined;
 

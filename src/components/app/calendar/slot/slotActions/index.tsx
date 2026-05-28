@@ -84,7 +84,7 @@ const SlotActions: React.FC<Props> = ({
     Alert.alert("Клиент опоздал?", "", [
       { text: "Отмена", style: "cancel" },
       {
-        text: "Отметить",
+        text: "Подтвердить",
         onPress: async () => {
           try {
             await markLate(appointmentId).unwrap();

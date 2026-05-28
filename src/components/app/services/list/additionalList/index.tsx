@@ -68,7 +68,7 @@ const AdditionalList = ({
         is_active: nextValue,
       })
         .unwrap()
-        .catch((error: any) => {
+        .catch((error: unknown) => {
           toast.error(getApiErrorMessage(error, "Не удалось обновить услугу"));
         });
     },

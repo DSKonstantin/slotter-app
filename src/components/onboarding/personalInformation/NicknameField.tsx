@@ -17,7 +17,7 @@ export function NicknameField() {
     control,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useFormContext();
 
   const [
@@ -58,7 +58,7 @@ export function NicknameField() {
   );
 
   useEffect(() => {
-    if (!value || value.length < 3) {
+    if (!dirtyFields.nickname || !value || value.length < 3) {
       debouncedCheck.cancel();
       setPending(false);
       reset();
@@ -67,7 +67,7 @@ export function NicknameField() {
     setPending(true);
     debouncedCheck(value);
     return () => debouncedCheck.cancel();
-  }, [value, debouncedCheck, reset]);
+  }, [value, dirtyFields.nickname, debouncedCheck, reset]);
 
   useEffect(() => {
     if (!isFetching) setPending(false);
