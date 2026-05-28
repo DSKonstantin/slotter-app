@@ -118,7 +118,10 @@ const ClientsStatisticsSkeleton = () => {
             SERVICES_ROW_GAP +
             SERVICES_DIVIDER_HEIGHT +
             SERVICES_ROW_GAP +
-            i * (SERVICES_ROW_HEIGHT + SERVICES_ROW_GAP + SERVICES_DIVIDER_HEIGHT);
+            i *
+              (SERVICES_ROW_HEIGHT +
+                SERVICES_ROW_GAP +
+                SERVICES_DIVIDER_HEIGHT);
           const nameW = 120 + (i % 2) * 30;
           const valueW = 60 + (i % 3) * 20;
 

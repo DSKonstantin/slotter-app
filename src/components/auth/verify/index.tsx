@@ -50,10 +50,6 @@ const Verify = () => {
     [sendCode],
   );
 
-  const handleRestoreLogin = useCallback(() => {
-    router.push(Routers.auth.restoreLogin);
-  }, []);
-
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
@@ -79,7 +75,6 @@ const Verify = () => {
           </Typography>
 
           <View className="mt-9">
-
             <RhfTextField
               name="phone"
               placeholder="+ 7 999 000-00-00"

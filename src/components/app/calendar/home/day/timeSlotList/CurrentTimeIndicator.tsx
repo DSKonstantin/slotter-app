@@ -1,6 +1,5 @@
 import React, { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "@/src/styles/colors";
 
 type CurrentTimeIndicatorProps = {
   top: number;

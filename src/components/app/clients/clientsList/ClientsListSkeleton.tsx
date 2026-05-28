@@ -25,8 +25,7 @@ type Props = { bottomInset?: number };
 const ClientsListSkeleton = ({ bottomInset = 0 }: Props) => {
   const { width } = useWindowDimensions();
   const w = width - SCREEN_PADDING * 2;
-  const totalH =
-    BUTTONS_BLOCK_H + COUNT * ROW_HEIGHT + (COUNT - 1) * ROW_GAP;
+  const totalH = BUTTONS_BLOCK_H + COUNT * ROW_HEIGHT + (COUNT - 1) * ROW_GAP;
   const buttonW = (w - BUTTON_GAP_X) / 2;
 
   const avatarCx = CARD_PADDING + AVATAR / 2;

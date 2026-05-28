@@ -24,7 +24,11 @@ const ServiceCard = ({ service, date, onPress }: Props) => {
               ? { uri: service.main_photo_url }
               : require("@/assets/images/placeholders/placeholder-slotter.png")
           }
-          placeholder={service.main_photo_blurhash ? { blurhash: service.main_photo_blurhash } : undefined}
+          placeholder={
+            service.main_photo_blurhash
+              ? { blurhash: service.main_photo_blurhash }
+              : undefined
+          }
           style={{ width: "100%", height: "100%", borderRadius: 20 }}
           contentFit="cover"
         />

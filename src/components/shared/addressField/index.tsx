@@ -2,10 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { View } from "react-native";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import debounce from "lodash/debounce";
-import { Item, StSvg } from "@/src/components/ui";
 import { Autocomplete } from "@/src/components/ui/fields/Autocomplete";
-import RHFSwitch from "@/src/components/hookForm/rhf-switch";
-import { colors } from "@/src/styles/colors";
 import { useDaDataSuggestions } from "@/src/hooks/useDaDataSuggestions";
 
 export function AddressField() {

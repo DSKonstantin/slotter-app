@@ -43,7 +43,6 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
-import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "cash", label: "Наличные" },

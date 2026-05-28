@@ -75,9 +75,7 @@ const ClientsStatistics = () => {
         <>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentInset={
-              Platform.OS === "ios" ? { top: topInset } : undefined
-            }
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
             contentOffset={
               Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
             }

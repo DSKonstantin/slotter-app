@@ -233,7 +233,10 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                             onPress={() =>
                               router.push(
                                 userCustomerId !== undefined
-                                  ? Routers.app.clients.slot(userCustomerId, item.id)
+                                  ? Routers.app.clients.slot(
+                                      userCustomerId,
+                                      item.id,
+                                    )
                                   : Routers.app.calendar.slot(item.id),
                               )
                             }
@@ -286,7 +289,10 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                     onPress={() =>
                       router.push(
                         userCustomerId !== undefined
-                          ? Routers.app.clients.slot(userCustomerId, payment.appointment_id)
+                          ? Routers.app.clients.slot(
+                              userCustomerId,
+                              payment.appointment_id,
+                            )
                           : Routers.app.calendar.slot(payment.appointment_id),
                       )
                     }

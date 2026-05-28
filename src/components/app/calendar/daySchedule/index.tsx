@@ -91,7 +91,7 @@ const DayScheduleEdit = ({
     const prev = prevIsActiveRef.current;
     prevIsActiveRef.current = isActive;
 
-    if (prev === true && isActive === false) {
+    if (prev && !isActive) {
       Alert.alert(
         "Сделать день выходным?",
         "День будет отмечен как нерабочий и сохранён",
@@ -114,7 +114,11 @@ const DayScheduleEdit = ({
                     end_at: workingDay.end_at,
                     working_day_breaks_attributes: (
                       workingDay.working_day_breaks ?? []
-                    ).map((b) => ({ id: b.id, start_at: b.start_at, end_at: b.end_at })),
+                    ).map((b) => ({
+                      id: b.id,
+                      start_at: b.start_at,
+                      end_at: b.end_at,
+                    })),
                   },
                 }).unwrap();
                 router.back();

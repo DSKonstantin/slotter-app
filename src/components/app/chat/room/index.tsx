@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { router } from "expo-router";
 import { ActivityIndicator, Alert, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";

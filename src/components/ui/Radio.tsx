@@ -24,9 +24,7 @@ export function Radio({
     >
       <View
         className={`h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${
-          value
-            ? "border-primary-blue-500"
-            : "border-neutral-300"
+          value ? "border-primary-blue-500" : "border-neutral-300"
         }`}
       >
         {value && (

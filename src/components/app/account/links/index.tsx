@@ -204,104 +204,108 @@ const Links = () => {
           return (
             <>
               <KeyboardAwareScrollView
-              showsVerticalScrollIndicator={false}
-              bottomOffset={BOTTOM_OFFSET_SMALL}
-              contentInset={
-                Platform.OS === "ios" ? { top: topInset } : undefined
-              }
-              contentOffset={
-                Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
-              }
-              refreshControl={
-                <RefreshControl
-                  progressViewOffset={Platform.select({ android: topInset })}
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                />
-              }
-              contentContainerStyle={{
-                paddingTop: Platform.OS === "ios" ? 0 : topInset,
-                paddingBottom: 16,
-              }}
-            >
-              <View className="px-screen gap-2">
-                {fields.map((field, index) => (
-                  <View key={field.id} className="gap-1">
-                    <RhfTextField
-                      label={`Ссылка №${index + 1}`}
-                      name={`links.${index}.title`}
-                      placeholder="Название ссылки"
-                    />
+                showsVerticalScrollIndicator={false}
+                bottomOffset={BOTTOM_OFFSET_SMALL}
+                contentInset={
+                  Platform.OS === "ios" ? { top: topInset } : undefined
+                }
+                contentOffset={
+                  Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                }
+                refreshControl={
+                  <RefreshControl
+                    progressViewOffset={Platform.select({ android: topInset })}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+                contentContainerStyle={{
+                  paddingTop: Platform.OS === "ios" ? 0 : topInset,
+                  paddingBottom: 16,
+                }}
+              >
+                <View className="px-screen gap-2">
+                  {fields.map((field, index) => (
+                    <View key={field.id} className="gap-1">
+                      <RhfTextField
+                        label={`Ссылка №${index + 1}`}
+                        name={`links.${index}.title`}
+                        placeholder="Название ссылки"
+                      />
 
-                    <RhfTextField
-                      name={`links.${index}.url`}
-                      placeholder="https://вашассылка.com"
-                      autoCapitalize="none"
-                      keyboardType="url"
-                      startAdornment={
-                        <StSvg
-                          name="glob_fill"
-                          size={24}
-                          color={colors.neutral[900]}
-                        />
-                      }
-                      endAdornment={
-                        watchedLinks[index]?.url ? (
-                          <IconButton
-                            size="xs"
-                            disabled={isDeleting}
-                            loading={isDeleting}
-                            onPress={() => handleRemove(index)}
-                            icon={
-                              <StSvg
-                                name="close_ring_fill_light"
-                                size={24}
-                                color={colors.neutral[400]}
-                              />
-                            }
+                      <RhfTextField
+                        name={`links.${index}.url`}
+                        placeholder="https://вашассылка.com"
+                        autoCapitalize="none"
+                        keyboardType="url"
+                        startAdornment={
+                          <StSvg
+                            name="glob_fill"
+                            size={24}
+                            color={colors.neutral[900]}
                           />
-                        ) : null
-                      }
-                    />
+                        }
+                        endAdornment={
+                          watchedLinks[index]?.url ? (
+                            <IconButton
+                              size="xs"
+                              disabled={isDeleting}
+                              loading={isDeleting}
+                              onPress={() => handleRemove(index)}
+                              icon={
+                                <StSvg
+                                  name="close_ring_fill_light"
+                                  size={24}
+                                  color={colors.neutral[400]}
+                                />
+                              }
+                            />
+                          ) : null
+                        }
+                      />
 
-                    <Divider />
-                  </View>
-                ))}
+                      <Divider />
+                    </View>
+                  ))}
 
+                  <Button
+                    variant="clear"
+                    title="Добавить"
+                    onPress={() =>
+                      append({
+                        title: "",
+                        url: "",
+                      })
+                    }
+                    rightIcon={
+                      <StSvg
+                        name="Add_ring_fill"
+                        size={22}
+                        color={colors.neutral[900]}
+                      />
+                    }
+                  />
+                </View>
+              </KeyboardAwareScrollView>
+
+              <View
+                className="px-screen"
+                style={{ paddingBottom: bottomInset + 8 }}
+              >
                 <Button
-                  variant="clear"
-                  title="Добавить"
-                  onPress={() =>
-                    append({
-                      title: "",
-                      url: "",
-                    })
-                  }
+                  title="Сохранить изменения"
+                  loading={isCreating || isUpdating}
+                  disabled={isCreating || isUpdating}
+                  onPress={methods.handleSubmit(onSubmit)}
                   rightIcon={
                     <StSvg
-                      name="Add_ring_fill"
-                      size={22}
-                      color={colors.neutral[900]}
+                      name="Save_fill"
+                      size={24}
+                      color={colors.neutral[0]}
                     />
                   }
                 />
               </View>
-            </KeyboardAwareScrollView>
-
-            <View
-              className="px-screen"
-              style={{ paddingBottom: bottomInset + 8 }}
-            >
-              <Button
-                title="Сохранить изменения"
-                loading={isCreating || isUpdating}
-                disabled={isCreating || isUpdating}
-                onPress={methods.handleSubmit(onSubmit)}
-                rightIcon={
-                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-                }
-              />
-            </View>
             </>
           );
         }}

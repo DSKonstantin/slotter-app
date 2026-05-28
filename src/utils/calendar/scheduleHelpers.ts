@@ -67,10 +67,7 @@ export const cloneBreaks = (
   breaks.map((item) => ({ start: item.start, end: item.end }));
 
 export const createDraftFromDay = (
-  day?: Pick<
-    CalendarScheduleDayValues,
-    "startAt" | "endAt" | "breaks"
-  >,
+  day?: Pick<CalendarScheduleDayValues, "startAt" | "endAt" | "breaks">,
 ): CalendarScheduleDraftValues => ({
   startAt: day?.startAt ?? "",
   endAt: day?.endAt ?? "",

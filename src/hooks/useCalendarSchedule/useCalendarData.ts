@@ -3,9 +3,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import {
-  useGetWorkingDaysQuery,
-} from "@/src/store/redux/services/api/workingDaysApi";
+import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { buildFormValues } from "@/src/utils/calendar/scheduleHelpers";

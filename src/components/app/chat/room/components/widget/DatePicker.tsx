@@ -1,15 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { addDays } from "date-fns";
+import { eachDayOfInterval, endOfMonth, parseISO, startOfMonth } from "date-fns";
 import { Calendar } from "react-native-calendars";
-import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { pickerCalendarTheme } from "@/src/styles/calendarTheme";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import RetryInline from "@/src/components/shared/retryInline";
-
-const DATE_RANGE_DAYS = 60;
 
 type Props = {
   userId: number;
@@ -19,32 +16,45 @@ type Props = {
 const DatePicker = ({ userId, onPick }: Props) => {
   const today = formatApiDate(new Date());
 
-  const dateRange = useMemo(
-    () => ({
-      date_from: today,
-      date_to: formatApiDate(addDays(new Date(), DATE_RANGE_DAYS)),
-    }),
-    [today],
-  );
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const now = new Date();
+    return {
+      date_from: formatApiDate(startOfMonth(now)),
+      date_to: formatApiDate(endOfMonth(now)),
+    };
+  });
 
   const {
     data: workingDaysData,
     isLoading,
     isError,
     refetch,
-  } = useGetWorkingDaysQuery({ userId, ...dateRange });
+  } = useGetWorkingDaysQuery({ userId, ...visibleMonth });
+
+  const handleMonthChange = useCallback(
+    (month: { year: number; month: number }) => {
+      const date = new Date(month.year, month.month - 1, 1);
+      setVisibleMonth({
+        date_from: formatApiDate(startOfMonth(date)),
+        date_to: formatApiDate(endOfMonth(date)),
+      });
+    },
+    [],
+  );
 
   const markedDates = useMemo(() => {
     if (!workingDaysData) return {};
-    return Object.entries(workingDaysData).reduce<
-      Record<string, { marked: boolean; dotColor: string; disabled?: boolean }>
-    >((acc, [date, wd]) => {
-      if (wd?.is_active && date >= today) {
-        acc[date] = { marked: true, dotColor: colors.primary.blue[500] };
-      }
+    const days = eachDayOfInterval({
+      start: parseISO(visibleMonth.date_from),
+      end: parseISO(visibleMonth.date_to),
+    });
+    return days.reduce<Record<string, { disabled?: boolean }>>((acc, d) => {
+      const dateStr = formatApiDate(d);
+      const wd = workingDaysData[dateStr];
+      acc[dateStr] = wd?.is_active ? {} : { disabled: true };
       return acc;
     }, {});
-  }, [workingDaysData, today]);
+  }, [workingDaysData, visibleMonth]);
 
   if (isLoading) {
     return (
@@ -66,26 +76,16 @@ const DatePicker = ({ userId, onPick }: Props) => {
     );
   }
 
-  if (Object.keys(markedDates).length === 0) {
-    return (
-      <View className="items-center py-6">
-        <Typography className="text-neutral-400">
-          Нет доступных рабочих дней
-        </Typography>
-      </View>
-    );
-  }
-
   return (
     <Calendar
       minDate={today}
-      maxDate={dateRange.date_to}
       markedDates={markedDates}
       onDayPress={(day) => {
-        if (markedDates[day.dateString]) {
+        if (!markedDates[day.dateString]?.disabled) {
           onPick(day.dateString);
         }
       }}
+      onMonthChange={handleMonthChange}
       disableAllTouchEventsForDisabledDays
       theme={pickerCalendarTheme}
     />

@@ -9,7 +9,6 @@ import {
 
 import { Typography } from "@/src/components/ui";
 import { ResendCodeButton } from "@/src/components/auth/enterCode/ResendCodeButton";
-import { CallModal } from "@/src/components/auth/verify/CallModal";
 
 type OtpConfirmProps = {
   length?: number;
@@ -25,7 +24,6 @@ export function OtpConfirm({
   onResend,
 }: OtpConfirmProps) {
   const [value, setValue] = useState("");
-  const [callModalVisible, setCallModalVisible] = useState(false);
 
   const ref = useBlurOnFulfill({ value, cellCount: length });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({

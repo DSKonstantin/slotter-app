@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { View, Pressable, FlatList, ActivityIndicator, useWindowDimensions } from "react-native";
+import React, { memo, useState } from "react";
+import {
+  View,
+  Pressable,
+  FlatList,
+  ActivityIndicator,
+  useWindowDimensions,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { StModal, StSvg, Typography } from "@/src/components/ui";
@@ -17,7 +23,7 @@ type Props = {
   onSelect: (tag: CustomerTag | null) => void;
 };
 
-const TagRow = React.memo(
+const TagRow = memo(
   ({
     tag,
     selected,

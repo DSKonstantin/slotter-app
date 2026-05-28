@@ -54,7 +54,12 @@ const CustomerRow = React.memo(function CustomerRow({
       className="flex-row items-center gap-3 py-3 px-2 active:opacity-70"
       onPress={() => onPress(item)}
     >
-      <Avatar uri={item.avatarUrl ?? undefined} blurhash={item.avatarBlurhash} name={item.title} size="sm" />
+      <Avatar
+        uri={item.avatarUrl ?? undefined}
+        blurhash={item.avatarBlurhash}
+        name={item.title}
+        size="sm"
+      />
       <Typography className="text-body text-neutral-900">
         {item.title}
       </Typography>

@@ -2,6 +2,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { ru } from "date-fns/locale";
 
 export const formatApiDate = (date: Date) => format(date, "yyyy-MM-dd");
+export const formatSlotDate = (date: Date) => format(date, "dd-MM-yyyy");
 
 export const formatMonthYear = (date: Date) =>
   format(date, "LLLL yyyy", { locale: ru });

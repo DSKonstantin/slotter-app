@@ -11,8 +11,14 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": ["ru", "en"],
-        "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании"
+        "CFBundleLocalizations": [
+          "ru",
+          "en",
+          "ru",
+          "en"
+        ],
+        "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.slotter.application"
     },
@@ -26,7 +32,12 @@
       "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.slotter.application"
+      "package": "com.slotter.application",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -51,8 +62,14 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": ["ru", "en"],
-            "android": ["ru", "en"]
+            "ios": [
+              "ru",
+              "en"
+            ],
+            "android": [
+              "ru",
+              "en"
+            ]
           }
         }
       ],
@@ -76,6 +93,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "843bd500-a571-43f1-9a69-b1bc61a63560"
+      }
     }
   }
 }

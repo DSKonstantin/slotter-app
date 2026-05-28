@@ -1,4 +1,4 @@
-import React, {memo, useCallback} from "react";
+import React, { memo, useCallback } from "react";
 import { Alert, View } from "react-native";
 
 import { Button, StSvg } from "@/src/components/ui";
@@ -29,7 +29,8 @@ const SlotActions: React.FC<Props> = ({
   onReschedule,
   onCancel,
 }) => {
-  const canCancel = status === "pending" || status === "confirmed" || status === "proposed";
+  const canCancel =
+    status === "pending" || status === "confirmed" || status === "proposed";
   const [confirm, { isLoading: isConfirming }] =
     useConfirmAppointmentMutation();
   const [arrive, { isLoading: isArriving }] = useArriveAppointmentMutation();
