@@ -129,12 +129,14 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
 
 const InsightsCarousel = () => {
   const [index, setIndex] = useState(0);
+  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  const opacity = useRef(new Animated.Value(1)).current;
+
   const [dismissedIds, setDismissedIds] = usePersistentStorage<
     (string | number)[]
   >("insights_dismissed", []);
+
   const dismissed = useMemo(() => new Set(dismissedIds), [dismissedIds]);
-  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
-  const opacity = useRef(new Animated.Value(1)).current;
 
   const handleStoryPress = useCallback((id: string) => {
     setSelectedStoryId(id);

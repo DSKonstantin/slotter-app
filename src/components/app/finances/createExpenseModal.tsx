@@ -35,10 +35,6 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
 
   const { handleSubmit, reset } = methods;
 
-  useEffect(() => {
-    if (visible) reset(emptyValues);
-  }, [visible, reset]);
-
   const onSubmit = useCallback(
     async (values: ExpenseCreateFormValues) => {
       if (!auth) return;
@@ -60,6 +56,10 @@ const CreateExpenseModal = ({ visible, onClose }: Props) => {
     },
     [auth, createExpense, reset, onClose],
   );
+
+  useEffect(() => {
+    if (visible) reset(emptyValues);
+  }, [visible, reset]);
 
   return (
     <StModal visible={visible} onClose={onClose} keyboardAware>

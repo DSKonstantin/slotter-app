@@ -36,10 +36,6 @@ const EditExpenseModal = ({ visible, onClose, expense, onDelete }: Props) => {
 
   const { handleSubmit, reset } = methods;
 
-  useEffect(() => {
-    if (visible && expense) reset(toFormValues(expense));
-  }, [visible, expense, reset]);
-
   const onSubmit = useCallback(
     async (values: ExpenseCreateFormValues) => {
       if (!expense) return;
@@ -60,6 +56,10 @@ const EditExpenseModal = ({ visible, onClose, expense, onDelete }: Props) => {
     },
     [expense, updateExpense, onClose],
   );
+
+  useEffect(() => {
+    if (visible && expense) reset(toFormValues(expense));
+  }, [visible, expense, reset]);
 
   if (!expense) return null;
 

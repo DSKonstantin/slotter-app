@@ -47,6 +47,9 @@ type NoteFormValues = { note: string };
 type Props = { userCustomerId?: number; customerId?: number };
 
 const ClientDetail = ({ userCustomerId, customerId }: Props) => {
+  const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
+  const [contactsVisible, setContactsVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const {
@@ -80,7 +83,6 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   } = methods;
   useFormNavigationGuard(isDirty);
 
-  const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
   const handleOpenChangeCategory = useCallback(
     () => setChangeCategoryVisible(true),
     [],
@@ -90,11 +92,9 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     [],
   );
 
-  const [contactsVisible, setContactsVisible] = useState(false);
   const handleOpenContacts = useCallback(() => setContactsVisible(true), []);
   const handleCloseContacts = useCallback(() => setContactsVisible(false), []);
 
-  const [menuVisible, setMenuVisible] = useState(false);
   const handleOpenMenu = useCallback(() => setMenuVisible(true), []);
   const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
 

@@ -22,13 +22,13 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import capitalize from "lodash/capitalize";
 
 const CalendarHome = () => {
-  const router = useRouter();
-  const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
   const dispatch = useAppDispatch();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const isFilterOpen = useAppSelector(
     (state) => state.calendar.isFilterModalOpen,
   );
+  const router = useRouter();
+  const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
 
   const title = useMemo(() => {
     if (mode !== "day" || !selectedDay) return "Календарь";

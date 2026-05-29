@@ -84,6 +84,11 @@ const PeriodModal = ({
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
 
+  const markedDates = useMemo(
+    () => buildRangeMarks(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
+  );
+
   useEffect(() => {
     if (!visible) {
       setCalendarVisible(false);
@@ -145,11 +150,6 @@ const PeriodModal = ({
     });
     onClose();
   };
-
-  const markedDates = useMemo(
-    () => buildRangeMarks(rangeStart, rangeEnd),
-    [rangeStart, rangeEnd],
-  );
 
   return (
     <StModal visible={visible} onClose={onClose}>

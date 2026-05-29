@@ -24,11 +24,12 @@ type NavItem = {
 };
 
 const AccountScreen = () => {
-  const auth = useRequiredAuth();
-  const { logout } = useAuth();
   const [supportVisible, setSupportVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const auth = useRequiredAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
+  const token = useAppSelector((state) => state.auth.token);
+  const { logout } = useAuth();
 
   const handleRefresh = async () => {
     try {
@@ -39,8 +40,6 @@ const AccountScreen = () => {
   };
 
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
-
-  const token = useAppSelector((state) => state.auth.token);
 
   if (!auth) return null;
 

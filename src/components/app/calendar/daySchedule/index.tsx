@@ -53,6 +53,15 @@ const DayScheduleEdit = ({
   bottomInset,
   refetchWorkingDay,
 }: DayScheduleEditProps) => {
+  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
+    id: b.id,
+    start: formatTimeFromISO(b.start_at),
+    end: formatTimeFromISO(b.end_at),
+  }));
+
+  const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
+  const prevIsActiveRef = useRef(workingDay.is_active);
+
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
 
   const { refetch: refetchAppointments } = useGetAppointmentsQuery({
@@ -63,14 +72,6 @@ const DayScheduleEdit = ({
   const { refreshing, onRefresh } = useRefresh(() =>
     Promise.all([refetchWorkingDay(), refetchAppointments()]),
   );
-
-  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
-    id: b.id,
-    start: formatTimeFromISO(b.start_at),
-    end: formatTimeFromISO(b.end_at),
-  }));
-
-  const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
 
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
@@ -85,7 +86,6 @@ const DayScheduleEdit = ({
 
   const { handleSubmit, control } = methods;
   const isActive = useWatch({ control, name: "isActive" });
-  const prevIsActiveRef = useRef(workingDay.is_active);
 
   useEffect(() => {
     const prev = prevIsActiveRef.current;

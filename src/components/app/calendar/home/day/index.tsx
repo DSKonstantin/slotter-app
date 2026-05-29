@@ -29,20 +29,15 @@ import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
 const DayCalendarView = () => {
-  const router = useRouter();
-  const auth = useRequiredAuth();
-  const { bottom } = useSafeAreaInsets();
   const [isRetrying, setIsRetrying] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const pendingScrollY = useRef<number | null>(null);
   const dateSelectorHeightRef = useRef(0);
-
+  const auth = useRequiredAuth();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
+  const { bottom } = useSafeAreaInsets();
+  const router = useRouter();
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
-
-  useEffect(() => {
-    pendingScrollY.current = null;
-  }, [selectedDay]);
 
   const dateRange = useMemo(
     () => ({
@@ -198,6 +193,10 @@ const DayCalendarView = () => {
     selectedDay,
     handleHighlightScroll,
   ]);
+
+  useEffect(() => {
+    pendingScrollY.current = null;
+  }, [selectedDay]);
 
   if (!auth) return null;
 

@@ -21,14 +21,15 @@ const POLL_TIMEOUT_MS = 60_000;
 
 const PaymentStatusScreen = () => {
   const auth = useRequiredAuth();
+  const [displayState, setDisplayState] = useState<DisplayState>("loading");
+  const [isPolling, setIsPolling] = useState(true);
+
   const token = useAppSelector((state) => state.auth.token);
   const dispatch = useDispatch();
   const { top, bottom } = useSafeAreaInsets();
   const { payment_id } = useLocalSearchParams<{ payment_id: string }>();
 
   const paymentId = payment_id ?? null;
-  const [displayState, setDisplayState] = useState<DisplayState>("loading");
-  const [isPolling, setIsPolling] = useState(true);
 
   const {
     data: payment,

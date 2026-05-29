@@ -61,18 +61,15 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 }) => {
   const now = new Date();
   const isToday = isCurrentDay(date);
+  const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
+
   const onHighlightScrollRef = useRef(onHighlightScroll);
-  useEffect(() => {
-    onHighlightScrollRef.current = onHighlightScroll;
-  });
 
   const dispatch = useAppDispatch();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
   const highlightSlotId = useAppSelector(
     (state) => state.calendar.highlightSlotId,
   );
-
-  const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
 
   const handleSlotPress = useCallback((id: number) => {
     router.push(Routers.app.calendar.slot(id));
@@ -176,9 +173,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     return () => clearTimeout(timer);
   }, [highlightSlotId, dispatch]);
 
-  if (segments.length === 0) return null;
+  useEffect(() => {
+    onHighlightScrollRef.current = onHighlightScroll;
+  });
 
-  console.log(JSON.stringify(segments, null, 2), "content");
+  if (segments.length === 0) return null;
 
   return (
     <View

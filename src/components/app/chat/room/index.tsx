@@ -62,7 +62,6 @@ const EMPTY_MESSAGES: ChatIMessage[] = [];
 
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
-  const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
   // ── Local UI State ─────────────────────────────────────────────────────
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -74,6 +73,7 @@ export default function ChatRoom({ roomId }: Props) {
   const [inputBarHeight, setInputBarHeight] = useState(0);
   const loadingMoreRef = useRef(false);
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
+  const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
   // ── Auth ──────────────────────────────────────────────────────────────
   const { currentUser, resourceType } = useAppSelector(
@@ -82,25 +82,6 @@ export default function ChatRoom({ roomId }: Props) {
   );
   const currentGiftedId =
     resourceType && currentUser ? `${resourceType}_${currentUser.id}` : null;
-
-  const userName = useMemo(
-    () =>
-      currentUser
-        ? [currentUser.first_name, currentUser.last_name]
-            .filter(Boolean)
-            .join(" ") || String(currentUser.id)
-        : "",
-    [currentUser],
-  );
-
-  const makeUser = useCallback(
-    () => ({
-      _id: currentGiftedId ?? currentUser?.id ?? 0,
-      name: userName,
-      avatar: currentUser?.avatar_url ?? undefined,
-    }),
-    [currentGiftedId, currentUser, userName],
-  );
 
   // ── Queries ───────────────────────────────────────────────────────────
   const { data: roomData } = useGetChatRoomQuery(
@@ -131,29 +112,24 @@ export default function ChatRoom({ roomId }: Props) {
   const [cancelAppointment] = useCancelAppointmentMutation();
   const [customerAcceptAppointment] = useCustomerAcceptAppointmentMutation();
 
-  // ── Mark room read on open ────────────────────────────────────────────
-  useEffect(() => {
-    if (!id) return;
-    lastMarkedIncomingIdRef.current = null;
-    markRoomRead({ chatRoomId: id });
-  }, [id, markRoomRead]);
+  const userName = useMemo(
+    () =>
+      currentUser
+        ? [currentUser.first_name, currentUser.last_name]
+            .filter(Boolean)
+            .join(" ") || String(currentUser.id)
+        : "",
+    [currentUser],
+  );
 
-  // ── Mark incoming messages read ───────────────────────────────────────
-  useEffect(() => {
-    if (!id || !currentGiftedId || messages.length === 0) return;
-
-    const latestIncoming = messages.find((m) => m.user._id !== currentGiftedId);
-    if (!latestIncoming) return;
-    if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
-
-    // First time we see incoming messages — initial mark is already handled by
-    // the on-open effect above. Just remember the latest id and bail.
-    const wasUninitialized = lastMarkedIncomingIdRef.current === null;
-    lastMarkedIncomingIdRef.current = latestIncoming._id;
-    if (wasUninitialized) return;
-
-    markRoomRead({ chatRoomId: id });
-  }, [currentGiftedId, id, markRoomRead, messages]);
+  const makeUser = useCallback(
+    () => ({
+      _id: currentGiftedId ?? currentUser?.id ?? 0,
+      name: userName,
+      avatar: currentUser?.avatar_url ?? undefined,
+    }),
+    [currentGiftedId, currentUser, userName],
+  );
 
   // ── Pagination ────────────────────────────────────────────────────────
   const handleLoadEarlier = useCallback(() => {
@@ -561,6 +537,30 @@ export default function ChatRoom({ roomId }: Props) {
       ) : undefined,
     [interlocutor],
   );
+
+  // ── Mark room read on open ────────────────────────────────────────────
+  useEffect(() => {
+    if (!id) return;
+    lastMarkedIncomingIdRef.current = null;
+    markRoomRead({ chatRoomId: id });
+  }, [id, markRoomRead]);
+
+  // ── Mark incoming messages read ───────────────────────────────────────
+  useEffect(() => {
+    if (!id || !currentGiftedId || messages.length === 0) return;
+
+    const latestIncoming = messages.find((m) => m.user._id !== currentGiftedId);
+    if (!latestIncoming) return;
+    if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
+
+    // First time we see incoming messages — initial mark is already handled by
+    // the on-open effect above. Just remember the latest id and bail.
+    const wasUninitialized = lastMarkedIncomingIdRef.current === null;
+    lastMarkedIncomingIdRef.current = latestIncoming._id;
+    if (wasUninitialized) return;
+
+    markRoomRead({ chatRoomId: id });
+  }, [currentGiftedId, id, markRoomRead, messages]);
 
   return (
     <>

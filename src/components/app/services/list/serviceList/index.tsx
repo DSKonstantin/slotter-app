@@ -68,31 +68,18 @@ const ServiceList = ({
   onLoadMore,
 }: ServiceListProps) => {
   const auth = useRequiredAuth();
-  const isEditMode = useAppSelector((s) => s.services.isEditMode);
-
   const [reorderKey, setReorderKey] = useState(0);
   const [collapsedIds, setCollapsedIds] = useState<Set<number>>(
     () => new Set(),
   );
   const autoCollapsedCategoryRef = useRef<number | null>(null);
 
+  const isEditMode = useAppSelector((s) => s.services.isEditMode);
+
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const [reorderServices] = useReorderServicesMutation();
   const [updateService] = useUpdateServiceMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
-
-  const handleToggleExpanded = useCallback((categoryId: number) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setCollapsedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-      return next;
-    });
-  }, []);
 
   const flatItems = useMemo<FlatItem[]>(() => {
     const items: FlatItem[] = [];
@@ -111,6 +98,19 @@ const ServiceList = ({
     }
     return items;
   }, [categories, collapsedIds]);
+
+  const handleToggleExpanded = useCallback((categoryId: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  }, []);
 
   const handleDragEnd = useCallback(
     async ({

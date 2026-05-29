@@ -91,34 +91,13 @@ const LIST_MAX_HEIGHT = 400;
 const LIST_MIN_HEIGHT = 200;
 
 export function NewChatSheet({ visible, onClose }: Props) {
-  const { height } = useWindowDimensions();
-  const { top, bottom } = useSafeAreaInsets();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const auth = useRequiredAuth();
-  const userId = auth?.userId;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [creatingId, setCreatingId] = useState<number | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const show = KeyboardEvents.addListener("keyboardWillShow", (e) =>
-      setKeyboardHeight(e.height),
-    );
-    const hide = KeyboardEvents.addListener("keyboardWillHide", () =>
-      setKeyboardHeight(0),
-    );
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
-
-  const available = height - top - bottom - keyboardHeight;
-  const listHeight = Math.max(
-    LIST_MIN_HEIGHT,
-    Math.min(available * 0.5, LIST_MAX_HEIGHT),
-  );
+  const auth = useRequiredAuth();
+  const userId = auth?.userId;
 
   const {
     data: customersData,
@@ -132,6 +111,15 @@ export function NewChatSheet({ visible, onClose }: Props) {
   );
 
   const { data: roomsData } = useGetChatRoomsInfiniteQuery({});
+
+  const { height } = useWindowDimensions();
+  const { top, bottom } = useSafeAreaInsets();
+
+  const available = height - top - bottom - keyboardHeight;
+  const listHeight = Math.max(
+    LIST_MIN_HEIGHT,
+    Math.min(available * 0.5, LIST_MAX_HEIGHT),
+  );
 
   const roomByCustomerId = useMemo(() => {
     const map = new Map<number, ChatRoom>();
@@ -206,6 +194,19 @@ export function NewChatSheet({ visible, onClose }: Props) {
     ),
     [debouncedSearch, creatingId, handleSelect],
   );
+
+  useEffect(() => {
+    const show = KeyboardEvents.addListener("keyboardWillShow", (e) =>
+      setKeyboardHeight(e.height),
+    );
+    const hide = KeyboardEvents.addListener("keyboardWillHide", () =>
+      setKeyboardHeight(0),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!visible) {

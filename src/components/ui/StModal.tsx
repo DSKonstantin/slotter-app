@@ -50,9 +50,9 @@ export const StModal = ({
   const { top, bottom, left, right } = useSafeAreaInsets();
   const swipeThreshold = height * 0.1;
 
-  const scrollViewRef = useRef<ScrollView>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [scrollOffsetMax, setScrollOffsetMax] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
   const layoutHeightRef = useRef(0);
 
   const containerStyle = useMemo(

@@ -44,13 +44,15 @@ export const DatePicker = ({
   ref,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
+  const [tempValue, setTempValue] = useState<Date>(() => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+    return defaultDisplayValue ?? new Date();
+  });
 
   const safeValue = useMemo(() => {
     if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
     return defaultDisplayValue ?? new Date();
   }, [value, defaultDisplayValue]);
-
-  const [tempValue, setTempValue] = useState<Date>(safeValue);
 
   const openPicker = () => {
     if (disabled) return;

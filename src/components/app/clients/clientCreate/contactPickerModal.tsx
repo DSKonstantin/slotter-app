@@ -62,18 +62,26 @@ const LIST_MAX_HEIGHT = 400;
 const LIST_MIN_HEIGHT = 200;
 
 const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
-  const { height } = useWindowDimensions();
-  const { top, bottom } = useSafeAreaInsets();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [contacts, setContacts] = useState<ContactItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const { height } = useWindowDimensions();
+  const { top, bottom } = useSafeAreaInsets();
 
   const available = height - top - bottom - keyboardHeight;
   const listHeight = Math.max(
     LIST_MIN_HEIGHT,
     Math.min(available * 0.5, LIST_MAX_HEIGHT),
   );
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return contacts;
+    const q = search.toLowerCase();
+    return contacts.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q),
+    );
+  }, [contacts, search]);
 
   const loadContacts = useCallback(async () => {
     setLoading(true);
@@ -101,14 +109,6 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
       setLoading(false);
     }
   }, []);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return contacts;
-    const q = search.toLowerCase();
-    return contacts.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.phone.includes(q),
-    );
-  }, [contacts, search]);
 
   const handleSelect = useCallback(
     (item: ContactItem) => {

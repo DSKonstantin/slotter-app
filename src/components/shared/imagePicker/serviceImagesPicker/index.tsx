@@ -85,6 +85,26 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
   const [menu, setMenu] = useState<MenuState>({ open: false });
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
 
+  const additionalRows = useMemo(() => {
+    const rows: number[][] = [];
+
+    for (let i = 0; i < MAX_ADDITIONAL_PHOTOS; i += ADDITIONAL_PHOTO_ROW_SIZE) {
+      rows.push(
+        Array.from(
+          {
+            length: Math.min(
+              ADDITIONAL_PHOTO_ROW_SIZE,
+              MAX_ADDITIONAL_PHOTOS - i,
+            ),
+          },
+          (_, offset) => i + offset,
+        ),
+      );
+    }
+
+    return rows;
+  }, []);
+
   const closeMenu = useCallback(() => setMenu({ open: false }), []);
 
   const update = useCallback(
@@ -282,26 +302,6 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
     },
     [openPickerMenu, replaceAdditionalPhoto],
   );
-
-  const additionalRows = useMemo(() => {
-    const rows: number[][] = [];
-
-    for (let i = 0; i < MAX_ADDITIONAL_PHOTOS; i += ADDITIONAL_PHOTO_ROW_SIZE) {
-      rows.push(
-        Array.from(
-          {
-            length: Math.min(
-              ADDITIONAL_PHOTO_ROW_SIZE,
-              MAX_ADDITIONAL_PHOTOS - i,
-            ),
-          },
-          (_, offset) => i + offset,
-        ),
-      );
-    }
-
-    return rows;
-  }, []);
 
   const renderAdditionalSlot = useCallback(
     (index: number) => {

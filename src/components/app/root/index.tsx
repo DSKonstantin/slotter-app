@@ -21,10 +21,7 @@ import InsightsCarousel from "@/src/components/app/root/insightsCarousel";
 import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const Home = () => {
-  const { bottom } = useSafeAreaInsets();
   const auth = useRequiredAuth();
-
-  const { refetch: refetchSchedule } = useTodaySchedule();
 
   const { refetch: refetchAppointments } = useGetUpcomingAppointmentsQuery(
     auth ? { userId: auth.userId } : skipToken,
@@ -37,15 +34,9 @@ const Home = () => {
 
   const [triggerGetMe] = useLazyGetMeQuery();
 
-  useFocusEffect(
-    useCallback(() => {
-      if (auth) {
-        refetchSchedule();
-        refetchAppointments();
-        refetchNotifications();
-      }
-    }, [auth, refetchSchedule, refetchAppointments, refetchNotifications]),
-  );
+  const { refetch: refetchSchedule } = useTodaySchedule();
+
+  const { bottom } = useSafeAreaInsets();
 
   const refetchAll = useCallback(
     () =>
@@ -59,6 +50,16 @@ const Home = () => {
   );
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (auth) {
+        refetchSchedule();
+        refetchAppointments();
+        refetchNotifications();
+      }
+    }, [auth, refetchSchedule, refetchAppointments, refetchNotifications]),
+  );
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>

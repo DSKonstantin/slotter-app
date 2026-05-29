@@ -57,12 +57,6 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
     applyTemplateDays,
   } = useCalendarSchedule(current);
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => clearSelection();
-    }, [clearSelection]),
-  );
-
   const { refreshing, onRefresh } = useRefresh(refetch);
 
   const calendarDaysMap = useMemo(
@@ -159,6 +153,12 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
       );
     },
     [calendarDaysMap, appointmentDates, toggleDay, methods.formState.isDirty],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => clearSelection();
+    }, [clearSelection]),
   );
 
   return (

@@ -43,11 +43,12 @@ type FormValues = {
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
   const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const methods = useForm<FormValues>({
     resolver: yupResolver(AccountPersonalInformationSchema),

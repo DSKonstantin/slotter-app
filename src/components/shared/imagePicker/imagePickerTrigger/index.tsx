@@ -26,8 +26,8 @@ const ImagePickerTrigger = ({
   disabled,
   onPick,
 }: Props) => {
-  const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
   const [visible, setVisible] = useState(false);
+  const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
 
   const open = useCallback(() => {
     if (!disabled) setVisible(true);

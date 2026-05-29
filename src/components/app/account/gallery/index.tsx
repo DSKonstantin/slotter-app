@@ -155,18 +155,19 @@ const Gallery = () => {
   const [deleteGalleryPhoto] = useDeleteGalleryPhotoMutation();
   const [reorderGalleryPhotos] = useReorderGalleryPhotosMutation();
 
-  const photos = useMemo(
-    () =>
-      (galleryResponse?.gallery_photos ?? EMPTY_GALLERY_PHOTOS).map(toUiPhoto),
-    [galleryResponse?.gallery_photos],
-  );
-
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
     null,
   );
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
+
+  const photos = useMemo(
+    () =>
+      (galleryResponse?.gallery_photos ?? EMPTY_GALLERY_PHOTOS).map(toUiPhoto),
+    [galleryResponse?.gallery_photos],
+  );
+
   const isEditMode = selectedIds !== null;
   const viewerIndex =
     viewerPhotoId !== null

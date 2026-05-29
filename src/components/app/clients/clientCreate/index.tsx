@@ -48,8 +48,6 @@ type ClientCreateProps = {
 };
 
 const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
-  const auth = useRequiredAuth();
-  const dispatch = useAppDispatch();
   const [pickerVisible, setPickerVisible] = useState(false);
   const [createTagVisible, setCreateTagVisible] = useState(false);
 
@@ -58,14 +56,15 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     null,
   );
 
+  const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
+
   const { data: tagsData } = useGetCustomerTagsQuery(
     auth ? { userId: auth.userId } : skipToken,
   );
 
-  const tags = useMemo(
-    () => tagsData?.customer_tags ?? [],
-    [tagsData?.customer_tags],
-  );
+  const [createUserCustomer, { isLoading }] = useCreateUserCustomerMutation();
+
   const { isGranted, requestOrOpenSettings } = useContactsPermission();
 
   const methods = useForm({
@@ -82,28 +81,10 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   useFormNavigationGuard(isDirty);
   const selectedTag = useWatch({ control, name: "customer_tag" }) ?? null;
 
-  useEffect(() => {
-    if (!selectedTag?.id || tags.length === 0) return;
-    const selectedIndex = tags.findIndex((tag) => tag.id === selectedTag.id);
-    if (selectedIndex < 0) return;
-    const timeoutId = setTimeout(() => {
-      tagsListRef.current?.scrollToIndex({
-        index: selectedIndex,
-        animated: true,
-        viewPosition: 0.5,
-      });
-    }, 0);
-    return () => clearTimeout(timeoutId);
-  }, [tags, selectedTag?.id]);
-
-  useEffect(() => {
-    const ref = scrollFallbackTimeoutRef;
-    return () => {
-      if (ref.current) clearTimeout(ref.current);
-    };
-  }, []);
-
-  const [createUserCustomer, { isLoading }] = useCreateUserCustomerMutation();
+  const tags = useMemo(
+    () => tagsData?.customer_tags ?? [],
+    [tagsData?.customer_tags],
+  );
 
   const onSubmit = useCallback(
     async (values: ClientCreateFormValues) => {
@@ -157,6 +138,27 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     },
     [setValue],
   );
+
+  useEffect(() => {
+    if (!selectedTag?.id || tags.length === 0) return;
+    const selectedIndex = tags.findIndex((tag) => tag.id === selectedTag.id);
+    if (selectedIndex < 0) return;
+    const timeoutId = setTimeout(() => {
+      tagsListRef.current?.scrollToIndex({
+        index: selectedIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [tags, selectedTag?.id]);
+
+  useEffect(() => {
+    const ref = scrollFallbackTimeoutRef;
+    return () => {
+      if (ref.current) clearTimeout(ref.current);
+    };
+  }, []);
 
   if (!auth) return null;
 

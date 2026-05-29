@@ -37,9 +37,11 @@ type Props = {
 };
 
 const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
-  const { top } = useSafeAreaInsets();
   const [storyIndex, setStoryIndex] = useState(0);
   const opacity = useRef(new Animated.Value(0)).current;
+  const storyIndexRef = useRef(storyIndex);
+  const allStoriesLengthRef = useRef(0);
+  const { top } = useSafeAreaInsets();
 
   const allStories = useMemo(
     () =>
@@ -49,8 +51,6 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
     [stories],
   );
 
-  const storyIndexRef = useRef(storyIndex);
-  const allStoriesLengthRef = useRef(allStories.length);
   storyIndexRef.current = storyIndex;
   allStoriesLengthRef.current = allStories.length;
 

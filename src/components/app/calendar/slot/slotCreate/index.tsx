@@ -52,6 +52,8 @@ const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
 
 const SlotCreate: React.FC = () => {
   const auth = useRequiredAuth();
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
+
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.slotDraft);
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
@@ -92,7 +94,6 @@ const SlotCreate: React.FC = () => {
   } = methods;
   const watchedServices = watch("services");
   const paymentMethod = watch("paymentMethod");
-  const [comingSoonVisible, setComingSoonVisible] = useState(false);
 
   const { fields, remove } = useFieldArray({
     control: methods.control,

@@ -58,9 +58,9 @@ const formatPeriodLabel = (period: string) => {
 };
 
 const FinancesIncomeScreen = () => {
-  const auth = useRequiredAuth();
   const [groupBy, setGroupBy] = useState(INCOME_GROUP_OPTIONS[0].value);
   const [selectedPeriod, setSelectedPeriod] = useState(PERIODS[0]);
+  const auth = useRequiredAuth();
 
   const {
     data,
@@ -79,13 +79,13 @@ const FinancesIncomeScreen = () => {
       : skipToken,
   );
 
+  const { refreshing, onRefresh } = useRefresh(refetch);
+
   useFocusEffect(
     useCallback(() => {
       refetch();
     }, [refetch]),
   );
-
-  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const apiByMonth = Object.fromEntries(
     (data?.chart ?? []).map((p) => [p.month, p.amount_cents]),

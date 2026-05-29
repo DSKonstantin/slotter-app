@@ -69,6 +69,11 @@ const NotificationBanners = () => {
 
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
 
+  const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
+    "banner_subscription_ended",
+    false,
+  );
+
   const banners = useMemo(() => {
     const items = data?.notifications.filter((n) => n.read_at === null) ?? [];
     const today = formatApiDate(new Date());
@@ -99,11 +104,6 @@ const NotificationBanners = () => {
     );
     return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
   }, [membership, subscriptionEnded]);
-
-  const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
-    "banner_subscription_ended",
-    false,
-  );
 
   useEffect(() => {
     if (!subscriptionEnded && subBannerClosed) setSubBannerClosed(false);

@@ -112,6 +112,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
   const debouncedSetSearch = useRef(
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
   ).current;
+  const savedTagIdRef = useRef<number | undefined>(undefined);
 
   const {
     data: tagsData,
@@ -119,19 +120,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     isError: isTagsError,
     refetch: refetchTags,
   } = useGetCustomerTagsQuery(auth ? { userId: auth.userId } : skipToken);
-
-  const filters = useMemo(
-    () => [
-      { label: "Все", value: undefined },
-      ...(tagsData?.customer_tags ?? []).map((t) => ({
-        label: t.name,
-        value: t.id,
-      })),
-    ],
-    [tagsData?.customer_tags],
-  );
-
-  const savedTagIdRef = useRef<number | undefined>(undefined);
 
   const { searchMode } = useToolbarSearch({
     placeholder: "Имя или телефон",
@@ -146,6 +134,17 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
       dispatch(setTagId(savedTagIdRef.current));
     },
   });
+
+  const filters = useMemo(
+    () => [
+      { label: "Все", value: undefined },
+      ...(tagsData?.customer_tags ?? []).map((t) => ({
+        label: t.name,
+        value: t.id,
+      })),
+    ],
+    [tagsData?.customer_tags],
+  );
 
   const queryParams = useMemo(
     () => ({
@@ -167,6 +166,15 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     refetch,
   } = useGetUserCustomersPaginatedInfiniteQuery(queryParams);
 
+  const customers = useMemo(() => {
+    if (!data?.pages) return [];
+    const unique = new Map<number, UserCustomer>();
+    data.pages.forEach((page) => {
+      page.user_customers.forEach((uc) => unique.set(uc.id, uc));
+    });
+    return [...unique.values()];
+  }, [data?.pages]);
+
   const handleRefresh = useCallback(() => {
     return refetch({ refetchCachedPages: false });
   }, [refetch]);
@@ -182,15 +190,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const customers = useMemo(() => {
-    if (!data?.pages) return [];
-    const unique = new Map<number, UserCustomer>();
-    data.pages.forEach((page) => {
-      page.user_customers.forEach((uc) => unique.set(uc.id, uc));
-    });
-    return [...unique.values()];
-  }, [data?.pages]);
 
   useEffect(() => {
     if (searchMode) {

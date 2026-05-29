@@ -31,17 +31,6 @@ const DatePicker = ({ userId, onPick }: Props) => {
     refetch,
   } = useGetWorkingDaysQuery({ userId, ...visibleMonth });
 
-  const handleMonthChange = useCallback(
-    (month: { year: number; month: number }) => {
-      const date = new Date(month.year, month.month - 1, 1);
-      setVisibleMonth({
-        date_from: formatApiDate(startOfMonth(date)),
-        date_to: formatApiDate(endOfMonth(date)),
-      });
-    },
-    [],
-  );
-
   const markedDates = useMemo(() => {
     if (!workingDaysData) return {};
     const days = eachDayOfInterval({
@@ -55,6 +44,17 @@ const DatePicker = ({ userId, onPick }: Props) => {
       return acc;
     }, {});
   }, [workingDaysData, visibleMonth]);
+
+  const handleMonthChange = useCallback(
+    (month: { year: number; month: number }) => {
+      const date = new Date(month.year, month.month - 1, 1);
+      setVisibleMonth({
+        date_from: formatApiDate(startOfMonth(date)),
+        date_to: formatApiDate(endOfMonth(date)),
+      });
+    },
+    [],
+  );
 
   if (isLoading) {
     return (

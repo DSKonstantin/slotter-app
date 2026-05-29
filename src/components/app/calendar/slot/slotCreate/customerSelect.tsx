@@ -75,6 +75,12 @@ type Props = {
 
 const CustomerSelect = ({ showCreateButton = true }: Props) => {
   const auth = useRequiredAuth();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerOption | null>(null);
+
   const dispatch = useAppDispatch();
   const createdCustomer = useAppSelector((s) => s.slotDraft.createdCustomer);
   const selectedCustomerFromDraft = useAppSelector(
@@ -83,12 +89,6 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
   const { setValue } = useFormContext();
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [search, setSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<CustomerOption | null>(null);
 
   const available = height - top - bottom - keyboardHeight;
   const listHeight = Math.max(

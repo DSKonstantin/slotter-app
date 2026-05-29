@@ -43,11 +43,11 @@ const CURRENT_MONTH = now.getMonth() + 1;
 const CURRENT_YEAR = now.getFullYear();
 
 const FinancesScreen = () => {
-  const auth = useRequiredAuth();
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<SummaryExpense | null>(
     null,
   );
+  const auth = useRequiredAuth();
 
   const {
     data: summary,
@@ -61,6 +61,8 @@ const FinancesScreen = () => {
   );
 
   const [deleteExpense] = useDeleteExpenseMutation();
+
+  const { refreshing, onRefresh } = useRefresh(refetchSummary);
 
   const handleDeleteExpense = useCallback(
     (expense: SummaryExpense) => {
@@ -90,8 +92,6 @@ const FinancesScreen = () => {
       refetchSummary();
     }, [refetchSummary]),
   );
-
-  const { refreshing, onRefresh } = useRefresh(refetchSummary);
 
   const growth = summary?.growth_percent;
   const growthValue =
