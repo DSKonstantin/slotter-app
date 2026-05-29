@@ -178,6 +178,8 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   if (segments.length === 0) return null;
 
+  console.log(JSON.stringify(segments, null, 2), "content");
+
   return (
     <View
       className="flex-1 px-screen relative"
@@ -191,6 +193,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       )}
       {segments.map((segment) => {
         const { segStart, segEnd, isCompressed, content } = segment;
+
         return (
           <View
             key={segStart}

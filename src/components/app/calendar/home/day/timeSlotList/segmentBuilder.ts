@@ -14,7 +14,7 @@ import { parseTime } from "./utils";
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export type ParsedBreak = {
+type ParsedBreak = {
   start: number;
   end: number;
   breakItem: WorkingDayBreak;
@@ -24,7 +24,6 @@ export type ParsedAppointment = {
   start: number;
   end: number;
   slot: Appointment;
-  blocksTime: boolean;
   isVisible: boolean;
 };
 
@@ -61,17 +60,13 @@ export const slotOccupiesTime = (slot: Appointment) =>
   slot.status !== "declined" &&
   slot.duration > 0;
 
-const occupiesTime = ({ blocksTime, slot }: ParsedAppointment) =>
-  blocksTime && slot.duration > 0;
+const occupiesTime = ({ slot }: ParsedAppointment) => slotOccupiesTime(slot);
+
+const stackedHeight = (appts: ParsedAppointment[]) =>
+  appts.reduce((h, a) => h + getSlotMinHeight(a.slot), 0) +
+  SLOT_GAP * Math.max(0, appts.length - 1);
 
 // ── Parsing ──────────────────────────────────────────────────────────
-
-const parseBreaks = (breaks: WorkingDayBreak[]): ParsedBreak[] =>
-  breaks.map((breakItem) => ({
-    start: parseTime(breakItem.start_at),
-    end: parseTime(breakItem.end_at),
-    breakItem,
-  }));
 
 const parseAppointments = (
   appointments: Appointment[],
@@ -81,12 +76,10 @@ const parseAppointments = (
 
   return appointments.map((slot) => {
     const start = parseTime(slot.start_time);
-
     return {
       start,
       end: start + slot.duration,
       slot,
-      blocksTime: slot.status !== "cancelled" && slot.status !== "declined",
       isVisible: visibleStatusesSet.has(slot.status),
     };
   });
@@ -101,83 +94,84 @@ const collectTimePoints = (
   workingEnd: number | undefined,
   parsedBreaks: ParsedBreak[],
   blockingAppointments: ParsedAppointment[],
+  nonBlockingAppointments: ParsedAppointment[],
 ) => {
   const timePoints = new Set<number>([effectiveStart, effectiveEnd]);
 
-  if (
-    workingStart !== undefined &&
-    workingStart > effectiveStart &&
-    workingStart < effectiveEnd
-  ) {
-    timePoints.add(workingStart);
-  }
-  if (
-    workingEnd !== undefined &&
-    workingEnd > effectiveStart &&
-    workingEnd < effectiveEnd
-  ) {
-    timePoints.add(workingEnd);
-  }
+  const addIfInside = (t: number | undefined) => {
+    if (t !== undefined && t > effectiveStart && t < effectiveEnd)
+      timePoints.add(t);
+  };
+  addIfInside(workingStart);
+  addIfInside(workingEnd);
 
   const startHour = Math.ceil(effectiveStart / 60);
   const endHour = Math.floor(effectiveEnd / 60);
 
   for (let hour = startHour; hour <= endHour; hour++) {
-    const hourMinute = hour * 60;
-    const insideBreak = parsedBreaks.some(
-      (breakItem) => breakItem.start < hourMinute && breakItem.end > hourMinute,
-    );
-    const insideAppointment = blockingAppointments.some(
-      ({ start, end, slot }) =>
-        slot.duration > 0 && start < hourMinute && end > hourMinute,
-    );
-    const insideOutsideWorking =
+    const t = hour * 60;
+    if (parsedBreaks.some((b) => b.start < t && b.end > t)) continue;
+    if (
+      blockingAppointments.some(
+        ({ start, end, slot }) => slot.duration > 0 && start < t && end > t,
+      )
+    )
+      continue;
+    if (
       workingStart !== undefined &&
       workingEnd !== undefined &&
-      (hourMinute < workingStart || hourMinute > workingEnd);
-
-    if (!insideBreak && !insideAppointment && !insideOutsideWorking) {
-      timePoints.add(hourMinute);
-    }
+      (t < workingStart || t > workingEnd)
+    )
+      continue;
+    timePoints.add(t);
   }
 
-  parsedBreaks.forEach((breakItem) => {
-    timePoints.add(breakItem.start);
-    timePoints.add(breakItem.end);
+  parsedBreaks.forEach(({ start, end }) => {
+    timePoints.add(start);
+    timePoints.add(end);
   });
 
-  blockingAppointments.forEach((appointment) => {
-    const isInsideLongerAppointment =
-      appointment.slot.duration === 0 &&
-      blockingAppointments.some(
-        (other) =>
-          other.slot.duration > 0 &&
-          other.start < appointment.start &&
-          other.end > appointment.start,
-      );
+  // Zero-duration appointments nested inside a longer one don't get their own boundary.
+  const nestedZeroStarts = new Set(
+    blockingAppointments
+      .filter(
+        ({ slot, start }) =>
+          slot.duration === 0 &&
+          blockingAppointments.some(
+            (other) =>
+              other.slot.duration > 0 &&
+              other.start < start &&
+              other.end > start,
+          ),
+      )
+      .map(({ start }) => start),
+  );
 
-    if (
-      !isInsideLongerAppointment &&
-      appointment.start >= effectiveStart &&
-      appointment.start <= effectiveEnd
-    ) {
-      timePoints.add(appointment.start);
+  blockingAppointments.forEach(({ slot, start, end }) => {
+    const isNested = slot.duration === 0 && nestedZeroStarts.has(start);
+
+    if (!isNested && start >= effectiveStart && start <= effectiveEnd) {
+      timePoints.add(start);
+      // Zero-duration outside working hours: add start+1 so the following gap can be compressed.
+      // Inside working hours the next segment is a free slot — no split needed.
+      const outsideWork =
+        workingStart === undefined ||
+        workingEnd === undefined ||
+        start < workingStart ||
+        start >= workingEnd;
+      if (slot.duration === 0 && outsideWork && start + 1 <= effectiveEnd) {
+        timePoints.add(start + 1);
+      }
     }
 
-    if (appointment.end > effectiveStart && appointment.end <= effectiveEnd) {
-      timePoints.add(appointment.end);
+    if (end > effectiveStart && end <= effectiveEnd) {
+      timePoints.add(end);
     }
+  });
 
-    // Zero-duration appointments have end === start, so no boundary is created
-    // after them. Add start+1 so the gap following this point can be compressed.
-    if (
-      appointment.slot.duration === 0 &&
-      !isInsideLongerAppointment &&
-      appointment.start + 1 > effectiveStart &&
-      appointment.start + 1 <= effectiveEnd
-    ) {
-      timePoints.add(appointment.start + 1);
-    }
+  nonBlockingAppointments.forEach(({ start, end }) => {
+    if (start >= effectiveStart && start <= effectiveEnd) timePoints.add(start);
+    if (end > effectiveStart && end <= effectiveEnd) timePoints.add(end);
   });
 
   return Array.from(timePoints).sort((a, b) => a - b);
@@ -199,18 +193,17 @@ const buildSegments = (
       workingEnd === undefined ||
       segEnd <= workingStart ||
       segStart >= workingEnd;
-    const breakItem = parsedBreaks.find(
-      (parsedBreak) =>
-        parsedBreak.start <= segStart && parsedBreak.end >= segEnd,
+    const matchingBreak = parsedBreaks.find(
+      (b) => b.start <= segStart && b.end >= segEnd,
     );
 
-    if (breakItem) {
+    if (matchingBreak) {
       return {
         segStart,
         segEnd,
         isOutsideWorking,
         isCompressed: false,
-        content: { kind: "break", breakItem: breakItem.breakItem } as const,
+        content: { kind: "break", breakItem: matchingBreak.breakItem } as const,
       };
     }
 
@@ -220,18 +213,19 @@ const buildSegments = (
     const visibleAppointments = segmentAppointments.filter(
       ({ isVisible }) => isVisible,
     );
-    const hiddenOccupiedAppointments = segmentAppointments.filter(
-      (appointment) => !appointment.isVisible && occupiesTime(appointment),
+    const hiddenOccupied = segmentAppointments.filter(
+      (a) => !a.isVisible && occupiesTime(a),
     );
 
-    const showFreeSlotBlock =
-      !isOutsideWorking && !segmentAppointments.some(occupiesTime);
+    const isOverlappedByPrior = parsedAppointments.some(
+      (a) => occupiesTime(a) && a.start < segStart && a.end > segStart,
+    );
+    const showFreeSlotBlock = !isOutsideWorking && !isOverlappedByPrior;
     const showFilteredBlock =
-      hiddenOccupiedAppointments.length > 0 && visibleAppointments.length === 0;
+      hiddenOccupied.length > 0 && visibleAppointments.length === 0;
     const isCompressed =
       isOutsideWorking &&
       visibleAppointments.length === 0 &&
-      !showFreeSlotBlock &&
       !showFilteredBlock;
 
     return {
@@ -244,12 +238,7 @@ const buildSegments = (
         slots: visibleAppointments.map(({ slot }) => slot),
         showFreeSlotBlock,
         showFilteredBlock,
-        filteredBlockMinHeight:
-          hiddenOccupiedAppointments.reduce(
-            (total, appointment) => total + getSlotMinHeight(appointment.slot),
-            0,
-          ) +
-          SLOT_GAP * Math.max(0, hiddenOccupiedAppointments.length - 1),
+        filteredBlockMinHeight: stackedHeight(hiddenOccupied),
       } as const,
     };
   });
@@ -263,8 +252,9 @@ export const getSegmentHeight = (segment: Segment) => {
   const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
 
   if (content.kind === "break") return baseGridHeight;
+
   const slotsMinHeight =
-    content.slots.reduce((total, slot) => total + getSlotMinHeight(slot), 0) +
+    content.slots.reduce((h, slot) => h + getSlotMinHeight(slot), 0) +
     SLOT_GAP * content.slots.length;
   const freeSlotHeight = content.showFreeSlotBlock ? LONG_SLOT_MIN_HEIGHT : 0;
   const filteredBlockHeight = content.showFilteredBlock
@@ -288,10 +278,17 @@ export const createSegments = (
 ): CreateSegmentsResult => {
   const workingStart = startAt ? parseTime(startAt) : undefined;
   const workingEnd = endAt ? parseTime(endAt) : undefined;
-  const parsedBreaks = parseBreaks(breaks);
+  const parsedBreaks = breaks.map((b) => ({
+    start: parseTime(b.start_at),
+    end: parseTime(b.end_at),
+    breakItem: b,
+  }));
   const parsedAppointments = parseAppointments(appointments, visibleStatuses);
   const blockingAppointments = parsedAppointments.filter(
-    ({ blocksTime }) => blocksTime,
+    ({ slot }) => slot.status !== "cancelled" && slot.status !== "declined",
+  );
+  const nonBlockingAppointments = parsedAppointments.filter(
+    ({ slot }) => slot.status === "cancelled" || slot.status === "declined",
   );
 
   const apptStarts = parsedAppointments.map((a) => a.start);
@@ -313,10 +310,14 @@ export const createSegments = (
   effectiveStart = Math.max(0, effectiveStart);
   effectiveEnd = Math.min(24 * 60, effectiveEnd);
 
-  const hasBoundaryZeroDuration = parsedAppointments.some(
-    (a) => a.slot.duration === 0 && a.start === effectiveEnd,
-  );
-  if (hasBoundaryZeroDuration && effectiveEnd < 24 * 60) {
+  // Extend by 1 if a zero-duration appointment sits exactly at the boundary
+  // so collectTimePoints can create a segment for it.
+  if (
+    parsedAppointments.some(
+      (a) => a.slot.duration === 0 && a.start === effectiveEnd,
+    ) &&
+    effectiveEnd < 24 * 60
+  ) {
     effectiveEnd += 1;
   }
 
@@ -331,6 +332,7 @@ export const createSegments = (
     workingEnd,
     parsedBreaks,
     blockingAppointments,
+    nonBlockingAppointments,
   );
 
   const segments = buildSegments(

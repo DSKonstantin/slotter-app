@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconButton, SegmentedControl, StSvg } from "@/src/components/ui";
-import { parseISO } from "date-fns";
+import { isValid, parseISO } from "date-fns";
 import { formatMonthYear } from "@/src/utils/date/formatDate";
 import DayCalendarView from "@/src/components/app/calendar/home/day";
 import MonthCalendarView from "@/src/components/app/calendar/home/month";
@@ -30,6 +30,12 @@ const CalendarHome = () => {
     (state) => state.calendar.isFilterModalOpen,
   );
 
+  const title = useMemo(() => {
+    if (mode !== "day" || !selectedDay) return "Календарь";
+    const d = parseISO(selectedDay);
+    return isValid(d) ? capitalize(formatMonthYear(d)) : "Календарь";
+  }, [mode, selectedDay]);
+
   const handleOpenFilters = useCallback(() => {
     dispatch(setFilterModalOpen(true));
   }, [dispatch]);
@@ -55,11 +61,7 @@ const CalendarHome = () => {
     <>
       <ScreenWithToolbar
         showBack={false}
-        title={
-          mode === "day" && selectedDay
-            ? capitalize(formatMonthYear(parseISO(selectedDay)))
-            : "Календарь"
-        }
+        title={title}
         rightButton={
           mode === "day" && (
             <IconButton

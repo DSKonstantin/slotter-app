@@ -1,5 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 import { router } from "expo-router";
 import React from "react";
@@ -28,11 +28,16 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
   const auth = useRequiredAuth();
   const [createWorkingDay, { isLoading }] = useCreateWorkingDayMutation();
 
+  const parsedDate = parseISO(date);
+  const formattedDate = isValid(parsedDate)
+    ? format(parsedDate, "d MMMM, EEEE", { locale: ru })
+    : date;
+
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
       isActive: true,
-      date: format(new Date(date), "d MMMM, EEEE", { locale: ru }),
+      date: formattedDate,
       startAt: "",
       endAt: "",
       breaks: [],

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { BackHandler, Pressable, View } from "react-native";
+import { BlurView } from "expo-blur";
 import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -58,20 +59,6 @@ const TabMenu = () => {
     dispatch(setTabMenuOpen(false));
   }, [dispatch]);
 
-  useEffect(() => {
-    if (!isMenuOpen) return;
-
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        handleClose();
-        return true;
-      },
-    );
-
-    return () => subscription.remove();
-  }, [handleClose, isMenuOpen]);
-
   const handleNavigate = useCallback(
     (route?: string, isActive?: boolean, isAtRoot?: boolean) => {
       handleClose();
@@ -86,18 +73,38 @@ const TabMenu = () => {
     [handleClose],
   );
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        handleClose();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [handleClose, isMenuOpen]);
+
   if (!isMenuOpen) return null;
 
   return (
-    <Pressable
-      className="absolute inset-0 bg-black/40 justify-end"
+    <BlurView
+      intensity={5}
+      tint="default"
+      className="absolute inset-0 justify-end"
       style={{
         paddingBottom: bottom + 4,
         paddingLeft: leftInset + SCREEN_PADDING,
         paddingRight: rightInset + SCREEN_PADDING,
       }}
-      onPress={handleClose}
     >
+      <Pressable
+        className="absolute inset-0"
+        style={{ backgroundColor: "#0000001F" }}
+        onPress={handleClose}
+      />
       <View className="flex-row items-end gap-2">
         <View className="flex-1">
           <View className="mb-2 items-end">
@@ -114,7 +121,6 @@ const TabMenu = () => {
             />
           </View>
           <Pressable
-            onPress={() => {}}
             className="bg-white rounded-[30px] py-2.5"
             style={{
               shadowColor: "#000",
@@ -170,7 +176,7 @@ const TabMenu = () => {
           onPress={handleClose}
         />
       </View>
-    </Pressable>
+    </BlurView>
   );
 };
 
