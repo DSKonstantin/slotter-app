@@ -4,13 +4,13 @@ import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
 import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
+import { useModalAction } from "@/src/hooks/useModalAction";
 
 export type PickedAssets = ImagePickerAsset[] | DocumentPickerAsset[];
 
 type Props = {
   children: React.ReactNode;
   title?: string;
-  message?: string;
   options?: ImagePickerOptions;
   includeFiles?: boolean;
   disabled?: boolean;
@@ -20,7 +20,6 @@ type Props = {
 const ImagePickerTrigger = ({
   children,
   title,
-  message,
   options,
   includeFiles,
   disabled,
@@ -29,44 +28,45 @@ const ImagePickerTrigger = ({
   const [visible, setVisible] = useState(false);
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
 
+  const close = useCallback(() => setVisible(false), []);
+  const { scheduleAction, onModalHide } = useModalAction(close);
+
   const open = useCallback(() => {
     if (!disabled) setVisible(true);
   }, [disabled]);
 
-  const close = useCallback(() => setVisible(false), []);
+  const handleCamera = useCallback(() => {
+    scheduleAction(async () => {
+      try {
+        const assets = await pickFromCamera(options);
+        if (assets?.length) onPick(assets);
+      } catch (e) {
+        console.warn("Camera pick failed", e);
+      }
+    });
+  }, [scheduleAction, pickFromCamera, options, onPick]);
 
-  const handleCamera = useCallback(async () => {
-    try {
-      const assets = await pickFromCamera(options);
-      if (assets?.length) onPick(assets);
-    } catch (e) {
-      console.warn("Camera pick failed", e);
-    } finally {
-      close();
-    }
-  }, [pickFromCamera, options, onPick, close]);
+  const handleGallery = useCallback(() => {
+    scheduleAction(async () => {
+      try {
+        const assets = await pickFromGallery(options);
+        if (assets?.length) onPick(assets);
+      } catch (e) {
+        console.warn("Gallery pick failed", e);
+      }
+    });
+  }, [scheduleAction, pickFromGallery, options, onPick]);
 
-  const handleGallery = useCallback(async () => {
-    try {
-      const assets = await pickFromGallery(options);
-      if (assets?.length) onPick(assets);
-    } catch (e) {
-      console.warn("Gallery pick failed", e);
-    } finally {
-      close();
-    }
-  }, [pickFromGallery, options, onPick, close]);
-
-  const handleFiles = useCallback(async () => {
-    try {
-      const assets = await pickFromFiles(options);
-      if (assets?.length) onPick(assets);
-    } catch (e) {
-      console.warn("File pick failed", e);
-    } finally {
-      close();
-    }
-  }, [pickFromFiles, options, onPick, close]);
+  const handleFiles = useCallback(() => {
+    scheduleAction(async () => {
+      try {
+        const assets = await pickFromFiles(options);
+        if (assets?.length) onPick(assets);
+      } catch (e) {
+        console.warn("File pick failed", e);
+      }
+    });
+  }, [scheduleAction, pickFromFiles, options, onPick]);
 
   return (
     <>
@@ -81,12 +81,12 @@ const ImagePickerTrigger = ({
       <ImagePickerMenu
         visible={visible}
         title={title}
-        message={message}
         showFiles={includeFiles}
         onClose={close}
         onCamera={handleCamera}
         onGallery={handleGallery}
         onFiles={handleFiles}
+        onModalHide={onModalHide}
       />
     </>
   );

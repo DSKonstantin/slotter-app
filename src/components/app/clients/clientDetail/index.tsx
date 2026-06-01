@@ -35,6 +35,7 @@ import {
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useModalAction } from "@/src/hooks/useModalAction";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ChangeCategoryModal from "./changeCategoryModal";
@@ -97,6 +98,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
   const handleOpenMenu = useCallback(() => setMenuVisible(true), []);
   const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
+  const { scheduleAction: scheduleMenuAction, onModalHide: onMenuModalHide } =
+    useModalAction(handleCloseMenu);
 
   const handleSaveNote = methods.handleSubmit(async ({ note }) => {
     if (!auth || !userCustomer) return;
@@ -351,7 +354,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
       <ClientMenuModal
         visible={menuVisible}
         onClose={handleCloseMenu}
-        onChangeCategory={handleOpenChangeCategory}
+        onModalHide={onMenuModalHide}
+        onChangeCategory={() => scheduleMenuAction(handleOpenChangeCategory)}
       />
     </FormProvider>
   );

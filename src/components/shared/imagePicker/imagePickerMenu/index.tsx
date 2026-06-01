@@ -1,60 +1,105 @@
 import React from "react";
 import { View } from "react-native";
-
-import { Button, Typography, StModal } from "@/src/components/ui";
+import { Button, Card, StModal, StSvg, Typography } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 
 type ImagePickerMenuProps = {
   visible: boolean;
   title?: string;
-  message?: string;
-
   showFiles?: boolean;
-
   onClose: () => void;
   onCamera: () => void;
   onGallery: () => void;
   onFiles?: () => void;
+  onModalHide?: () => void;
 };
+
+const IconBox = ({
+  bg,
+  iconColor,
+  name,
+}: {
+  bg: string;
+  iconColor: string;
+  name: string;
+}) => (
+  <View
+    style={{ backgroundColor: bg }}
+    className="w-10 h-10 rounded-xl items-center justify-center"
+  >
+    <StSvg name={name} size={20} color={iconColor} />
+  </View>
+);
+
+const Chevron = () => (
+  <StSvg name="Expand_right_light" size={20} color={colors.neutral[400]} />
+);
 
 const ImagePickerMenu = ({
   visible,
-  title = "Загрузить фото",
-  message = "Выберите источник",
-  showFiles = true,
+  title = "Выберите источник",
+  showFiles = false,
   onClose,
   onCamera,
   onGallery,
   onFiles,
-}: ImagePickerMenuProps) => {
-  return (
-    <StModal visible={visible} onClose={onClose}>
-      <View className="gap-3">
-        <Typography weight="semibold" className="text-display text-center">
-          {title}
-        </Typography>
+  onModalHide,
+}: ImagePickerMenuProps) => (
+  <StModal visible={visible} onClose={onClose} onModalHide={onModalHide}>
+    <View className="gap-4">
+      <Typography weight="semibold" className="text-display text-center">
+        {title}
+      </Typography>
 
-        {!!message && (
-          <Typography
-            weight="regular"
-            className="text-caption text-neutral-500 text-center"
-          >
-            {message}
-          </Typography>
+      <View className="gap-2">
+        <Card
+          title="Сделать фото"
+          subtitle="Откроется камера для снимка"
+          left={
+            <IconBox
+              bg={colors.primary.blue[100]}
+              iconColor={colors.primary.blue[500]}
+              name="Camera"
+            />
+          }
+          right={<Chevron />}
+          onPress={onCamera}
+        />
+
+        <Card
+          title="Галерея"
+          subtitle="Выберите фото из галереи"
+          left={
+            <IconBox
+              bg={colors.primary.green[100]}
+              iconColor={colors.primary.green[400]}
+              name="Img_box_fill"
+            />
+          }
+          right={<Chevron />}
+          onPress={onGallery}
+        />
+
+        {showFiles && onFiles && (
+          <Card
+            title="Документ"
+            subtitle="Прикрепить файл с устройства"
+            left={
+              <IconBox
+                bg={colors.accent.orange[100]}
+                iconColor={colors.accent.orange[500]}
+                name="File_dock_fill"
+              />
+            }
+            right={<Chevron />}
+            onPress={onFiles}
+          />
         )}
-
-        <View className="gap-2 mt-2">
-          <Button title="📸 Камера" onPress={onCamera} />
-          <Button title="🖼 Галерея" onPress={onGallery} />
-
-          {showFiles && onFiles && (
-            <Button title="📁 Файлы" onPress={onFiles} />
-          )}
-        </View>
-
-        <Button title="Отмена" variant="clear" onPress={onClose} />
       </View>
-    </StModal>
-  );
-};
+
+      <Button title="Отмена" variant="clear" onPress={onClose} />
+    </View>
+  </StModal>
+);
 
 export default ImagePickerMenu;

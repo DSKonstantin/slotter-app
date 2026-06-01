@@ -13,6 +13,10 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
+import type { ImagePickerAsset } from "expo-image-picker";
+import type { DocumentPickerAsset } from "expo-document-picker";
+import { useModalAction } from "@/src/hooks/useModalAction";
+import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 import {
   Badge,
   Button,
@@ -136,7 +140,10 @@ const GalleryItem = memo(function GalleryItem({
 const Gallery = () => {
   const auth = useRequiredAuth();
   const { userId } = auth!;
-  const { pickFromGallery } = useImagePicker();
+  const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
+  const [menuVisible, setMenuVisible] = useState(false);
+  const closeMenu = useCallback(() => setMenuVisible(false), []);
+  const { scheduleAction, onModalHide } = useModalAction(closeMenu);
 
   const {
     data: galleryResponse,
@@ -191,17 +198,18 @@ const Gallery = () => {
     });
   }, []);
 
-  const handleAddPhoto = async () => {
+  const handleAddPhoto = () => {
     if (photos.length >= MAX_PHOTOS) {
       toast.error(`Можно добавить максимум ${MAX_PHOTOS} фото`);
       return;
     }
+    setMenuVisible(true);
+  };
 
-    const assets = await pickFromGallery({
-      allowsMultipleSelection: true,
-      quality: 1,
-    });
-    if (!assets) return;
+  const handlePickFromSource = async (
+    assets: ImagePickerAsset[] | DocumentPickerAsset[] | null,
+  ) => {
+    if (!assets?.length) return;
 
     const availableSlots = MAX_PHOTOS - photos.length;
     const selectedAssets = assets.slice(0, availableSlots);
@@ -213,11 +221,14 @@ const Gallery = () => {
     if (!selectedAssets.length) return;
 
     setPendingPhotos(
-      selectedAssets.map((asset, index) => ({
+      selectedAssets.map((asset, i) => ({
         uri: asset.uri,
         mimeType: asset.mimeType ?? "image/jpeg",
         fileName:
-          asset.fileName ?? `gallery-photo-${photos.length + index + 1}.jpg`,
+          ("fileName" in asset
+            ? (asset as ImagePickerAsset).fileName
+            : (asset as DocumentPickerAsset).name) ??
+          `gallery-photo-${photos.length + i + 1}.jpg`,
         cropData: null,
         croppedUri: null,
       })),
@@ -443,6 +454,39 @@ const Gallery = () => {
           onCropDone={handleCropDone}
         />
       )}
+
+      <ImagePickerMenu
+        visible={menuVisible}
+        title="Добавить фото"
+        showFiles
+        onClose={closeMenu}
+        onCamera={() =>
+          scheduleAction(async () =>
+            handlePickFromSource(await pickFromCamera({ quality: 1 })),
+          )
+        }
+        onGallery={() =>
+          scheduleAction(async () =>
+            handlePickFromSource(
+              await pickFromGallery({
+                allowsMultipleSelection: true,
+                quality: 1,
+              }),
+            ),
+          )
+        }
+        onFiles={() =>
+          scheduleAction(async () =>
+            handlePickFromSource(
+              await pickFromFiles({
+                allowsMultipleSelection: true,
+                quality: 1,
+              }),
+            ),
+          )
+        }
+        onModalHide={onModalHide}
+      />
 
       {pendingPhotos !== null && (
         <PhotoUploadPreview

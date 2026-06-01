@@ -40,6 +40,7 @@ export function useImagePicker() {
       allowsEditing: opts?.allowsEditing ?? true,
       aspect: opts?.aspect ?? [1, 1],
       quality: opts?.quality ?? 1,
+      cameraType: opts?.cameraType,
     });
 
     if (res.canceled) return null;

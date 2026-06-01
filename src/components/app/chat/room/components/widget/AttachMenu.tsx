@@ -21,7 +21,6 @@ const AttachMenu = ({
   <View className="gap-2">
     <ImagePickerTrigger
       title="Прикрепить файл"
-      message="Выберите источник"
       includeFiles
       options={{ allowsMultipleSelection: true, selectionLimit: 10 }}
       onPick={onAttachFile}

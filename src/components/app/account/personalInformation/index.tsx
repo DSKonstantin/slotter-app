@@ -2,8 +2,8 @@ import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CameraType, ImagePickerAsset } from "expo-image-picker";
-import { DocumentPickerAsset } from "expo-document-picker";
+import { CameraType } from "expo-image-picker";
+import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
@@ -66,9 +66,9 @@ const PersonalInformation = () => {
   const avatar = methods.watch("avatar");
 
   const handlePickAvatar = useCallback(
-    (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => {
+    (assets: PickedAssets) => {
       const asset = assets[0];
-      if (!asset || !("width" in asset)) return;
+      if (!asset) return;
       methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
@@ -121,6 +121,7 @@ const PersonalInformation = () => {
                   <ImagePickerTrigger
                     title="Фото профиля"
                     options={{ aspect: [1, 1], cameraType: CameraType.front }}
+                    includeFiles
                     onPick={handlePickAvatar}
                   >
                     <Avatar

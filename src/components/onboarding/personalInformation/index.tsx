@@ -16,7 +16,8 @@ import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { AddressField } from "@/src/components/shared/addressField";
 import { colors } from "@/src/styles/colors";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
-import { CameraType, ImagePickerAsset } from "expo-image-picker";
+import { CameraType } from "expo-image-picker";
+import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -25,7 +26,6 @@ import {
   type PersonalInformationFormValues,
 } from "@/src/validation/schemas/onboardingPersonalInformation.schema";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { DocumentPickerAsset } from "expo-document-picker";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
 import { assetToFile } from "@/src/utils/files/assetToFile";
@@ -86,15 +86,9 @@ const PersonalInformation = () => {
   );
 
   const handlePickAvatar = useCallback(
-    (assets: (ImagePickerAsset | DocumentPickerAsset)[] | null) => {
-      if (!assets?.[0]) return;
+    (assets: PickedAssets) => {
       const asset = assets[0];
-
-      if (!("width" in asset)) {
-        toast.error("Пожалуйста, выберите изображение.");
-        return;
-      }
-
+      if (!asset) return;
       methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
@@ -142,6 +136,7 @@ const PersonalInformation = () => {
             <View className="items-center my-4">
               <ImagePickerTrigger
                 title="Загрузить аватар"
+                includeFiles
                 options={{ aspect: [1, 1], cameraType: CameraType.front }}
                 onPick={handlePickAvatar}
               >

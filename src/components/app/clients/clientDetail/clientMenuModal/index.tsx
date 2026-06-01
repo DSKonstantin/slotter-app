@@ -6,17 +6,18 @@ import { colors } from "@/src/styles/colors";
 type Props = {
   visible: boolean;
   onClose: () => void;
+  onModalHide?: () => void;
   onChangeCategory: () => void;
 };
 
-const ClientMenuModal = ({ visible, onClose, onChangeCategory }: Props) => {
-  const handleChangeCategory = () => {
-    onClose();
-    onChangeCategory();
-  };
-
+const ClientMenuModal = ({
+  visible,
+  onClose,
+  onModalHide,
+  onChangeCategory,
+}: Props) => {
   return (
-    <StModal visible={visible} onClose={onClose}>
+    <StModal visible={visible} onClose={onClose} onModalHide={onModalHide}>
       <View className="gap-4">
         <Typography weight="semibold" className="text-display text-center">
           Действия
@@ -34,7 +35,7 @@ const ClientMenuModal = ({ visible, onClose, onChangeCategory }: Props) => {
             left={
               <StSvg name="Edit_fill" size={20} color={colors.neutral[900]} />
             }
-            onPress={handleChangeCategory}
+            onPress={onChangeCategory}
           />
         </View>
       </View>
