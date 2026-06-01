@@ -1,38 +1,57 @@
 import React, { useState } from "react";
-import { Platform, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Linking,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
-import { Button, Divider, Item, StSvg } from "@/src/components/ui";
+import { Button, Divider, Item, StSvg, Switch } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import { useGetCustomerQuery } from "@/src/store/redux/services/api/usersApi";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useAppSelector } from "@/src/store/redux/store";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ProfileAvatar from "@/src/components/app/account/ProfileAvatar";
-import { useAppSelector } from "@/src/store/redux/store";
 
-type NavItem = {
-  title: string;
-  subtitle?: string;
-  icon: string;
-  rightIcon?: string;
-  route: () => void;
+const formatDate = (value: string | null | undefined): string => {
+  if (!value) return "—";
+  const date = new Date(value);
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
 };
 
 const AccountScreen = () => {
-  const auth = useRequiredAuth();
   const { logout } = useAuth();
+  const user = useAppSelector((s) => s.auth.user);
   const [supportVisible, setSupportVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(user?.is_notify_push ?? true);
+  const [emailEnabled, setEmailEnabled] = useState(
+    user?.is_notify_email ?? false,
+  );
+  const [telegramEnabled, setTelegramEnabled] = useState(
+    user?.is_notify_telegram ?? true,
+  );
+
   const [triggerGetMe] = useLazyGetMeQuery();
+  const { refetch: refetchCustomer } = useGetCustomerQuery(user?.id!, { skip: !user?.id });
 
   const handleRefresh = async () => {
     try {
-      await triggerGetMe().unwrap();
+      await Promise.all([
+        triggerGetMe().unwrap(),
+        refetchCustomer(),
+      ]);
     } catch {
       toast.error("Не удалось обновить данные профиля");
     }
@@ -40,89 +59,9 @@ const AccountScreen = () => {
 
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
-  const token = useAppSelector((state) => state.auth.token);
-
-  if (!auth) return null;
-
-  const NAV_GROUPS: NavItem[][] = [
-    [
-      {
-        title: "Оплата",
-        icon: "Credit-card_fill",
-        rightIcon: "External",
-        route: () =>
-          WebBrowser.openBrowserAsync(
-            `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
-          ),
-      },
-    ],
-    [
-      {
-        title: "О специалисте",
-        icon: "User_fill",
-        route: () => router.push(Routers.app.account.about),
-      },
-      {
-        title: "Галерея",
-        subtitle: "(фото на сайт)",
-        icon: "Camera",
-        route: () => router.push(Routers.app.account.gallery),
-      },
-      {
-        title: "Отзывы",
-        icon: "Chat_alt_3_fill",
-        route: () => {},
-      },
-      {
-        title: "Ссылки",
-        icon: "link_alt",
-        route: () => router.push(Routers.app.account.links),
-      },
-    ],
-    [
-      {
-        title: "Бронирование",
-        icon: "Setting_alt_fill",
-        route: () => router.push(Routers.app.account.booking),
-      },
-    ],
-    [
-      {
-        title: "Уведомления клиентам",
-        icon: "Message_fill",
-        rightIcon: "External",
-        route: () => {},
-      },
-    ],
-    [
-      {
-        title: "Просмотр страницы",
-        icon: "Eye_fill",
-        route: () => router.push(Routers.app.account.preview),
-      },
-    ],
-    [
-      {
-        title: "Безопасность",
-        icon: "Chield_alt_fill",
-        route: () => router.push(Routers.app.account.security.root),
-      },
-      {
-        title: "Уведомления",
-        icon: "Bell_fill",
-        route: () => router.push(Routers.app.account.notifications),
-      },
-      {
-        title: "Поддержка",
-        icon: "Chat_alt_2_fill",
-        route: () => {},
-      },
-    ],
-  ];
-
   return (
     <>
-      <ScreenWithToolbar title="Аккаунт" showBack={false}>
+      <ScreenWithToolbar title="Профиль">
         {({ topInset, bottomInset }) => (
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -136,9 +75,7 @@ const AccountScreen = () => {
             }}
             refreshControl={
               <RefreshControl
-                progressViewOffset={Platform.select({
-                  android: topInset,
-                })}
+                progressViewOffset={Platform.select({ android: topInset })}
                 refreshing={refreshing}
                 onRefresh={onRefresh}
               />
@@ -146,47 +83,237 @@ const AccountScreen = () => {
           >
             <ProfileAvatar />
 
-            <View className="mx-screen gap-7 mt-7">
-              {NAV_GROUPS.map((group, groupIndex) => (
-                <View
-                  key={groupIndex}
-                  className="bg-background-surface rounded-base overflow-hidden"
-                >
-                  {group.map((item, index) => (
-                    <React.Fragment key={item.title}>
-                      {index > 0 && (
-                        <Divider className="ml-12 mr-4 flex-1 w-auto" />
-                      )}
-                      <Item
-                        title={item.title}
-                        subtitle={item.subtitle}
-                        left={
-                          <StSvg
-                            name={item.icon}
-                            size={24}
-                            color={colors.neutral[900]}
-                          />
-                        }
-                        className="border-0 rounded-none"
-                        right={
-                          <StSvg
-                            name={
-                              item.rightIcon ? item.rightIcon : "Expand_right"
-                            }
-                            size={20}
-                            color={colors.neutral[400]}
-                          />
-                        }
-                        onPress={
-                          item.title === "Поддержка"
-                            ? () => setSupportVisible(true)
-                            : item.route
-                        }
-                      />
-                    </React.Fragment>
-                  ))}
-                </View>
-              ))}
+            <View className="mx-screen gap-3 mt-7">
+              <View className="bg-background-surface rounded-base overflow-hidden">
+                <Item
+                  title={user?.phone ?? "—"}
+                  left={
+                    <StSvg
+                      name="Phone_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title={user?.email ?? "—"}
+                  left={
+                    <StSvg
+                      name="Message_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title={formatDate(user?.birthday)}
+                  left={
+                    <StSvg
+                      name="Calendar_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <StSvg
+                      name="Expand_right"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  onPress={() => router.push(Routers.app.account.birthday)}
+                />
+              </View>
+
+              <View className="bg-background-surface rounded-base overflow-hidden">
+                <Item
+                  title="Push-уведомления"
+                  left={
+                    <StSvg
+                      name="Bell_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <Switch value={pushEnabled} onChange={setPushEnabled} />
+                  }
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title="Email-уведомления"
+                  left={
+                    <StSvg
+                      name="Message_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <Switch value={emailEnabled} onChange={setEmailEnabled} />
+                  }
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title="Уведомления в Telegram Bot"
+                  left={
+                    <StSvg
+                      name="SocialTelegram"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <Switch
+                      value={telegramEnabled}
+                      onChange={setTelegramEnabled}
+                    />
+                  }
+                />
+              </View>
+
+              <View className="bg-background-surface rounded-base overflow-hidden">
+                <Item
+                  title="Способы оплаты"
+                  disabled
+                  left={
+                    <StSvg
+                      name="Credit-card_fill"
+                      size={24}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  titleClassName="text-neutral-400"
+                  right={
+                    <StSvg
+                      name="Expand_right"
+                      size={20}
+                      color={colors.neutral[300]}
+                    />
+                  }
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title="Безопасность"
+                  left={
+                    <StSvg
+                      name="Chield_alt_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <StSvg
+                      name="Expand_right"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  onPress={() => router.push(Routers.app.account.security.root)}
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title="Приватность"
+                  left={
+                    <StSvg
+                      name="View_hide_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <StSvg
+                      name="External"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  onPress={() =>
+                    WebBrowser.openBrowserAsync("https://slotter.app/privacy")
+                  }
+                />
+              </View>
+
+              <View className="bg-background-surface rounded-base overflow-hidden">
+                <Item
+                  title="Справка"
+                  left={
+                    <StSvg
+                      name="Info_alt_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <StSvg
+                      name="External"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  onPress={() =>
+                    WebBrowser.openBrowserAsync("https://slotter.app/help")
+                  }
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title="Связаться с нами"
+                  left={
+                    <StSvg
+                      name="Chat_alt_2_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <StSvg
+                      name="Expand_right"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  onPress={() => setSupportVisible(true)}
+                />
+                <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                <Item
+                  title="Оценить Slotter"
+                  left={
+                    <StSvg
+                      name="Star_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  className="border-0 rounded-none"
+                  right={
+                    <StSvg
+                      name="External"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  }
+                  onPress={() =>
+                    Linking.openURL(
+                      Platform.OS === "ios"
+                        ? "https://apps.apple.com/app/id0000000000"
+                        : "https://play.google.com/store/apps/details?id=app.slotter",
+                    )
+                  }
+                />
+              </View>
             </View>
 
             <View className="mx-screen mt-7">

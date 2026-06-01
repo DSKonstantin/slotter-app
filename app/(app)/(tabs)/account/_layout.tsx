@@ -5,14 +5,10 @@ export default function AccountLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="personal-information" />
-      <Stack.Screen name="about" />
-      <Stack.Screen name="links" />
-      <Stack.Screen name="booking" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="security" />
-      <Stack.Screen name="preview" />
-      <Stack.Screen name="gallery" />
       <Stack.Screen name="support" />
+      <Stack.Screen name="birthday" />
     </Stack>
   );
 }

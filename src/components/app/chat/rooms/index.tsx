@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -8,22 +8,18 @@ import {
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { Typography } from "@/src/components/ui";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useGetChatRoomsInfiniteQuery } from "@/src/store/redux/services/api/chatRoomsApi";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import ChatRoomItem from "./ChatRoomItem";
 import ChatRoomsSkeleton from "./ChatRoomsSkeleton";
-import { NewChatSheet } from "./NewChatSheet";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
 const RoomSeparator = () => <View className="h-2" />;
 
 export default function ChatRoomsScreen() {
-  const [newChatVisible, setNewChatVisible] = useState(false);
-
   const {
     data,
     isLoading,
@@ -55,14 +51,6 @@ export default function ChatRoomsScreen() {
       <ScreenWithToolbar
         title="Чаты"
         showBack={false}
-        rightButton={
-          <IconButton
-            icon={
-              <StSvg name="Add_round" size={24} color={colors.neutral[900]} />
-            }
-            onPress={() => setNewChatVisible(true)}
-          />
-        }
       >
         {({ topInset, bottomInset }) =>
           isLoading ? (
@@ -90,7 +78,7 @@ export default function ChatRoomsScreen() {
                     Нет чатов
                   </Typography>
                   <Typography className="text-neutral-500 text-caption">
-                    Начните переписку с клиентом
+                    Начните переписку с мастером
                   </Typography>
                 </View>
               ) : (
@@ -144,11 +132,6 @@ export default function ChatRoomsScreen() {
           )
         }
       </ScreenWithToolbar>
-
-      <NewChatSheet
-        visible={newChatVisible}
-        onClose={() => setNewChatVisible(false)}
-      />
     </>
   );
 }

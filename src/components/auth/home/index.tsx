@@ -36,10 +36,11 @@ const AuthHome = () => {
                 weight="semibold"
                 className="text-3xl text-center text-neutral-0"
               >
-                Управляй своим делом
+                Веди свои привычки
               </Typography>
               <Typography className=" text-body text-neutral-0 text-center">
-                Веди запись, график и базу клиентов {"\n"} в одном приложении
+                Удобно общайся, сохраняй {"\n"} и бронируй специалистов со
+                Slotter
               </Typography>
             </View>
           </View>

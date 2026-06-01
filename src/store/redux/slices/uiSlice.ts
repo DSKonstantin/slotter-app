@@ -1,22 +1,13 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
-interface UiState {
-  isTabMenuOpen: boolean;
-}
+interface UiState {}
 
-const initialState: UiState = {
-  isTabMenuOpen: false,
-};
+const initialState: UiState = {};
 
 const uiSlice = createSlice({
   name: "ui",
   initialState,
-  reducers: {
-    setTabMenuOpen(state, action: PayloadAction<boolean>) {
-      state.isTabMenuOpen = action.payload;
-    },
-  },
+  reducers: {},
 });
 
-export const { setTabMenuOpen } = uiSlice.actions;
 export default uiSlice.reducer;

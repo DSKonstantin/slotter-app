@@ -2,11 +2,10 @@ import React from "react";
 import { View } from "react-native";
 import { Stack, useSegments } from "expo-router";
 import StTabBar from "@/src/components/navigation/tabBar";
-import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
 
 export default function AppLayout() {
   const segments = useSegments() as string[];
-  const showTabBar = segments[1] !== "chat" && segments[1] !== "payment";
+  const showTabBar = segments[1] !== "chat";
 
   return (
     <View style={{ flex: 1 }}>
@@ -17,15 +16,15 @@ export default function AppLayout() {
           options={{ presentation: "card", animation: "slide_from_right" }}
         />
         <Stack.Screen
-          name="chat/client-history/[id]"
+          name="mySpecialists"
           options={{ presentation: "card", animation: "slide_from_right" }}
         />
-        <Stack.Screen name="create-slot-flow" />
-        <Stack.Screen name="create-client" />
-        <Stack.Screen name="payment/status" />
+        <Stack.Screen
+          name="notifications"
+          options={{ presentation: "card", animation: "slide_from_right" }}
+        />
       </Stack>
       {showTabBar && <StTabBar />}
-      <TabMenu />
     </View>
   );
 }

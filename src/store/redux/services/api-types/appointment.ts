@@ -94,6 +94,48 @@ export interface GetUpcomingAppointmentsResponse {
   appointments: UpcomingAppointment[];
 }
 
+export interface CustomerAppointmentMaster {
+  id: number;
+  first_name: string;
+  last_name: string | null;
+  address: string | null;
+  avatar_url: string | null;
+  avatar_blurhash: string | null;
+  phone: string | null;
+}
+
+export interface CustomerUpcomingAppointment {
+  id: number;
+  status: AppointmentStatus;
+  start_time: string;
+  end_time: string;
+  date: string;
+  duration: number;
+  public_token: string;
+  services: AppointmentService[];
+  additional_services: AppointmentService[];
+  user: CustomerAppointmentMaster;
+}
+
+export type GetCustomerUpcomingAppointmentsResponse = {
+  appointments: CustomerUpcomingAppointment[];
+};
+
+export interface VisitedUser {
+  id: number;
+  first_name: string;
+  last_name: string;
+  profession: string;
+  avatar_url: string | null;
+  avatar_blurhash: string | null;
+  visits_count: number;
+  last_visited_at: string;
+}
+
+export type GetCustomerVisitedUsersResponse = {
+  users: VisitedUser[];
+};
+
 export type CreateAppointmentPayload = {
   date: string;
   start_time: string;

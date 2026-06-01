@@ -34,6 +34,8 @@ function extractUser(payload: UserPayload): User | null {
 
   if ("resource" in payload && payload.resource) return payload.resource;
   if ("user" in payload && payload.user) return payload.user;
+  if ("customer" in payload && (payload as any).customer)
+    return (payload as any).customer;
   if ("id" in payload) return payload as User;
 
   return null;
@@ -70,6 +72,14 @@ const authSlice = createSlice({
   reducers: {
     setToken(state, action: PayloadAction<string | null>) {
       state.token = action.payload;
+    },
+    setUser(state, action: PayloadAction<User>) {
+      state.user = action.payload;
+    },
+    mergeUser(state, action: PayloadAction<Partial<User>>) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
     },
     logout(state) {
       state.token = null;
@@ -118,9 +128,25 @@ const authSlice = createSlice({
         (state, { payload }) => {
           setUserOnly(state, payload);
         },
+      )
+      .addMatcher(
+        usersApi.endpoints.updateCustomer.matchFulfilled,
+        (state, { payload }) => {
+          setUserOnly(state, payload);
+        },
+      )
+      .addMatcher(
+        usersApi.endpoints.getCustomer.matchFulfilled,
+        (state, { payload }) => {
+          if (!state.user) return;
+          const customer = extractUser(payload);
+          if (customer) {
+            state.user = { ...state.user, ...customer };
+          }
+        },
       );
   },
 });
 
-export const { logout, setToken } = authSlice.actions;
+export const { logout, setToken, setUser, mergeUser } = authSlice.actions;
 export default authSlice.reducer;

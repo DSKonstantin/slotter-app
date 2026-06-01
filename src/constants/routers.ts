@@ -15,83 +15,10 @@ export const Routers = {
   onboarding: {
     root: "/(onboarding)",
     register: "/(onboarding)/register",
-    experience: "/(onboarding)/experience",
-    database: "/(onboarding)/database",
-    databaseSuccess: "/(onboarding)/database-success",
-    personalInformation: "/(onboarding)/personal-information",
-    service: "/(onboarding)/service",
-    schedule: "/(onboarding)/schedule",
-    notification: "/(onboarding)/notification",
-    link: "/(onboarding)/link",
+    personalName: "/(onboarding)/personalName",
   },
   app: {
     root: "/(app)/(tabs)",
-    calendar: {
-      root: (date?: string, mode?: string) =>
-        date
-          ? ({
-              pathname: "/(app)/(tabs)/calendar",
-              params: { date, ...(mode && { mode }) },
-            } as const)
-          : ("/(app)/(tabs)/calendar" as const),
-      schedule: (
-        date?: string,
-        extra?: { openTemplate?: boolean; duplicateFrom?: string },
-      ) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/schedule",
-          params: {
-            ...(date && { date }),
-            ...(extra?.openTemplate && { openTemplate: "true" }),
-            ...(extra?.duplicateFrom && { duplicateFrom: extra.duplicateFrom }),
-          },
-        }) as const,
-      daySchedule: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/day-schedule/[id]",
-          params: { id: String(id) },
-        }) as const,
-      dayScheduleCreate: (date: string) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/day-schedule/create",
-          params: { date },
-        }) as const,
-      slot: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/slot/[id]",
-          params: { id: String(id) },
-        }) as const,
-      clientDetail: (
-        id: string | number,
-        kind: "customer" | "userCustomer" = "userCustomer",
-      ) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/client/[id]",
-          params: {
-            id: String(id),
-            ...(kind === "customer" && { kind: "customer" as const }),
-          },
-        }) as const,
-    },
-    createSlotFlow: {
-      selectService: (params?: {
-        date?: string;
-        time?: string;
-        appointmentId?: string;
-        selectedServiceIds?: string;
-        selectedAdditionalServiceIds?: string;
-        mode?: "services" | "additional";
-      }) =>
-        ({
-          pathname: "/(app)/create-slot-flow/select-service",
-          params: params ?? {},
-        }) as const,
-      create: () =>
-        ({
-          pathname: "/(app)/create-slot-flow/create",
-        }) as const,
-    },
-    createClient: "/(app)/create-client" as const,
     chat: {
       index: "/(app)/(tabs)/chat" as const,
       room: (id: string | number) =>
@@ -99,40 +26,7 @@ export const Routers = {
           pathname: "/(app)/chat/[id]",
           params: { id: String(id) },
         }) as const,
-      clientHistory: (customerId: string | number) =>
-        ({
-          pathname: "/(app)/chat/client-history/[id]",
-          params: { id: String(customerId) },
-        }) as const,
     },
-    clients: {
-      root: "/(app)/(tabs)/clients",
-      create: "/(app)/(tabs)/clients/create" as const,
-      statistics: "/(app)/(tabs)/clients/statistics" as const,
-      detail: (
-        id: string | number,
-        kind: "customer" | "userCustomer" = "userCustomer",
-      ) =>
-        ({
-          pathname: "/(app)/(tabs)/clients/[id]",
-          params: {
-            id: String(id),
-            ...(kind === "customer" && { kind: "customer" as const }),
-          },
-        }) as const,
-      history: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/clients/[id]/history",
-          params: { id: String(id) },
-        }) as const,
-      slot: (clientId: string | number, slotId: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/clients/[id]/slot/[slotId]",
-          params: { id: String(clientId), slotId: String(slotId) },
-        }) as const,
-    },
-
-    schedule: "/(app)/(tabs)/schedule",
     history: {
       root: "/(app)/(tabs)/history" as const,
       slot: (id: string | number) =>
@@ -141,69 +35,19 @@ export const Routers = {
           params: { id },
         }) as const,
     },
-    finances: {
-      root: "/(app)/(tabs)/finances",
-      income: "/(app)/(tabs)/finances/income",
-    } as const,
-    services: {
-      root: "/(app)/(tabs)/services",
-      create: (categoryId?: string | number) =>
-        categoryId !== undefined
-          ? ({
-              pathname: "/(app)/(tabs)/services/create",
-              params: { categoryId: String(categoryId) },
-            } as const)
-          : "/(app)/(tabs)/services/create",
-      categories: "/(app)/(tabs)/services/categories" as const,
-      additionalServices: {
-        root: "/(app)/(tabs)/services/additional-services" as const,
-
-        create: "/(app)/(tabs)/services/additional-services/create" as const,
-
-        edit: (additionalServiceId: string | number) =>
-          ({
-            pathname: "/(app)/(tabs)/services/additional-services/[id]",
-            params: {
-              id: String(additionalServiceId),
-            },
-          }) as const,
-      },
-      edit: (serviceId: string | number, categoryId?: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/services/[serviceId]",
-          params: {
-            serviceId: String(serviceId),
-            ...(categoryId !== undefined
-              ? { categoryId: String(categoryId) }
-              : {}),
-          },
-        }) as const,
-    },
-
-    paymentStatus: (paymentId: number) =>
-      ({
-        pathname: "/(app)/payment/status",
-        params: { payment_id: String(paymentId) },
-      }) as const,
-
+    mySpecialists: "/(app)/mySpecialists" as const,
     account: {
       root: "/(app)/(tabs)/account" as const,
       personalInformation:
         "/(app)/(tabs)/account/personal-information" as const,
-      about: "/(app)/(tabs)/account/about" as const,
-      links: "/(app)/(tabs)/account/links" as const,
-      booking: "/(app)/(tabs)/account/booking" as const,
-      notifications: "/(app)/(tabs)/account/notifications" as const,
+      notifications: "/(app)/notifications" as const,
+      birthday: "/(app)/(tabs)/account/birthday" as const,
       security: {
         root: "/(app)/(tabs)/account/security" as const,
         changePassword:
           "/(app)/(tabs)/account/security/change-password" as const,
-        email: "/(app)/(tabs)/account/security/email" as const,
       },
-      preview: "/(app)/(tabs)/account/preview" as const,
-      gallery: "/(app)/(tabs)/account/gallery" as const,
       support: "/(app)/(tabs)/account/support" as const,
-      subscription: "/(app)/(tabs)/account/subscription" as const,
     },
   },
 } as const;

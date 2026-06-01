@@ -1,58 +1,41 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
 import { CameraType, ImagePickerAsset } from "expo-image-picker";
 import { DocumentPickerAsset } from "expo-document-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import {
-  Avatar,
-  Button,
-  StModal,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Avatar, Button, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
-import {
-  useDeleteUserMutation,
-  useUpdateUserMutation,
-} from "@/src/store/redux/services/api/usersApi";
+import { useUpdateCustomerMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useAuth } from "@/src/contexts/AuthContext";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
+import { buildCustomerFormData } from "@/src/utils/formData/buildCustomerFormData";
 import { assetToFile } from "@/src/utils/files/assetToFile";
-import { AccountPersonalInformationSchema } from "@/src/validation/schemas/accountPersonalInformation.schema";
+import { nameField } from "@/src/validation/fields/name";
+import { avatarField } from "@/src/validation/fields/avatar";
 import type { UploadFile } from "@/src/types/upload";
 import { colors } from "@/src/styles/colors";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
-type FormValues = {
-  name: string;
-  surname: string;
-  profession: string;
-  avatar: UploadFile | null;
-};
+const schema = Yup.object({ name: nameField, avatar: avatarField });
+type FormValues = { name: string; avatar: UploadFile | null };
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
-  const { logout } = useAuth();
-  const [updateUser, { isLoading }] = useUpdateUserMutation();
-  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [updateCustomer, { isLoading }] = useUpdateCustomerMutation();
 
   const methods = useForm<FormValues>({
-    resolver: yupResolver(AccountPersonalInformationSchema),
+    resolver: yupResolver(schema),
     defaultValues: {
-      name: user?.first_name ?? "",
-      surname: user?.last_name ?? "",
-      profession: user?.profession ?? "",
+      name: user?.name ?? "",
       avatar: null,
     },
   });
@@ -74,28 +57,16 @@ const PersonalInformation = () => {
     async (data: FormValues) => {
       if (!auth) return;
       try {
-        const formData = buildUserFormData(data);
-        await updateUser({ id: auth.userId, data: formData }).unwrap();
+        const formData = buildCustomerFormData(data);
+        await updateCustomer({ id: auth.userId, data: formData }).unwrap();
         methods.reset(data);
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser, methods],
+    [auth, updateCustomer, methods],
   );
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!auth) return;
-    try {
-      await deleteUser(auth.userId).unwrap();
-      setDeleteModalVisible(false);
-      methods.reset(methods.getValues());
-      await logout();
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось удалить профиль"));
-    }
-  }, [auth, deleteUser, logout, methods]);
 
   if (!auth) return null;
 
@@ -134,19 +105,11 @@ const PersonalInformation = () => {
                   </ImagePickerTrigger>
                 </View>
 
-                <View className="gap-1">
-                  <RhfTextField name="name" label="Имя" placeholder="Иван" />
-                  <RhfTextField
-                    name="surname"
-                    label="Фамилия"
-                    placeholder="Иванов"
-                  />
-                  <RhfTextField
-                    name="profession"
-                    label="Специализация"
-                    placeholder="Барбер"
-                  />
-                </View>
+                <RhfTextField
+                  name="name"
+                  label="Имя"
+                  placeholder="Иван Иванов"
+                />
               </View>
             </KeyboardAwareScrollView>
 
@@ -163,51 +126,7 @@ const PersonalInformation = () => {
                 loading={isLoading}
                 disabled={isLoading}
               />
-              <Button
-                title="Удалить профиль"
-                variant="clear"
-                onPress={() => setDeleteModalVisible(true)}
-                textClassName="text-accent-red-500"
-                rightIcon={
-                  <StSvg
-                    name="Trash"
-                    size={24}
-                    color={colors.accent.red[500]}
-                  />
-                }
-                disabled={isDeleting}
-              />
             </View>
-
-            <StModal
-              visible={deleteModalVisible}
-              onClose={() => setDeleteModalVisible(false)}
-            >
-              <Typography
-                weight="semibold"
-                className="text-display text-center mb-3"
-              >
-                Удалить профиль?
-              </Typography>
-              <Typography className="text-body text-center mb-6">
-                Аккаунт будет удалён. Это действие нельзя отменить.
-              </Typography>
-              <View className="gap-3">
-                <Button
-                  title="Удалить"
-                  variant="destructive"
-                  onPress={handleConfirmDelete}
-                  loading={isDeleting}
-                  disabled={isDeleting}
-                />
-                <Button
-                  title="Отмена"
-                  variant="clear"
-                  onPress={() => setDeleteModalVisible(false)}
-                  disabled={isDeleting}
-                />
-              </View>
-            </StModal>
           </>
         )}
       </ScreenWithToolbar>

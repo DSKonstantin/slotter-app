@@ -37,7 +37,7 @@ const Verify = () => {
       const phone = `+${unMask(data.phone)}`;
 
       try {
-        await sendCode({ phone, type: UserType.USER }).unwrap();
+        await sendCode({ phone, type: UserType.CUSTOMER }).unwrap();
 
         router.push({
           pathname: Routers.auth.enterCode,
@@ -79,7 +79,6 @@ const Verify = () => {
           </Typography>
 
           <View className="mt-9">
-
             <RhfTextField
               name="phone"
               placeholder="+ 7 999 000-00-00"

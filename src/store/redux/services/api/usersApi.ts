@@ -32,11 +32,30 @@ export const usersApi = api.injectEndpoints({
       }),
     }),
 
+    getCustomer: builder.query<{ customer: User }, number>({
+      query: (id) => ({
+        url: `/customers/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    updateCustomer: builder.mutation<
+      { customer: User },
+      { id: number; data: Record<string, unknown> | FormData }
+    >({
+      query: ({ id, data }) => ({
+        url: `/customers/${id}`,
+        method: "PATCH",
+        data,
+      }),
+    }),
   }),
 });
 
 export const {
   useUpdateUserMutation,
+  useUpdateCustomerMutation,
   useDeleteUserMutation,
   useLazyCheckNicknameQuery,
+  useGetCustomerQuery,
 } = usersApi;

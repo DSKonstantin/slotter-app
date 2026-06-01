@@ -13,15 +13,21 @@ import {
   RegisterSchema,
   type RegisterFormValues,
 } from "@/src/validation/schemas/register.schema";
-import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
+import {
+  useUpdateCredentialsMutation,
+  useLoginMutation,
+} from "@/src/store/redux/services/api/authApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAuth } from "@/src/contexts/AuthContext";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const Register = () => {
   const auth = useRequiredAuth();
+  const { login } = useAuth();
 
-  const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
+  const [updateCredentials] = useUpdateCredentialsMutation();
+  const [loginMutation, { isLoading }] = useLoginMutation();
 
   const methods = useForm({
     resolver: yupResolver(RegisterSchema),
@@ -37,7 +43,7 @@ const Register = () => {
 
       try {
         await updateCredentials({
-          resourceType: "user",
+          resourceType: "customer",
           id: auth.userId,
           data: {
             email: data.email,
@@ -46,14 +52,24 @@ const Register = () => {
           },
         }).unwrap();
 
-        router.push(Routers.onboarding.personalInformation);
+        const result = await loginMutation({
+          email: data.email,
+          password: data.password,
+          type: "customer",
+        }).unwrap();
+
+        await login(result.token);
+        router.push(Routers.onboarding.personalName);
       } catch (error) {
         toast.error(
-          getApiErrorMessage(error, "Не удалось создать профиль. Попробуйте ещё раз."),
+          getApiErrorMessage(
+            error,
+            "Не удалось создать профиль. Попробуйте ещё раз.",
+          ),
         );
       }
     },
-    [auth, updateCredentials],
+    [auth, updateCredentials, loginMutation, login],
   );
 
   if (!auth) return null;
@@ -79,13 +95,13 @@ const Register = () => {
             Безопасность
           </Typography>
           <Typography className="text-body text-neutral-500">
-            Защити базу клиентов паролем и привяжи почту для восстановления
+            Защити свои данные и привяжи почту для восстановления
           </Typography>
           <View className="gap-2 mt-9">
             <RhfTextField
               name="email"
               label="Электронная почта"
-              placeholder="master@example.com"
+              placeholder="user@example.com"
             />
             <RhfTextField
               name="password"

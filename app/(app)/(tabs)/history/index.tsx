@@ -1,8 +1,8 @@
 import React from "react";
-import HistoryScreen from "@/src/components/app/history";
+import { View } from "react-native";
 
 const History = () => {
-  return <HistoryScreen />;
+  return <View className="flex-1" />;
 };
 
 export default History;

@@ -5,14 +5,7 @@ export default function OnboardingLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="register" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="personal-information"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen name="service" options={{ headerShown: false }} />
-      <Stack.Screen name="schedule" options={{ headerShown: false }} />
-      <Stack.Screen name="notification" options={{ headerShown: false }} />
-      <Stack.Screen name="link" options={{ headerShown: false }} />
+      <Stack.Screen name="personal-name" options={{ headerShown: false }} />
     </Stack>
   );
 }

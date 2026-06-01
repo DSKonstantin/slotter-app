@@ -38,6 +38,11 @@ export type {
   UpcomingAppointment,
   UpcomingAppointmentCustomer,
   GetUpcomingAppointmentsResponse,
+  CustomerUpcomingAppointment,
+  CustomerAppointmentMaster,
+  GetCustomerUpcomingAppointmentsResponse,
+  VisitedUser,
+  GetCustomerVisitedUsersResponse,
 } from "./appointment";
 export type {
   Customer,

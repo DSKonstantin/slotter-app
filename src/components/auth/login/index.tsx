@@ -42,7 +42,7 @@ const Login = () => {
           email: isEmail ? data.identifier : undefined,
           phone: isEmail ? undefined : data.identifier,
           password: data.password,
-          type: UserType.USER,
+          type: UserType.CUSTOMER,
         }).unwrap();
 
         await login(result.token);

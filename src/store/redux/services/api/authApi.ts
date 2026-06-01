@@ -81,7 +81,7 @@ export const authApi = api.injectEndpoints({
     }),
 
     updateCredentials: builder.mutation<
-      User,
+      { customer: User },
       {
         resourceType: "user" | "customer";
         id: number;

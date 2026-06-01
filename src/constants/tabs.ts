@@ -5,9 +5,9 @@ const BOTTOM_OFFSET_SMALL = 30;
 
 const TABS = [
   { key: "index", label: "Главная", icon: "Home" },
-  { key: "calendar", label: "Календарь", icon: "Date_range_fill" },
-  { key: "chat", label: "Чат", icon: "Notification" },
-  { key: "clients", label: "Клиенты", icon: "Group_fill" },
+  { key: "history", label: "Записи", icon: "File_dock_fill" },
+  { key: "chat", label: "Чат", icon: "Chat_fill" },
+  { key: "account", label: "Профиль", icon: "User_fill" },
 ] as const;
 
 export {

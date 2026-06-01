@@ -60,3 +60,20 @@ export const formatTimeFromISO = (iso: string) => {
   if (timeMatch) return `${timeMatch[1]}:${timeMatch[2]}`;
   return "";
 };
+
+export const formatStartTime = (startTime: string): string =>
+  startTime.slice(0, 5);
+
+export const formatTimeUntil = (date: string, startTime: string): string => {
+  const now = new Date();
+  const [h, m] = startTime.split(":").map(Number);
+  const target = new Date(date);
+  target.setHours(h, m, 0, 0);
+  const diff = Math.floor((target.getTime() - now.getTime()) / 60000);
+  if (diff <= 0) return "скоро";
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  if (hours > 0 && mins > 0) return `${hours} ч ${mins} мин`;
+  if (hours > 0) return `${hours} ч`;
+  return `${mins} мин`;
+};

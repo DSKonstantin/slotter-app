@@ -11,13 +11,14 @@ export type AppointmentStep =
 
 export enum UserType {
   USER = "user",
-  CUSTOM = "custom",
+  CUSTOMER = "customer",
 }
 
 export interface User {
   id: number;
   phone: string;
   email: string | null;
+  name?: string | null;
   first_name: string | null;
   last_name: string | null;
   about_me: string | null;
@@ -38,6 +39,11 @@ export interface User {
   is_notify_new_appointment: boolean;
   is_notify_customer_cancel: boolean;
   is_notify_reminders: boolean;
+  is_notify_push: boolean;
+  is_notify_email: boolean;
+  is_notify_telegram: boolean;
+  birthday: string | null;
+  created_at: string | null;
   gallery_photos: GalleryPhoto[];
   subscription_membership: SubscriptionMembership;
 }

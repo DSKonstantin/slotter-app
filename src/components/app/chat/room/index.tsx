@@ -42,18 +42,12 @@ import ChatScrollBottomButton from "./components/ChatScrollBottomButton";
 import ChatEmptyState from "./components/ChatEmptyState";
 import ChatMessage from "./components/ChatMessage";
 import {
-  AttachSheet,
   ChatAppointmentWidget,
   ChatServiceWidget,
 } from "./components/widget";
-import {
-  useCancelAppointmentMutation,
-  useCreateAppointmentMutation,
-  useCustomerAcceptAppointmentMutation,
-} from "@/src/store/redux/services/api/appointmentsApi";
+import { useCustomerAcceptAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import type { Service } from "@/src/store/redux/services/api-types";
 
 type Props = { roomId: string };
 
@@ -65,18 +59,14 @@ export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
   const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
-  // ── Local UI State ─────────────────────────────────────────────────────
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [menuMessage, setMenuMessage] = useState<ChatIMessage | null>(null);
   const [roomMenuVisible, setRoomMenuVisible] = useState(false);
-  const [attachVisible, setAttachVisible] = useState(false);
-  const [isProposing, setIsProposing] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
   const [inputBarHeight, setInputBarHeight] = useState(0);
   const loadingMoreRef = useRef(false);
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
 
-  // ── Auth ──────────────────────────────────────────────────────────────
   const { currentUser, resourceType } = useAppSelector(
     (s) => ({ currentUser: s.auth.user, resourceType: s.auth.resourceType }),
     shallowEqual,
@@ -103,7 +93,6 @@ export default function ChatRoom({ roomId }: Props) {
     [currentGiftedId, currentUser, userName],
   );
 
-  // ── Queries ───────────────────────────────────────────────────────────
   const { data: roomData } = useGetChatRoomQuery(
     { chatRoomId: id },
     { skip: !id },
@@ -126,20 +115,15 @@ export default function ChatRoom({ roomId }: Props) {
   const messages = chatData?.messages ?? EMPTY_MESSAGES;
   const hasMore = chatData?.hasMore ?? false;
 
-  // ── Mutations ─────────────────────────────────────────────────────────
   const [createMessage] = useCreateChatMessageMutation();
-  const [createAppointment] = useCreateAppointmentMutation();
-  const [cancelAppointment] = useCancelAppointmentMutation();
   const [customerAcceptAppointment] = useCustomerAcceptAppointmentMutation();
 
-  // ── Mark room read on open ────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
     lastMarkedIncomingIdRef.current = null;
     markRoomRead({ chatRoomId: id });
   }, [id, markRoomRead]);
 
-  // ── Mark incoming messages read ───────────────────────────────────────
   useEffect(() => {
     if (!id || !currentGiftedId || messages.length === 0) return;
 
@@ -147,8 +131,6 @@ export default function ChatRoom({ roomId }: Props) {
     if (!latestIncoming) return;
     if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
 
-    // First time we see incoming messages — initial mark is already handled by
-    // the on-open effect above. Just remember the latest id and bail.
     const wasUninitialized = lastMarkedIncomingIdRef.current === null;
     lastMarkedIncomingIdRef.current = latestIncoming._id;
     if (wasUninitialized) return;
@@ -156,7 +138,6 @@ export default function ChatRoom({ roomId }: Props) {
     markRoomRead({ chatRoomId: id });
   }, [currentGiftedId, id, markRoomRead, messages]);
 
-  // ── Pagination ────────────────────────────────────────────────────────
   const handleLoadEarlier = useCallback(() => {
     if (!hasMore || isFetching || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
@@ -165,7 +146,6 @@ export default function ChatRoom({ roomId }: Props) {
 
   if (!isFetching) loadingMoreRef.current = false;
 
-  // ── Send handlers ─────────────────────────────────────────────────────
   const onSend = useCallback(
     (newMessages: ChatIMessage[] = []) => {
       const msg = newMessages[0];
@@ -256,162 +236,6 @@ export default function ChatRoom({ roomId }: Props) {
     [id, currentUser, createMessage, makeUser],
   );
 
-  const handleAttachWidget = useCallback(
-    (service: Service) => {
-      if (!currentUser) return;
-
-      createMessage({
-        chatRoomId: id,
-        data: {
-          chat_widget: {
-            kind: "service_card",
-            widgetable_type: "Service",
-            widgetable_id: service.id,
-            payload: {},
-          },
-        },
-        optimistic: {
-          _id: `temp_${Date.now()}`,
-          text: "",
-          createdAt: Date.now(),
-          pending: true,
-          sent: false,
-          reply_to: null,
-          widget: {
-            id: -1,
-            kind: "service_card",
-            payload: {},
-            created_at: new Date().toISOString(),
-            widgetable: {
-              id: service.id,
-              name: service.name,
-              duration: service.duration,
-              price_cents: service.price_cents,
-              price_currency: service.price_currency,
-              main_photo_url: service.main_photo_url ?? null,
-              main_photo_blurhash: service.main_photo_blurhash ?? null,
-            },
-          },
-          user: makeUser(),
-        },
-      });
-    },
-    [id, currentUser, createMessage, makeUser],
-  );
-
-  const handleProposeAppointment = useCallback(
-    async ({
-      service,
-      additionalServiceId,
-      date,
-      startTime,
-    }: {
-      service: Service;
-      additionalServiceId?: number;
-      date: string;
-      startTime: string;
-    }) => {
-      if (!currentUser) return;
-      if (!interlocutor || interlocutor.type !== "Customer") {
-        toast.error("Запись можно предложить только клиенту");
-        return;
-      }
-
-      setIsProposing(true);
-      try {
-        const appointment = await createAppointment({
-          userId: currentUser.id,
-          body: {
-            customer_id: interlocutor.id,
-            date,
-            start_time: startTime,
-            service_ids: [service.id],
-            ...(additionalServiceId && {
-              additional_service_ids: [additionalServiceId],
-            }),
-            duration: service.duration,
-            price_cents: service.price_cents,
-          },
-        }).unwrap();
-
-        try {
-          await createMessage({
-            chatRoomId: id,
-            data: {
-              chat_widget: {
-                kind: "appointment_proposal",
-                widgetable_type: "Appointment",
-                widgetable_id: appointment.id,
-                payload: {
-                  start_time: startTime,
-                  duration: service.duration,
-                  price_cents: service.price_cents,
-                },
-              },
-            },
-            optimistic: {
-              _id: `temp_${Date.now()}`,
-              text: "",
-              createdAt: Date.now(),
-              pending: true,
-              sent: false,
-              reply_to: null,
-              widget: {
-                id: -1,
-                kind: "appointment_proposal",
-                payload: {
-                  start_time: startTime,
-                  duration: service.duration,
-                  price_cents: service.price_cents,
-                },
-                created_at: new Date().toISOString(),
-                widgetable: {
-                  id: appointment.id,
-                  status: appointment.status,
-                  start_time: appointment.start_time,
-                  end_time: appointment.end_time,
-                  date: appointment.date,
-                  duration: appointment.duration,
-                  price_cents: appointment.price_cents,
-                  price_currency: appointment.price_currency,
-                },
-              },
-              user: makeUser(),
-            },
-          }).unwrap();
-        } catch (messageError) {
-          try {
-            await cancelAppointment({
-              id: appointment.id,
-              body: {
-                cancel_reason: "Не удалось отправить предложение в чат",
-              },
-            }).unwrap();
-          } catch {}
-          throw messageError;
-        }
-
-        setAttachVisible(false);
-      } catch (error) {
-        toast.error(
-          getApiErrorMessage(error, "Не удалось отправить предложение"),
-        );
-      } finally {
-        setIsProposing(false);
-      }
-    },
-    [
-      id,
-      currentUser,
-      interlocutor,
-      createAppointment,
-      createMessage,
-      cancelAppointment,
-      makeUser,
-    ],
-  );
-
-  // ── Message actions ───────────────────────────────────────────────────
   const handleAcceptAppointment = useCallback(
     async (appointmentId: number) => {
       try {
@@ -436,12 +260,12 @@ export default function ChatRoom({ roomId }: Props) {
     [],
   );
 
-  // ── Render callbacks ──────────────────────────────────────────────────
   const handleCancelReply = useCallback(() => {
     setReplyingTo(null);
     setInputBarHeight(0);
   }, []);
-  const handleOpenAttach = useCallback(() => setAttachVisible(true), []);
+
+  const handleOpenAttach = useCallback(() => {}, []);
 
   const renderScrollToBottom = useCallback(
     () => <ChatScrollBottomButton />,
@@ -540,7 +364,6 @@ export default function ChatRoom({ roomId }: Props) {
     [isLoading],
   );
 
-  // ── Render ────────────────────────────────────────────────────────────
   const titleNode = useMemo(
     () =>
       interlocutor ? (
@@ -671,19 +494,6 @@ export default function ChatRoom({ roomId }: Props) {
           onClose={() => setRoomMenuVisible(false)}
           roomId={id}
           interlocutor={interlocutor}
-        />
-      )}
-
-      {currentUser && (
-        <AttachSheet
-          visible={attachVisible}
-          onClose={() => setAttachVisible(false)}
-          userId={currentUser.id}
-          isSubmitting={isProposing}
-          isUser={resourceType === "user"}
-          onPickService={handleAttachWidget}
-          onProposeAppointment={handleProposeAppointment}
-          onAttachFile={handleAttach}
         />
       )}
 
