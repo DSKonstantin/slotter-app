@@ -28,6 +28,7 @@ type DatePickerProps = {
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
+  formatDisplay?: (date: Date) => string;
 };
 
 export const DatePicker = ({
@@ -41,6 +42,7 @@ export const DatePicker = ({
   defaultDisplayValue,
   startAdornment,
   endAdornment,
+  formatDisplay,
   ref,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
@@ -96,7 +98,11 @@ export const DatePicker = ({
                 color: value ? colors.neutral[900] : colors.neutral[300],
               }}
             >
-              {value ? formatTime(value) : placeholder}
+              {value
+                ? formatDisplay
+                  ? formatDisplay(value)
+                  : formatTime(value)
+                : placeholder}
             </Text>
           </Pressable>
 

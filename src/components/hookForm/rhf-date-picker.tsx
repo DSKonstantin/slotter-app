@@ -12,8 +12,9 @@ type DatePickerFieldsProps = {
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
 
-  formatValue?: (date: Date) => string;
-  parseValue?: (value: string) => Date | null;
+  formatValue?: (date: Date) => string | number;
+  parseValue?: (value: unknown) => Date | null;
+  formatDisplay?: (date: Date) => string;
 };
 
 export function RhfDatePicker({
@@ -26,6 +27,7 @@ export function RhfDatePicker({
   defaultDisplayValue,
   formatValue,
   parseValue,
+  formatDisplay,
   ...other
 }: DatePickerFieldsProps) {
   const { control } = useFormContext();
@@ -46,6 +48,7 @@ export function RhfDatePicker({
       defaultDisplayValue={defaultDisplayValue}
       startAdornment={startAdornment}
       endAdornment={endAdornment}
+      formatDisplay={formatDisplay}
       onChange={(d: Date) => {
         onChange(formatValue ? formatValue(d) : d);
       }}

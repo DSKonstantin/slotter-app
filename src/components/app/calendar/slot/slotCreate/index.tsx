@@ -8,6 +8,7 @@ import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
 import { formatTime } from "@/src/utils/date/formatTime";
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
@@ -27,7 +28,6 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import RHFPicker from "@/src/components/hookForm/rhf-picker";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -347,8 +347,8 @@ const SlotCreate: React.FC = () => {
                         label="Время"
                         placeholder="чч:мм"
                         formatValue={(date: Date) => formatTime(date)}
-                        parseValue={(value: string) => {
-                          if (!value) return null;
+                        parseValue={(value) => {
+                          if (!value || typeof value !== "string") return null;
                           const [hours, minutes] = value.split(":").map(Number);
                           const d = new Date();
                           d.setHours(hours, minutes, 0, 0);
@@ -366,7 +366,7 @@ const SlotCreate: React.FC = () => {
                   </View>
 
                   <View className="mt-1">
-                    <RHFPicker
+                    <RhfDurationPicker
                       name="duration"
                       label="Изменить продолжительность (мин)"
                       placeholder="Выберите длительность"

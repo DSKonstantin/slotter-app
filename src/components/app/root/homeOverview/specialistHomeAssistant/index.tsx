@@ -25,8 +25,8 @@ const SpecialistHomeAssistant = () => {
   );
 
   const {
+    hasTodayWorkingDay,
     isTodayDayOff,
-    hasAnySchedule,
     isReady,
     isError: isScheduleError,
     refetch: refetchSchedule,
@@ -52,7 +52,7 @@ const SpecialistHomeAssistant = () => {
 
   const appointments = data?.appointments ?? [];
 
-  if (!hasAnySchedule) return <SetupScheduleVariant />;
+  if (!hasTodayWorkingDay) return <SetupScheduleVariant />;
   if (appointments.length > 0) {
     return <NextAppointmentVariant appointments={appointments} />;
   }

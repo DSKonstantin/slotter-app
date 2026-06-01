@@ -16,7 +16,8 @@ import {
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector } from "@/src/store/redux/store";
-import { Button, Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 import AdditionalServiceItem, {
   AdditionalListItem,
 } from "@/src/components/app/services/list/additionalList/additionalServiceItem";
@@ -174,10 +175,24 @@ const AdditionalList = ({
         ) : undefined
       }
       ListEmptyComponent={
-        <View className="py-6">
+        <View className="py-6 gap-3">
           <Typography className="text-neutral-500">
             Дополнительные услуги пока отсутствуют.
           </Typography>
+          <Button
+            title="Создать доп. услугу"
+            variant="secondary"
+            onPress={() =>
+              router.push(Routers.app.services.additionalServices.create)
+            }
+            rightIcon={
+              <StSvg
+                name="Add_ring_fill_light"
+                size={18}
+                color={colors.neutral[900]}
+              />
+            }
+          />
         </View>
       }
       renderItem={({

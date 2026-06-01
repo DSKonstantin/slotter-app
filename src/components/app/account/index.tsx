@@ -46,7 +46,7 @@ const AccountScreen = () => {
   const NAV_GROUPS: NavItem[][] = [
     [
       {
-        title: "Оплата",
+        title: "Ваша подписка",
         icon: "Credit-card_fill",
         rightIcon: "External",
         route: () =>

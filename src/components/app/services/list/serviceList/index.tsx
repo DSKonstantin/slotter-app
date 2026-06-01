@@ -404,10 +404,22 @@ const ServiceList = ({
       }}
       accessibilityRole="list"
       ListEmptyComponent={
-        <View className="pt-6">
+        <View className="pt-6 gap-3">
           <Typography className="text-neutral-500">
             Категорий пока нет.
           </Typography>
+          <Button
+            title="Создать категорию"
+            variant="secondary"
+            onPress={() => router.push(Routers.app.services.categories)}
+            rightIcon={
+              <StSvg
+                name="Add_ring_fill_light"
+                size={18}
+                color={colors.neutral[900]}
+              />
+            }
+          />
         </View>
       }
       ItemSeparatorComponent={() => <View style={{ height: 8 }} />}

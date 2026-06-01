@@ -154,11 +154,11 @@ const DayCalendarView = () => {
       return (
         <View className="flex-1">
           <EmptyStateScreen
-            image={require("@/assets/images/placeholders/empty-slots.png")}
-            title="На этот день записей нет"
-            subtitle="Добавьте первую запись или настройте рабочее время"
-            buttonTitle="Добавить запись"
-            buttonIcon="Add_round_fill"
+            image={require("@/assets/images/app/not-working.png")}
+            title="Этот день свободен"
+            subtitle="Настройте график, чтобы принимать записи  в этот день"
+            buttonTitle="Настроить день"
+            buttonIcon="Edit_fill"
             onPress={handleEmptyPress}
           />
         </View>
