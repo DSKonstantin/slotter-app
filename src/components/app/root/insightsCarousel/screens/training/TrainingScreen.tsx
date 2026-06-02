@@ -1,15 +1,30 @@
 import React from "react";
 import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, type ImageSource } from "expo-image";
 
-const TrainingScreen = ({ source }: { source: ImageSource }) => (
-  <View className="flex-1">
-    <Image
-      source={source}
-      style={{ flex: 1, width: "100%" }}
-      contentFit="fill"
-    />
-  </View>
-);
+const TrainingScreen = ({
+  source,
+  paddingTop,
+}: {
+  source: ImageSource;
+  paddingTop?: number;
+}) => {
+  const { top } = useSafeAreaInsets();
+  return (
+    <View
+      style={{
+        flex: 1,
+        paddingTop: paddingTop !== undefined ? paddingTop + top : undefined,
+      }}
+    >
+      <Image
+        source={source}
+        style={{ flex: 1, width: "100%" }}
+        contentFit="fill"
+      />
+    </View>
+  );
+};
 
 export default TrainingScreen;

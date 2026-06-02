@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Modal, TouchableOpacity, View } from "react-native";
+import { Animated, Modal, Pressable, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -10,7 +10,6 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { HORIZONTAL_PADDING } from "@/src/components/app/account/gallery/constants";
 
 export type StoryCategory =
   | "training"
@@ -65,18 +64,6 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
     );
   }, []);
 
-  const panGesture = useMemo(
-    () =>
-      Gesture.Pan()
-        .activeOffsetX([-10, 10])
-        .runOnJS(true)
-        .onEnd((event) => {
-          if (event.translationX > SWIPE_THRESHOLD) handleSwipe("right");
-          else if (event.translationX < -SWIPE_THRESHOLD) handleSwipe("left");
-        }),
-    [handleSwipe],
-  );
-
   const handleAnimateIn = useCallback(() => {
     setStoryIndex(0);
     opacity.setValue(0);
@@ -95,6 +82,18 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
     }).start(() => onClose());
   }, [opacity, onClose]);
 
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX([-10, 10])
+        .runOnJS(true)
+        .onEnd((event) => {
+          if (event.translationX > SWIPE_THRESHOLD) handleSwipe("right");
+          else if (event.translationX < -SWIPE_THRESHOLD) handleSwipe("left");
+        }),
+    [handleSwipe],
+  );
+
   if (!currentStory) return null;
 
   return (
@@ -105,16 +104,19 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
       onShow={handleAnimateIn}
       onRequestClose={handleClose}
     >
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView className="flex-1">
         <Animated.View
-          style={{
-            flex: 1,
-            backgroundColor: colors.background.surface,
-            opacity,
-          }}
+          className="flex-1 bg-background-surface"
+          style={{ opacity }}
         >
           <GestureDetector gesture={panGesture}>
             <View className="flex-1">
+              <View className="flex-1">
+                {typeof currentStory.customScreen === "function"
+                  ? currentStory.customScreen(() => handleSwipe("left"))
+                  : currentStory.customScreen}
+              </View>
+
               <LinearGradient
                 colors={[
                   `${colors.neutral[400]}99`,
@@ -126,55 +128,44 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
                   left: 0,
                   right: 0,
                   height: 200,
-                  pointerEvents: "none",
                 }}
-              />
-
-              <View
-                style={{
-                  paddingTop: top + 16,
-                  paddingHorizontal: HORIZONTAL_PADDING,
-                }}
+                pointerEvents="box-none"
               >
-                <View className="flex-row gap-1">
-                  {allStories.map((_, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      onPress={() => setStoryIndex(idx)}
-                      activeOpacity={0.7}
-                      className="flex-1"
-                    >
-                      <View className="h-1.5 bg-neutral-300 rounded-full overflow-hidden">
-                        {idx <= storyIndex && (
-                          <View className="h-full bg-neutral-0" />
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View className="items-end pr-4 pt-6 pb-6">
-                <TouchableOpacity
-                  onPress={handleClose}
-                  hitSlop={8}
-                  className="active:opacity-70"
+                <View
+                  className="px-screen gap-4 items-end"
+                  style={{ paddingTop: top + 8 }}
                 >
-                  <View className="bg-neutral-300 rounded-full p-2">
-                    <StSvg
-                      name="Close_round"
-                      size={24}
-                      color={colors.background.surface}
-                    />
+                  <View className="flex-1 flex-row gap-1">
+                    {allStories.map((_, idx) => (
+                      <Pressable
+                        key={idx}
+                        onPress={() => setStoryIndex(idx)}
+                        className="flex-1 active:opacity-70"
+                      >
+                        <View className="h-1.5 bg-neutral-300 rounded-full overflow-hidden">
+                          {idx <= storyIndex && (
+                            <View className="h-full bg-neutral-0" />
+                          )}
+                        </View>
+                      </Pressable>
+                    ))}
                   </View>
-                </TouchableOpacity>
-              </View>
 
-              <View className="flex-1">
-                {typeof currentStory.customScreen === "function"
-                  ? currentStory.customScreen(() => handleSwipe("left"))
-                  : currentStory.customScreen}
-              </View>
+                  <Pressable
+                    onPress={handleClose}
+                    hitSlop={8}
+                    className="active:opacity-70"
+                  >
+                    <View className="bg-neutral-300 rounded-full p-2">
+                      <StSvg
+                        name="Close_round"
+                        size={24}
+                        color={colors.background.surface}
+                      />
+                    </View>
+                  </Pressable>
+                </View>
+              </LinearGradient>
             </View>
           </GestureDetector>
         </Animated.View>

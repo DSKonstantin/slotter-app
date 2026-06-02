@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 
 import { Badge, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -26,7 +26,6 @@ type Props = {
   title: string;
   body: BodyPart[] | string;
   onPress: () => void;
-  onDismiss?: () => void;
 };
 
 const InsightCard = ({
@@ -35,7 +34,6 @@ const InsightCard = ({
   title,
   body,
   onPress,
-  onDismiss,
 }: Props) => {
   const styles = INSIGHT_CATEGORY_CONFIG[category];
 
@@ -92,23 +90,6 @@ const InsightCard = ({
           />
         </View>
       </TouchableOpacity>
-      {onDismiss && (
-        <Pressable
-          hitSlop={8}
-          onPress={onDismiss}
-          className="active:opacity-70"
-          style={{
-            position: "absolute",
-            top: -8,
-            right: -8,
-            zIndex: 10,
-          }}
-        >
-          <View className="bg-neutral-100 rounded-full p-1">
-            <StSvg name="Close_round" size={20} color={colors.neutral[400]} />
-          </View>
-        </Pressable>
-      )}
     </View>
   );
 };
