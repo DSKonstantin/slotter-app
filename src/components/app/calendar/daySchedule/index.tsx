@@ -36,7 +36,6 @@ import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/D
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 type DayScheduleEditProps = {
   workingDay: WorkingDay;
@@ -191,7 +190,7 @@ const DayScheduleEdit = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-      <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
+      <FloatingFooter offset={bottomInset + 8}>
         <Button
           title="Сохранить изменения"
           loading={isLoading}

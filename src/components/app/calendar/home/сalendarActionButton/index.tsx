@@ -1,5 +1,4 @@
 import React, { useCallback } from "react";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { Button, FloatingFooter, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
@@ -7,15 +6,16 @@ interface Props {
   mode?: string;
   title?: string;
   onPress: () => void;
+  bottomInset: number;
 }
 
-const CalendarActionButton = ({ mode, title, onPress }: Props) => {
+const CalendarActionButton = ({ mode, title, onPress, bottomInset }: Props) => {
   const handlePress = useCallback(() => {
     onPress();
   }, [onPress]);
 
   return (
-    <FloatingFooter className="left-auto" offset={TAB_BAR_HEIGHT + 8}>
+    <FloatingFooter className="left-auto" offset={bottomInset + 8}>
       <Button
         onPress={handlePress}
         title={

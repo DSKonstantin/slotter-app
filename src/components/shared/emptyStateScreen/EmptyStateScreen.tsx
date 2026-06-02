@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, ImageSourcePropType, View } from "react-native";
 import { Button, StSvg, Typography } from "@/src/components/ui";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/src/styles/colors";
 
@@ -27,6 +27,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   onPress,
 }) => {
   const { bottom } = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
 
   return (
     <View className="flex-1">
@@ -51,7 +52,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
       <View
         className="px-screen"
         style={{
-          marginBottom: (withTabBar ? TAB_BAR_HEIGHT : 0) + bottom + 8,
+          marginBottom: (withTabBar ? tabBarHeight : 0) + bottom + 8,
         }}
       >
         <Button

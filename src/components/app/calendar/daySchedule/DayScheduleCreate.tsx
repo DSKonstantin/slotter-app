@@ -22,7 +22,6 @@ import { ScrollView } from "react-native";
 import { Button, FloatingFooter, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
   const auth = useRequiredAuth();
@@ -89,7 +88,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                 <DayScheduleForm />
               </ScrollView>
             </SafeAreaView>
-            <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
+            <FloatingFooter offset={bottomInset + 8}>
               <Button
                 title="Сохранить изменения"
                 loading={isLoading}

@@ -90,7 +90,11 @@ const CalendarHome = () => {
               onChange={handleModeChange}
               options={CALENDAR_VIEW_OPTIONS}
             />
-            {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
+            {mode === "month" ? (
+              <MonthCalendarView bottomInset={insets.bottomInset} />
+            ) : (
+              <DayCalendarView bottomInset={insets.bottomInset} />
+            )}
           </View>
         )}
       </ScreenWithToolbar>

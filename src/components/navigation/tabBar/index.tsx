@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { router, useSegments, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -9,7 +9,8 @@ import {
   FadeOverlay,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT, TABS } from "@/src/constants/tabs";
+import { COMPACT_BREAKPOINT, TABS } from "@/src/constants/tabs";
+import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
@@ -20,11 +21,19 @@ type TabItemProps = {
   isActive: boolean;
   isAtRoot: boolean;
   extendActive?: boolean;
+  compact: boolean;
   onPress: (key: string, isActive: boolean, isAtRoot: boolean) => void;
 };
 
 const TabItem = memo(
-  ({ tab, isActive, isAtRoot, extendActive, onPress }: TabItemProps) => {
+  ({
+    tab,
+    isActive,
+    isAtRoot,
+    extendActive,
+    compact,
+    onPress,
+  }: TabItemProps) => {
     const handlePress = useCallback(() => {
       onPress(tab.key, isActive, isAtRoot);
     }, [onPress, tab.key, isActive, isAtRoot]);
@@ -32,7 +41,7 @@ const TabItem = memo(
     return (
       <Pressable
         onPress={handlePress}
-        className="flex-1 items-center justify-center h-[46px] rounded-full active:opacity-70"
+        className={`flex-1 items-center justify-center rounded-full active:opacity-70 ${compact ? "h-[46px]" : "h-[58px] gap-0.5"}`}
       >
         {isActive && (
           <View
@@ -41,13 +50,13 @@ const TabItem = memo(
         )}
         <StSvg
           name={tab.icon as string}
-          size={24}
+          size={compact ? 24 : 32}
           color={isActive ? colors.neutral[900] : colors.neutral[500]}
         />
 
         <Typography
           weight="semibold"
-          className="text-[10px] leading-none text-center min-w-[64px] mt-[2px]"
+          className="text-[10px] leading-none text-center"
           style={isActive ? styles.labelActive : styles.labelInactive}
         >
           {tab.label}
@@ -65,7 +74,11 @@ const StTabBar: React.FC = () => {
   const dispatch = useAppDispatch();
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const tabBarHeight = useTabBarHeight();
   const segments = useSegments() as string[];
+
+  const compact = width < COMPACT_BREAKPOINT;
 
   const isInTabs = segments[1] === "(tabs)";
   const activeRoute = isInTabs ? (segments[2] ?? "index") : undefined;
@@ -92,19 +105,22 @@ const StTabBar: React.FC = () => {
       style={[
         styles.container,
         {
+          width: width,
           paddingLeft: insets.left,
           paddingRight: insets.right,
           paddingBottom: insets.bottom,
         },
       ]}
     >
-      <FadeOverlay position="bottom" height={TAB_BAR_HEIGHT + insets.bottom} />
+      <FadeOverlay position="bottom" height={tabBarHeight + insets.bottom} />
       <View
         className="flex-row items-center justify-between px-screen bg-transparent"
-        style={{ height: TAB_BAR_HEIGHT }}
+        style={{ height: tabBarHeight }}
       >
         <View
-          className="flex-1 mr-1.5 bg-background-surface rounded-full flex-row items-center justify-between overflow-hidden border-4 border-background-surface"
+          className="flex-1 bg-background-surface rounded-full
+          flex-row items-center justify-between overflow-hidden border-[3px]
+         border-background-surface mr-1.5"
           style={styles.topShadow}
         >
           {TABS.map((tab) => {
@@ -116,15 +132,16 @@ const StTabBar: React.FC = () => {
                 isActive={isActive}
                 isAtRoot={isActive ? isActiveTabAtRoot : true}
                 extendActive={tab.key === "calendar"}
+                compact={compact}
                 onPress={handleTabPress}
               />
             );
           })}
         </View>
         <IconButton
-          size="lg"
+          size={compact ? "lg" : "xxl"}
           style={styles.topShadow}
-          icon={<StSvg name="Menu" size={24} color={colors.neutral[900]} />}
+          icon={<StSvg name="Menu" size={28} color={colors.neutral[900]} />}
           onPress={handleMenuPress}
           buttonClassName={isMenuOpen ? "opacity-0" : undefined}
           disabled={isMenuOpen}

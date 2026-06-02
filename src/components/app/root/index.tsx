@@ -7,7 +7,7 @@ import {
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useFocusEffect } from "expo-router";
 
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
@@ -37,6 +37,7 @@ const Home = () => {
   const { refetch: refetchSchedule } = useTodaySchedule();
 
   const { bottom } = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
 
   const refetchAll = useCallback(
     () =>
@@ -79,10 +80,9 @@ const Home = () => {
       </ScrollView>
       <View
         className="px-screen gap-3"
-        style={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 8 }}
+        style={{ paddingBottom: tabBarHeight + bottom + 8 }}
       >
         <NotificationBanners />
-        {/*// TODO: нижние уведомления */}
         <InsightsCarousel />
       </View>
     </SafeAreaView>

@@ -48,7 +48,6 @@ import {
 } from "./constants";
 import GallerySkeleton from "./GallerySkeleton";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const toUiPhoto = (p: ApiGalleryPhoto): GalleryPhoto => ({
   id: String(p.id),
@@ -429,7 +428,7 @@ const Gallery = () => {
                 />
 
                 {isEditMode && selectedIds!.size > 0 && (
-                  <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
+                  <FloatingFooter offset={bottomInset + 8}>
                     <Button
                       buttonClassName="bg-background-surface"
                       title={`Удалить (${selectedIds!.size})`}
