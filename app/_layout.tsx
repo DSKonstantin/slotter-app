@@ -27,6 +27,8 @@ import { persistor, store } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
 import "@/src/utils/date/date";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
+import * as Sentry from "@sentry/react-native";
+import "@/src/services/sentry";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -95,7 +97,7 @@ function InitialLayout() {
   );
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -105,4 +107,4 @@ export default function RootLayout() {
       </PersistGate>
     </Provider>
   );
-}
+});

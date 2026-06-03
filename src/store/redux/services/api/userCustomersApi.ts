@@ -96,6 +96,14 @@ const userCustomersApi = api.injectEndpoints({
       invalidatesTags: ["UserCustomers"],
     }),
 
+    deleteUserCustomer: builder.mutation<void, { userId: number; id: number }>({
+      query: ({ userId, id }) => ({
+        url: `/users/${userId}/user_customers/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["UserCustomers"],
+    }),
+
     getUserCustomerAppointments: builder.query<
       GetUserCustomerAppointmentsResponse,
       { userId: number; id: number; params?: GetUserCustomerAppointmentsParams }
@@ -140,6 +148,7 @@ export const {
   useGetUserCustomerQuery,
   useCreateUserCustomerMutation,
   useUpdateUserCustomerMutation,
+  useDeleteUserCustomerMutation,
   useGetUserCustomerAppointmentsQuery,
   useGetUserCustomerFinancesQuery,
   useGetUserCustomersStatisticsQuery,

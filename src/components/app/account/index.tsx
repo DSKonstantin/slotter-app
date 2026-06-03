@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Platform, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
@@ -194,10 +200,23 @@ const AccountScreen = () => {
                 variant="clear"
                 loading={isLoggingOut}
                 disabled={isLoggingOut}
-                onPress={async () => {
-                  setIsLoggingOut(true);
-                  await logout();
-                }}
+                onPress={() =>
+                  Alert.alert(
+                    "Выйти из аккаунта?",
+                    "Вы уверены, что хотите выйти?",
+                    [
+                      { text: "Отмена", style: "cancel" },
+                      {
+                        text: "Подтвердить",
+                        style: "destructive",
+                        onPress: async () => {
+                          setIsLoggingOut(true);
+                          await logout();
+                        },
+                      },
+                    ],
+                  )
+                }
                 textClassName="text-accent-red-500"
                 rightIcon={
                   <StSvg

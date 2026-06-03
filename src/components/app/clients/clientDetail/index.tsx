@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, RefreshControl, Platform } from "react-native";
+import { Alert, View, RefreshControl, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -23,6 +23,7 @@ import { Routers } from "@/src/constants/routers";
 import {
   useGetUserCustomerQuery,
   useUpdateUserCustomerMutation,
+  useDeleteUserCustomerMutation,
 } from "@/src/store/redux/services/api/userCustomersApi";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -67,6 +68,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
   const [updateUserCustomer, { isLoading: isSaving }] =
     useUpdateUserCustomerMutation();
+  const [deleteUserCustomer] = useDeleteUserCustomerMutation();
   const [createChatRoom] = useCreateChatRoomMutation();
 
   const userCustomer = customerData?.user_customer;
@@ -84,6 +86,10 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   } = methods;
   useFormNavigationGuard(isDirty);
 
+  const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
+  const { scheduleAction: scheduleMenuAction, onModalHide: onMenuModalHide } =
+    useModalAction(handleCloseMenu);
+
   const handleOpenChangeCategory = useCallback(
     () => setChangeCategoryVisible(true),
     [],
@@ -97,9 +103,30 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const handleCloseContacts = useCallback(() => setContactsVisible(false), []);
 
   const handleOpenMenu = useCallback(() => setMenuVisible(true), []);
-  const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
-  const { scheduleAction: scheduleMenuAction, onModalHide: onMenuModalHide } =
-    useModalAction(handleCloseMenu);
+  const handleDeleteCustomer = useCallback(() => {
+    if (!auth || !customer || !userCustomer) return;
+    Alert.alert(
+      "Удалить клиента?",
+      `${customer.name} и вся история визитов будут удалены без возможности восстановления`,
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: () => {
+            router.back();
+            deleteUserCustomer({ userId: auth.userId, id: userCustomer.id })
+              .unwrap()
+              .catch((error) => {
+                toast.error(
+                  getApiErrorMessage(error, "Не удалось удалить клиента"),
+                );
+              });
+          },
+        },
+      ],
+    );
+  }, [auth, customer, userCustomer, deleteUserCustomer]);
 
   const handleSaveNote = methods.handleSubmit(async ({ note }) => {
     if (!auth || !userCustomer) return;
@@ -330,6 +357,20 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   />
                 )}
               </View>
+
+              <Button
+                title="Удалить клиента"
+                variant="clear"
+                onPress={handleDeleteCustomer}
+                textClassName="text-accent-red-500"
+                rightIcon={
+                  <StSvg
+                    name="Trash"
+                    size={24}
+                    color={colors.accent.red[500]}
+                  />
+                }
+              />
             </KeyboardAwareScrollView>
           );
         }}

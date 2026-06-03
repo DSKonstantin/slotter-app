@@ -11,12 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": [
-          "ru",
-          "en",
-          "ru",
-          "en"
-        ],
+        "CFBundleLocalizations": ["ru", "en", "ru", "en"],
         "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании",
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -62,14 +57,8 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": [
-              "ru",
-              "en"
-            ],
-            "android": [
-              "ru",
-              "en"
-            ]
+            "ios": ["ru", "en"],
+            "android": ["ru", "en"]
           }
         }
       ],
@@ -87,6 +76,14 @@
         "expo-contacts",
         {
           "contactsPermission": "Разрешите $(PRODUCT_NAME) доступ к контактам для быстрого добавления клиентов"
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "slotter-app",
+          "organization": "gcode-ay"
         }
       ]
     ],
