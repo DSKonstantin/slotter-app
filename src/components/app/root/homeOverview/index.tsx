@@ -24,7 +24,7 @@ const HomeOverview = () => {
         hitSlop={8}
       >
         <Typography weight="semibold" className="text-caption text-neutral-500">
-          Показатели
+          Помощник
         </Typography>
         <View className="relative" style={{ width: 12, height: 20 }}>
           {isExpanded ? (

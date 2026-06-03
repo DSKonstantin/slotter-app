@@ -27,6 +27,14 @@ type Props = {
 const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
   const { name, phone, avatar_url, avatar_blurhash } = interlocutor;
 
+  const { data: roomData } = useGetChatRoomQuery(
+    { chatRoomId: roomId },
+    { skip: !roomId },
+  );
+  const isNotify = roomData?.is_notify ?? true;
+
+  const [updateMembership] = useUpdateMembershipMutation();
+
   const handleCall = () => {
     if (!phone) return;
     const clean = phone.replace(/[^\d+]/g, "");
@@ -39,14 +47,6 @@ const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
     onClose();
     router.push(Routers.app.chat.clientHistory(interlocutor.id));
   };
-
-  const { data: roomData } = useGetChatRoomQuery(
-    { chatRoomId: roomId },
-    { skip: !roomId },
-  );
-  const isNotify = roomData?.is_notify ?? true;
-
-  const [updateMembership] = useUpdateMembershipMutation();
 
   return (
     <StModal visible={visible} onClose={onClose}>

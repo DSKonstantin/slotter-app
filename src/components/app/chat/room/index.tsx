@@ -122,6 +122,28 @@ export default function ChatRoom({ roomId }: Props) {
     [currentUser],
   );
 
+  const titleNode = useMemo(
+    () =>
+      interlocutor ? (
+        <View className="flex-row items-center gap-2 max-w-full">
+          <Avatar
+            name={interlocutor.name}
+            uri={interlocutor.avatar_url ?? undefined}
+            blurhash={interlocutor.avatar_blurhash}
+            size="xs"
+          />
+          <Typography
+            weight="semibold"
+            className="shrink text-[17px] leading-[22px]"
+            numberOfLines={2}
+          >
+            {interlocutor.name}
+          </Typography>
+        </View>
+      ) : undefined,
+    [interlocutor],
+  );
+
   const makeUser = useCallback(
     () => ({
       _id: currentGiftedId ?? currentUser?.id ?? 0,
@@ -513,29 +535,6 @@ export default function ChatRoom({ roomId }: Props) {
         <ChatEmptyState />
       ),
     [isLoading],
-  );
-
-  // ── Render ────────────────────────────────────────────────────────────
-  const titleNode = useMemo(
-    () =>
-      interlocutor ? (
-        <View className="flex-row items-center gap-2 max-w-full">
-          <Avatar
-            name={interlocutor.name}
-            uri={interlocutor.avatar_url ?? undefined}
-            blurhash={interlocutor.avatar_blurhash}
-            size="xs"
-          />
-          <Typography
-            weight="semibold"
-            className="shrink text-[17px] leading-[22px]"
-            numberOfLines={2}
-          >
-            {interlocutor.name}
-          </Typography>
-        </View>
-      ) : undefined,
-    [interlocutor],
   );
 
   // ── Mark room read on open ────────────────────────────────────────────

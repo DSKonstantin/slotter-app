@@ -78,8 +78,7 @@ const SlotCreate: React.FC = () => {
       time: draft.time ?? "",
       duration:
         initialServices.reduce((sum, s) => sum + s.duration, 0) +
-          draft.additionalServices.reduce((sum, s) => sum + s.duration, 0) ||
-        60,
+        draft.additionalServices.reduce((sum, s) => sum + s.duration, 0),
       comment: "",
       paymentMethod: "cash",
       sendNotification: true,
