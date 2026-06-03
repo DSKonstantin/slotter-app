@@ -41,13 +41,10 @@ const SlotCard = ({
   const rotation = useRef(new Animated.Value(0)).current;
   const highlightOpacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.timing(rotation, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [isExpanded, rotation]);
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
 
   const toggleExpand = () => {
     if (onToggleExpand) {
@@ -57,10 +54,13 @@ const SlotCard = ({
     }
   };
 
-  const rotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "180deg"],
-  });
+  useEffect(() => {
+    Animated.timing(rotation, {
+      toValue: isExpanded ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isExpanded, rotation]);
 
   useEffect(() => {
     if (!highlighted) return;

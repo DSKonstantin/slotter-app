@@ -71,14 +71,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     (state) => state.calendar.highlightSlotId,
   );
 
-  const handleSlotPress = useCallback((id: number) => {
-    router.push(Routers.app.calendar.slot(id));
-  }, []);
-
-  const handleToggleExpand = useCallback((id: number) => {
-    setExpandedSlotId((prev) => (prev === id ? null : id));
-  }, []);
-
   const segmentsResult = useMemo(
     () => createSegments(startAt, endAt, breaks, appointments, visibleStatuses),
     [appointments, visibleStatuses, breaks, startAt, endAt],
@@ -123,6 +115,14 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   const isNowInRange =
     currentMinutes >= effectiveStart && currentMinutes <= timelineEnd;
+
+  const handleSlotPress = useCallback((id: number) => {
+    router.push(Routers.app.calendar.slot(id));
+  }, []);
+
+  const handleToggleExpand = useCallback((id: number) => {
+    setExpandedSlotId((prev) => (prev === id ? null : id));
+  }, []);
 
   const computeTargetScrollY = useCallback(() => {
     if (highlightSlotId) {

@@ -169,9 +169,16 @@ const collectTimePoints = (
     }
   });
 
+  const isInsideBlocking = (t: number) =>
+    blockingAppointments.some(
+      ({ slot, start, end }) => slot.duration > 0 && start < t && end > t,
+    );
+
   nonBlockingAppointments.forEach(({ start, end }) => {
-    if (start >= effectiveStart && start <= effectiveEnd) timePoints.add(start);
-    if (end > effectiveStart && end <= effectiveEnd) timePoints.add(end);
+    if (!isInsideBlocking(start) && start >= effectiveStart && start <= effectiveEnd)
+      timePoints.add(start);
+    if (!isInsideBlocking(end) && end > effectiveStart && end <= effectiveEnd)
+      timePoints.add(end);
   });
 
   return Array.from(timePoints).sort((a, b) => a - b);
@@ -218,7 +225,7 @@ const buildSegments = (
     );
 
     const isOverlappedByPrior = parsedAppointments.some(
-      (a) => occupiesTime(a) && a.start < segStart && a.end > segStart,
+      (a) => occupiesTime(a) && a.start <= segStart && a.end > segStart,
     );
     const showFreeSlotBlock = !isOutsideWorking && !isOverlappedByPrior;
     const showFilteredBlock =
@@ -291,18 +298,24 @@ export const createSegments = (
     ({ slot }) => slot.status === "cancelled" || slot.status === "declined",
   );
 
-  const apptStarts = parsedAppointments.map((a) => a.start);
-  const apptEnds = parsedAppointments.map((a) => Math.max(a.start, a.end));
+  const blockingStarts = blockingAppointments.map((a) => a.start);
+  const blockingEnds = blockingAppointments.map((a) => Math.max(a.start, a.end));
+  const allStarts = parsedAppointments.map((a) => a.start);
+  const allEnds = parsedAppointments.map((a) => Math.max(a.start, a.end));
 
   let effectiveStart: number;
   let effectiveEnd: number;
 
   if (workingStart !== undefined && workingEnd !== undefined) {
-    effectiveStart = Math.min(workingStart, ...apptStarts);
-    effectiveEnd = Math.max(workingEnd, ...apptEnds);
-  } else if (apptStarts.length > 0) {
-    effectiveStart = Math.min(...apptStarts);
-    effectiveEnd = Math.max(...apptEnds);
+    effectiveStart = blockingStarts.length > 0
+      ? Math.min(workingStart, ...blockingStarts)
+      : workingStart;
+    effectiveEnd = blockingEnds.length > 0
+      ? Math.max(workingEnd, ...blockingEnds)
+      : workingEnd;
+  } else if (allStarts.length > 0) {
+    effectiveStart = Math.min(...allStarts);
+    effectiveEnd = Math.max(...allEnds);
   } else {
     return { segments: [], effectiveStart: 0 };
   }
