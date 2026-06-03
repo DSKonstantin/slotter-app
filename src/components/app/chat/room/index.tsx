@@ -582,7 +582,7 @@ export default function ChatRoom({ roomId }: Props) {
           <SafeAreaView className="flex-1" edges={["left", "right"]}>
             {isLoading ? (
               <View className="flex-1 items-center justify-center">
-                <ActivityIndicator color={colors.neutral[400]} />
+                <ActivityIndicator size="large" color={colors.neutral[400]} />
               </View>
             ) : isError && messages.length === 0 ? (
               <View className="flex-1 items-center justify-center px-screen">

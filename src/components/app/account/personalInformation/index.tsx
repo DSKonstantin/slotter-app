@@ -31,13 +31,11 @@ import { AccountPersonalInformationSchema } from "@/src/validation/schemas/accou
 import type { UploadFile } from "@/src/types/upload";
 import { colors } from "@/src/styles/colors";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
-import { NicknameField } from "@/src/components/onboarding/personalInformation/NicknameField";
 
 type FormValues = {
   name: string;
   surname: string;
   profession: string;
-  nickname: string;
   avatar: UploadFile | null;
 };
 
@@ -56,7 +54,6 @@ const PersonalInformation = () => {
       name: user?.first_name ?? "",
       surname: user?.last_name ?? "",
       profession: user?.profession ?? "",
-      nickname: user?.nickname ?? "",
       avatar: null,
     },
   });
@@ -79,7 +76,6 @@ const PersonalInformation = () => {
       if (!auth) return;
       try {
         const formData = buildUserFormData(data);
-        formData.append("user[nickname]", data.nickname);
         await updateUser({ id: auth.userId, data: formData }).unwrap();
         methods.reset(data);
         router.back();
@@ -152,7 +148,6 @@ const PersonalInformation = () => {
                     label="Специализация"
                     placeholder="Барбер"
                   />
-                  <NicknameField />
                 </View>
               </View>
             </KeyboardAwareScrollView>

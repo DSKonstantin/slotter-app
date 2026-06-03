@@ -24,12 +24,12 @@ export const authApi = api.injectEndpoints({
 
     confirmCode: builder.mutation<
       AuthResponse,
-      { phone: string; code: string }
+      { phone: string; code: string; referral_code?: string }
     >({
-      query: ({ phone, code }) => ({
+      query: ({ phone, code, referral_code }) => ({
         url: "/auth/confirm_code",
         method: "POST",
-        data: { phone, code },
+        data: { phone, code, ...(referral_code && { referral_code }) },
       }),
     }),
 

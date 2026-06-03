@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
 import { Image } from "expo-image";
 import authHomeImage from "@/assets/images/auth/auth-home.png";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthHeader from "@/src/components/auth/layout/header";
+import { colors } from "@/src/styles/colors";
 
 const AuthHome = () => {
   const handleRegister = useCallback(() => {
@@ -27,7 +28,10 @@ const AuthHome = () => {
       />
       <SafeAreaView className="flex-1">
         <View className="px-screen">
-          <AuthHeader showBack={false} title="slotter" />
+          <AuthHeader
+            showBack={false}
+            title={<StSvg name="union" size={25} color={colors.neutral[0]} />}
+          />
         </View>
         <View className="flex-1 justify-between gap-8">
           <View className="flex-1 justify-end items-center px-screen">
