@@ -66,6 +66,7 @@ const HomeHeader = () => {
 
       <IconButton
         size="sm"
+        buttonClassName="bg-background"
         onPress={() => setModalVisible(true)}
         icon={<StSvg name="Add_round" size={24} color={colors.neutral[900]} />}
       />

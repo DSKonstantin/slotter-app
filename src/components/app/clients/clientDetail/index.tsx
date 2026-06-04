@@ -39,6 +39,7 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { useModalAction } from "@/src/hooks/useModalAction";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import ChangeCategoryModal from "./changeCategoryModal";
 import ContactsModal from "./contactsModal";
 import ClientMenuModal from "./clientMenuModal";
@@ -52,6 +53,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
   const [contactsVisible, setContactsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const {
@@ -313,8 +315,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   }
                 />
                 <HomeCard
-                  disabled
                   title={"Сделать\nподарок"}
+                  className="opacity-40"
                   startAdornment={
                     <StSvg
                       name="gift_alt_fill"
@@ -322,6 +324,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                       color={colors.neutral[900]}
                     />
                   }
+                  onPress={() => setComingSoonVisible(true)}
                 />
               </View>
 
@@ -397,6 +400,11 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         onClose={handleCloseMenu}
         onModalHide={onMenuModalHide}
         onChangeCategory={() => scheduleMenuAction(handleOpenChangeCategory)}
+      />
+
+      <ComingSoonModal
+        visible={comingSoonVisible}
+        onClose={() => setComingSoonVisible(false)}
       />
     </FormProvider>
   );

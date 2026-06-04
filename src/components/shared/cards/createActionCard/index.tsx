@@ -1,5 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
+import { twMerge } from "tailwind-merge";
 import { Typography } from "@/src/components/ui";
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
   disabled?: boolean;
   leftIcon?: React.ReactNode;
   onPress?: () => void;
+  className?: string;
 };
 
 const CreateActionCard = ({
@@ -16,6 +18,7 @@ const CreateActionCard = ({
   disabled,
   subtitle,
   onPress,
+  className,
 }: Props) => {
   return (
     <TouchableOpacity
@@ -24,7 +27,10 @@ const CreateActionCard = ({
       style={{
         ...(disabled && { opacity: 0.4 }),
       }}
-      className="px-4 py-3.5 bg-background-surface flex-row rounded-base gap-4 items-center"
+      className={twMerge(
+        "px-4 py-3.5 bg-background-surface flex-row rounded-base gap-4 items-center",
+        className,
+      )}
       onPress={onPress}
     >
       {leftIcon}

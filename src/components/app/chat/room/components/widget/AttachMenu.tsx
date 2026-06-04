@@ -22,7 +22,11 @@ const AttachMenu = ({
     <ImagePickerTrigger
       title="Прикрепить файл"
       includeFiles
-      options={{ allowsMultipleSelection: true, selectionLimit: 10 }}
+      options={{
+        allowsMultipleSelection: true,
+        selectionLimit: 10,
+        allowsEditing: false,
+      }}
       onPick={onAttachFile}
     >
       <Card

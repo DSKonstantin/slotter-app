@@ -29,6 +29,7 @@ import { colors } from "@/src/styles/colors";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
 import ClientsListSkeleton from "./ClientsListSkeleton";
@@ -108,6 +109,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
   const search = useAppSelector(selectClientsSearch);
   const tagId = useAppSelector(selectClientsTagId);
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
 
   const debouncedSetSearch = useRef(
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
@@ -278,9 +280,8 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
                 />
                 <Button
                   title="Рассылка"
-                  disabled
                   variant="clear"
-                  buttonClassName="flex-1"
+                  buttonClassName="flex-1 opacity-40"
                   rightIcon={
                     <StSvg
                       name="Message_alt_fill"
@@ -288,7 +289,7 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
                       color={colors.neutral[900]}
                     />
                   }
-                  onPress={() => {}}
+                  onPress={() => setComingSoonVisible(true)}
                 />
               </View>
             ) : null
@@ -315,6 +316,11 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           }
         />
       )}
+
+      <ComingSoonModal
+        visible={comingSoonVisible}
+        onClose={() => setComingSoonVisible(false)}
+      />
     </View>
   );
 };
