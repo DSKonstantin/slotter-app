@@ -53,6 +53,15 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     stories: MOCK_NOTIFICATION_STORIES["finances"],
     onPress: () => onStoryPress("finances"),
   },
+  {
+    id: "notification",
+    category: "tip",
+    iconName: "Lamp_fill",
+    title: "Как отправлять уведомление клиентам",
+    body: [{ text: "От бесплатных до платных каналов отправки" }],
+    stories: MOCK_NOTIFICATION_STORIES["notification"],
+    onPress: () => onStoryPress("notification"),
+  },
 ];
 
 const InsightsCarousel = () => {

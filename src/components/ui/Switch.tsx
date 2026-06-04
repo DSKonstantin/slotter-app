@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Pressable, Animated, ViewStyle } from "react-native";
 import { colors } from "@/src/styles/colors";
 import { twMerge } from "tailwind-merge";
@@ -18,17 +18,16 @@ export function Switch({
   value,
   onChange,
   disabled = false,
-  width = 50,
+  width = 54,
   height = 28,
   className,
 }: SwitchProps) {
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
-  const thumbSize = useMemo(() => height - 4, [height]);
-
+  const thumbSize = height - 4;
   const translateX = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [2, width - thumbSize - 6],
+    outputRange: [2, width - thumbSize - 2],
   });
 
   const bgColor = anim.interpolate({
@@ -64,7 +63,6 @@ export function Switch({
             height,
             borderRadius: height / 2,
             backgroundColor: bgColor as any,
-            paddingHorizontal: 3,
             justifyContent: "center",
           } satisfies ViewStyle,
         ]}

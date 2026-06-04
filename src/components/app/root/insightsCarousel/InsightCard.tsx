@@ -42,7 +42,7 @@ const InsightCard = ({
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onPress}
-        className="bg-background-surface rounded-base p-4 gap-2 min-h-[132px]"
+        className="bg-background rounded-base p-4 gap-2 min-h-[132px]"
       >
         <View className="flex-row items-center gap-2">
           <StSvg name={iconName} size={28} color={styles.color} />

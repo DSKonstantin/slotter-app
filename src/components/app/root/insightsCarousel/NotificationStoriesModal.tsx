@@ -17,7 +17,8 @@ export type StoryCategory =
   | "schedule"
   | "services"
   | "events"
-  | "finance";
+  | "finance"
+  | "notification";
 
 export type Story = {
   id: string;

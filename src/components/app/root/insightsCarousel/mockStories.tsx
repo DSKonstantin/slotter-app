@@ -165,6 +165,48 @@ const FINANCES_STORIES: Story[] = [
   },
 ];
 
+const NOTIFICATION_STORIES: Story[] = [
+  {
+    id: "1",
+    category: "notification",
+    customScreen: (
+      <TrainingScreen
+        source={require("@/assets/images/history/notification/one.png")}
+      />
+    ),
+  },
+  {
+    id: "2",
+    category: "notification",
+    customScreen: (
+      <TrainingScreen
+        source={require("@/assets/images/history/notification/two.png")}
+        paddingTop={60}
+      />
+    ),
+  },
+  {
+    id: "3",
+    category: "notification",
+    customScreen: (
+      <TrainingScreen
+        source={require("@/assets/images/history/notification/three.png")}
+        paddingTop={60}
+      />
+    ),
+  },
+  {
+    id: "4",
+    category: "notification",
+    customScreen: (
+      <TrainingScreen
+        source={require("@/assets/images/history/notification/four.png")}
+        paddingTop={60}
+      />
+    ),
+  },
+];
+
 export const MOCK_NOTIFICATION_STORIES: Record<string, StoriesData> = {
   "education-payments": {
     training: TRAINING_STORIES,
@@ -175,5 +217,8 @@ export const MOCK_NOTIFICATION_STORIES: Record<string, StoriesData> = {
 
   finances: {
     training: FINANCES_STORIES,
+  },
+  notification: {
+    training: NOTIFICATION_STORIES,
   },
 };
