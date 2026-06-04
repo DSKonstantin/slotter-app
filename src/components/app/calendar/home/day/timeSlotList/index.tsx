@@ -83,10 +83,12 @@ const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
     return d.getHours() * 60 + d.getMinutes();
   });
 
-  const nowOffset = useMemo(
-    () => computeNowOffset(segments, currentMinutes),
-    [segments, currentMinutes],
-  );
+  const nowOffset = useMemo(() => {
+    if (currentMinutes < effectiveStart) return 0;
+    if (currentMinutes > timelineEnd)
+      return segments.reduce((acc, seg) => acc + getSegmentHeight(seg), 0);
+    return computeNowOffset(segments, currentMinutes);
+  }, [segments, currentMinutes, effectiveStart, timelineEnd]);
 
   useEffect(() => {
     const tick = () => {
@@ -108,9 +110,6 @@ const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
       clearInterval(interval);
     };
   }, []);
-
-  if (currentMinutes < effectiveStart || currentMinutes > timelineEnd)
-    return null;
 
   return (
     <CurrentTimeIndicator
