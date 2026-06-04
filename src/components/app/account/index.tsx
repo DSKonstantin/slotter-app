@@ -95,8 +95,7 @@ const AccountScreen = () => {
       {
         title: "Уведомления клиентам",
         icon: "Message_fill",
-        rightIcon: "External",
-        route: () => {},
+        route: () => router.push(Routers.app.account.clientNotifications.root),
       },
     ],
     [

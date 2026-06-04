@@ -18,7 +18,8 @@ type BadgeVariant =
   | "success"
   | "warning"
   | "neutral"
-  | "error";
+  | "error"
+  | "ghost";
 
 type BadgeSize = "sm" | "md";
 
@@ -135,4 +136,5 @@ const variants: Record<BadgeVariant, { container: string; text: string }> = {
     text: "text-accent-yellow-700",
   },
   error: { container: "bg-accent-red-100", text: "text-accent-red-500" },
+  ghost: { container: "bg-background", text: "text-neutral-500" },
 };
