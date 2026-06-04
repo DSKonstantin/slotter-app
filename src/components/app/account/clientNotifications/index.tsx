@@ -10,6 +10,8 @@ import {
   StSvg,
   Typography,
 } from "@/src/components/ui";
+import { SlotterLogo } from "@/src/components/shared/svg/SlotterLogo";
+import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
 import DirectDiffModal from "./DirectDiffModal";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
@@ -27,15 +29,21 @@ const APP_FEATURES = [
     icon: "Refresh_2_light" as const,
     text: "Клиент сам записывается повторно",
   },
-  { icon: "Refresh_2_light" as const, text: "Переносит и отменяет запись" },
+  { icon: "close_ring_light" as const, text: "Переносит и отменяет запись" },
   {
-    icon: "Refresh_2_light" as const,
+    icon: "Chat_alt_3_light" as const,
     text: "Оставляет отзыв прямо в приложении",
   },
   { icon: "Chat_light" as const, text: "Пишет в чат без лишних мессенджеров" },
 ];
 
-const TELEGRAM_BOTS = ["Telegram Bot", "Макс Bot"] as const;
+const TELEGRAM_BOTS = [
+  {
+    title: "Telegram Bot",
+    icon: <StSvg name="SocialTelegram" size={24} color="#37B5DB" />,
+  },
+  { title: "Макс Bot", icon: <MaxLogo size={24} /> },
+];
 
 const DIRECT_CHANNELS = [
   {
@@ -47,7 +55,8 @@ const DIRECT_CHANNELS = [
   },
   {
     channel: "max" as const,
-    icon: "SocialTelegram" as const,
+    icon: null,
+    iconNode: <MaxLogo size={28} />,
     iconColor: "#7B61FF",
     name: "Макс",
     price: "от 1 000 ₽/мес",
@@ -140,7 +149,7 @@ const ClientNotifications = () => {
 
             <View className="bg-background-surface p-4 rounded-base">
               <View className="flex-row gap-2 items-center">
-                <View className="w-8 h-8 bg-red-500" />
+                <SlotterLogo size={32} />
                 <View>
                   <Typography className="text-body">
                     Slotter - трекер услуг и мастеров
@@ -156,10 +165,10 @@ const ClientNotifications = () => {
 
               <Divider className="my-4" />
 
-              <View className="mb-2.5">
+              <View className="mb-2.5 gap-2">
                 {APP_FEATURES.map(({ icon, text }) => (
                   <View key={text} className="flex-row gap-2 items-center">
-                    <StSvg name={icon} size={20} color={colors.neutral[400]} />
+                    <StSvg name={icon} size={20} color={colors.neutral[900]} />
                     <Typography weight="regular" className="text-caption">
                       {text}
                     </Typography>
@@ -178,13 +187,12 @@ const ClientNotifications = () => {
             </View>
 
             <View className="my-2 flex-row gap-2">
-              {TELEGRAM_BOTS.map((title) => (
+              {TELEGRAM_BOTS.map(({ title, icon }) => (
                 <Card
                   key={title}
                   title={title}
-                  left={
-                    <StSvg name="SocialTelegram" size={24} color="#37B5DB" />
-                  }
+                  left={icon}
+                  onPress={() => {}}
                   className="flex-1"
                   right={
                     <StSvg
@@ -230,13 +238,15 @@ const ClientNotifications = () => {
 
             <View className="bg-background-surface p-4 rounded-base mt-2">
               {DIRECT_CHANNELS.map(
-                ({ channel, icon, iconColor, name, price }, i) => (
+                ({ channel, icon, iconNode, iconColor, name, price }, i) => (
                   <React.Fragment key={name}>
                     <Card
                       className="p-0"
                       titleNode={
                         <View className="flex-row items-center gap-1.5">
-                          <StSvg name={icon} size={28} color={iconColor} />
+                          {iconNode ?? (
+                            <StSvg name={icon!} size={28} color={iconColor} />
+                          )}
                           <Typography className="text-body">{name}</Typography>
                         </View>
                       }

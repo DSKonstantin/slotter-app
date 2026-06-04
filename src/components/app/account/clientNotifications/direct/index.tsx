@@ -10,13 +10,15 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
 
 type Channel = "telegram" | "max" | "whatsapp";
 
 const CHANNEL_CONFIG: Record<
   Channel,
   {
-    icon: "SocialTelegram" | "SocialWhatsApp";
+    icon: "SocialTelegram" | "SocialWhatsApp" | "SocialMax";
+    iconNode?: React.ReactNode;
     iconColor: string;
     name: string;
     description: string;
@@ -38,7 +40,8 @@ const CHANNEL_CONFIG: Record<
     price: "1 000 ₽/мес",
   },
   max: {
-    icon: "SocialTelegram",
+    icon: "SocialMax",
+    iconNode: <MaxLogo size={80} />,
     iconColor: "#7B61FF",
     name: "Макс",
     description:
@@ -80,7 +83,9 @@ const DirectNotifications = () => {
             contentContainerStyle={{ paddingBottom: bottomInset + 56 }}
           >
             <View className="items-center">
-              <StSvg name={config.icon} size={80} color={config.iconColor} />
+              {config.iconNode ?? (
+                <StSvg name={config.icon} size={80} color={config.iconColor} />
+              )}
               <Typography weight="semibold" className="text-display mt-2">
                 {config.name}
               </Typography>

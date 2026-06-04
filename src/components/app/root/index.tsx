@@ -63,7 +63,7 @@ const Home = () => {
   );
 
   return (
-    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
       <HomeHeader />
       <ScrollView
         contentContainerStyle={{

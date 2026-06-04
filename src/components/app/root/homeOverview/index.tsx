@@ -63,7 +63,7 @@ const HomeOverview = () => {
 
       {isExpanded && (
         <>
-          <View className="bg-background-card rounded-full flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2">
             <View
               className={`w-4 h-4 rounded-md ${
                 !isReady
