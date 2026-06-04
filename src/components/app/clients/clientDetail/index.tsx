@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, RefreshControl, Platform } from "react-native";
+import { Alert, View, RefreshControl, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -23,6 +23,7 @@ import { Routers } from "@/src/constants/routers";
 import {
   useGetUserCustomerQuery,
   useUpdateUserCustomerMutation,
+  useDeleteUserCustomerMutation,
 } from "@/src/store/redux/services/api/userCustomersApi";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -35,8 +36,10 @@ import {
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useModalAction } from "@/src/hooks/useModalAction";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import ChangeCategoryModal from "./changeCategoryModal";
 import ContactsModal from "./contactsModal";
 import ClientMenuModal from "./clientMenuModal";
@@ -47,6 +50,10 @@ type NoteFormValues = { note: string };
 type Props = { userCustomerId?: number; customerId?: number };
 
 const ClientDetail = ({ userCustomerId, customerId }: Props) => {
+  const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
+  const [contactsVisible, setContactsVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const {
@@ -63,6 +70,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
   const [updateUserCustomer, { isLoading: isSaving }] =
     useUpdateUserCustomerMutation();
+  const [deleteUserCustomer] = useDeleteUserCustomerMutation();
   const [createChatRoom] = useCreateChatRoomMutation();
 
   const userCustomer = customerData?.user_customer;
@@ -80,7 +88,10 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   } = methods;
   useFormNavigationGuard(isDirty);
 
-  const [changeCategoryVisible, setChangeCategoryVisible] = useState(false);
+  const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
+  const { scheduleAction: scheduleMenuAction, onModalHide: onMenuModalHide } =
+    useModalAction(handleCloseMenu);
+
   const handleOpenChangeCategory = useCallback(
     () => setChangeCategoryVisible(true),
     [],
@@ -90,13 +101,34 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     [],
   );
 
-  const [contactsVisible, setContactsVisible] = useState(false);
   const handleOpenContacts = useCallback(() => setContactsVisible(true), []);
   const handleCloseContacts = useCallback(() => setContactsVisible(false), []);
 
-  const [menuVisible, setMenuVisible] = useState(false);
   const handleOpenMenu = useCallback(() => setMenuVisible(true), []);
-  const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
+  const handleDeleteCustomer = useCallback(() => {
+    if (!auth || !customer || !userCustomer) return;
+    Alert.alert(
+      "Удалить клиента?",
+      `${customer.name} и вся история визитов будут удалены без возможности восстановления`,
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: () => {
+            router.back();
+            deleteUserCustomer({ userId: auth.userId, id: userCustomer.id })
+              .unwrap()
+              .catch((error) => {
+                toast.error(
+                  getApiErrorMessage(error, "Не удалось удалить клиента"),
+                );
+              });
+          },
+        },
+      ],
+    );
+  }, [auth, customer, userCustomer, deleteUserCustomer]);
 
   const handleSaveNote = methods.handleSubmit(async ({ note }) => {
     if (!auth || !userCustomer) return;
@@ -283,8 +315,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   }
                 />
                 <HomeCard
-                  disabled
                   title={"Сделать\nподарок"}
+                  className="opacity-40"
                   startAdornment={
                     <StSvg
                       name="gift_alt_fill"
@@ -292,6 +324,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                       color={colors.neutral[900]}
                     />
                   }
+                  onPress={() => setComingSoonVisible(true)}
                 />
               </View>
 
@@ -327,6 +360,20 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   />
                 )}
               </View>
+
+              <Button
+                title="Удалить клиента"
+                variant="clear"
+                onPress={handleDeleteCustomer}
+                textClassName="text-accent-red-500"
+                rightIcon={
+                  <StSvg
+                    name="Trash"
+                    size={24}
+                    color={colors.accent.red[500]}
+                  />
+                }
+              />
             </KeyboardAwareScrollView>
           );
         }}
@@ -351,7 +398,13 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
       <ClientMenuModal
         visible={menuVisible}
         onClose={handleCloseMenu}
-        onChangeCategory={handleOpenChangeCategory}
+        onModalHide={onMenuModalHide}
+        onChangeCategory={() => scheduleMenuAction(handleOpenChangeCategory)}
+      />
+
+      <ComingSoonModal
+        visible={comingSoonVisible}
+        onClose={() => setComingSoonVisible(false)}
       />
     </FormProvider>
   );

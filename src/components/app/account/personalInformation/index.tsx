@@ -2,8 +2,8 @@ import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CameraType, ImagePickerAsset } from "expo-image-picker";
-import { DocumentPickerAsset } from "expo-document-picker";
+import { CameraType } from "expo-image-picker";
+import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
@@ -41,11 +41,12 @@ type FormValues = {
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
   const [updateUser, { isLoading }] = useUpdateUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const methods = useForm<FormValues>({
     resolver: yupResolver(AccountPersonalInformationSchema),
@@ -62,9 +63,9 @@ const PersonalInformation = () => {
   const avatar = methods.watch("avatar");
 
   const handlePickAvatar = useCallback(
-    (assets: ImagePickerAsset[] | DocumentPickerAsset[]) => {
+    (assets: PickedAssets) => {
       const asset = assets[0];
-      if (!asset || !("width" in asset)) return;
+      if (!asset) return;
       methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
@@ -116,6 +117,7 @@ const PersonalInformation = () => {
                   <ImagePickerTrigger
                     title="Фото профиля"
                     options={{ aspect: [1, 1], cameraType: CameraType.front }}
+                    includeFiles
                     onPick={handlePickAvatar}
                   >
                     <Avatar

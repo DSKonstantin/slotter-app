@@ -68,31 +68,18 @@ const ServiceList = ({
   onLoadMore,
 }: ServiceListProps) => {
   const auth = useRequiredAuth();
-  const isEditMode = useAppSelector((s) => s.services.isEditMode);
-
   const [reorderKey, setReorderKey] = useState(0);
   const [collapsedIds, setCollapsedIds] = useState<Set<number>>(
     () => new Set(),
   );
   const autoCollapsedCategoryRef = useRef<number | null>(null);
 
+  const isEditMode = useAppSelector((s) => s.services.isEditMode);
+
   const [reorderServiceCategories] = useReorderServiceCategoriesMutation();
   const [reorderServices] = useReorderServicesMutation();
   const [updateService] = useUpdateServiceMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
-
-  const handleToggleExpanded = useCallback((categoryId: number) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setCollapsedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-      return next;
-    });
-  }, []);
 
   const flatItems = useMemo<FlatItem[]>(() => {
     const items: FlatItem[] = [];
@@ -111,6 +98,19 @@ const ServiceList = ({
     }
     return items;
   }, [categories, collapsedIds]);
+
+  const handleToggleExpanded = useCallback((categoryId: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  }, []);
 
   const handleDragEnd = useCallback(
     async ({
@@ -404,10 +404,22 @@ const ServiceList = ({
       }}
       accessibilityRole="list"
       ListEmptyComponent={
-        <View className="pt-6">
+        <View className="pt-6 gap-3">
           <Typography className="text-neutral-500">
             Категорий пока нет.
           </Typography>
+          <Button
+            title="Создать категорию"
+            variant="secondary"
+            onPress={() => router.push(Routers.app.services.categories)}
+            rightIcon={
+              <StSvg
+                name="Add_ring_fill_light"
+                size={18}
+                color={colors.neutral[900]}
+              />
+            }
+          />
         </View>
       }
       ItemSeparatorComponent={() => <View style={{ height: 8 }} />}

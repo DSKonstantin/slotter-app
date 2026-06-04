@@ -3,7 +3,7 @@ import { Pressable, View, Text, TextProps } from "react-native";
 import { twMerge } from "tailwind-merge";
 
 type CardProps = {
-  title: string;
+  title?: string;
   titleNode?: ReactNode;
   titleProps?: TextProps;
   subtitleProps?: TextProps;
@@ -53,7 +53,7 @@ export const Card = ({
         className,
       )}
     >
-      {left ? <View className="mr-3">{left}</View> : null}
+      {left ? <View className="mr-2">{left}</View> : null}
 
       <ContentComponent
         className="grow shrink basis-auto min-w-0"

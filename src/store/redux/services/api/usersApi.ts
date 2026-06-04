@@ -31,7 +31,6 @@ export const usersApi = api.injectEndpoints({
         params: { nickname },
       }),
     }),
-
   }),
 });
 

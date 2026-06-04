@@ -16,7 +16,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { colors } from "@/src/styles/colors";
 import { parseISO } from "date-fns";
-import { formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { formatDayMonthLong, formatSlotDate } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
@@ -67,7 +67,7 @@ const RescheduleModal = ({
     auth
       ? {
           userId: auth.userId,
-          date: dateValue,
+          date: formatSlotDate(parseISO(dateValue)),
           step: stepMinutes,
           appointment_id: appointmentId,
         }

@@ -7,7 +7,7 @@ import {
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useFocusEffect } from "expo-router";
 
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
+import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
@@ -21,10 +21,7 @@ import InsightsCarousel from "@/src/components/app/root/insightsCarousel";
 import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const Home = () => {
-  const { bottom } = useSafeAreaInsets();
   const auth = useRequiredAuth();
-
-  const { refetch: refetchSchedule } = useTodaySchedule();
 
   const { refetch: refetchAppointments } = useGetUpcomingAppointmentsQuery(
     auth ? { userId: auth.userId } : skipToken,
@@ -37,15 +34,10 @@ const Home = () => {
 
   const [triggerGetMe] = useLazyGetMeQuery();
 
-  useFocusEffect(
-    useCallback(() => {
-      if (auth) {
-        refetchSchedule();
-        refetchAppointments();
-        refetchNotifications();
-      }
-    }, [auth, refetchSchedule, refetchAppointments, refetchNotifications]),
-  );
+  const { refetch: refetchSchedule } = useTodaySchedule();
+
+  const { bottom } = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
 
   const refetchAll = useCallback(
     () =>
@@ -60,8 +52,18 @@ const Home = () => {
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (auth) {
+        refetchSchedule();
+        refetchAppointments();
+        refetchNotifications();
+      }
+    }, [auth, refetchSchedule, refetchAppointments, refetchNotifications]),
+  );
+
   return (
-    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
       <HomeHeader />
       <ScrollView
         contentContainerStyle={{
@@ -78,10 +80,9 @@ const Home = () => {
       </ScrollView>
       <View
         className="px-screen gap-3"
-        style={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 8 }}
+        style={{ paddingBottom: tabBarHeight + bottom + 8 }}
       >
         <NotificationBanners />
-        {/*// TODO: нижние уведомления */}
         <InsightsCarousel />
       </View>
     </SafeAreaView>

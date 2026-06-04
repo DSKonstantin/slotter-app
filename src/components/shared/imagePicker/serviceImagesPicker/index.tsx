@@ -7,6 +7,7 @@ import { nanoid } from "nanoid/non-secure";
 
 import { Typography, Divider } from "@/src/components/ui";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
+import { useModalAction } from "@/src/hooks/useModalAction";
 import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
 import PhotoPreview from "@/src/components/shared/imagePicker/serviceImagesPicker/PhotoPreview";
 import EmptySlot from "@/src/components/shared/imagePicker/serviceImagesPicker/EmptySlot";
@@ -50,10 +51,9 @@ type MenuState =
   | {
       open: true;
       title: string;
-      message?: string;
       onCamera: () => void | Promise<void>;
       onGallery: () => void | Promise<void>;
-      onFiles?: () => void | Promise<void>;
+      onFiles: () => void | Promise<void>;
     };
 
 const REQUIREMENTS = [
@@ -85,7 +85,28 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
   const [menu, setMenu] = useState<MenuState>({ open: false });
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
 
+  const additionalRows = useMemo(() => {
+    const rows: number[][] = [];
+
+    for (let i = 0; i < MAX_ADDITIONAL_PHOTOS; i += ADDITIONAL_PHOTO_ROW_SIZE) {
+      rows.push(
+        Array.from(
+          {
+            length: Math.min(
+              ADDITIONAL_PHOTO_ROW_SIZE,
+              MAX_ADDITIONAL_PHOTOS - i,
+            ),
+          },
+          (_, offset) => i + offset,
+        ),
+      );
+    }
+
+    return rows;
+  }, []);
+
   const closeMenu = useCallback(() => setMenu({ open: false }), []);
+  const { scheduleAction, onModalHide } = useModalAction(closeMenu);
 
   const update = useCallback(
     (patch: Partial<ServicePhotosValue>) => {
@@ -195,34 +216,22 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
   const openPickerMenu = useCallback(
     ({
       title,
-      message = "Выберите источник",
       options,
       onPick,
     }: {
       title: string;
-      message?: string;
       options: ImagePickerOptions;
       onPick: (assets: PickerAsset[] | null) => void;
     }) => {
       setMenu({
         open: true,
         title,
-        message,
-        onCamera: async () => {
-          onPick(await pickFromCamera(options));
-          closeMenu();
-        },
-        onGallery: async () => {
-          onPick(await pickFromGallery(options));
-          closeMenu();
-        },
-        onFiles: async () => {
-          onPick(await pickFromFiles(options));
-          closeMenu();
-        },
+        onCamera: () => scheduleAction(async () => onPick(await pickFromCamera(options))),
+        onGallery: () => scheduleAction(async () => onPick(await pickFromGallery(options))),
+        onFiles: () => scheduleAction(async () => onPick(await pickFromFiles(options))),
       });
     },
-    [closeMenu, pickFromCamera, pickFromFiles, pickFromGallery],
+    [scheduleAction, pickFromCamera, pickFromFiles, pickFromGallery],
   );
 
   const openMainPhotoMenu = useCallback(() => {
@@ -282,26 +291,6 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
     },
     [openPickerMenu, replaceAdditionalPhoto],
   );
-
-  const additionalRows = useMemo(() => {
-    const rows: number[][] = [];
-
-    for (let i = 0; i < MAX_ADDITIONAL_PHOTOS; i += ADDITIONAL_PHOTO_ROW_SIZE) {
-      rows.push(
-        Array.from(
-          {
-            length: Math.min(
-              ADDITIONAL_PHOTO_ROW_SIZE,
-              MAX_ADDITIONAL_PHOTOS - i,
-            ),
-          },
-          (_, offset) => i + offset,
-        ),
-      );
-    }
-
-    return rows;
-  }, []);
 
   const renderAdditionalSlot = useCallback(
     (index: number) => {
@@ -411,12 +400,13 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
       {menu.open && (
         <ImagePickerMenu
           visible
-          onClose={closeMenu}
           title={menu.title}
-          message={menu.message}
+          showFiles
+          onClose={closeMenu}
           onCamera={menu.onCamera}
           onGallery={menu.onGallery}
           onFiles={menu.onFiles}
+          onModalHide={onModalHide}
         />
       )}
     </>

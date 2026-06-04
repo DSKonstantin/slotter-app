@@ -1,5 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 import { router } from "expo-router";
 import React from "react";
@@ -22,17 +22,21 @@ import { ScrollView } from "react-native";
 import { Button, FloatingFooter, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
   const auth = useRequiredAuth();
   const [createWorkingDay, { isLoading }] = useCreateWorkingDayMutation();
 
+  const parsedDate = parseISO(date);
+  const formattedDate = isValid(parsedDate)
+    ? format(parsedDate, "d MMMM, EEEE", { locale: ru })
+    : date;
+
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
     defaultValues: {
       isActive: true,
-      date: format(new Date(date), "d MMMM, EEEE", { locale: ru }),
+      date: formattedDate,
       startAt: "",
       endAt: "",
       breaks: [],
@@ -84,7 +88,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                 <DayScheduleForm />
               </ScrollView>
             </SafeAreaView>
-            <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
+            <FloatingFooter offset={bottomInset + 8}>
               <Button
                 title="Сохранить изменения"
                 loading={isLoading}

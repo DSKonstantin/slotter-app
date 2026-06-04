@@ -21,7 +21,7 @@ function SetupScheduleVariantComponent() {
       </Typography>
 
       <Button
-        title="Добавить запись"
+        title="Настроить график"
         rightIcon={
           <StSvg name="Add_round_fill" size={24} color={colors.neutral[0]} />
         }

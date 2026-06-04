@@ -27,17 +27,20 @@ const DurationField = ({
     field: { value, onChange },
   } = useController({ name, control });
 
+  const currentValue = String(value ?? "");
+
+  const [isCustomSelected, setIsCustomSelected] = useState<boolean>(() => {
+    const presetStrings = presets.map((preset) => String(preset));
+    return (
+      currentValue.length > 0 &&
+      currentValue !== "0" &&
+      !presetStrings.includes(currentValue)
+    );
+  });
+
   const presetValues = useMemo(
     () => presets.map((preset) => String(preset)),
     [presets],
-  );
-  const currentValue = String(value ?? "");
-
-  const [isCustomSelected, setIsCustomSelected] = useState<boolean>(
-    () =>
-      currentValue.length > 0 &&
-      currentValue !== "0" &&
-      !presetValues.includes(currentValue),
   );
 
   const handlePresetPress = (preset: number | string) => {

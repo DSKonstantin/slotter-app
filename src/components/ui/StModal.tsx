@@ -11,7 +11,6 @@ import {
 import { Toasts } from "@backpackapp-io/react-native-toast";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
-import { BlurView } from "expo-blur";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BottomSheetHandle } from "./BottomSheetHandle";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -51,9 +50,9 @@ export const StModal = ({
   const { top, bottom, left, right } = useSafeAreaInsets();
   const swipeThreshold = height * 0.1;
 
-  const scrollViewRef = useRef<ScrollView>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [scrollOffsetMax, setScrollOffsetMax] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
   const layoutHeightRef = useRef(0);
 
   const containerStyle = useMemo(

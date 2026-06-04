@@ -80,6 +80,12 @@ const AttachSheet = ({
     selectedHour,
   } = state;
 
+  const title = useMemo(() => {
+    if (mode === "menu") return "Прикрепить";
+    if (mode === "service") return "Прикрепить услугу";
+    return STAGE_TITLES[stage];
+  }, [mode, stage]);
+
   const handleBack = useCallback(() => {
     setState((prev) => {
       if (prev.mode === "menu") {
@@ -160,12 +166,6 @@ const AttachSheet = ({
       selectedDate,
     ],
   );
-
-  const title = useMemo(() => {
-    if (mode === "menu") return "Прикрепить";
-    if (mode === "service") return "Прикрепить услугу";
-    return STAGE_TITLES[stage];
-  }, [mode, stage]);
 
   const renderBody = () => {
     if (mode === "menu") {

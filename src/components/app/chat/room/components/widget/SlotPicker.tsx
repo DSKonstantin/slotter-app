@@ -3,6 +3,8 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useGetAvailableSlotsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import { formatSlotDate } from "@/src/utils/date/formatDate";
+import { parseISO } from "date-fns";
 import RetryInline from "@/src/components/shared/retryInline";
 import { useSlotStep } from "@/src/hooks/useSlotStep";
 import { groupSlotsByHour } from "@/src/utils/schedule/groupSlotsByHour";
@@ -35,12 +37,9 @@ const SlotPicker = ({
     isLoading,
     isError,
     refetch,
-  } = useGetAvailableSlotsQuery({ userId, date, step: stepMinutes });
+  } = useGetAvailableSlotsQuery({ userId, date: formatSlotDate(parseISO(date)), step: stepMinutes });
 
-  const slotsByHour = useMemo(
-    () => groupSlotsByHour(slots ?? []),
-    [slots],
-  );
+  const slotsByHour = useMemo(() => groupSlotsByHour(slots ?? []), [slots]);
 
   if (isLoading) {
     return (

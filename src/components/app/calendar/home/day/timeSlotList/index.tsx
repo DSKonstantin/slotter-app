@@ -48,6 +48,77 @@ type TimeSlotListProps = {
 
 const PADDING_TOP = 16;
 
+function computeNowOffset(
+  segments: ReturnType<typeof createSegments>["segments"],
+  currentMinutes: number,
+): number {
+  let y = 0;
+  for (const seg of segments) {
+    const start = seg.segStart;
+    const end = seg.segEnd;
+    if (currentMinutes >= start && currentMinutes < end) {
+      y += (currentMinutes - start) * MINUTE_HEIGHT;
+      return y;
+    }
+    y += getSegmentHeight(seg);
+  }
+  return y;
+}
+
+type AutoCurrentTimeIndicatorProps = {
+  segments: ReturnType<typeof createSegments>["segments"];
+  effectiveStart: number;
+  timelineEnd: number;
+  paddingTop: number;
+};
+
+const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
+  segments,
+  effectiveStart,
+  timelineEnd,
+  paddingTop,
+}: AutoCurrentTimeIndicatorProps) {
+  const [currentMinutes, setCurrentMinutes] = useState(() => {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
+  });
+
+  const nowOffset = useMemo(() => {
+    if (currentMinutes < effectiveStart) return 0;
+    if (currentMinutes > timelineEnd)
+      return segments.reduce((acc, seg) => acc + getSegmentHeight(seg), 0);
+    return computeNowOffset(segments, currentMinutes);
+  }, [segments, currentMinutes, effectiveStart, timelineEnd]);
+
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setCurrentMinutes(d.getHours() * 60 + d.getMinutes());
+    };
+
+    const now = new Date();
+    const msToNext = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+    let interval: ReturnType<typeof setInterval>;
+    const timeout = setTimeout(() => {
+      tick();
+      interval = setInterval(tick, 60_000);
+    }, msToNext);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <CurrentTimeIndicator
+      top={nowOffset + paddingTop}
+      time={formatTime(currentMinutes)}
+    />
+  );
+});
+
 const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointments,
   breaks = [],
@@ -59,28 +130,18 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   isActive,
   onHighlightScroll,
 }) => {
-  const now = new Date();
   const isToday = isCurrentDay(date);
+  const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
   const onHighlightScrollRef = useRef(onHighlightScroll);
-  useEffect(() => {
-    onHighlightScrollRef.current = onHighlightScroll;
-  });
 
   const dispatch = useAppDispatch();
   const visibleStatuses = useAppSelector(selectActiveStatuses);
   const highlightSlotId = useAppSelector(
     (state) => state.calendar.highlightSlotId,
   );
-
-  const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
-
-  const handleSlotPress = useCallback((id: number) => {
-    router.push(Routers.app.calendar.slot(id));
-  }, []);
-
-  const handleToggleExpand = useCallback((id: number) => {
-    setExpandedSlotId((prev) => (prev === id ? null : id));
-  }, []);
 
   const segmentsResult = useMemo(
     () => createSegments(startAt, endAt, breaks, appointments, visibleStatuses),
@@ -101,31 +162,23 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     ]);
   }, [date, startAt, endAt, appointments, visibleStatuses]);
 
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const currentTime = formatTime(currentMinutes);
-
   const timelineEnd = parseTime(endAt ?? "23:59");
 
-  const nowOffset = useMemo(() => {
-    let y = 0;
-
-    for (const seg of segments) {
-      const start = seg.segStart;
-      const end = seg.segEnd;
-
-      if (currentMinutes >= start && currentMinutes < end) {
-        y += (currentMinutes - start) * MINUTE_HEIGHT;
-        return y;
-      }
-
-      y += getSegmentHeight(seg);
-    }
-
-    return y;
-  }, [segments, currentMinutes]);
+  const nowOffset = useMemo(
+    () => computeNowOffset(segments, currentMinutes),
+    [segments, currentMinutes],
+  );
 
   const isNowInRange =
     currentMinutes >= effectiveStart && currentMinutes <= timelineEnd;
+
+  const handleSlotPress = useCallback((id: number) => {
+    router.push(Routers.app.calendar.slot(id));
+  }, []);
+
+  const handleToggleExpand = useCallback((id: number) => {
+    setExpandedSlotId((prev) => (prev === id ? null : id));
+  }, []);
 
   const computeTargetScrollY = useCallback(() => {
     if (highlightSlotId) {
@@ -176,6 +229,10 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     return () => clearTimeout(timer);
   }, [highlightSlotId, dispatch]);
 
+  useEffect(() => {
+    onHighlightScrollRef.current = onHighlightScroll;
+  });
+
   if (segments.length === 0) return null;
 
   return (
@@ -183,14 +240,17 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       className="flex-1 px-screen relative"
       style={{ paddingTop: PADDING_TOP }}
     >
-      {isToday && isNowInRange && (
-        <CurrentTimeIndicator
-          top={nowOffset + PADDING_TOP}
-          time={currentTime}
+      {isToday && (
+        <AutoCurrentTimeIndicator
+          segments={segments}
+          effectiveStart={effectiveStart}
+          timelineEnd={timelineEnd}
+          paddingTop={PADDING_TOP}
         />
       )}
       {segments.map((segment) => {
         const { segStart, segEnd, isCompressed, content } = segment;
+
         return (
           <View
             key={segStart}

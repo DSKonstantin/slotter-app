@@ -1,8 +1,15 @@
-import React, { useState } from "react";
-import { View, Pressable, FlatList, ActivityIndicator, useWindowDimensions } from "react-native";
+import React, { memo, useCallback, useState } from "react";
+import {
+  View,
+  Pressable,
+  FlatList,
+  ActivityIndicator,
+  useWindowDimensions,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { StModal, StSvg, Typography } from "@/src/components/ui";
+import { useModalAction } from "@/src/hooks/useModalAction";
 import { colors } from "@/src/styles/colors";
 import { useGetCustomerTagsQuery } from "@/src/store/redux/services/api/customersApi";
 import RetryInline from "@/src/components/shared/retryInline";
@@ -17,7 +24,7 @@ type Props = {
   onSelect: (tag: CustomerTag | null) => void;
 };
 
-const TagRow = React.memo(
+const TagRow = memo(
   ({
     tag,
     selected,
@@ -54,6 +61,7 @@ const TagPickerModal = ({
 }: Props) => {
   const { height: screenHeight } = useWindowDimensions();
   const [createVisible, setCreateVisible] = useState(false);
+  const { scheduleAction, onModalHide } = useModalAction(onClose);
 
   const { data, isLoading, isError, refetch } = useGetCustomerTagsQuery(
     visible ? { userId } : skipToken,
@@ -77,7 +85,12 @@ const TagPickerModal = ({
 
   return (
     <>
-      <StModal visible={visible} onClose={onClose} horizontalPadding={false}>
+      <StModal
+        visible={visible}
+        onClose={onClose}
+        onModalHide={onModalHide}
+        horizontalPadding={false}
+      >
         <View className="px-screen pb-3">
           <Typography weight="semibold" className="text-display text-center">
             Тег клиента
@@ -121,7 +134,7 @@ const TagPickerModal = ({
         <View className="mx-screen mt-3 mb-1">
           <Pressable
             className="flex-row items-center gap-2 py-3 active:opacity-70"
-            onPress={() => setCreateVisible(true)}
+            onPress={() => scheduleAction(() => setCreateVisible(true))}
           >
             <StSvg
               name="Add_ring_fill"

@@ -202,6 +202,13 @@ export const Routers = {
       },
       preview: "/(app)/(tabs)/account/preview" as const,
       gallery: "/(app)/(tabs)/account/gallery" as const,
+      clientNotifications: {
+        root: "/(app)/(tabs)/account/client-notifications" as const,
+        direct: "/(app)/(tabs)/account/client-notifications/direct" as const,
+        statistics:
+          "/(app)/(tabs)/account/client-notifications/statistics" as const,
+        types: "/(app)/(tabs)/account/client-notifications/types" as const,
+      },
       support: "/(app)/(tabs)/account/support" as const,
       subscription: "/(app)/(tabs)/account/subscription" as const,
     },

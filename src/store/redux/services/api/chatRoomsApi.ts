@@ -125,10 +125,7 @@ export const chatRoomsApi = api.injectEndpoints({
           }
         };
 
-        const reconcileInterval = setInterval(
-          reconcile,
-          RECONCILE_INTERVAL_MS,
-        );
+        const reconcileInterval = setInterval(reconcile, RECONCILE_INTERVAL_MS);
 
         try {
           const { data } = await cacheDataLoaded;
@@ -189,15 +186,11 @@ export const chatRoomsApi = api.injectEndpoints({
         try {
           const { data: newRoom } = await queryFulfilled;
           dispatch(
-            chatRoomsApi.util.updateQueryData(
-              "getChatRooms",
-              {},
-              (draft) => {
-                // Dedup: Pusher (chat_room.created) may have already added it
-                if (findRoomInPages(draft, newRoom.id)) return;
-                draft.pages[0]?.rooms.unshift(newRoom);
-              },
-            ),
+            chatRoomsApi.util.updateQueryData("getChatRooms", {}, (draft) => {
+              // Dedup: Pusher (chat_room.created) may have already added it
+              if (findRoomInPages(draft, newRoom.id)) return;
+              draft.pages[0]?.rooms.unshift(newRoom);
+            }),
           );
         } catch {
           // Mutation failed — nothing to patch

@@ -18,8 +18,14 @@ import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const EnterCode = () => {
-  const params = useLocalSearchParams<{ phone: string }>();
+  const params = useLocalSearchParams<{
+    phone: string;
+    referralCode?: string;
+  }>();
   const phone = Array.isArray(params.phone) ? params.phone[0] : params.phone;
+  const referralCode = Array.isArray(params.referralCode)
+    ? params.referralCode[0]
+    : params.referralCode;
 
   const [code, setCode] = useState("");
   const [sendCode] = useSendCodeMutation();
@@ -29,14 +35,18 @@ const EnterCode = () => {
   const onSubmit = useCallback(async () => {
     if (!code || code.length < 6) return;
     try {
-      const result = await confirmCode({ phone, code }).unwrap();
+      const result = await confirmCode({
+        phone,
+        code,
+        ...(referralCode && { referral_code: referralCode }),
+      }).unwrap();
 
       await login(result.token);
       router.replace(getRedirectPath(result.resource));
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Неверный код"));
     }
-  }, [confirmCode, phone, code, login]);
+  }, [code, confirmCode, phone, referralCode, login]);
 
   return (
     <AuthScreenLayout
@@ -55,6 +65,7 @@ const EnterCode = () => {
               />
             ),
             disabled: code.length < 6 || isLoading,
+            loading: isLoading,
             onPress: onSubmit,
           }}
         />

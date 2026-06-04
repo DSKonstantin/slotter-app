@@ -6,13 +6,14 @@
     "orientation": "portrait",
     "icon": "./assets/images/app-icon/icon.png",
     "scheme": "slotter",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "CFBundleLocalizations": ["ru", "en"],
-        "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании"
+        "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.slotter.application"
     },
@@ -26,7 +27,12 @@
       "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.slotter.application"
+      "package": "com.slotter.application",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -71,11 +77,25 @@
         {
           "contactsPermission": "Разрешите $(PRODUCT_NAME) доступ к контактам для быстрого добавления клиентов"
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "slotter-app",
+          "organization": "gcode-ay"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "843bd500-a571-43f1-9a69-b1bc61a63560"
+      }
     }
   }
 }

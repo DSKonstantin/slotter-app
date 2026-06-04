@@ -62,12 +62,13 @@ export const ScheduleSettingsModal = ({
   const currentSnapIndexRef = useRef(-1);
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
-  const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
 
   const { control, setValue } = methods;
   const mode = useWatch({ control, name: "mode" }) ?? "bulk";
   const calendarDays =
     useWatch({ control, name: "calendarDays" }) ?? EMPTY_DAYS;
+
+  const snapPoints = useMemo(() => ["20%", "45%", height - top], [height, top]);
 
   const { selectedEditableDays, hasBlockedDays, totalCount } = useMemo(() => {
     const editable: { day: CalendarScheduleDayValues; index: number }[] = [];

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
@@ -8,7 +8,7 @@ import { colors } from "@/src/styles/colors";
 type AuthHeaderProps = {
   showBack?: boolean;
   showSupport?: boolean;
-  title?: string;
+  title?: React.ReactNode;
 };
 
 export default function AuthHeader({
@@ -47,9 +47,7 @@ export default function AuthHeader({
             onPress={handleBack}
           />
         ) : title ? (
-          <Typography weight="bold" className="text-[24px] text-neutral-0">
-            {title}
-          </Typography>
+          title
         ) : (
           <View className="w-10" />
         )}

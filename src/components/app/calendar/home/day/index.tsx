@@ -8,7 +8,6 @@ import React, {
 import { useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 import { RefreshControl, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
@@ -25,24 +24,17 @@ import EmptyStateScreen, {
   ErrorScreen,
 } from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
-const DayCalendarView = () => {
-  const router = useRouter();
-  const auth = useRequiredAuth();
-  const { bottom } = useSafeAreaInsets();
+const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const [isRetrying, setIsRetrying] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const pendingScrollY = useRef<number | null>(null);
   const dateSelectorHeightRef = useRef(0);
-
+  const auth = useRequiredAuth();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
+  const router = useRouter();
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
-
-  useEffect(() => {
-    pendingScrollY.current = null;
-  }, [selectedDay]);
 
   const dateRange = useMemo(
     () => ({
@@ -154,16 +146,16 @@ const DayCalendarView = () => {
           />
         </View>
       );
-    if (isLoading) return <TimeSlotListSkeleton />;
+    if (isLoading) return <TimeSlotListSkeleton bottomInset={bottomInset} />;
     if (isEmpty)
       return (
         <View className="flex-1">
           <EmptyStateScreen
-            image={require("@/assets/images/placeholders/empty-slots.png")}
-            title="На этот день записей нет"
-            subtitle="Добавьте первую запись или настройте рабочее время"
-            buttonTitle="Добавить запись"
-            buttonIcon="Add_round_fill"
+            image={require("@/assets/images/app/not-working.png")}
+            title="Этот день свободен"
+            subtitle="Настройте график, чтобы принимать записи  в этот день"
+            buttonTitle="Настроить день"
+            buttonIcon="Edit_fill"
             onPress={handleEmptyPress}
           />
         </View>
@@ -186,6 +178,7 @@ const DayCalendarView = () => {
     isRetrying,
     handleRetry,
     isLoading,
+    bottomInset,
     isEmpty,
     handleEmptyPress,
     appointments,
@@ -199,6 +192,10 @@ const DayCalendarView = () => {
     handleHighlightScroll,
   ]);
 
+  useEffect(() => {
+    pendingScrollY.current = null;
+  }, [selectedDay]);
+
   if (!auth) return null;
 
   return (
@@ -208,7 +205,7 @@ const DayCalendarView = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: isEmpty ? 0 : TAB_BAR_HEIGHT + bottom + 72,
+          paddingBottom: isEmpty ? 0 : bottomInset + 80,
         }}
         onContentSizeChange={() => {
           if (pendingScrollY.current !== null) {
@@ -241,6 +238,7 @@ const DayCalendarView = () => {
         <CalendarActionButton
           onPress={handlePress}
           title={selectedWorkingDay ? "Изменить день" : "Настроить день"}
+          bottomInset={bottomInset}
         />
       )}
     </>

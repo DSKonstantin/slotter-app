@@ -21,7 +21,11 @@ const ChatMessageImages = ({
       f.content_type.startsWith("image/"),
     );
     if (files?.length) {
-      return files.map((f) => ({ id: String(f.id), uri: f.url, blurhash: f.blurhash }));
+      return files.map((f) => ({
+        id: String(f.id),
+        uri: f.url,
+        blurhash: f.blurhash,
+      }));
     }
     if (currentMessage.image) {
       return [{ id: "single", uri: currentMessage.image }];
@@ -38,7 +42,9 @@ const ChatMessageImages = ({
           <Pressable key={item.id} onPress={() => setViewerIndex(index)}>
             <Image
               source={{ uri: item.uri }}
-              placeholder={item.blurhash ? { blurhash: item.blurhash } : undefined}
+              placeholder={
+                item.blurhash ? { blurhash: item.blurhash } : undefined
+              }
               contentFit="cover"
               style={{
                 width: IMAGE_WIDTH,

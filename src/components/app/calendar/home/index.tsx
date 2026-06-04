@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconButton, SegmentedControl, StSvg } from "@/src/components/ui";
-import { parseISO } from "date-fns";
+import { isValid, parseISO } from "date-fns";
 import { formatMonthYear } from "@/src/utils/date/formatDate";
 import DayCalendarView from "@/src/components/app/calendar/home/day";
 import MonthCalendarView from "@/src/components/app/calendar/home/month";
@@ -22,13 +22,19 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import capitalize from "lodash/capitalize";
 
 const CalendarHome = () => {
-  const router = useRouter();
-  const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
   const dispatch = useAppDispatch();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const isFilterOpen = useAppSelector(
     (state) => state.calendar.isFilterModalOpen,
   );
+  const router = useRouter();
+  const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
+
+  const title = useMemo(() => {
+    if (mode !== "day" || !selectedDay) return "Календарь";
+    const d = parseISO(selectedDay);
+    return isValid(d) ? capitalize(formatMonthYear(d)) : "Календарь";
+  }, [mode, selectedDay]);
 
   const handleOpenFilters = useCallback(() => {
     dispatch(setFilterModalOpen(true));
@@ -55,11 +61,7 @@ const CalendarHome = () => {
     <>
       <ScreenWithToolbar
         showBack={false}
-        title={
-          mode === "day" && selectedDay
-            ? capitalize(formatMonthYear(parseISO(selectedDay)))
-            : "Календарь"
-        }
+        title={title}
         rightButton={
           mode === "day" && (
             <IconButton
@@ -88,7 +90,11 @@ const CalendarHome = () => {
               onChange={handleModeChange}
               options={CALENDAR_VIEW_OPTIONS}
             />
-            {mode === "month" ? <MonthCalendarView /> : <DayCalendarView />}
+            {mode === "month" ? (
+              <MonthCalendarView bottomInset={insets.bottomInset} />
+            ) : (
+              <DayCalendarView bottomInset={insets.bottomInset} />
+            )}
           </View>
         )}
       </ScreenWithToolbar>

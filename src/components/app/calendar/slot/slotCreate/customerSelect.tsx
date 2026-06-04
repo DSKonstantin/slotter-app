@@ -54,7 +54,12 @@ const CustomerRow = React.memo(function CustomerRow({
       className="flex-row items-center gap-3 py-3 px-2 active:opacity-70"
       onPress={() => onPress(item)}
     >
-      <Avatar uri={item.avatarUrl ?? undefined} blurhash={item.avatarBlurhash} name={item.title} size="sm" />
+      <Avatar
+        uri={item.avatarUrl ?? undefined}
+        blurhash={item.avatarBlurhash}
+        name={item.title}
+        size="sm"
+      />
       <Typography className="text-body text-neutral-900">
         {item.title}
       </Typography>
@@ -70,6 +75,12 @@ type Props = {
 
 const CustomerSelect = ({ showCreateButton = true }: Props) => {
   const auth = useRequiredAuth();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerOption | null>(null);
+
   const dispatch = useAppDispatch();
   const createdCustomer = useAppSelector((s) => s.slotDraft.createdCustomer);
   const selectedCustomerFromDraft = useAppSelector(
@@ -78,12 +89,6 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
   const { setValue } = useFormContext();
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [search, setSearch] = useState("");
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<CustomerOption | null>(null);
 
   const available = height - top - bottom - keyboardHeight;
   const listHeight = Math.max(

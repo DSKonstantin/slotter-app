@@ -22,8 +22,22 @@ const AssistantSkeleton = () => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        <Rect x={0} y={0} rx={RADIUS} ry={RADIUS} width={w * 0.85} height={18} />
-        <Rect x={0} y={28} rx={RADIUS} ry={RADIUS} width={w * 0.6} height={18} />
+        <Rect
+          x={0}
+          y={0}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w * 0.85}
+          height={18}
+        />
+        <Rect
+          x={0}
+          y={28}
+          rx={RADIUS}
+          ry={RADIUS}
+          width={w * 0.6}
+          height={18}
+        />
       </ContentLoader>
     </View>
   );

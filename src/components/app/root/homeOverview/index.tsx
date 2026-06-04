@@ -24,7 +24,7 @@ const HomeOverview = () => {
         hitSlop={8}
       >
         <Typography weight="semibold" className="text-caption text-neutral-500">
-          Показатели
+          Помощник
         </Typography>
         <View className="relative" style={{ width: 12, height: 20 }}>
           {isExpanded ? (
@@ -63,7 +63,7 @@ const HomeOverview = () => {
 
       {isExpanded && (
         <>
-          <View className="bg-background-card rounded-full flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2">
             <View
               className={`w-4 h-4 rounded-md ${
                 !isReady

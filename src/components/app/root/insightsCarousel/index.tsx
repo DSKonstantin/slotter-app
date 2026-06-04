@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import usePersistentStorage from "@/src/hooks/usePersistentStorage";
 import { Animated, PanResponder, View } from "react-native";
 
 import { PaginationDots } from "@/src/components/ui";
@@ -14,6 +13,7 @@ import NotificationStoriesModal, {
 import { MOCK_NOTIFICATION_STORIES } from "./mockStories";
 
 const SWIPE_THRESHOLD = 40;
+const EMPTY_STORIES: Partial<StoriesData> = {};
 
 type Insight = {
   id: number | string;
@@ -21,141 +21,66 @@ type Insight = {
   iconName: string;
   title: string;
   body: BodyPart[] | string;
-  dismissable?: boolean;
   stories?: Partial<StoriesData>;
   onPress: () => void;
 };
 
-// TODO: заменить на useGetInsightsQuery({ userId }) когда появится бэк
-// TODO: заменить на useGetNotificationStoriesQuery({ notificationId }) когда появится бэк
 const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
-  {
-    id: "analytics-best-month",
-    category: "analytics",
-    iconName: "Chart_alt_fill",
-    title: "Лучший месяц — выручка +37%",
-    body: "Февраль стал рекордным за всё время",
-    dismissable: true,
-    stories: MOCK_NOTIFICATION_STORIES["analytics-best-month"],
-
-    onPress: () => onStoryPress("analytics-best-month"),
-  },
   {
     id: "education-payments",
     category: "education",
     iconName: "Star_alt_fill",
     title: "Как работать с приложением",
     body: [{ text: "Изучите основные разделы для работы" }],
-    dismissable: true,
     stories: MOCK_NOTIFICATION_STORIES["education-payments"],
     onPress: () => onStoryPress("education-payments"),
   },
   {
-    id: "tip-breaks",
+    id: "fill_profile",
     category: "tip",
     iconName: "Lamp_fill",
-    title: "Настройте перерывы в расписании",
-    body: [
-      { text: "Снизьте число отмен на " },
-      { text: "18%", highlight: true },
-    ],
-    dismissable: true,
-    stories: MOCK_NOTIFICATION_STORIES["tip-breaks"],
-    onPress: () => onStoryPress("tip-breaks"),
+    title: "Почему важно заполнять профиль",
+    body: [{ text: "Немного о конверсии в услугах" }],
+    stories: MOCK_NOTIFICATION_STORIES["fill_profile"],
+    onPress: () => onStoryPress("fill_profile"),
   },
   {
-    id: "reminder-prices",
-    category: "reminder",
-    iconName: "Bell_pin_fill",
-    title: "Заполните прайс",
-    body: "Клиенты не видят стоимость услуг — это снижает конверсию в запись",
-    dismissable: true,
-    stories: MOCK_NOTIFICATION_STORIES["reminder-prices"],
-    onPress: () => onStoryPress("reminder-prices"),
+    id: "finances",
+    category: "tip",
+    iconName: "Lamp_fill",
+    title: "Начинаем считать деньги",
+    body: [{ text: "Подготовили необходимые калькуляторы" }],
+    stories: MOCK_NOTIFICATION_STORIES["finances"],
+    onPress: () => onStoryPress("finances"),
   },
   {
-    id: "update-payments",
-    category: "update",
-    iconName: "slotter_fill",
-    title: "Оплата теперь в 2× быстрее",
-    body: [
-      { text: "Конверсия в оплату выросла на " },
-      { text: "22%", highlight: true },
-    ],
-    dismissable: true,
-    stories: {},
-    onPress: () => onStoryPress("update-payments"),
-  },
-  {
-    id: "offer-payments",
-    category: "offer",
-    iconName: "Star_fill",
-    title: "Продлите подписку со скидкой 20%",
-    body: [
-      { text: "Акция до " },
-      { text: "пятницы ", highlight: true },
-      { text: "экономия 480 ₽ на 3 месяца" },
-    ],
-    dismissable: true,
-    stories: {},
-    onPress: () => onStoryPress("offer-payments"),
-  },
-  {
-    id: "offer-referral",
-    category: "offer",
-    iconName: "Star_fill",
-    title: "Давай зарабатывать вместе!",
-    body: [
-      {
-        text: "Рекомендуй приложение коллегам и получай до 50% с первой оплаты. ",
-      },
-      { text: "Подробнее...", highlight: true },
-    ],
-    dismissable: true,
-    stories: {},
-    onPress: () => onStoryPress("offer-referral"),
-  },
-  {
-    id: "event-new",
-    category: "event",
-    iconName: "Status",
-    title: "У вас не прочитано 2 события",
-    body: "Советуем просмотреть, прежде чем событие станет неактуальным",
-    dismissable: true,
-    stories: {},
-    onPress: () => onStoryPress("event-new"),
+    id: "notification",
+    category: "tip",
+    iconName: "Lamp_fill",
+    title: "Как отправлять уведомление клиентам",
+    body: [{ text: "От бесплатных до платных каналов отправки" }],
+    stories: MOCK_NOTIFICATION_STORIES["notification"],
+    onPress: () => onStoryPress("notification"),
   },
 ];
 
 const InsightsCarousel = () => {
   const [index, setIndex] = useState(0);
-  const [dismissedIds, setDismissedIds] = usePersistentStorage<
-    (string | number)[]
-  >("insights_dismissed", []);
-  const dismissed = useMemo(() => new Set(dismissedIds), [dismissedIds]);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
   const opacity = useRef(new Animated.Value(1)).current;
+  const safeIndexRef = useRef(0);
+  const insightsLengthRef = useRef(0);
 
-  const handleStoryPress = useCallback((id: string) => {
-    setSelectedStoryId(id);
-  }, []);
-
-  const handleCloseStories = useCallback(() => {
-    setSelectedStoryId(null);
-  }, []);
-
-  const insights = useMemo(
-    () => getMockInsights(handleStoryPress).filter((i) => !dismissed.has(i.id)),
-    [dismissed, handleStoryPress],
-  );
-
-  const safeIndex = Math.min(index, Math.max(0, insights.length - 1));
-  const current = safeIndex >= 0 ? insights[safeIndex] : null;
+  const insights = useMemo(() => getMockInsights(setSelectedStoryId), []);
 
   const selectedInsight = useMemo(
     () => insights.find((i) => i.id === selectedStoryId) ?? null,
     [insights, selectedStoryId],
   );
+
+  const handleCloseStories = useCallback(() => {
+    setSelectedStoryId(null);
+  }, []);
 
   const animateChange = useCallback(
     (next: number) => {
@@ -169,11 +94,6 @@ const InsightsCarousel = () => {
     },
     [opacity],
   );
-
-  const safeIndexRef = useRef(safeIndex);
-  const insightsLengthRef = useRef(insights.length);
-  safeIndexRef.current = safeIndex;
-  insightsLengthRef.current = insights.length;
 
   const panResponder = useMemo(
     () =>
@@ -197,13 +117,10 @@ const InsightsCarousel = () => {
     [animateChange],
   );
 
-  const currentRef = useRef(current);
-  currentRef.current = current;
-
-  const handleDismiss = useCallback(() => {
-    setDismissedIds((prev) => [...prev, currentRef.current!.id]);
-    setIndex(0);
-  }, [setDismissedIds]);
+  const safeIndex = Math.min(index, Math.max(0, insights.length - 1));
+  const current = safeIndex >= 0 ? insights[safeIndex] : null;
+  safeIndexRef.current = safeIndex;
+  insightsLengthRef.current = insights.length;
 
   if (!current) return null;
 
@@ -217,7 +134,6 @@ const InsightsCarousel = () => {
             title={current.title}
             body={current.body}
             onPress={current.onPress}
-            onDismiss={current.dismissable ? handleDismiss : undefined}
           />
         </Animated.View>
 
@@ -236,7 +152,7 @@ const InsightsCarousel = () => {
         <NotificationStoriesModal
           isVisible={selectedStoryId !== null}
           onClose={handleCloseStories}
-          stories={selectedInsight.stories ?? {}}
+          stories={selectedInsight.stories ?? EMPTY_STORIES}
         />
       )}
     </>

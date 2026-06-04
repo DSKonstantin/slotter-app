@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import {
   Button,
   IconButton,
@@ -7,6 +7,7 @@ import {
   StSvg,
   Typography,
 } from "@/src/components/ui";
+import { SUPPORT_TELEGRAM_URL } from "@/src/constants/support";
 
 interface Props {
   visible: boolean;
@@ -25,6 +26,7 @@ const ComingSoonModal: React.FC<Props> = ({ visible, onClose }) => (
     <View className="flex-row justify-center items-center my-6 gap-10">
       <IconButton
         buttonClassName="border border-neutral-100"
+        onPress={() => Linking.openURL(SUPPORT_TELEGRAM_URL)}
         icon={<StSvg name="SocialTelegram" size={24} color="#37B5DB" />}
       />
     </View>

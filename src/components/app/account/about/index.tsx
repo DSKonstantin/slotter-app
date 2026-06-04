@@ -21,6 +21,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
+import { NicknameField } from "@/src/components/onboarding/personalInformation/NicknameField";
 
 const AboutSpecialist = () => {
   const auth = useRequiredAuth();
@@ -30,6 +31,7 @@ const AboutSpecialist = () => {
   const methods = useForm<AccountAboutFormValues>({
     resolver: yupResolver(AccountAboutSchema),
     defaultValues: {
+      nickname: user?.nickname ?? "",
       aboutMe: user?.about_me ?? "",
       tags: [],
       address: user?.address ?? "",
@@ -49,6 +51,7 @@ const AboutSpecialist = () => {
         await updateUser({
           id: auth.userId,
           data: {
+            nickname: data.nickname,
             about_me: data.aboutMe,
             address: data.address,
             is_home_work: data.atHome,
@@ -85,6 +88,7 @@ const AboutSpecialist = () => {
                   name="aboutMe"
                   label="О себе"
                   placeholder="Расскажите о себе и своём опыте"
+                  hideErrorText
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
@@ -105,6 +109,7 @@ const AboutSpecialist = () => {
                     />
                   </View>
                 </View>
+                <NicknameField />
                 <AddressField />
               </View>
             </KeyboardAwareScrollView>

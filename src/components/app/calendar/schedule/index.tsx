@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "react-native-calendars";
+import type { DateData } from "react-native-calendars";
 import { addMonths, format, parseISO, subMonths } from "date-fns";
 import { ru } from "date-fns/locale";
 import { FormProvider } from "react-hook-form";
@@ -56,12 +57,6 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
     applyTemplateDays,
   } = useCalendarSchedule(current);
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => clearSelection();
-    }, [clearSelection]),
-  );
-
   const { refreshing, onRefresh } = useRefresh(refetch);
 
   const calendarDaysMap = useMemo(
@@ -104,7 +99,7 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
   );
 
   const renderDay = useCallback(
-    ({ date, state }: any) => {
+    ({ date, state }: { date?: DateData; state?: string }) => {
       const isToday = state === "today";
       const dayData = date ? calendarDaysMap[date.dateString] : undefined;
 
@@ -158,6 +153,12 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
       );
     },
     [calendarDaysMap, appointmentDates, toggleDay, methods.formState.isDirty],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => clearSelection();
+    }, [clearSelection]),
   );
 
   return (

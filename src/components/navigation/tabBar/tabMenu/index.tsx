@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect } from "react";
-import { BackHandler, Pressable, View } from "react-native";
+import {
+  BackHandler,
+  Pressable,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { BlurView } from "expo-blur";
 import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,6 +13,7 @@ import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
+import { COMPACT_BREAKPOINT } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
@@ -52,25 +59,13 @@ const TabMenu = () => {
   const dispatch = useAppDispatch();
   const isMenuOpen = useAppSelector((s) => s.ui.isTabMenuOpen);
   const { bottom, left: leftInset, right: rightInset } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const compact = width < COMPACT_BREAKPOINT;
   const pathname = usePathname();
 
   const handleClose = useCallback(() => {
     dispatch(setTabMenuOpen(false));
   }, [dispatch]);
-
-  useEffect(() => {
-    if (!isMenuOpen) return;
-
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        handleClose();
-        return true;
-      },
-    );
-
-    return () => subscription.remove();
-  }, [handleClose, isMenuOpen]);
 
   const handleNavigate = useCallback(
     (route?: string, isActive?: boolean, isAtRoot?: boolean) => {
@@ -86,18 +81,38 @@ const TabMenu = () => {
     [handleClose],
   );
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        handleClose();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [handleClose, isMenuOpen]);
+
   if (!isMenuOpen) return null;
 
   return (
-    <Pressable
-      className="absolute inset-0 bg-black/40 justify-end"
+    <BlurView
+      intensity={5}
+      tint="default"
+      className="absolute inset-0 justify-end"
       style={{
-        paddingBottom: bottom + 4,
+        paddingBottom: bottom + 2,
         paddingLeft: leftInset + SCREEN_PADDING,
         paddingRight: rightInset + SCREEN_PADDING,
       }}
-      onPress={handleClose}
     >
+      <Pressable
+        className="absolute inset-0"
+        style={{ backgroundColor: "#0000001F" }}
+        onPress={handleClose}
+      />
       <View className="flex-row items-end gap-2">
         <View className="flex-1">
           <View className="mb-2 items-end">
@@ -107,14 +122,13 @@ const TabMenu = () => {
               icon={
                 <StSvg
                   name="Setting_alt_fill"
-                  size={28}
+                  size={compact ? 24 : 28}
                   color={colors.neutral[900]}
                 />
               }
             />
           </View>
           <Pressable
-            onPress={() => {}}
             className="bg-white rounded-[30px] py-2.5"
             style={{
               shadowColor: "#000",
@@ -163,14 +177,18 @@ const TabMenu = () => {
         </View>
 
         <IconButton
-          size="lg"
+          size={compact ? "lg" : "xxl"}
           icon={
-            <StSvg name="Close_round" size={24} color={colors.neutral[900]} />
+            <StSvg
+              name="Close_round"
+              size={compact ? 24 : 36}
+              color={colors.neutral[900]}
+            />
           }
           onPress={handleClose}
         />
       </View>
-    </Pressable>
+    </BlurView>
   );
 };
 

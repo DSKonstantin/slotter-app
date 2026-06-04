@@ -8,6 +8,7 @@ import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
 import { formatTime } from "@/src/utils/date/formatTime";
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
@@ -27,7 +28,6 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import RHFPicker from "@/src/components/hookForm/rhf-picker";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -43,7 +43,6 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
-import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
   { key: "cash", label: "Наличные" },
@@ -53,6 +52,8 @@ const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
 
 const SlotCreate: React.FC = () => {
   const auth = useRequiredAuth();
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
+
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.slotDraft);
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
@@ -77,8 +78,7 @@ const SlotCreate: React.FC = () => {
       time: draft.time ?? "",
       duration:
         initialServices.reduce((sum, s) => sum + s.duration, 0) +
-          draft.additionalServices.reduce((sum, s) => sum + s.duration, 0) ||
-        60,
+        draft.additionalServices.reduce((sum, s) => sum + s.duration, 0),
       comment: "",
       paymentMethod: "cash",
       sendNotification: true,
@@ -93,7 +93,6 @@ const SlotCreate: React.FC = () => {
   } = methods;
   const watchedServices = watch("services");
   const paymentMethod = watch("paymentMethod");
-  const [comingSoonVisible, setComingSoonVisible] = useState(false);
 
   const { fields, remove } = useFieldArray({
     control: methods.control,
@@ -347,8 +346,8 @@ const SlotCreate: React.FC = () => {
                         label="Время"
                         placeholder="чч:мм"
                         formatValue={(date: Date) => formatTime(date)}
-                        parseValue={(value: string) => {
-                          if (!value) return null;
+                        parseValue={(value) => {
+                          if (!value || typeof value !== "string") return null;
                           const [hours, minutes] = value.split(":").map(Number);
                           const d = new Date();
                           d.setHours(hours, minutes, 0, 0);
@@ -366,7 +365,7 @@ const SlotCreate: React.FC = () => {
                   </View>
 
                   <View className="mt-1">
-                    <RHFPicker
+                    <RhfDurationPicker
                       name="duration"
                       label="Изменить продолжительность (мин)"
                       placeholder="Выберите длительность"

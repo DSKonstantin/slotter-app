@@ -40,10 +40,7 @@ const isWithinDay = (
   return s >= ds && e <= de;
 };
 
-const overlapsOther = (
-  current: BreakItem,
-  others: BreakItem[],
-): boolean => {
+const overlapsOther = (current: BreakItem, others: BreakItem[]): boolean => {
   const cs = parseTimeToMinutes(current.start ?? "");
   const ce = parseTimeToMinutes(current.end ?? "");
   if (cs === null || ce === null) return false;
@@ -114,7 +111,8 @@ export const breaksField = ({
   startFieldName = "startAt",
   endFieldName = "endAt",
 }: BreaksFieldOptions = {}) => {
-  const schema = itemSchema ?? buildBreakSchema({ startFieldName, endFieldName });
+  const schema =
+    itemSchema ?? buildBreakSchema({ startFieldName, endFieldName });
   return Yup.array().of(schema).required().default([]);
 };
 

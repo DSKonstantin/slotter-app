@@ -74,10 +74,7 @@ export const useCalendarActions = ({
       const workingDays = values.calendarDays
         .filter(
           (day) =>
-            day.isSelected &&
-            !day.isExisting &&
-            !!day.startAt &&
-            !!day.endAt,
+            day.isSelected && !day.isExisting && !!day.startAt && !!day.endAt,
         )
         .map((day) => ({
           day: day.date,

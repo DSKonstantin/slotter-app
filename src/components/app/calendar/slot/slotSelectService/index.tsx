@@ -98,10 +98,27 @@ const SlotSelectService: React.FC<Props> = ({
   mode,
 }) => {
   const auth = useRequiredAuth();
-  const dispatch = useAppDispatch();
-  const personalLink = useAppSelector((s) => s.auth.user?.nickname);
   const [bookingLinkVisible, setBookingLinkVisible] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [selectedServiceIdSet, setSelectedServiceIdSet] = useState<Set<number>>(
+    () =>
+      new Set(
+        selectedServiceIds ? selectedServiceIds.split(",").map(Number) : [],
+      ),
+  );
+  const [selectedAdditionalIdSet, setSelectedAdditionalIdSet] = useState<
+    Set<number>
+  >(
+    () =>
+      new Set(
+        selectedAdditionalServiceIds
+          ? selectedAdditionalServiceIds.split(",").map(Number)
+          : [],
+      ),
+  );
+
+  const dispatch = useAppDispatch();
+  const personalLink = useAppSelector((s) => s.auth.user?.nickname);
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
@@ -174,23 +191,6 @@ const SlotSelectService: React.FC<Props> = ({
   const allServices = useMemo(
     () => categories.flatMap((cat) => cat.services ?? []),
     [categories],
-  );
-
-  const [selectedServiceIdSet, setSelectedServiceIdSet] = useState<Set<number>>(
-    () =>
-      new Set(
-        selectedServiceIds ? selectedServiceIds.split(",").map(Number) : [],
-      ),
-  );
-  const [selectedAdditionalIdSet, setSelectedAdditionalIdSet] = useState<
-    Set<number>
-  >(
-    () =>
-      new Set(
-        selectedAdditionalServiceIds
-          ? selectedAdditionalServiceIds.split(",").map(Number)
-          : [],
-      ),
   );
 
   const selectedServices = useMemo(

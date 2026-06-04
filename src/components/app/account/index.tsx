@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Platform, RefreshControl, ScrollView, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
 import SupportModal from "@/src/components/shared/modals/SupportModal";
@@ -24,11 +30,12 @@ type NavItem = {
 };
 
 const AccountScreen = () => {
-  const auth = useRequiredAuth();
-  const { logout } = useAuth();
   const [supportVisible, setSupportVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const auth = useRequiredAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
+  const token = useAppSelector((state) => state.auth.token);
+  const { logout } = useAuth();
 
   const handleRefresh = async () => {
     try {
@@ -40,14 +47,12 @@ const AccountScreen = () => {
 
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
-  const token = useAppSelector((state) => state.auth.token);
-
   if (!auth) return null;
 
   const NAV_GROUPS: NavItem[][] = [
     [
       {
-        title: "Оплата",
+        title: "Ваша подписка",
         icon: "Credit-card_fill",
         rightIcon: "External",
         route: () =>
@@ -90,8 +95,7 @@ const AccountScreen = () => {
       {
         title: "Уведомления клиентам",
         icon: "Message_fill",
-        rightIcon: "External",
-        route: () => {},
+        route: () => router.push(Routers.app.account.clientNotifications.root),
       },
     ],
     [
@@ -195,10 +199,23 @@ const AccountScreen = () => {
                 variant="clear"
                 loading={isLoggingOut}
                 disabled={isLoggingOut}
-                onPress={async () => {
-                  setIsLoggingOut(true);
-                  await logout();
-                }}
+                onPress={() =>
+                  Alert.alert(
+                    "Выйти из аккаунта?",
+                    "Вы уверены, что хотите выйти?",
+                    [
+                      { text: "Отмена", style: "cancel" },
+                      {
+                        text: "Подтвердить",
+                        style: "destructive",
+                        onPress: async () => {
+                          setIsLoggingOut(true);
+                          await logout();
+                        },
+                      },
+                    ],
+                  )
+                }
                 textClassName="text-accent-red-500"
                 rightIcon={
                   <StSvg

@@ -7,7 +7,7 @@ import {
 import { twMerge } from "tailwind-merge";
 import { colors } from "@/src/styles/colors";
 
-type IconButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
+type IconButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
 type IconButtonProps = TouchableOpacityProps & {
   icon: ReactNode;
@@ -49,6 +49,7 @@ export function IconButton({
 const styles = {
   base: "items-center justify-center rounded-full bg-background-surface",
   size: {
+    xxl: "h-[66px] w-[66px]",
     xl: "h-[62px] w-[62px]",
     lg: "h-[54px] w-[54px]",
     md: "h-[48px] w-[48px]",

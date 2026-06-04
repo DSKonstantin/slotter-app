@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
@@ -66,8 +67,15 @@ const NotificationBanners = () => {
   const membership = useAppSelector(
     (s) => s.auth.user?.subscription_membership,
   );
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const token = useAppSelector((s) => s.auth.token);
 
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
+
+  const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
+    "banner_subscription_ended",
+    false,
+  );
 
   const banners = useMemo(() => {
     const items = data?.notifications.filter((n) => n.read_at === null) ?? [];
@@ -100,17 +108,20 @@ const NotificationBanners = () => {
     return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
   }, [membership, subscriptionEnded]);
 
-  const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
-    "banner_subscription_ended",
-    false,
+  const handleOpenList = useCallback(
+    () => router.push(Routers.app.history.root),
+    [],
   );
+
+  const handleOpenSubscription = useCallback(async () => {
+    await WebBrowser.openBrowserAsync(
+      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${userId}?token=${token}`,
+    );
+  }, [userId, token]);
 
   useEffect(() => {
     if (!subscriptionEnded && subBannerClosed) setSubBannerClosed(false);
   }, [subscriptionEnded, subBannerClosed, setSubBannerClosed]);
-
-  const handleOpenList = () => router.push(Routers.app.history.root);
-  const handleOpenSubscription = () => router.push(Routers.app.account.root);
 
   if (banners.length === 0 && expiryDaysLeft === null && !subscriptionEnded)
     return null;

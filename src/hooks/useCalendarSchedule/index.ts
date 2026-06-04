@@ -58,9 +58,7 @@ export const useCalendarSchedule = (current: Date) => {
     if (!isTemplateLoaded) return;
     if (workingDaysData === undefined) return;
 
-    const templateConfigured = templateValues.days.some(
-      (day) => day.isEnabled,
-    );
+    const templateConfigured = templateValues.days.some((day) => day.isEnabled);
 
     if (!templateConfigured) {
       // setModalTemplate(true);

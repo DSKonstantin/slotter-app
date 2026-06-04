@@ -1,9 +1,7 @@
 import React from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 import { SCREEN_PADDING } from "@/src/constants/layout";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   LEFT_COL,
   RIGHT_GAP,
@@ -14,9 +12,8 @@ import {
   SKELETON_ROW_COUNT,
 } from "./constants";
 
-const TimeSlotListSkeleton = () => {
+const TimeSlotListSkeleton = ({ bottomInset }: { bottomInset: number }) => {
   const { width } = useWindowDimensions();
-  const { bottom } = useSafeAreaInsets();
   const contentWidth = width - SCREEN_PADDING * 2;
   const rightColWidth = contentWidth - LEFT_COL - RIGHT_GAP;
   const totalHeight = HOUR_HEIGHT * SKELETON_ROW_COUNT;
@@ -25,7 +22,7 @@ const TimeSlotListSkeleton = () => {
     <ScrollView
       showsVerticalScrollIndicator={false}
       className="flex-1 pt-4 px-screen"
-      contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + bottom + 80 }}
+      contentContainerStyle={{ paddingBottom: bottomInset + 80 }}
       scrollEnabled={false}
     >
       <ContentLoader

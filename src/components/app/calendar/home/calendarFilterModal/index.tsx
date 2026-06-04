@@ -33,10 +33,6 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
   const filters = useAppSelector((state) => state.calendar.filters);
   const [draft, setDraft] = useState<CalendarFilters>(filters);
 
-  useEffect(() => {
-    if (visible) setDraft(filters);
-  }, [filters, visible]);
-
   const handleApply = useCallback(() => {
     dispatch(setFilters(draft));
     onClose();
@@ -45,6 +41,10 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
   const toggleDraft = useCallback((key: keyof CalendarFilters) => {
     setDraft((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
+
+  useEffect(() => {
+    if (visible) setDraft(filters);
+  }, [filters, visible]);
 
   return (
     <StModal

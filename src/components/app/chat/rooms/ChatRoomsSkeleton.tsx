@@ -27,7 +27,7 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
       scrollEnabled={false}
       contentContainerStyle={{
         paddingHorizontal: SCREEN_PADDING,
-        paddingTop: topInset + 12,
+        paddingTop: topInset,
       }}
     >
       {/* Room items skeleton */}

@@ -39,9 +39,9 @@ function deltaTag(
 }
 
 const ClientsStatistics = () => {
-  const auth = useRequiredAuth();
   const [periodModalVisible, setPeriodModalVisible] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>(PERIODS[1]);
+  const auth = useRequiredAuth();
 
   const queryParams =
     selectedPeriod.value === CUSTOM_PERIOD_VALUE
@@ -75,9 +75,7 @@ const ClientsStatistics = () => {
         <>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentInset={
-              Platform.OS === "ios" ? { top: topInset } : undefined
-            }
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
             contentOffset={
               Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
             }

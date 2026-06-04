@@ -29,7 +29,7 @@ const BreakBlock: React.FC<Props> = ({ breakItem, workingDayId }) => {
         {timeLabel}
       </Typography>
 
-      <Badge size="sm" title={"Перерыв"} variant="neutral" />
+      <Badge size="sm" title="Перерыв" variant="neutral" />
     </TouchableOpacity>
   );
 };

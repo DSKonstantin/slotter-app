@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Divider, Item, StSvg } from "@/src/components/ui";
+import { Item, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 

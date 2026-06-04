@@ -1,13 +1,12 @@
 import { useMemo } from "react";
-import { addDays } from "date-fns";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 
 type TodayScheduleResult = {
+  hasTodayWorkingDay: boolean;
   isTodayDayOff: boolean;
-  hasAnySchedule: boolean;
   isReady: boolean;
   todayISO: string;
   isLoading: boolean;
@@ -19,26 +18,20 @@ type TodayScheduleResult = {
 export const useTodaySchedule = (): TodayScheduleResult => {
   const auth = useRequiredAuth();
 
-  const { todayISO, weekEndISO } = useMemo(() => {
-    const now = new Date();
-    return {
-      todayISO: formatApiDate(now),
-      weekEndISO: formatApiDate(addDays(now, 6)),
-    };
-  }, []);
+  const todayISO = useMemo(() => formatApiDate(new Date()), []);
 
   const { data, isLoading, isFetching, isError, refetch } =
     useGetWorkingDaysQuery(
       auth
-        ? { userId: auth.userId, date_from: todayISO, date_to: weekEndISO }
+        ? { userId: auth.userId, date_from: todayISO, date_to: todayISO }
         : skipToken,
     );
 
   return useMemo(() => {
     if (!data) {
       return {
+        hasTodayWorkingDay: false,
         isTodayDayOff: false,
-        hasAnySchedule: false,
         isReady: false,
         todayISO,
         isLoading,
@@ -49,12 +42,10 @@ export const useTodaySchedule = (): TodayScheduleResult => {
     }
 
     const todayWD = data[todayISO] ?? null;
-    const isTodayDayOff = !todayWD || !todayWD.is_active;
-    const hasAnySchedule = Object.values(data).some((wd) => wd && wd.is_active);
 
     return {
-      isTodayDayOff,
-      hasAnySchedule,
+      hasTodayWorkingDay: !!todayWD,
+      isTodayDayOff: !!todayWD && !todayWD.is_active,
       isReady: true,
       todayISO,
       isLoading,

@@ -4,8 +4,6 @@ import MonthCalendar from "@/src/components/app/calendar/home/month/MonthCalenda
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
 import { parseISO, startOfMonth, subMonths } from "date-fns";
 import { formatApiDate, formatMonthName } from "@/src/utils/date/formatDate";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRouter } from "expo-router";
@@ -13,19 +11,18 @@ import ScheduleActionsModal from "./ScheduleActionsModal";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import useMonthCalendarData from "@/src/hooks/useMonthCalendarData";
 
-const MonthCalendarView = () => {
-  const { bottom } = useSafeAreaInsets();
-  const auth = useRequiredAuth();
+const MonthCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const routerInstance = useRouter();
-
   const [isOpen, setIsOpen] = useState(false);
+  const [pendingMonth, setPendingMonth] = useState<Date | null>(null);
+  const auth = useRequiredAuth();
+
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(parseISO(selectedDay)),
   );
-  const [pendingMonth, setPendingMonth] = useState<Date | null>(null);
 
   const fetchMonth = pendingMonth ?? currentMonth;
 
@@ -74,7 +71,7 @@ const MonthCalendarView = () => {
         className="px-screen"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingBottom: TAB_BAR_HEIGHT + bottom + 80,
+          paddingBottom: bottomInset + 80,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
@@ -89,7 +86,11 @@ const MonthCalendarView = () => {
         />
       </ScrollView>
 
-      <CalendarActionButton mode="month" onPress={() => setIsOpen(true)} />
+      <CalendarActionButton
+        mode="month"
+        onPress={() => setIsOpen(true)}
+        bottomInset={bottomInset}
+      />
 
       <ScheduleActionsModal
         visible={isOpen}

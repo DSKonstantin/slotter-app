@@ -16,14 +16,6 @@ const SpecialistHomeAssistant = () => {
   const nickname = useAppSelector((s) => s.auth.user?.nickname ?? "");
 
   const {
-    isTodayDayOff,
-    hasAnySchedule,
-    isReady,
-    isError: isScheduleError,
-    refetch: refetchSchedule,
-  } = useTodaySchedule();
-
-  const {
     data,
     isLoading: isAppointmentsLoading,
     isError: isAppointmentsError,
@@ -31,6 +23,14 @@ const SpecialistHomeAssistant = () => {
   } = useGetUpcomingAppointmentsQuery(
     auth ? { userId: auth.userId } : skipToken,
   );
+
+  const {
+    hasTodayWorkingDay,
+    isTodayDayOff,
+    isReady,
+    isError: isScheduleError,
+    refetch: refetchSchedule,
+  } = useTodaySchedule();
 
   const handleRetry = useCallback(() => {
     if (isScheduleError) refetchSchedule();
@@ -52,7 +52,7 @@ const SpecialistHomeAssistant = () => {
 
   const appointments = data?.appointments ?? [];
 
-  if (!hasAnySchedule) return <SetupScheduleVariant />;
+  if (!hasTodayWorkingDay) return <SetupScheduleVariant />;
   if (appointments.length > 0) {
     return <NextAppointmentVariant appointments={appointments} />;
   }

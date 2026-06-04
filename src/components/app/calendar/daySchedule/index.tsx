@@ -36,7 +36,6 @@ import DayScheduleAppointments from "@/src/components/app/calendar/daySchedule/D
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/src/styles/colors";
-import { TAB_BAR_HEIGHT } from "@/src/constants/tabs";
 
 type DayScheduleEditProps = {
   workingDay: WorkingDay;
@@ -53,6 +52,15 @@ const DayScheduleEdit = ({
   bottomInset,
   refetchWorkingDay,
 }: DayScheduleEditProps) => {
+  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
+    id: b.id,
+    start: formatTimeFromISO(b.start_at),
+    end: formatTimeFromISO(b.end_at),
+  }));
+
+  const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
+  const prevIsActiveRef = useRef(workingDay.is_active);
+
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
 
   const { refetch: refetchAppointments } = useGetAppointmentsQuery({
@@ -63,14 +71,6 @@ const DayScheduleEdit = ({
   const { refreshing, onRefresh } = useRefresh(() =>
     Promise.all([refetchWorkingDay(), refetchAppointments()]),
   );
-
-  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
-    id: b.id,
-    start: formatTimeFromISO(b.start_at),
-    end: formatTimeFromISO(b.end_at),
-  }));
-
-  const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
 
   const methods = useForm<DayScheduleFormValues>({
     resolver: yupResolver(DayScheduleSchema) as Resolver<DayScheduleFormValues>,
@@ -85,13 +85,12 @@ const DayScheduleEdit = ({
 
   const { handleSubmit, control } = methods;
   const isActive = useWatch({ control, name: "isActive" });
-  const prevIsActiveRef = useRef(workingDay.is_active);
 
   useEffect(() => {
     const prev = prevIsActiveRef.current;
     prevIsActiveRef.current = isActive;
 
-    if (prev === true && isActive === false) {
+    if (prev && !isActive) {
       Alert.alert(
         "Сделать день выходным?",
         "День будет отмечен как нерабочий и сохранён",
@@ -114,7 +113,11 @@ const DayScheduleEdit = ({
                     end_at: workingDay.end_at,
                     working_day_breaks_attributes: (
                       workingDay.working_day_breaks ?? []
-                    ).map((b) => ({ id: b.id, start_at: b.start_at, end_at: b.end_at })),
+                    ).map((b) => ({
+                      id: b.id,
+                      start_at: b.start_at,
+                      end_at: b.end_at,
+                    })),
                   },
                 }).unwrap();
                 router.back();
@@ -187,7 +190,7 @@ const DayScheduleEdit = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-      <FloatingFooter offset={TAB_BAR_HEIGHT + 8}>
+      <FloatingFooter offset={bottomInset + 8}>
         <Button
           title="Сохранить изменения"
           loading={isLoading}

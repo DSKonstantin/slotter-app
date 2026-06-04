@@ -2,7 +2,8 @@ import React, { ReactNode, useContext, useMemo } from "react";
 import { StyleProp, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import { TAB_BAR_HEIGHT, TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import {
   ToolbarContext,
   ToolbarContextValue,
@@ -42,13 +43,14 @@ const ScreenWithToolbar = ({
   style,
 }: ScreenWithToolbarProps) => {
   const { top, bottom } = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
 
   const insets = useMemo(
     () => ({
       topInset: TOOLBAR_HEIGHT + top,
-      bottomInset: TAB_BAR_HEIGHT + bottom,
+      bottomInset: tabBarHeight + bottom,
     }),
-    [top, bottom],
+    [top, bottom, tabBarHeight],
   );
 
   return (

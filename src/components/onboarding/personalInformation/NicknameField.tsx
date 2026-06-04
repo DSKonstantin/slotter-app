@@ -17,7 +17,7 @@ export function NicknameField() {
     control,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useFormContext();
 
   const [
@@ -57,22 +57,6 @@ export function NicknameField() {
     [name, surname, profession, hasProfileData],
   );
 
-  useEffect(() => {
-    if (!value || value.length < 3) {
-      debouncedCheck.cancel();
-      setPending(false);
-      reset();
-      return () => debouncedCheck.cancel();
-    }
-    setPending(true);
-    debouncedCheck(value);
-    return () => debouncedCheck.cancel();
-  }, [value, debouncedCheck, reset]);
-
-  useEffect(() => {
-    if (!isFetching) setPending(false);
-  }, [isFetching]);
-
   const endAdornment = useMemo(() => {
     if (loading)
       return <ActivityIndicator size="small" color={colors.neutral[400]} />;
@@ -98,6 +82,22 @@ export function NicknameField() {
     if (focused) return "Только латиница, цифры и подчёркивание";
     return "Уникальная ссылка на ваш профиль";
   }, [showQueryError, loading, focused, queryError]);
+
+  useEffect(() => {
+    if (!dirtyFields.nickname || !value || value.length < 3) {
+      debouncedCheck.cancel();
+      setPending(false);
+      reset();
+      return () => debouncedCheck.cancel();
+    }
+    setPending(true);
+    debouncedCheck(value);
+    return () => debouncedCheck.cancel();
+  }, [value, dirtyFields.nickname, debouncedCheck, reset]);
+
+  useEffect(() => {
+    if (!isFetching) setPending(false);
+  }, [isFetching]);
 
   return (
     <View className="gap-2">

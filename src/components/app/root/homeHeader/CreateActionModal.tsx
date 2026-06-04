@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
@@ -7,6 +7,8 @@ import { colors } from "@/src/styles/colors";
 import CreateActionCard from "@/src/components/shared/cards/createActionCard";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { clearSlotDraft } from "@/src/store/redux/slices/slotDraftSlice";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import { useModalAction } from "@/src/hooks/useModalAction";
 
 type Props = {
   visible: boolean;
@@ -14,7 +16,9 @@ type Props = {
 };
 
 const CreateActionModal = ({ visible, onClose }: Props) => {
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const dispatch = useAppDispatch();
+  const { scheduleAction, onModalHide } = useModalAction(onClose);
 
   const actions = [
     {
@@ -22,9 +26,10 @@ const CreateActionModal = ({ visible, onClose }: Props) => {
       title: "Слот",
       subtitle: "Создать новую запись",
       onPress: () => {
-        onClose();
-        dispatch(clearSlotDraft());
-        router.push(Routers.app.createSlotFlow.selectService());
+        scheduleAction(() => {
+          dispatch(clearSlotDraft());
+          router.push(Routers.app.createSlotFlow.selectService());
+        });
       },
     },
     {
@@ -32,45 +37,51 @@ const CreateActionModal = ({ visible, onClose }: Props) => {
       title: "Клиента",
       subtitle: "Добавить в базу",
       onPress: () => {
-        onClose();
-        router.push(Routers.app.createClient);
+        scheduleAction(() => router.push(Routers.app.createClient));
       },
     },
     {
-      icon: "link_alt",
-      title: "Поделиться свободными слотами",
-      subtitle: "Удобно добавить в Stories или переслать",
-      disabled: true,
+      icon: "Money_fill",
+      title: "Оплату",
+      subtitle: "Наличный или безналичный расчет",
+      className: "opacity-40",
       onPress: () => {
-        onClose();
+        scheduleAction(() => setComingSoonVisible(true));
       },
     },
   ];
 
   return (
-    <StModal visible={visible} onClose={onClose}>
-      <Typography weight="semibold" className="text-display text-center mb-4">
-        Создать
-      </Typography>
-      <View className="gap-2">
-        {actions.map((action) => (
-          <CreateActionCard
-            key={action.title}
-            title={action.title}
-            subtitle={action.subtitle}
-            disabled={action.disabled}
-            onPress={action.onPress}
-            leftIcon={
-              <StSvg
-                name={action.icon as string}
-                size={24}
-                color={colors.neutral[900]}
-              />
-            }
-          />
-        ))}
-      </View>
-    </StModal>
+    <>
+      <StModal visible={visible} onClose={onClose} onModalHide={onModalHide}>
+        <Typography weight="semibold" className="text-display text-center mb-4">
+          Создать
+        </Typography>
+        <View className="gap-2">
+          {actions.map((action) => (
+            <CreateActionCard
+              key={action.title}
+              title={action.title}
+              className={action.className}
+              subtitle={action.subtitle}
+              onPress={action.onPress}
+              leftIcon={
+                <StSvg
+                  name={action.icon as string}
+                  size={24}
+                  color={colors.neutral[900]}
+                />
+              }
+            />
+          ))}
+        </View>
+      </StModal>
+
+      <ComingSoonModal
+        visible={comingSoonVisible}
+        onClose={() => setComingSoonVisible(false)}
+      />
+    </>
   );
 };
 

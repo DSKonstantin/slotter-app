@@ -24,7 +24,12 @@ const ClientInfoCard = ({
   return (
     <View className="flex-row rounded-base bg-background-surface p-4">
       <View className="mr-3">
-        <Avatar name={name} size="md" uri={avatarUrl} blurhash={avatarBlurhash} />
+        <Avatar
+          name={name}
+          size="md"
+          uri={avatarUrl}
+          blurhash={avatarBlurhash}
+        />
       </View>
 
       <View className="flex-1">

@@ -173,28 +173,24 @@ const chatMessagesApi = api.injectEndpoints({
           // don't wait for Pusher echo (avoids stale preview if user navigates
           // back immediately).
           dispatch(
-            chatRoomsApi.util.updateQueryData(
-              "getChatRooms",
-              {},
-              (draft) => {
-                const room = removeRoomFromPages(draft, chatRoomId);
-                if (!room) return;
-                room.last_activity_at = result.created_at;
-                room.last_message = {
-                  id: result.id,
-                  body: result.body,
-                  created_at: result.created_at,
-                  owner: {
-                    id: result.owner.id,
-                    type: result.owner.type,
-                    name: result.owner.name,
-                    avatar_url: result.owner.avatar_url,
-                    avatar_blurhash: result.owner.avatar_blurhash,
-                  },
-                };
-                draft.pages[0]?.rooms.unshift(room);
-              },
-            ),
+            chatRoomsApi.util.updateQueryData("getChatRooms", {}, (draft) => {
+              const room = removeRoomFromPages(draft, chatRoomId);
+              if (!room) return;
+              room.last_activity_at = result.created_at;
+              room.last_message = {
+                id: result.id,
+                body: result.body,
+                created_at: result.created_at,
+                owner: {
+                  id: result.owner.id,
+                  type: result.owner.type,
+                  name: result.owner.name,
+                  avatar_url: result.owner.avatar_url,
+                  avatar_blurhash: result.owner.avatar_blurhash,
+                },
+              };
+              draft.pages[0]?.rooms.unshift(room);
+            }),
           );
         } catch {
           patches.forEach((p) => p.undo());
