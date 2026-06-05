@@ -65,7 +65,7 @@ const SlotActions: React.FC<Props> = ({
     Alert.alert("Клиент пришёл?", "", [
       { text: "Отмена", style: "cancel" },
       {
-        text: "Отметить",
+        text: "Пришел",
         onPress: async () => {
           try {
             await arrive(appointmentId).unwrap();

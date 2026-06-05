@@ -68,7 +68,7 @@ const Home = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: 8,
+          paddingBottom: tabBarHeight + bottom + 8,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -77,14 +77,11 @@ const Home = () => {
         <View className="px-screen flex-1 gap-3">
           <HomeOverview />
         </View>
+        <View className="px-screen gap-3 mt-5">
+          <NotificationBanners />
+          <InsightsCarousel />
+        </View>
       </ScrollView>
-      <View
-        className="px-screen gap-3"
-        style={{ paddingBottom: tabBarHeight + bottom + 8 }}
-      >
-        <NotificationBanners />
-        <InsightsCarousel />
-      </View>
     </SafeAreaView>
   );
 };
