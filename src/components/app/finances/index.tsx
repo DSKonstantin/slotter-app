@@ -229,12 +229,6 @@ const FinancesScreen = () => {
 
               <View className="flex-row gap-2.5">
                 <StatCard
-                  value={"8 500 ₽"}
-                  label="Предоплаты"
-                  tag={{ title: "3 чел", size: "sm", variant: "info" }}
-                />
-
-                <StatCard
                   value={
                     summary
                       ? formatRublesFromCents(summary.net_profit_cents)

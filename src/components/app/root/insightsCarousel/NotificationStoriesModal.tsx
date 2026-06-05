@@ -1,5 +1,11 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Modal, Pressable, View } from "react-native";
+import {
+  Animated,
+  Modal,
+  Pressable,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -42,6 +48,7 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   const storyIndexRef = useRef(storyIndex);
   const allStoriesLengthRef = useRef(0);
   const { top } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
   const allStories = useMemo(
     () =>
@@ -53,8 +60,6 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
 
   storyIndexRef.current = storyIndex;
   allStoriesLengthRef.current = allStories.length;
-
-  const currentStory = allStories[storyIndex]?.story;
 
   const handleSwipe = useCallback((direction: "left" | "right") => {
     const len = allStoriesLengthRef.current;
@@ -95,7 +100,24 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
     [handleSwipe],
   );
 
-  if (!currentStory) return null;
+  const tapGesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .runOnJS(true)
+        .onEnd((event) => {
+          if (event.y < top + 80) return;
+          if (event.x > width / 2) handleSwipe("left");
+          else handleSwipe("right");
+        }),
+    [handleSwipe, width, top],
+  );
+
+  const composedGesture = useMemo(
+    () => Gesture.Simultaneous(panGesture, tapGesture),
+    [panGesture, tapGesture],
+  );
+
+  if (!allStories.length) return null;
 
   return (
     <Modal
@@ -110,12 +132,27 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
           className="flex-1 bg-background-surface"
           style={{ opacity }}
         >
-          <GestureDetector gesture={panGesture}>
+          <GestureDetector gesture={composedGesture}>
             <View className="flex-1">
               <View className="flex-1">
-                {typeof currentStory.customScreen === "function"
-                  ? currentStory.customScreen(() => handleSwipe("left"))
-                  : currentStory.customScreen}
+                {allStories.map(({ story }, idx) => (
+                  <View
+                    key={story.id}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      opacity: idx === storyIndex ? 1 : 0,
+                    }}
+                    pointerEvents={idx === storyIndex ? "box-none" : "none"}
+                  >
+                    {typeof story.customScreen === "function"
+                      ? story.customScreen(() => handleSwipe("left"))
+                      : story.customScreen}
+                  </View>
+                ))}
               </View>
 
               <LinearGradient
