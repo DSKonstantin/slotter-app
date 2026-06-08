@@ -76,7 +76,10 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
               end: endOfMonth(currentMonth),
             })
               .map((d) => formatApiDate(d))
-              .filter((date) => !workingDaysData[date]),
+              .filter((date) => {
+            const wd = workingDaysData[date];
+            return !wd || !wd.is_active;
+          }),
           );
 
     const progressMap: Record<string, number> = {};
@@ -88,9 +91,11 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
         if (dayAppointments.length === 0) continue;
 
         const wd = workingDay as WorkingDay;
+        const wdStart = parseTime(wd.start_at);
+        const wdEnd = parseTime(wd.end_at);
         const availableMinutes =
-          parseTime(wd.end_at) -
-          parseTime(wd.start_at) -
+          wdEnd -
+          wdStart -
           (wd.working_day_breaks ?? []).reduce(
             (sum, b) => sum + parseTime(b.end_at) - parseTime(b.start_at),
             0,
@@ -98,10 +103,13 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
 
         if (availableMinutes <= 0) continue;
 
-        const bookedMinutes = dayAppointments.reduce(
-          (sum, a) => sum + a.duration,
-          0,
-        );
+        const bookedMinutes = dayAppointments.reduce((sum, a) => {
+          const apptStart = parseTime(a.start_time);
+          const apptEnd = parseTime(a.end_time);
+          const overlapStart = Math.max(apptStart, wdStart);
+          const overlapEnd = Math.min(apptEnd, wdEnd);
+          return sum + Math.max(0, overlapEnd - overlapStart);
+        }, 0);
         progressMap[date] = Math.min(1, bookedMinutes / availableMinutes);
       }
     }

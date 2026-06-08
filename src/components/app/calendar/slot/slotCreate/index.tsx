@@ -139,6 +139,13 @@ const SlotCreate: React.FC = () => {
     [fields.length, remove, methods, setValue, draft.additionalServices],
   );
 
+  const handleNonWorkingDaySuccess = useCallback(
+    (date: string) => {
+      setValue("date", date);
+    },
+    [setValue],
+  );
+
   const onSubmit = useCallback(
     async (values: SlotCreateFormValues) => {
       if (!auth) return;
@@ -328,6 +335,8 @@ const SlotCreate: React.FC = () => {
                         name="date"
                         label="Дата"
                         placeholder="дд.мм"
+                        userId={auth?.userId}
+                        onNonWorkingDaySuccess={handleNonWorkingDaySuccess}
                         displayFormat={(iso) =>
                           formatDayMonthLong(parseISO(iso))
                         }

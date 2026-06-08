@@ -12,6 +12,8 @@ type RhfCalendarDatePickerProps = {
   disabled?: boolean;
   endAdornment?: ReactNode;
   startAdornment?: ReactNode;
+  userId?: number;
+  onNonWorkingDaySuccess?: (date: string) => void;
 };
 
 export function RhfCalendarDatePicker({
@@ -23,6 +25,8 @@ export function RhfCalendarDatePicker({
   disabled,
   endAdornment,
   startAdornment,
+  userId,
+  onNonWorkingDaySuccess,
 }: RhfCalendarDatePickerProps) {
   const { control } = useFormContext();
   const {
@@ -44,6 +48,8 @@ export function RhfCalendarDatePicker({
       disabled={disabled}
       endAdornment={endAdornment}
       startAdornment={startAdornment}
+      userId={userId}
+      onNonWorkingDaySuccess={onNonWorkingDaySuccess}
     />
   );
 }

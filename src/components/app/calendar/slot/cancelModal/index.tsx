@@ -61,7 +61,7 @@ const CancelModal = ({ visible, appointmentId, onClose }: Props) => {
           multiline
         />
 
-        <View className="bg-accent-red-100 px-4 pt-2.5 rounded-small">
+        <View className="bg-accent-red-100 px-4 py-2.5 rounded-small">
           <Typography
             weight="regular"
             className="text-body text-accent-red-500"

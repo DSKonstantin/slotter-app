@@ -74,11 +74,6 @@ const AccountScreen = () => {
         route: () => router.push(Routers.app.account.gallery),
       },
       {
-        title: "Отзывы",
-        icon: "Chat_alt_3_fill",
-        route: () => {},
-      },
-      {
         title: "Ссылки",
         icon: "link_alt",
         route: () => router.push(Routers.app.account.links),
