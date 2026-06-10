@@ -46,6 +46,7 @@ export const ResendCodeButton: React.FC<Props> = ({
           title="Отправить код повторно"
           size="sm"
           variant="clear"
+          loading={isSending}
           disabled={isSending}
           onPress={handleResend}
         />

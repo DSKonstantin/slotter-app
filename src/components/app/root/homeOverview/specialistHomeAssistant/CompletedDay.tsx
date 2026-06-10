@@ -17,7 +17,7 @@ function CompletedDayComponent({ firstName }: Props) {
         </Typography>
       </View>
       <Typography weight="semibold" className="text-lg text-neutral-900">
-        {firstName}, на сегодня всё. Хорошего вечера!
+        {firstName}, на сегодня всё. Хорошего дня!
       </Typography>
     </View>
   );

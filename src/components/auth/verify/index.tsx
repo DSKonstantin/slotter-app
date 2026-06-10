@@ -19,6 +19,7 @@ import { unMask } from "react-native-mask-text";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { useSendCodeMutation } from "@/src/store/redux/services/api/authApi";
 import { useLazyValidateReferralCodeQuery } from "@/src/store/redux/services/api/referralApi";
+import { useAppSelector } from "@/src/store/redux/store";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
@@ -33,6 +34,7 @@ const Verify = () => {
   const [showTelegramStep, setShowTelegramStep] = useState(false);
   const pendingData = useRef<VerifyFormValues | null>(null);
 
+  const ispe = useAppSelector((s) => s.appVersion.ispe);
   const [sendCode, { isLoading }] = useSendCodeMutation();
   const [validateReferralCode, { isFetching: isValidating }] =
     useLazyValidateReferralCodeQuery();
@@ -144,7 +146,7 @@ const Verify = () => {
             Твой номер
           </Typography>
           <Typography className="text-body text-neutral-500">
-            Отправим код через SMS, Telegram или WhatsApp
+            Отправим код в Telegram
           </Typography>
 
           <View className="mt-9">
@@ -169,33 +171,37 @@ const Verify = () => {
                 условиями использования
               </Typography>
             </Typography>
-            <RhfTextField
-              name="promoCode"
-              label="Если вас пригласили или вы попали на акцию"
-              placeholder="Промокод"
-              hideErrorText
-              autoCapitalize="characters"
-              maxLength={16}
-            />
-            <View className="mt-2">
-              <Button
-                title="Проверить"
-                variant="secondary"
-                size="sm"
-                loading={isValidating}
-                disabled={!isPromoEntered || isValidating}
-                onPress={handleValidateCode}
-              />
-            </View>
-            {codeState.status === "valid" && (
-              <Typography className="text-caption text-accent-green-500 mt-2">
-                Вы получите 30 дней Pro бесплатно
-              </Typography>
-            )}
-            {codeState.status === "invalid" && (
-              <Typography className="text-caption text-accent-red-500 mt-2">
-                {codeState.error}
-              </Typography>
+            {ispe && (
+              <>
+                <RhfTextField
+                  name="promoCode"
+                  label="Если вас пригласили или вы попали на акцию"
+                  placeholder="Промокод"
+                  hideErrorText
+                  autoCapitalize="characters"
+                  maxLength={16}
+                />
+                <View className="mt-2">
+                  <Button
+                    title="Проверить"
+                    variant="secondary"
+                    size="sm"
+                    loading={isValidating}
+                    disabled={!isPromoEntered || isValidating}
+                    onPress={handleValidateCode}
+                  />
+                </View>
+                {codeState.status === "valid" && (
+                  <Typography className="text-caption text-accent-green-500 mt-2">
+                    Вы получите 30 дней Pro бесплатно
+                  </Typography>
+                )}
+                {codeState.status === "invalid" && (
+                  <Typography className="text-caption text-accent-red-500 mt-2">
+                    {codeState.error}
+                  </Typography>
+                )}
+              </>
             )}
           </View>
         </View>

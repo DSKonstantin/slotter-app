@@ -1,6 +1,7 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 
 import { Pressable, Share, View } from "react-native";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 
 import * as Clipboard from "expo-clipboard";
 import * as WebBrowser from "expo-web-browser";
@@ -27,6 +28,7 @@ const ProfileLinkModal = ({
   profileUrl,
   profileLink,
 }: ProfileActionsModalProps) => {
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const hasProfile = Boolean(profileUrl);
 
   const handleOpen = useCallback(async () => {
@@ -78,11 +80,15 @@ const ProfileLinkModal = ({
 
         <Button
           variant="secondary"
+          buttonClassName="opacity-40"
           title="Поделиться слотами"
-          onPress={handleShare}
-          disabled={true}
+          onPress={() => setComingSoonVisible(true)}
         />
       </View>
+      <ComingSoonModal
+        visible={comingSoonVisible}
+        onClose={() => setComingSoonVisible(false)}
+      />
     </StModal>
   );
 };

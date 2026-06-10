@@ -53,6 +53,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
+import EditableDurationRow from "./EditableDurationRow";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
@@ -468,19 +469,33 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     }
                   />
 
-                  <EditableRow
+                  <EditableDurationRow
                     label="Длительность"
                     displayValue={`${slot.duration} мин`}
-                    fieldName="duration"
-                    editing={editingField === "duration"}
+                    value={slot.duration}
                     canEdit={derived!.canEdit}
-                    isUpdating={isUpdating}
-                    placeholder="мин"
-                    onEdit={() => {
-                      methods.setValue("duration", String(slot.duration));
+                    isUpdating={isUpdating && editingField === "duration"}
+                    onSave={async (minutes) => {
+                      if (!slot || minutes <= 0) return;
+                      if (minutes === slot.duration) return;
+                      if (isSavingRef.current) return;
                       setEditingField("duration");
+                      isSavingRef.current = true;
+                      try {
+                        await updateAppointment({
+                          id,
+                          body: { duration: minutes },
+                        }).unwrap();
+                        toast.success("Сохранено");
+                      } catch (error) {
+                        toast.error(
+                          getApiErrorMessage(error, "Не удалось сохранить"),
+                        );
+                      } finally {
+                        isSavingRef.current = false;
+                        setEditingField(null);
+                      }
                     }}
-                    onSave={handleSave}
                   />
 
                   <EditableRow

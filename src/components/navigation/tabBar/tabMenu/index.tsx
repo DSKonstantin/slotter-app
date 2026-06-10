@@ -115,19 +115,6 @@ const TabMenu = () => {
       />
       <View className="flex-row items-end gap-2">
         <View className="flex-1">
-          <View className="mb-2 items-end">
-            <IconButton
-              onPress={() => {}}
-              disabled={true}
-              icon={
-                <StSvg
-                  name="Setting_alt_fill"
-                  size={compact ? 24 : 28}
-                  color={colors.neutral[900]}
-                />
-              }
-            />
-          </View>
           <Pressable
             className="bg-white rounded-[30px] py-2.5"
             style={{
