@@ -97,7 +97,7 @@ export interface GetUpcomingAppointmentsResponse {
 export type CreateAppointmentPayload = {
   date: string;
   start_time: string;
-  customer_id: number;
+  customer_id?: number;
   service_ids?: number[];
   additional_service_ids?: number[];
   duration?: number;

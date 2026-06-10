@@ -29,18 +29,13 @@ const SlotActions: React.FC<Props> = ({
   onReschedule,
   onCancel,
 }) => {
-  const canCancel =
-    status === "pending" || status === "confirmed" || status === "proposed";
   const [confirm, { isLoading: isConfirming }] =
     useConfirmAppointmentMutation();
   const [arrive, { isLoading: isArriving }] = useArriveAppointmentMutation();
-  const [markLate, { isLoading: isMarkingLate }] =
-    useMarkLateAppointmentMutation();
   const [markNoShow, { isLoading: isMarkingNoShow }] =
     useMarkNoShowAppointmentMutation();
   const [complete, { isLoading: isCompleting }] =
     useCompleteAppointmentMutation();
-  const [remind, { isLoading: isReminding }] = useRemindAppointmentMutation();
 
   const handleConfirm = useCallback(() => {
     Alert.alert("Подтвердить запись?", "", [
@@ -50,7 +45,6 @@ const SlotActions: React.FC<Props> = ({
         onPress: async () => {
           try {
             await confirm(appointmentId).unwrap();
-            router.back();
           } catch (error) {
             toast.error(
               getApiErrorMessage(error, "Не удалось подтвердить запись"),
@@ -69,7 +63,6 @@ const SlotActions: React.FC<Props> = ({
         onPress: async () => {
           try {
             await arrive(appointmentId).unwrap();
-            router.back();
           } catch (error) {
             toast.error(
               getApiErrorMessage(error, "Не удалось обновить статус"),
@@ -80,45 +73,29 @@ const SlotActions: React.FC<Props> = ({
     ]);
   }, [appointmentId, arrive]);
 
-  const handleLate = useCallback(() => {
-    Alert.alert("Клиент опоздал?", "", [
-      { text: "Отмена", style: "cancel" },
-      {
-        text: "Подтвердить",
-        onPress: async () => {
-          try {
-            await markLate(appointmentId).unwrap();
-            router.back();
-          } catch (error) {
-            toast.error(
-              getApiErrorMessage(error, "Не удалось обновить статус"),
-            );
-          }
-        },
-      },
-    ]);
-  }, [appointmentId, markLate]);
-
   const handleNoShow = useCallback(() => {
+    const doMarkNoShow = async () => {
+      try {
+        await markNoShow(appointmentId).unwrap();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось обновить статус"));
+      }
+    };
+
     Alert.alert(
       "Клиент не явился?",
       "Вы можете заблокировать этому клиенту возможность самостоятельной онлайн-записи",
       [
-        { text: "Не нужно", style: "cancel" },
+        {
+          text: "Не нужно",
+          onPress: doMarkNoShow,
+        },
         {
           text: "Заблокировать",
           style: "destructive",
-          onPress: async () => {
-            try {
-              await markNoShow(appointmentId).unwrap();
-              router.back();
-            } catch (error) {
-              toast.error(
-                getApiErrorMessage(error, "Не удалось обновить статус"),
-              );
-            }
-          },
+          onPress: doMarkNoShow,
         },
+        { text: "Закрыть", style: "cancel" },
       ],
     );
   }, [appointmentId, markNoShow]);
@@ -131,7 +108,6 @@ const SlotActions: React.FC<Props> = ({
         onPress: async () => {
           try {
             await complete(appointmentId).unwrap();
-            router.back();
           } catch (error) {
             toast.error(
               getApiErrorMessage(error, "Не удалось завершить запись"),
@@ -141,25 +117,6 @@ const SlotActions: React.FC<Props> = ({
       },
     ]);
   }, [appointmentId, complete]);
-
-  const handleRemind = useCallback(() => {
-    Alert.alert("Отправить напоминание клиенту?", "", [
-      { text: "Отмена", style: "cancel" },
-      {
-        text: "Отправить",
-        onPress: async () => {
-          try {
-            await remind(appointmentId).unwrap();
-            toast.success("Напоминание отправлено");
-          } catch (error) {
-            toast.error(
-              getApiErrorMessage(error, "Не удалось отправить напоминание"),
-            );
-          }
-        },
-      },
-    ]);
-  }, [appointmentId, remind]);
 
   const renderActions = () => {
     switch (status) {
@@ -179,18 +136,6 @@ const SlotActions: React.FC<Props> = ({
                 />
               }
             />
-            <Button
-              title="Перенести"
-              variant="clear"
-              rightIcon={
-                <StSvg
-                  name="Refund_Forward"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              }
-              onPress={onReschedule}
-            />
           </>
         );
       case "confirmed":
@@ -204,61 +149,37 @@ const SlotActions: React.FC<Props> = ({
               onPress={handleArrive}
               loading={isArriving}
             />
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <Button
-                  title="Опоздал"
-                  variant="clear"
-                  rightIcon={
-                    <StSvg
-                      name="Sad_alt_2"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                  onPress={handleLate}
-                  loading={isMarkingLate}
-                />
-              </View>
-              <View className="flex-1">
-                <Button
-                  title="Не явился"
-                  variant="clear"
-                  textClassName="text-accent-red-500"
-                  rightIcon={
-                    <StSvg
-                      name="thumb_down"
-                      size={24}
-                      color={colors.accent.red[500]}
-                    />
-                  }
-                  onPress={handleNoShow}
-                  loading={isMarkingNoShow}
-                />
-              </View>
-            </View>
             <Button
-              title="Напомнить"
+              title="Не пришел"
               variant="clear"
-              onPress={handleRemind}
-              loading={isReminding}
-              rightIcon={
-                <StSvg name="Bell_fill" size={24} color={colors.neutral[900]} />
-              }
-            />
-            <Button
-              title="Перенести"
-              variant="clear"
+              textClassName="text-accent-red-500"
               rightIcon={
                 <StSvg
-                  name="Refund_Forward"
+                  name="thumb_down"
                   size={24}
-                  color={colors.neutral[900]}
+                  color={colors.accent.red[500]}
                 />
               }
-              onPress={onReschedule}
+              onPress={handleNoShow}
+              loading={isMarkingNoShow}
             />
           </>
+        );
+      case "proposed":
+        return (
+          <Button
+            title="Отменить запись"
+            variant="clear"
+            textClassName="text-accent-red-500"
+            rightIcon={
+              <StSvg
+                name="Dell_fill"
+                size={24}
+                color={colors.accent.red[500]}
+              />
+            }
+            onPress={onCancel}
+          />
         );
       case "arrived":
         return (
@@ -281,22 +202,7 @@ const SlotActions: React.FC<Props> = ({
     }
   };
 
-  return (
-    <View className="px-screen mt-1 gap-3">
-      {renderActions()}
-      {canCancel && (
-        <Button
-          title="Отменить запись"
-          variant="clear"
-          textClassName="text-accent-red-500"
-          rightIcon={
-            <StSvg name="Dell_fill" size={24} color={colors.accent.red[500]} />
-          }
-          onPress={onCancel}
-        />
-      )}
-    </View>
-  );
+  return <View className="px-screen mt-1 gap-3">{renderActions()}</View>;
 };
 
 export default memo(SlotActions);

@@ -62,6 +62,7 @@ export type CreateUserCustomerPayload = {
 };
 
 export type UpdateUserCustomerPayload = {
+  customer?: { name?: string };
   customer_tag_id?: number | null;
   note?: string;
 };

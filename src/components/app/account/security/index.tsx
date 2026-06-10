@@ -15,11 +15,7 @@ const SecurityScreen = () => {
             <Item
               title="Сменить пароль"
               left={
-                <StSvg
-                  name="Meatballs_menu"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
+                <StSvg name="Password" size={24} color={colors.neutral[900]} />
               }
               className="border-0 rounded-none"
               right={

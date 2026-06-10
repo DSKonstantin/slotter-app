@@ -60,6 +60,7 @@ export const CalendarDatePicker = ({
   const [nonWorkingDay, setNonWorkingDay] = useState<NonWorkingDayInfo | null>(
     null,
   );
+  const [visibleMonth, setVisibleMonth] = useState<string | null>(null);
 
   const {
     markedDates,
@@ -236,10 +237,13 @@ export const CalendarDatePicker = ({
                 </View>
               ) : (
                 <Calendar
-                  current={value ?? today}
+                  current={visibleMonth ?? value ?? today}
                   minDate={minDate}
                   onDayPress={(day) => handleDayPress(day.dateString)}
-                  onMonthChange={onMonthChange}
+                  onMonthChange={(month) => {
+                    setVisibleMonth(month.dateString);
+                    onMonthChange(month);
+                  }}
                   markedDates={computedMarkedDates}
                   markingType={
                     onNonWorkingDaySuccess && userId ? "custom" : "dot"

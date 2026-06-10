@@ -11,15 +11,23 @@ import RetryInline from "@/src/components/shared/retryInline";
 
 type Props = {
   userId: number;
+  currentMonth?: string;
   onPick: (date: string) => void;
   onNonWorkingDayPress?: (
     date: string,
     status: Exclude<WorkingDayStatus, "working">,
     workingDayId?: number,
   ) => void;
+  onMonthChange?: (month: string) => void;
 };
 
-const DatePicker = ({ userId, onPick, onNonWorkingDayPress }: Props) => {
+const DatePicker = ({
+  userId,
+  currentMonth,
+  onPick,
+  onNonWorkingDayPress,
+  onMonthChange: onMonthChangeProp,
+}: Props) => {
   const {
     markedDates,
     isLoading,
@@ -66,10 +74,14 @@ const DatePicker = ({ userId, onPick, onNonWorkingDayPress }: Props) => {
 
   return (
     <Calendar
+      current={currentMonth}
       minDate={minDate}
       markedDates={markedDates}
       onDayPress={handleDayPress}
-      onMonthChange={onMonthChange}
+      onMonthChange={(month) => {
+        onMonthChange(month);
+        onMonthChangeProp?.(month.dateString);
+      }}
       disableAllTouchEventsForDisabledDays={!onNonWorkingDayPress}
       theme={pickerCalendarTheme}
     />

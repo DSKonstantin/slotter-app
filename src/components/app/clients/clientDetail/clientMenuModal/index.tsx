@@ -8,6 +8,7 @@ type Props = {
   onClose: () => void;
   onModalHide?: () => void;
   onChangeCategory: () => void;
+  onEditName: () => void;
 };
 
 const ClientMenuModal = ({
@@ -15,6 +16,7 @@ const ClientMenuModal = ({
   onClose,
   onModalHide,
   onChangeCategory,
+  onEditName,
 }: Props) => {
   return (
     <StModal visible={visible} onClose={onClose} onModalHide={onModalHide}>
@@ -24,12 +26,13 @@ const ClientMenuModal = ({
         </Typography>
 
         <View className="gap-2">
-          {/*<Item*/}
-          {/*  title="Редактировать"*/}
-          {/*  left={*/}
-          {/*    <StSvg name="Edit_fill" size={20} color={colors.neutral[900]} />*/}
-          {/*  }*/}
-          {/*/>*/}
+          <Item
+            title="Редактировать имя"
+            left={
+              <StSvg name="User_fill" size={20} color={colors.neutral[900]} />
+            }
+            onPress={onEditName}
+          />
           <Item
             title="Изменить категорию"
             left={

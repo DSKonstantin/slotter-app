@@ -18,7 +18,7 @@ export const SlotCreateSchema = Yup.object({
     .min(0, "Минимальная длительность — 0 минут")
     .required("Укажите длительность"),
   comment: Yup.string(),
-  paymentMethod: Yup.string().oneOf(["cash", "sbp", "online"]).required(),
+  paymentMethod: Yup.string().oneOf(["cash", "sbp", "online_bank"]).required(),
   sendNotification: Yup.boolean().required(),
 });
 

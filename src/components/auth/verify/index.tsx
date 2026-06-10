@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Typography, Button } from "@/src/components/ui";
+import { Typography, Button, StModal } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -22,12 +22,16 @@ import { useLazyValidateReferralCodeQuery } from "@/src/store/redux/services/api
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
+const TELEGRAM_BOT = process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME ?? "";
+
 type CodeState = { status: "idle" | "valid" | "invalid"; error: string };
 
 const INITIAL_CODE_STATE: CodeState = { status: "idle", error: "" };
 
 const Verify = () => {
   const [codeState, setCodeState] = useState<CodeState>(INITIAL_CODE_STATE);
+  const [showTelegramStep, setShowTelegramStep] = useState(false);
+  const pendingData = useRef<VerifyFormValues | null>(null);
 
   const [sendCode, { isLoading }] = useSendCodeMutation();
   const [validateReferralCode, { isFetching: isValidating }] =
@@ -58,27 +62,34 @@ const Verify = () => {
     }
   }, [promoCode, validateReferralCode]);
 
-  const onSubmit = useCallback(
-    async (data: VerifyFormValues) => {
-      const code = (data.promoCode ?? "").trim();
-      const phone = `+${unMask(data.phone)}`;
+  const handleOpenTelegram = useCallback(() => {
+    Linking.openURL(`https://t.me/${TELEGRAM_BOT}`);
+  }, []);
 
-      try {
-        await sendCode({ phone, type: UserType.USER }).unwrap();
+  const handleSendCode = useCallback(async () => {
+    const data = pendingData.current;
+    if (!data) return;
+    const code = (data.promoCode ?? "").trim();
+    const phone = `+${unMask(data.phone)}`;
+    try {
+      await sendCode({ phone, type: UserType.USER }).unwrap();
+      setShowTelegramStep(false);
+      router.push({
+        pathname: Routers.auth.enterCode,
+        params: {
+          phone,
+          ...(code && { referralCode: code }),
+        },
+      });
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
+    }
+  }, [sendCode]);
 
-        router.push({
-          pathname: Routers.auth.enterCode,
-          params: {
-            phone,
-            ...(code && { referralCode: code }),
-          },
-        });
-      } catch (e) {
-        toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
-      }
-    },
-    [sendCode],
-  );
+  const onSubmit = useCallback((data: VerifyFormValues) => {
+    pendingData.current = data;
+    setShowTelegramStep(true);
+  }, []);
 
   const trimmedPromo = promoCode.trim();
   const isPromoEntered = trimmedPromo.length >= 4;
@@ -89,6 +100,31 @@ const Verify = () => {
 
   return (
     <FormProvider {...methods}>
+      <StModal
+        visible={showTelegramStep}
+        onClose={() => setShowTelegramStep(false)}
+      >
+        <View className="gap-4 pt-2 pb-2">
+          <View className="gap-1">
+            <Typography weight="semibold" className="text-display">
+              Откройте бота в Telegram
+            </Typography>
+            <Typography className="text-body text-neutral-500">
+              Перед отправкой кода нажмите Старт в нашем боте — это нужно
+              сделать один раз
+            </Typography>
+          </View>
+          <Button title="Открыть Telegram" onPress={handleOpenTelegram} />
+          <Button
+            title="Я нажал Старт — отправить код"
+            variant="secondary"
+            loading={isLoading}
+            disabled={isLoading}
+            onPress={handleSendCode}
+          />
+        </View>
+      </StModal>
+
       <AuthScreenLayout
         avoidKeyboard
         header={<AuthHeader />}

@@ -134,7 +134,7 @@ const MonthCalendar = ({
           )}
 
           <View
-            className={`w-[36px] h-[36px] rounded-full items-center justify-center ${isToday && "bg-background-black"}`}
+            className={`w-[36px] h-[36px] rounded-full items-center justify-center`}
           >
             <Typography
               weight="regular"
@@ -142,7 +142,7 @@ const MonthCalendar = ({
               text-[20px]
               ${
                 isToday
-                  ? "text-white"
+                  ? "text-primary-blue-500"
                   : isDisabled || isNonWorking
                     ? "text-neutral-300"
                     : "text-neutral-900"

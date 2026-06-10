@@ -181,7 +181,10 @@ const SlotCard = ({
             />
           )}
           <View className="flex-row flex-1 items-center justify-between">
-            <Typography className="text-body text-neutral-900">
+            <Typography
+              className="text-body text-neutral-900 flex-1 mr-2"
+              numberOfLines={1}
+            >
               {timeString}
               <Typography className="text-caption text-neutral-900">
                 {clientName && ` · ${clientName}`}

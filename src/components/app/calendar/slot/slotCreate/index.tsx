@@ -43,12 +43,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
-
-const PAYMENT_OPTIONS: { key: "cash" | "sbp" | "online"; label: string }[] = [
-  { key: "cash", label: "Наличные" },
-  { key: "sbp", label: "СБП" },
-  { key: "online", label: "Онлайн-банк" },
-];
+import { PAYMENT_OPTIONS } from "@/src/constants/payment";
 
 const SlotCreate: React.FC = () => {
   const auth = useRequiredAuth();
@@ -163,10 +158,7 @@ const SlotCreate: React.FC = () => {
             }),
             customer_id: values.customerId,
             duration: values.duration,
-            payment_method:
-              values.paymentMethod === "online"
-                ? "online_bank"
-                : values.paymentMethod,
+            payment_method: values.paymentMethod,
             comment: values.comment,
             send_notification: values.sendNotification,
           },
@@ -396,14 +388,14 @@ const SlotCreate: React.FC = () => {
                       Способ оплаты
                     </Typography>
                     <View className="gap-2">
-                      {PAYMENT_OPTIONS.map(({ key, label }) => (
+                      {PAYMENT_OPTIONS.map(({ key, label, comingSoon }) => (
                         <Card
                           key={key}
                           title={label}
                           active={paymentMethod === key}
-                          className={key === "online" ? "opacity-40" : ""}
+                          className={comingSoon ? "opacity-40" : ""}
                           onPress={() => {
-                            if (key === "online") {
+                            if (comingSoon) {
                               setComingSoonVisible(true);
                               return;
                             }

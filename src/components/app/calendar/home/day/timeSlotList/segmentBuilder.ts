@@ -303,15 +303,25 @@ export const createSegments = (
   const allStarts = parsedAppointments.map((a) => a.start);
   const allEnds = parsedAppointments.map((a) => Math.max(a.start, a.end));
 
+  const visibleNonBlocking = nonBlockingAppointments.filter((a) => a.isVisible);
+  const relevantStarts = [
+    ...blockingStarts,
+    ...visibleNonBlocking.map((a) => a.start),
+  ];
+  const relevantEnds = [
+    ...blockingEnds,
+    ...visibleNonBlocking.map((a) => Math.max(a.start, a.end)),
+  ];
+
   let effectiveStart: number;
   let effectiveEnd: number;
 
   if (workingStart !== undefined && workingEnd !== undefined) {
-    effectiveStart = blockingStarts.length > 0
-      ? Math.min(workingStart, ...blockingStarts)
+    effectiveStart = relevantStarts.length > 0
+      ? Math.min(workingStart, ...relevantStarts)
       : workingStart;
-    effectiveEnd = blockingEnds.length > 0
-      ? Math.max(workingEnd, ...blockingEnds)
+    effectiveEnd = relevantEnds.length > 0
+      ? Math.max(workingEnd, ...relevantEnds)
       : workingEnd;
   } else if (allStarts.length > 0) {
     effectiveStart = Math.min(...allStarts);

@@ -15,21 +15,22 @@ type Props = {
 };
 
 function NextAppointmentVariantComponent({ appointments }: Props) {
-  const next = appointments[0];
+  const list = Array.isArray(appointments) ? appointments : [];
+  const next = list[0];
   if (!next) return null;
 
-  const totalCount = appointments.length;
+  const totalCount = list.length;
   const statusConfig = APPOINTMENT_STATUS_CONFIG[next.status];
   const additionalCount = next.additional_services?.length ?? 0;
 
   return (
     <View className="flex-row flex-wrap items-center gap-1">
       <StSvg name="Date_range_fill" size={16} color={colors.neutral[900]} />
-      <Typography weight="semibold" className="text-xl text-neutral-900">
+      <Typography weight="semibold" className="text-lg text-neutral-900">
         {totalCount} {pluralize(totalCount, ["запись", "записи", "записей"])}
       </Typography>
       <Dot />
-      <Typography weight="semibold" className="text-xl text-neutral-500">
+      <Typography weight="semibold" className="text-lg text-neutral-500">
         ближайшая
       </Typography>
       <Button
@@ -42,33 +43,35 @@ function NextAppointmentVariantComponent({ appointments }: Props) {
           <StSvg name="Expand_right" size={16} color={colors.neutral[700]} />
         }
       />
-      <Typography weight="semibold" className="text-xl text-neutral-900">
+      <Typography weight="semibold" className="text-lg text-neutral-900">
         в
       </Typography>
-      <Typography weight="semibold" className="text-xl text-neutral-900">
+      <Typography weight="semibold" className="text-lg text-neutral-900">
         {formatTimeFromISO(next.start_time)}
       </Typography>
       <Dot />
-      <Typography
-        weight="semibold"
-        className="text-xl text-neutral-900 lowercase"
-      >
-        {statusConfig.label}
-      </Typography>
+      {statusConfig && (
+        <Typography
+          weight="semibold"
+          className="text-lg text-neutral-900 lowercase"
+        >
+          {statusConfig.label}
+        </Typography>
+      )}
       <StSvg name="Check_round_fill" size={20} color={colors.neutral[900]} />
 
       <Dot />
-      <Typography weight="semibold" className="text-xl text-neutral-500">
+      <Typography weight="semibold" className="text-lg text-neutral-500">
         стоимость
       </Typography>
       <StSvg name="Money_fill" size={20} color={colors.neutral[900]} />
-      <Typography weight="semibold" className="text-xl text-neutral-900">
+      <Typography weight="semibold" className="text-lg text-neutral-900">
         {formatRublesFromCents(next.price_cents)}
       </Typography>
       {additionalCount > 0 ? (
         <>
           <Dot />
-          <Typography weight="semibold" className="text-xl text-neutral-900">
+          <Typography weight="semibold" className="text-lg text-neutral-900">
             +{additionalCount}{" "}
             {pluralize(additionalCount, [
               "доп. услуга",
@@ -80,7 +83,7 @@ function NextAppointmentVariantComponent({ appointments }: Props) {
       ) : (
         <>
           <Dot />
-          <Typography weight="semibold" className="text-xl text-neutral-900">
+          <Typography weight="semibold" className="text-lg text-neutral-900">
             без доп. услуг
           </Typography>
         </>
@@ -90,7 +93,7 @@ function NextAppointmentVariantComponent({ appointments }: Props) {
 }
 
 const Dot = () => (
-  <Typography className="text-xl text-neutral-900">·</Typography>
+  <Typography className="text-lg text-neutral-900">·</Typography>
 );
 
 export default memo(NextAppointmentVariantComponent);

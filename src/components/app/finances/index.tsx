@@ -19,6 +19,7 @@ import {
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { SummaryExpense } from "@/src/store/redux/services/api-types";
+import { Image } from "expo-image";
 import {
   Card,
   Divider,
@@ -95,7 +96,9 @@ const FinancesScreen = () => {
 
   const growth = summary?.growth_percent;
   const growthValue =
-    growth != null ? `${growth > 0 ? "+" : ""}${growth}%` : "—";
+    growth != null && summary?.income_cents !== 0
+      ? `${growth > 0 ? "+" : ""}${growth}%`
+      : "0%";
 
   if (!auth) {
     return null;
@@ -116,6 +119,33 @@ const FinancesScreen = () => {
             />
           );
         }
+
+        // if (summary?.appointments_count === 0 && summary?.income_cents === 0) {
+        //   return (
+        //     <View
+        //       className="flex-1 items-center justify-center gap-5 px-screen"
+        //       style={{
+        //         marginBottom: bottomInset + 8,
+        //       }}
+        //     >
+        //       <Image
+        //         style={{ width: 159, height: 142 }}
+        //         source={require("@/assets/images/app/finances.png")}
+        //       />
+        //       <View className="gap-2">
+        //         <Typography
+        //           weight="semibold"
+        //           className="text-display text-center"
+        //         >
+        //           История финансов пока пуста
+        //         </Typography>
+        //         <Typography className="text-body text-neutral-500 text-center">
+        //           Финансовая история появится после первой оплаченной записи
+        //         </Typography>
+        //       </View>
+        //     </View>
+        //   );
+        // }
 
         return (
           <>
@@ -238,7 +268,12 @@ const FinancesScreen = () => {
                   tag={{
                     title: growthValue,
                     size: "sm",
-                    variant: growth != null && growth < 0 ? "error" : "mint",
+                    variant:
+                      summary?.income_cents === 0
+                        ? "default"
+                        : growth != null && growth < 0
+                          ? "error"
+                          : "mint",
                   }}
                 />
               </View>

@@ -67,6 +67,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           },
         }
       : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   const selectedWorkingDay = useMemo(

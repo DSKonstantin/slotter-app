@@ -44,9 +44,11 @@ type Props = {
 
 const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   const [storyIndex, setStoryIndex] = useState(0);
+
   const opacity = useRef(new Animated.Value(0)).current;
   const storyIndexRef = useRef(storyIndex);
   const allStoriesLengthRef = useRef(0);
+
   const { top } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
 
@@ -57,9 +59,6 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
       ),
     [stories],
   );
-
-  storyIndexRef.current = storyIndex;
-  allStoriesLengthRef.current = allStories.length;
 
   const handleSwipe = useCallback((direction: "left" | "right") => {
     const len = allStoriesLengthRef.current;
@@ -113,9 +112,12 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   );
 
   const composedGesture = useMemo(
-    () => Gesture.Simultaneous(panGesture, tapGesture),
+    () => Gesture.Exclusive(panGesture, tapGesture),
     [panGesture, tapGesture],
   );
+
+  storyIndexRef.current = storyIndex;
+  allStoriesLengthRef.current = allStories.length;
 
   if (!allStories.length) return null;
 

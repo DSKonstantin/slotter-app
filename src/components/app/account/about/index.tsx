@@ -88,7 +88,6 @@ const AboutSpecialist = () => {
                   name="aboutMe"
                   label="О себе"
                   placeholder="Расскажите о себе и своём опыте"
-                  hideErrorText
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"

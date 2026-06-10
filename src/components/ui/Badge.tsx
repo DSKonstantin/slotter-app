@@ -16,9 +16,11 @@ type BadgeVariant =
   | "info"
   | "mint"
   | "success"
+  | "completed"
   | "warning"
   | "neutral"
   | "error"
+  | "destructive"
   | "ghost";
 
 type BadgeSize = "sm" | "md";
@@ -131,10 +133,19 @@ const variants: Record<BadgeVariant, { container: string; text: string }> = {
     container: "bg-primary-green-500",
     text: "text-primary-green-800",
   },
+  completed: {
+    container: "bg-primary-green-100",
+    text: "text-primary-green-700",
+  },
+
   warning: {
     container: "bg-accent-yellow-500",
     text: "text-accent-yellow-700",
   },
   error: { container: "bg-accent-red-100", text: "text-accent-red-500" },
+  destructive: {
+    container: "bg-accent-red-500",
+    text: "text-accent-red-100",
+  },
   ghost: { container: "bg-background", text: "text-neutral-500" },
 };

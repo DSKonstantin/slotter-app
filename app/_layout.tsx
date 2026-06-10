@@ -9,7 +9,7 @@ import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
-  Inter_700Bold,
+  Inter_700Bold, Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { StatusBar } from "expo-status-bar";
@@ -40,6 +40,7 @@ function InitialLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Inter_800ExtraBold,
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 

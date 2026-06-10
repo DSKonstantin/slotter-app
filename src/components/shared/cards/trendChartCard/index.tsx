@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { View, TouchableOpacity, useWindowDimensions } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  Modal,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -33,16 +39,17 @@ const TrendChartCard = ({
 }: Props) => {
   const [selectedPeriod, setSelectedPeriod] = useState(periods[0]);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { width: screenWidth } = useWindowDimensions();
-  // 20px screen padding * 2 + 16px card padding * 2 + 60px y-axis label width
+  const triggerRef = useRef<View>(null);
+
   const chartWidth = screenWidth - 40 - 32 - 80;
 
   const maxRubles =
     data.length > 0 ? Math.max(...data.map((d) => centsToRubles(d.value))) : 0;
   const noOfSections = 3;
 
-  // Convert cents → rubles for chart rendering
   const rubleData = data.map((item) => ({
     ...item,
     value: centsToRubles(item.value),
@@ -78,63 +85,48 @@ const TrendChartCard = ({
     onPress: () => setSelectedIndex((prev) => (prev === index ? null : index)),
   }));
 
+  const openMenu = () => {
+    triggerRef.current?.measure(
+      (
+        _x: number,
+        _y: number,
+        width: number,
+        height: number,
+        pageX: number,
+        pageY: number,
+      ) => {
+        setMenuPosition({
+          top: pageY + height + 4,
+          right: screenWidth - pageX - width,
+        });
+        setPeriodMenuVisible(true);
+      },
+    );
+  };
+
   return (
     <View className="bg-background-surface rounded-base p-[16px] gap-4">
-      <View className="flex-row items-center justify-between">
-        <Typography className="text-body text-neutral-900">{title}</Typography>
+      <View className="flex-row items-center justify-between gap-2">
+        <Typography className="text-body text-neutral-900 flex-1 flex-shrink">
+          {title}
+        </Typography>
 
         {periods.length > 0 && selectedPeriod && (
-          <View className="relative">
-            <TouchableOpacity
-              activeOpacity={0.7}
-              className="flex-row items-center gap-1"
-              onPress={() => setPeriodMenuVisible((v) => !v)}
-            >
-              <Typography
-                weight="regular"
-                className="text-body text-neutral-500"
-              >
-                {selectedPeriod.label}
-              </Typography>
-              <StSvg
-                name="Expand_down_light"
-                size={16}
-                color={colors.neutral[500]}
-              />
-            </TouchableOpacity>
-
-            {periodMenuVisible && (
-              <View className="absolute right-0 top-7 bg-background-surface rounded-small border border-neutral-100 z-10 min-w-[120px]">
-                {periods.map((p) => (
-                  <TouchableOpacity
-                    key={p.value}
-                    activeOpacity={0.7}
-                    className="px-3 py-2"
-                    onPress={() => {
-                      setSelectedPeriod(p);
-                      setPeriodMenuVisible(false);
-                      onPeriodChange?.(p);
-                    }}
-                  >
-                    <Typography
-                      weight={
-                        selectedPeriod.value === p.value
-                          ? "semibold"
-                          : "regular"
-                      }
-                      className={
-                        selectedPeriod.value === p.value
-                          ? "text-body text-primary-blue-500"
-                          : "text-body text-neutral-700"
-                      }
-                    >
-                      {p.label}
-                    </Typography>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
+          <TouchableOpacity
+            ref={triggerRef as React.RefObject<View>}
+            activeOpacity={0.7}
+            className="flex-row items-center gap-1"
+            onPress={openMenu}
+          >
+            <Typography weight="regular" className="text-body text-neutral-500">
+              {selectedPeriod.label}
+            </Typography>
+            <StSvg
+              name="Expand_down_light"
+              size={16}
+              color={colors.neutral[500]}
+            />
+          </TouchableOpacity>
         )}
       </View>
 
@@ -182,6 +174,48 @@ const TrendChartCard = ({
           />
         )}
       </View>
+
+      <Modal
+        visible={periodMenuVisible}
+        transparent
+        animationType="none"
+        onRequestClose={() => setPeriodMenuVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setPeriodMenuVisible(false)}>
+          <View className="flex-1">
+            <View
+              className="absolute bg-background-surface rounded-small border border-neutral-100 min-w-[120px]"
+              style={{ top: menuPosition.top, right: menuPosition.right }}
+            >
+              {periods.map((p) => (
+                <TouchableOpacity
+                  key={p.value}
+                  activeOpacity={0.7}
+                  className="px-3 py-2"
+                  onPress={() => {
+                    setSelectedPeriod(p);
+                    setPeriodMenuVisible(false);
+                    onPeriodChange?.(p);
+                  }}
+                >
+                  <Typography
+                    weight={
+                      selectedPeriod.value === p.value ? "semibold" : "regular"
+                    }
+                    className={
+                      selectedPeriod.value === p.value
+                        ? "text-body text-primary-blue-500"
+                        : "text-body text-neutral-700"
+                    }
+                  >
+                    {p.label}
+                  </Typography>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };

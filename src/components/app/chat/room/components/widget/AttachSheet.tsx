@@ -38,6 +38,7 @@ type WizardState = {
   selectedDate: string | null;
   selectedHour: string | null;
   nonWorkingDayInfo: NonWorkingDayInfo | null;
+  visibleMonth: string | null;
 };
 
 const INITIAL_STATE: WizardState = {
@@ -48,6 +49,7 @@ const INITIAL_STATE: WizardState = {
   selectedDate: null,
   selectedHour: null,
   nonWorkingDayInfo: null,
+  visibleMonth: null,
 };
 
 export type ProposeData = {
@@ -255,8 +257,12 @@ const AttachSheet = ({
       return (
         <DatePicker
           userId={userId}
+          currentMonth={state.visibleMonth ?? undefined}
           onPick={handlePickDate}
           onNonWorkingDayPress={handleNonWorkingDayPress}
+          onMonthChange={(month) =>
+            setState((p) => ({ ...p, visibleMonth: month }))
+          }
         />
       );
     }

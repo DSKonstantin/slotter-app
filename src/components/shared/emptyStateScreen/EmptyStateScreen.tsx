@@ -30,8 +30,8 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   const tabBarHeight = useTabBarHeight();
 
   return (
-    <View className="flex-1">
-      <View className="flex-1 items-center justify-center gap-4 px-screen pb-24">
+    <View className="flex-1 ">
+      <View className="flex-1 items-center justify-center gap-4 px-screen">
         <Image
           source={image}
           style={{ width: 160, height: 160 }}
