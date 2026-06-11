@@ -122,14 +122,24 @@ const SlotCard = ({
               </View>
             </View>
 
-            <Typography
-              weight="medium"
-              className="text-caption text-neutral-500 mb-1"
-            >
-              {clientName && `${clientName} | `}
-              {slot.price_cents > 0 &&
-                `${formatRublesFromCents(slot.price_cents)}`}
-            </Typography>
+            <View className="flex-row items-center my-1 gap-2">
+              {clientName ? (
+                <Typography
+                  weight="medium"
+                  className="text-caption text-neutral-500 flex-1"
+                  numberOfLines={1}
+                >
+                  {clientName}
+                </Typography>
+              ) : null}
+              <Typography
+                weight="medium"
+                className="text-caption text-neutral-500"
+              >
+                {clientName ? "| " : ""}
+                {formatRublesFromCents(slot.price_cents)}
+              </Typography>
+            </View>
 
             {serviceNames && (
               <Typography

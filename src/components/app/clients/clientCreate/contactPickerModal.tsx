@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, memo } from "react";
 import {
   View,
-  Text,
   Pressable,
   ActivityIndicator,
   useWindowDimensions,
@@ -11,7 +10,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import * as Contacts from "expo-contacts";
 
-import { Avatar, Input, StModal, StSvg, Typography } from "@/src/components/ui";
+import {
+  Avatar,
+  HighlightText,
+  Input,
+  StModal,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
 export type PickedContact = {
@@ -31,11 +37,13 @@ type ContactItem = {
   phone: string;
 };
 
-const ContactRow = React.memo(function ContactRow({
+const ContactRow = memo(function ContactRow({
   item,
+  highlight,
   onPress,
 }: {
   item: ContactItem;
+  highlight?: string;
   onPress: (item: ContactItem) => void;
 }) {
   return (
@@ -45,12 +53,16 @@ const ContactRow = React.memo(function ContactRow({
     >
       <Avatar name={item.name} size="sm" />
       <View className="flex-1">
-        <Text className="font-inter-semibold text-body text-neutral-900">
-          {item.name}
-        </Text>
-        <Text className="font-inter-regular text-caption text-neutral-500">
-          {item.phone}
-        </Text>
+        <HighlightText
+          text={item.name}
+          highlight={highlight ?? ""}
+          className="font-inter-semibold text-body text-neutral-900"
+        />
+        <HighlightText
+          text={item.phone}
+          highlight={highlight ?? ""}
+          className="font-inter-regular text-caption text-neutral-500"
+        />
       </View>
     </Pressable>
   );
@@ -119,8 +131,10 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
   );
 
   const renderItem = useCallback<ListRenderItem<ContactItem>>(
-    ({ item }) => <ContactRow item={item} onPress={handleSelect} />,
-    [handleSelect],
+    ({ item }) => (
+      <ContactRow item={item} highlight={search} onPress={handleSelect} />
+    ),
+    [handleSelect, search],
   );
 
   const keyExtractor = useCallback((item: ContactItem) => item.id, []);
@@ -192,13 +206,16 @@ const ContactPickerModal = ({ visible, onClose, onSelect }: Props) => {
           <View style={{ height: listHeight }}>
             <FlashList
               data={filtered}
+              contentContainerStyle={{
+                flexGrow: 1,
+              }}
               keyExtractor={keyExtractor}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               renderItem={renderItem}
               ItemSeparatorComponent={Separator}
               ListEmptyComponent={
-                <View className="flex-1 items-center justify-center pt-10 gap-2">
+                <View className="flex-1 items-center justify-center gap-2">
                   <StSvg
                     name="User_fill"
                     size={40}

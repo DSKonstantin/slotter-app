@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { eachDayOfInterval, endOfMonth, parseISO, startOfMonth } from "date-fns";
+import {
+  eachDayOfInterval,
+  endOfMonth,
+  parseISO,
+  startOfMonth,
+} from "date-fns";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
@@ -14,11 +19,24 @@ const makeInitialMonth = () => {
   };
 };
 
-export const useWorkingDaysCalendar = (userId?: number) => {
-  const [visibleMonth, setVisibleMonth] = useState(makeInitialMonth);
+export const useWorkingDaysCalendar = (userId?: number, initialMonth?: string) => {
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    if (initialMonth) {
+      const date = parseISO(initialMonth);
+      return {
+        date_from: formatApiDate(startOfMonth(date)),
+        date_to: formatApiDate(endOfMonth(date)),
+      };
+    }
+    return makeInitialMonth();
+  });
 
-  const { data: workingDaysData, isLoading, isError, refetch } =
-    useGetWorkingDaysQuery(userId ? { userId, ...visibleMonth } : skipToken);
+  const {
+    data: workingDaysData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetWorkingDaysQuery(userId ? { userId, ...visibleMonth } : skipToken);
 
   const markedDates = useMemo(() => {
     if (!userId || !workingDaysData) return {};
@@ -48,13 +66,16 @@ export const useWorkingDaysCalendar = (userId?: number) => {
     [workingDaysData],
   );
 
-  const onMonthChange = useCallback((month: { year: number; month: number }) => {
-    const date = new Date(month.year, month.month - 1, 1);
-    setVisibleMonth({
-      date_from: formatApiDate(startOfMonth(date)),
-      date_to: formatApiDate(endOfMonth(date)),
-    });
-  }, []);
+  const onMonthChange = useCallback(
+    (month: { year: number; month: number }) => {
+      const date = new Date(month.year, month.month - 1, 1);
+      setVisibleMonth({
+        date_from: formatApiDate(startOfMonth(date)),
+        date_to: formatApiDate(endOfMonth(date)),
+      });
+    },
+    [],
+  );
 
   return {
     markedDates,

@@ -100,7 +100,7 @@ export default function ChatRoom({ roomId }: Props) {
     refetch,
   } = useGetChatMessagesQuery(
     { chatRoomId: id, cursor },
-    { skip: !id, refetchOnReconnect: true },
+    { skip: !id, refetchOnReconnect: true, refetchOnMountOrArgChange: true },
   );
 
   const messages = chatData?.messages ?? EMPTY_MESSAGES;

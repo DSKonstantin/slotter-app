@@ -78,8 +78,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const { scheduleAction, onModalHide } = useModalAction(() =>
     setActionsVisible(false),
   );
-  const { scheduleAction: schedulePaymentAction, onModalHide: onPaymentModalHide } =
-    useModalAction(() => setPaymentMethodVisible(false));
+  const {
+    scheduleAction: schedulePaymentAction,
+    onModalHide: onPaymentModalHide,
+  } = useModalAction(() => setPaymentMethodVisible(false));
   const [editingField, setEditingField] = useState<EditingField>(null);
   const isSavingRef = useRef(false);
 
@@ -305,6 +307,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 <View className="px-screen gap-5">
                   <Card
                     title={slot.customer?.name ?? "—"}
+                    titleProps={{
+                      numberOfLines: 4,
+                    }}
                     subtitle={slot.customer?.phone ?? undefined}
                     onPress={() =>
                       slot.customer &&
@@ -621,7 +626,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       className={comingSoon ? "opacity-40" : ""}
                       onPress={() => {
                         if (comingSoon) {
-                          schedulePaymentAction(() => setComingSoonVisible(true));
+                          schedulePaymentAction(() =>
+                            setComingSoonVisible(true),
+                          );
                           return;
                         }
                         void handleUpdatePaymentMethod(key);

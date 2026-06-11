@@ -32,6 +32,7 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
           date_to: formatApiDate(endOfMonth(fetchMonth)),
         }
       : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   const {
@@ -58,6 +59,7 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
           },
         }
       : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   const isLoading = isWorkingDaysLoading || isAppointmentsLoading;
@@ -77,9 +79,9 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
             })
               .map((d) => formatApiDate(d))
               .filter((date) => {
-            const wd = workingDaysData[date];
-            return !wd || !wd.is_active;
-          }),
+                const wd = workingDaysData[date];
+                return !wd || !wd.is_active;
+              }),
           );
 
     const progressMap: Record<string, number> = {};

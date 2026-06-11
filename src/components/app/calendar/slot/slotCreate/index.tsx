@@ -37,7 +37,7 @@ import {
   setSlotDraft,
 } from "@/src/store/redux/slices/slotDraftSlice";
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
-import CustomerSelect from "@/src/components/app/calendar/slot/slotCreate/customerSelect";
+import CustomerSelectField from "@/src/components/shared/fields/customerSelectField";
 import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
@@ -319,7 +319,7 @@ const SlotCreate: React.FC = () => {
                     </View>
                   )}
 
-                  <CustomerSelect />
+                  <CustomerSelectField />
 
                   <View className="flex-row gap-3 mt-5">
                     <View className="flex-1">

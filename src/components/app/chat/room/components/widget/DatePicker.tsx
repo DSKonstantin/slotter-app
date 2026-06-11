@@ -37,7 +37,7 @@ const DatePicker = ({
     minDate,
     getDayStatus,
     getWorkingDayId,
-  } = useWorkingDaysCalendar(userId);
+  } = useWorkingDaysCalendar(userId, currentMonth);
 
   if (isLoading) {
     return (
