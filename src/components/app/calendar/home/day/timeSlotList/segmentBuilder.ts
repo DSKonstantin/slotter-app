@@ -182,21 +182,12 @@ const buildSegments = (
     }
 
     const segmentAppointments = parsedAppointments
-      .filter(({ slot, start }) => {
-        const assignedStart = slotOccupiesTime(slot)
-          ? start
-          : Math.floor(start / 60) * 60;
-        return assignedStart >= segStart && assignedStart < segEnd;
-      })
+      .filter(({ start }) => start >= segStart && start < segEnd)
       .sort((a, b) => {
         const aNB =
-          a.slot.status === "cancelled" ||
-          a.slot.status === "declined" ||
-          a.slot.duration === 0;
+          a.slot.status === "cancelled" || a.slot.status === "declined";
         const bNB =
-          b.slot.status === "cancelled" ||
-          b.slot.status === "declined" ||
-          b.slot.duration === 0;
+          b.slot.status === "cancelled" || b.slot.status === "declined";
         if (aNB !== bNB) return aNB ? -1 : 1;
         return a.start - b.start || a.slot.duration - b.slot.duration;
       });
