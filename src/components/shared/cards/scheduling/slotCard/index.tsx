@@ -163,7 +163,12 @@ const SlotCard = ({
     </Pressable>
   );
 
-  if (slot.duration <= 29) {
+  const isCompactSlot =
+    slot.duration <= 30 ||
+    slot.status === "cancelled" ||
+    slot.status === "declined";
+
+  if (isCompactSlot) {
     return (
       <View
         className="relative"
@@ -240,6 +245,11 @@ const SlotCard = ({
     <View
       className="rounded-base overflow-hidden bg-background-surface"
       style={containerStyle}
+
+      onLayout={(event) => {
+        const { width, height, x, y } = event.nativeEvent.layout;
+        console.log('Размеры:', { width, height, x, y });
+      }}
     >
       <Animated.View
         pointerEvents="none"

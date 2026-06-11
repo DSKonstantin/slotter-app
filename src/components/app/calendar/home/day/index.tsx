@@ -218,6 +218,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
         }
       >
         <View
+          className="pb-4"
           onLayout={(e) => {
             dateSelectorHeightRef.current = e.nativeEvent.layout.height;
           }}

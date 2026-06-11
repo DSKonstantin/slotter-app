@@ -5,6 +5,7 @@ import { colors } from "@/src/styles/colors";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { setFilterModalOpen } from "@/src/store/redux/slices/calendarSlice";
 import Svg, { Defs, Pattern, Line, Rect } from "react-native-svg";
+import { SLOT_GAP } from "@/src/components/app/calendar/home/day/timeSlotList/constants";
 
 const HatchPattern: React.FC = () => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -42,7 +43,7 @@ const FilteredSlotBlock: React.FC = () => {
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      className="relative flex-1 rounded-base flex-row items-center overflow-hidden border border-neutral-200 bg-background px-4 mb-1"
+      className="relative flex-1 rounded-base flex-row items-center overflow-hidden border border-neutral-200 bg-background px-4"
       onPress={handleOpenFilter}
     >
       <HatchPattern />

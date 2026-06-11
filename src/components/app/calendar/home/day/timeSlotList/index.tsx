@@ -10,15 +10,15 @@ import type {
   Appointment,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { View, Dimensions } from "react-native";
+import { View, Pressable, Dimensions } from "react-native";
 import { router } from "expo-router";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
-import FreeSlotBlock from "./FreeSlotBlock";
 import FilteredSlotBlock from "./FilteredSlotBlock";
 import TimeLabels from "./TimeLabels";
 import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
 import { parseTime, formatTime } from "./utils";
+import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
@@ -46,8 +46,6 @@ type TimeSlotListProps = {
   onHighlightScroll?: (y: number) => void;
 };
 
-const PADDING_TOP = 16;
-
 function computeNowOffset(
   segments: ReturnType<typeof createSegments>["segments"],
   currentMinutes: number,
@@ -69,14 +67,12 @@ type AutoCurrentTimeIndicatorProps = {
   segments: ReturnType<typeof createSegments>["segments"];
   effectiveStart: number;
   timelineEnd: number;
-  paddingTop: number;
 };
 
 const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
   segments,
   effectiveStart,
   timelineEnd,
-  paddingTop,
 }: AutoCurrentTimeIndicatorProps) {
   const [currentMinutes, setCurrentMinutes] = useState(() => {
     const d = new Date();
@@ -112,10 +108,7 @@ const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
   }, []);
 
   return (
-    <CurrentTimeIndicator
-      top={nowOffset + paddingTop}
-      time={formatTime(currentMinutes)}
-    />
+    <CurrentTimeIndicator top={nowOffset} time={formatTime(currentMinutes)} />
   );
 });
 
@@ -123,11 +116,9 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointments,
   breaks = [],
   workingDayId,
-  userId,
   startAt,
   endAt,
   date,
-  isActive,
   onHighlightScroll,
 }) => {
   const isToday = isCurrentDay(date);
@@ -236,34 +227,88 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   if (segments.length === 0) return null;
 
   return (
-    <View
-      className="flex-1 px-screen relative"
-      style={{ paddingTop: PADDING_TOP }}
-    >
-      {isToday && (
-        <AutoCurrentTimeIndicator
-          segments={segments}
-          effectiveStart={effectiveStart}
-          timelineEnd={timelineEnd}
-          paddingTop={PADDING_TOP}
-        />
-      )}
-      {segments.map((segment) => {
-        const { segStart, segEnd, isCompressed, content } = segment;
+    <View className="flex-1 px-screen relative">
+      {/*{isToday && (*/}
+      {/*  <AutoCurrentTimeIndicator*/}
+      {/*    segments={segments}*/}
+      {/*    effectiveStart={effectiveStart}*/}
+      {/*    timelineEnd={timelineEnd}*/}
+      {/*  />*/}
+      {/*)}*/}
+      {segments.map((segment, segIndex) => {
+        const { segStart, segEnd, content } = segment;
+        const isLast = segIndex === segments.length - 1;
+
+        const segHeight = getSegmentHeight(segment);
+        const gridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
+        const nonOccupyingSlots =
+          content.kind === "slots"
+            ? content.slots.filter((s) => !slotOccupiesTime(s))
+            : [];
+        const cancelledOffset =
+          content.kind === "slots"
+            ? SLOT_GAP +
+              nonOccupyingSlots.reduce((h, s) => h + getSlotMinHeight(s), 0) +
+              SLOT_GAP * nonOccupyingSlots.length
+            : 0;
+        const markTop = (t: number) =>
+          ((t - segStart) / (segEnd - segStart)) * gridHeight;
+        const markTopFreeSlot = (t: number) => cancelledOffset + markTop(t);
+
+        const hourMarks: number[] = [];
+        for (let t = Math.ceil(segStart / 60) * 60; t < segEnd; t += 60)
+          hourMarks.push(t);
+        if (isLast && segEnd % 60 === 0) hourMarks.push(segEnd);
+
+        const halfHourMarks: number[] = [];
+        for (
+          let t = Math.floor((segStart + 30) / 60) * 60 + 30;
+          t <= segEnd;
+          t += 60
+        )
+          halfHourMarks.push(t);
 
         return (
           <View
             key={segStart}
-            className="flex-row"
-            style={{ height: getSegmentHeight(segment) }}
+            className="flex-row relative"
+            style={{ height: segHeight }}
           >
+            {hourMarks.map((t) => (
+              <View
+                key={`h-${t}`}
+                pointerEvents="none"
+                className="absolute left-0 right-0 bg-neutral-200"
+                style={{ top: markTop(t), height: 1 }}
+              />
+            ))}
+            {halfHourMarks.map((t) => (
+              <View
+                key={`hh-${t}`}
+                pointerEvents="none"
+                className="absolute left-0 right-0"
+                style={{
+                  top: markTopFreeSlot(t),
+                  height: 0,
+                  borderBottomWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: colors.neutral[200],
+                }}
+              />
+            ))}
             <View className="border-r border-neutral-200 relative w-[50px]">
-              {!isCompressed && (
-                <TimeLabels segStart={segStart} segEnd={segEnd} />
-              )}
+              <TimeLabels
+                segStart={segStart}
+                segEnd={segEnd}
+                gridHeight={gridHeight}
+                isLast={isLast}
+              />
             </View>
 
-            <View className="flex-1 pl-2.5 relative">
+            <View
+              className="flex-1 pl-2.5 relative"
+              style={{ gap: SLOT_GAP, paddingTop: SLOT_GAP }}
+            >
               {content.kind === "break" ? (
                 <BreakBlock
                   breakItem={content.breakItem}
@@ -282,19 +327,16 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                       containerStyle={{
                         ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
                         minHeight: getSlotMinHeight(slot),
-                        marginBottom: SLOT_GAP,
                       }}
                     />
                   ))}
-                  {content.showFilteredBlock && <FilteredSlotBlock />}
+                  {content.filteredBlock && <FilteredSlotBlock />}
                   {content.showFreeSlotBlock && (
-                    <FreeSlotBlock
-                      date={date}
-                      time={formatTime(segStart)}
-                      endTime={formatTime(segEnd)}
-                      isActive={isActive}
-                      workingDayId={workingDayId}
-                      userId={userId}
+                    <Pressable
+                      className="flex-1"
+                      onPress={() => {
+                        console.log("Test");
+                      }}
                     />
                   )}
                 </>
