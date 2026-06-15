@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { Animated, Linking, View } from "react-native";
+import { Animated, Easing, Linking, View } from "react-native";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { formatPhoneDisplay } from "@/src/utils/mask/maskPhone";
 import { useCountDown } from "@/src/hooks/useCountdown";
+import { colors } from "@/src/styles/colors";
 
 type CallModalProps = {
   visible: boolean;
@@ -10,6 +11,8 @@ type CallModalProps = {
   call_phone: string;
   resendAfter?: number;
   onResend?: () => Promise<void>;
+  onSwitchToFlashcall?: () => void;
+  isSwitchingToFlashcall?: boolean;
   onSwitchToTelegram?: () => void;
   isSwitchingToTelegram?: boolean;
 };
@@ -26,6 +29,8 @@ export const CallModal = ({
   call_phone,
   resendAfter = 60,
   onResend,
+  onSwitchToFlashcall,
+  isSwitchingToFlashcall,
 }: // TODO: Telegram временно отключён
 // onSwitchToTelegram,
 // isSwitchingToTelegram,
@@ -52,27 +57,34 @@ CallModalProps) => {
 
   // 6. useEffect
   useEffect(() => {
-    const animate = (dot: Animated.Value, delay: number) =>
+    const animate = (
+      dot: Animated.Value,
+      startDelay: number,
+      endDelay: number,
+    ) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(delay),
+          Animated.delay(startDelay),
           Animated.timing(dot, {
             toValue: 1,
-            duration: 300,
+            duration: 500,
+            easing: Easing.inOut(Easing.sin),
             useNativeDriver: true,
           }),
           Animated.timing(dot, {
             toValue: 0.3,
-            duration: 300,
+            duration: 500,
+            easing: Easing.inOut(Easing.sin),
             useNativeDriver: true,
           }),
-          Animated.delay(600),
+          Animated.delay(endDelay),
         ]),
       );
 
-    const a1 = animate(dot1, 0);
-    const a2 = animate(dot2, 200);
-    const a3 = animate(dot3, 400);
+    // Все циклы = 1800ms: startDelay + 1000ms анимации + endDelay
+    const a1 = animate(dot1, 0, 800);
+    const a2 = animate(dot2, 300, 500);
+    const a3 = animate(dot3, 600, 200);
 
     a1.start();
     a2.start();
@@ -85,8 +97,6 @@ CallModalProps) => {
     };
   }, [dot1, dot2, dot3]);
 
-  const tel = call_phone.startsWith("+") ? call_phone : `+${call_phone}`;
-
   return (
     <StModal visible={visible} onClose={onClose}>
       <View className="gap-4 pb-2">
@@ -95,7 +105,7 @@ CallModalProps) => {
             <Typography className="text-caption text-neutral-500">
               Авторизоваться по звонку
             </Typography>
-            <Typography weight="semibold" className="text-display">
+            <Typography weight="semibold" className="text-[18px]">
               {formatPhoneDisplay(call_phone)}
             </Typography>
           </View>
@@ -103,7 +113,9 @@ CallModalProps) => {
             size="sm"
             title="Позвонить"
             onPress={() => {
-              Linking.openURL(`tel:${tel}`);
+              Linking.openURL(
+                `tel:${call_phone.startsWith("+") ? call_phone : `+${call_phone}`}`,
+              );
             }}
           />
         </View>
@@ -119,7 +131,7 @@ CallModalProps) => {
                       width: 6,
                       height: 6,
                       borderRadius: 3,
-                      backgroundColor: "#9CA3AF",
+                      backgroundColor: colors.neutral[700],
                       opacity: dot,
                     }}
                   />
@@ -134,12 +146,22 @@ CallModalProps) => {
             </Typography>
           </View>
         ) : (
-          <Button
-            title="Получить новый номер"
-            variant="secondary"
-            size="sm"
-            onPress={handleResend}
-          />
+          <View className="gap-2">
+            <Button
+              title="Сменить номер"
+              variant="accent"
+              onPress={handleResend}
+            />
+            {onSwitchToFlashcall && (
+              <Button
+                title="Позвонить мне"
+                variant="secondary"
+                loading={isSwitchingToFlashcall}
+                disabled={isSwitchingToFlashcall}
+                onPress={onSwitchToFlashcall}
+              />
+            )}
+          </View>
         )}
 
         {/*TODO: Telegram временно отключён*/}

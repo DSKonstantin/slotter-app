@@ -110,7 +110,10 @@ const SlotCard = ({
       <Typography className="text-body text-neutral-900" numberOfLines={1}>
         {slotInfo.servicesTitle}
         {includeClient && slotInfo.clientName && (
-          <Typography className="text-caption text-neutral-900">
+          <Typography
+            weight="regular"
+            className="text-caption text-neutral-500"
+          >
             {hasServicesTitle ? " · " : ""}
             {slotInfo.clientName}
           </Typography>

@@ -46,17 +46,11 @@ type CallSession = {
 const Verify = () => {
   // 1. useState
   const [codeState, setCodeState] = useState<CodeState>(INITIAL_CODE_STATE);
-  const [callModalVisible, setCallModalVisible] = useState(false);
   const [callSession, setCallSession] = useState<CallSession | null>(null);
-  const [sendCodeError, setSendCodeError] = useState<
-    "spend_unavailable" | null
-  >(null);
+  const [isSwitchingToFlashcall, setIsSwitchingToFlashcall] = useState(false);
 
   // 2. useRef
-  const sessionDataRef = useRef<{
-    phone: string;
-    referralCode?: string;
-  } | null>(null);
+  const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(null);
 
   // 3. Custom hooks + RTK Query
   const ispe = useAppSelector((s) => s.appVersion.ispe);
@@ -64,12 +58,10 @@ const Verify = () => {
   const [validateReferralCode, { isFetching: isValidating }] =
     useLazyValidateReferralCodeQuery();
   const [confirmCode] = useConfirmCodeMutation();
-  const [createTelegramIntent, { isLoading: isStartingTelegram }] =
-    useCreateTelegramIntentMutation();
   const { login } = useAuth();
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
-    defaultValues: { phone: "", promoCode: "" },
+    defaultValues: { phone: "+79525898088", promoCode: "" },
   });
 
   const promoCode = methods.watch("promoCode") ?? "";
@@ -102,15 +94,12 @@ const Verify = () => {
     async (data: VerifyFormValues) => {
       const referralCode = (data.promoCode ?? "").trim() || undefined;
       const phone = `+${unMask(data.phone)}`;
-      setSendCodeError(null);
       try {
         const result = await sendCode({
           phone,
           type: UserType.USER,
           method: "callback",
         }).unwrap();
-
-        sessionDataRef.current = { phone, referralCode };
 
         if (result.method === "callback" && result.call_phone) {
           setCallSession({
@@ -119,7 +108,6 @@ const Verify = () => {
             resend_after: result.resend_after,
             expires_in: result.expires_in,
           });
-          setCallModalVisible(true);
         } else {
           router.push({
             pathname: Routers.auth.enterCode,
@@ -138,8 +126,7 @@ const Verify = () => {
       } catch (e) {
         const code = getApiErrorCode(e);
         if (code === "spend_unavailable") {
-          setSendCodeError("spend_unavailable");
-          toast.error("Звонки временно недоступны. Войдите через Telegram");
+          toast.error("Звонки временно недоступны. Попробуйте позже");
         } else if (code === "gonec_unavailable") {
           toast.error("Сервис временно недоступен. Попробуйте позже");
         } else {
@@ -150,12 +137,48 @@ const Verify = () => {
     [sendCode],
   );
 
-  const handleResend = useCallback(async () => {
-    const session = sessionDataRef.current;
-    if (!session) return;
+  const handleSwitchToFlashcall = useCallback(async () => {
+    const phone = `+${unMask(methods.getValues("phone"))}`;
+    const referralCode =
+      (methods.getValues("promoCode") ?? "").trim() || undefined;
+    setIsSwitchingToFlashcall(true);
     try {
       const result = await sendCode({
-        phone: session.phone,
+        phone,
+        type: UserType.USER,
+        method: "flashcall",
+      }).unwrap();
+      pendingRouteRef.current = {
+        pathname: Routers.auth.enterCode,
+        params: {
+          phone,
+          method: "flashcall",
+          ...(result.code_length != null && {
+            code_length: String(result.code_length),
+          }),
+          resend_after: String(result.resend_after),
+          ...(referralCode && { referralCode }),
+        },
+      };
+      setCallSession(null);
+    } catch (e) {
+      const code = getApiErrorCode(e);
+      if (code === "flashcall_rate_limited") {
+        toast.error("Лимит звонков исчерпан. Попробуйте другой способ");
+      } else {
+        toast.error(getApiErrorMessage(e, "Не удалось отправить звонок"));
+      }
+    } finally {
+      setIsSwitchingToFlashcall(false);
+    }
+  }, [methods, sendCode]);
+
+  const handleResend = useCallback(async () => {
+    if (!callSession) return;
+    const phone = `+${unMask(methods.getValues("phone"))}`;
+    try {
+      const result = await sendCode({
+        phone,
         type: UserType.USER,
         method: "callback",
       }).unwrap();
@@ -174,70 +197,48 @@ const Verify = () => {
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
     }
-  }, [sendCode]);
-
-  // TODO: Telegram временно отключён
-  // const handleSwitchToTelegram = useCallback(async () => {
-  //   try {
-  //     const result = await createTelegramIntent({ type: UserType.USER }).unwrap();
-  //     void Linking.openURL(result.url);
-  //     setCallModalVisible(false);
-  //     const session = sessionDataRef.current;
-  //     router.push({
-  //       pathname: Routers.auth.enterCode,
-  //       params: {
-  //         method: "telegram",
-  //         telegram_code: result.code,
-  //         poll_interval: String(result.poll_interval),
-  //         ...(session?.phone && { phone: session.phone }),
-  //       },
-  //     });
-  //   } catch (e) {
-  //     toast.error(getApiErrorMessage(e, "Не удалось запустить вход через Telegram"));
-  //   }
-  // }, [createTelegramIntent]);
+  }, [callSession, methods, sendCode]);
 
   // 6. useEffect
   useEffect(() => {
     setCodeState(INITIAL_CODE_STATE);
-    setSendCodeError(null);
   }, [promoCode]);
 
-  // Сессия истекает по expires_in независимо от состояния модалки
+  useEffect(() => {
+    if (callSession || !pendingRouteRef.current) return;
+    const route = pendingRouteRef.current;
+    pendingRouteRef.current = null;
+    router.push(route);
+  }, [callSession]);
+
+  // Таймер истечения + polling — оба живут пока callSession != null
   useEffect(() => {
     if (!callSession) return;
-    const timeout = setTimeout(() => {
-      setCallModalVisible(false);
+
+    const phone = `+${unMask(methods.getValues("phone"))}`;
+    const referralCode =
+      (methods.getValues("promoCode") ?? "").trim() || undefined;
+
+    const expiryTimeout = setTimeout(() => {
       setCallSession(null);
       toast.error("Сессия истекла. Попробуйте снова");
     }, callSession.expires_in * 1000);
-    return () => clearTimeout(timeout);
-  }, [callSession]);
 
-  // Polling — активен только пока модалка открыта
-  useEffect(() => {
-    if (!callModalVisible || !callSession) return;
-    const session = sessionDataRef.current;
-    if (!session) return;
-
-    const interval = setInterval(async () => {
+    const pollInterval = setInterval(async () => {
       try {
         const result = await confirmCode({
-          phone: session.phone,
+          phone,
           type: UserType.USER,
-          ...(session.referralCode && { referral_code: session.referralCode }),
+          ...(referralCode && { referral_code: referralCode }),
         }).unwrap();
 
         if (result.status === "authorized") {
-          clearInterval(interval);
-          setCallModalVisible(false);
+          setCallSession(null);
           await handleAuthorized(result.token, result.resource);
         } else if (
           result.status === "expired" ||
           result.status === "deactivated"
         ) {
-          clearInterval(interval);
-          setCallModalVisible(false);
           setCallSession(null);
           toast.error(
             result.status === "deactivated"
@@ -250,8 +251,11 @@ const Verify = () => {
       }
     }, callSession.poll_interval * 1000);
 
-    return () => clearInterval(interval);
-  }, [callModalVisible, callSession, confirmCode, handleAuthorized]);
+    return () => {
+      clearTimeout(expiryTimeout);
+      clearInterval(pollInterval);
+    };
+  }, [callSession, confirmCode, handleAuthorized, methods]);
 
   const trimmedPromo = promoCode.trim();
   const isPromoEntered = trimmedPromo.length >= 4;
@@ -269,18 +273,6 @@ const Verify = () => {
               loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
-            // TODO: Telegram временно отключён
-            // secondary={
-            //   sendCodeError === "spend_unavailable"
-            //     ? {
-            //         title: "Войти через Telegram",
-            //         variant: "secondary",
-            //         loading: isStartingTelegram,
-            //         disabled: isStartingTelegram,
-            //         onPress: handleSwitchToTelegram,
-            //       }
-            //     : undefined
-            // }
           />
         }
       >
@@ -350,16 +342,15 @@ const Verify = () => {
         </View>
       </AuthScreenLayout>
 
-      {callSession && (
+      {!!callSession && (
         <CallModal
-          visible={callModalVisible}
-          onClose={() => setCallModalVisible(false)}
+          visible
+          onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
           resendAfter={callSession.resend_after}
           onResend={handleResend}
-          // TODO: Telegram временно отключён
-          // onSwitchToTelegram={handleSwitchToTelegram}
-          // isSwitchingToTelegram={isStartingTelegram}
+          onSwitchToFlashcall={handleSwitchToFlashcall}
+          isSwitchingToFlashcall={isSwitchingToFlashcall}
         />
       )}
     </FormProvider>

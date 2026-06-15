@@ -22,8 +22,6 @@ import { colors } from "@/src/styles/colors";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
-type VerifyMode = "flashcall" | "telegram";
-
 type CallSession = {
   call_phone: string;
   poll_interval: number;
@@ -48,43 +46,24 @@ const EnterCode = () => {
   const referralCode = params.referralCode
     ? String(params.referralCode)
     : undefined;
-  const initialMethod: VerifyMode =
-    params.method === "telegram" ? "telegram" : "flashcall";
+  const isFlashcall = params.method !== "telegram";
   const codeLength = Number(params.code_length ?? "4");
-  const resendAfter = Number(params.resend_after ?? "60");
-  const telegramCodeFromParams = params.telegram_code
-    ? String(params.telegram_code)
-    : null;
-  const pollIntervalFromParams = Number(params.poll_interval ?? "3");
+  const initialResendAfter = Number(params.resend_after ?? "60");
 
   // 1. useState
-  const [mode, setMode] = useState<VerifyMode>(initialMethod);
   const [callSession, setCallSession] = useState<CallSession | null>(null);
-  const [callModalVisible, setCallModalVisible] = useState(false);
   const [wrongCode, setWrongCode] = useState<{
     attemptsLeft: number;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFlashcallFallback, setShowFlashcallFallback] = useState(false);
-  const [telegramPolling, setTelegramPolling] = useState<{
-    code: string;
-    interval: number;
-  } | null>(
-    telegramCodeFromParams
-      ? { code: telegramCodeFromParams, interval: pollIntervalFromParams }
-      : null,
-  );
-  const [telegramStatus, setTelegramStatus] = useState<
-    "pending" | "awaiting_contact"
-  >("pending");
+  const [currentResendAfter, setCurrentResendAfter] = useState(initialResendAfter);
+  const [flashcallKey, setFlashcallKey] = useState(0);
 
   // 3. Custom hooks + RTK Query
   const { login } = useAuth();
   const [confirmCode] = useConfirmCodeMutation();
   const [sendCode] = useSendCodeMutation();
-  const [createTelegramIntent, { isLoading: isStartingTelegram }] =
-    useCreateTelegramIntentMutation();
-  const [fetchTelegramSession] = useLazyGetTelegramSessionQuery();
 
   // 5. useCallback
   const handleAuthorized = useCallback(
@@ -144,19 +123,6 @@ const EnterCode = () => {
     ],
   );
 
-  // TODO: Telegram временно отключён
-  // const handleSwitchToTelegram = useCallback(async () => {
-  //   try {
-  //     const result = await createTelegramIntent({ type: UserType.USER }).unwrap();
-  //     Linking.openURL(result.url);
-  //     setTelegramPolling({ code: result.code, interval: result.poll_interval });
-  //     setTelegramStatus("pending");
-  //     setMode("telegram");
-  //   } catch (e) {
-  //     toast.error(getApiErrorMessage(e, "Не удалось запустить вход через Telegram"));
-  //   }
-  // }, [createTelegramIntent]);
-
   const handleSwitchToCallback = useCallback(async () => {
     try {
       const result = await sendCode({
@@ -171,7 +137,6 @@ const EnterCode = () => {
           resend_after: result.resend_after,
           expires_in: result.expires_in,
         });
-        setCallModalVisible(true);
       }
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
@@ -204,44 +169,41 @@ const EnterCode = () => {
 
   const handleResend = useCallback(async () => {
     try {
-      await sendCode({
+      const result = await sendCode({
         phone,
         type: UserType.USER,
         method: "flashcall",
       }).unwrap();
       setWrongCode(null);
       setShowFlashcallFallback(false);
+      setCurrentResendAfter(result.resend_after);
+      setFlashcallKey((k) => k + 1);
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
     }
   }, [sendCode, phone]);
 
   // 6. useEffect
-  // Flashcall: show fallback options after 45 seconds
+  // Flashcall: show fallback options after 45 seconds; resets on each resend
   useEffect(() => {
-    if (mode !== "flashcall") return;
+    if (!isFlashcall) return;
     const timeout = setTimeout(
       () => setShowFlashcallFallback(true),
       FLASHCALL_FALLBACK_DELAY_MS,
     );
     return () => clearTimeout(timeout);
-  }, [mode]);
+  }, [isFlashcall, flashcallKey]);
 
-  // Callback fallback: expires_in timeout
+  // Таймер истечения + polling — оба живут пока callSession != null
   useEffect(() => {
     if (!callSession) return;
-    const timeout = setTimeout(() => {
-      setCallModalVisible(false);
+
+    const expiryTimeout = setTimeout(() => {
       setCallSession(null);
       toast.error("Сессия истекла. Попробуйте снова");
     }, callSession.expires_in * 1000);
-    return () => clearTimeout(timeout);
-  }, [callSession]);
 
-  // Callback fallback: polling while modal is open
-  useEffect(() => {
-    if (!callModalVisible || !callSession) return;
-    const interval = setInterval(async () => {
+    const pollInterval = setInterval(async () => {
       try {
         const result = await confirmCode({
           phone,
@@ -249,15 +211,12 @@ const EnterCode = () => {
           ...(referralCode && { referral_code: referralCode }),
         }).unwrap();
         if (result.status === "authorized") {
-          clearInterval(interval);
-          setCallModalVisible(false);
+          setCallSession(null);
           await handleAuthorized(result.token, result.resource);
         } else if (
           result.status === "expired" ||
           result.status === "deactivated"
         ) {
-          clearInterval(interval);
-          setCallModalVisible(false);
           setCallSession(null);
           toast.error(
             result.status === "deactivated"
@@ -269,69 +228,13 @@ const EnterCode = () => {
         // network error — keep trying
       }
     }, callSession.poll_interval * 1000);
-    return () => clearInterval(interval);
-  }, [
-    callModalVisible,
-    callSession,
-    phone,
-    referralCode,
-    confirmCode,
-    handleAuthorized,
-  ]);
 
-  // TODO: Telegram временно отключён
-  // useEffect(() => {
-  //   if (mode !== "telegram" || !telegramPolling) return;
-  //   const { code, interval: tInterval } = telegramPolling;
-  //   const interval = setInterval(async () => {
-  //     try {
-  //       const result = await fetchTelegramSession({ code }).unwrap();
-  //       if (result.status === "authorized") {
-  //         clearInterval(interval);
-  //         await handleAuthorized(result.token, result.resource);
-  //       } else if (result.status === "awaiting_contact") {
-  //         setTelegramStatus("awaiting_contact");
-  //       } else if (result.status === "expired") {
-  //         clearInterval(interval);
-  //         setMode("flashcall");
-  //         setTelegramPolling(null);
-  //         toast("Ссылка Telegram истекла. Попробуйте снова");
-  //       } else if (result.status === "deactivated") {
-  //         clearInterval(interval);
-  //         handleExpiredOrDeactivated("deactivated");
-  //       }
-  //     } catch {}
-  //   }, tInterval * 1000);
-  //   return () => clearInterval(interval);
-  // }, [mode, telegramPolling, fetchTelegramSession, handleAuthorized, handleExpiredOrDeactivated]);
+    return () => {
+      clearTimeout(expiryTimeout);
+      clearInterval(pollInterval);
+    };
+  }, [callSession, phone, referralCode, confirmCode, handleAuthorized]);
 
-  // TODO: Telegram временно отключён
-  // if (mode === "telegram") {
-  //   return (
-  //     <AuthScreenLayout
-  //       header={<AuthHeader />}
-  //       footer={
-  //         <AuthFooter
-  //           primary={{ title: "Открыть Telegram", onPress: () => { if (telegramPolling) Linking.openURL(`https://t.me/${process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME}`); } }}
-  //           secondary={{ title: "Вернуться назад", variant: "secondary", onPress: () => { setMode("flashcall"); setTelegramPolling(null); } }}
-  //         />
-  //       }
-  //     >
-  //       <View className="mt-14">
-  //         <Typography weight="semibold" className="text-display mb-2">Войдите через Telegram</Typography>
-  //         <Typography className="text-body text-neutral-500">
-  //           {telegramStatus === "awaiting_contact" ? "Нажмите «Поделиться номером» в боте Telegram" : "Откройте бота и следуйте инструкции"}
-  //         </Typography>
-  //         <View className="flex-row items-center gap-2 mt-8">
-  //           <ActivityIndicator color={colors.primary.green[500]} />
-  //           <Typography className="text-caption text-neutral-500">Ожидаем подтверждение...</Typography>
-  //         </View>
-  //       </View>
-  //     </AuthScreenLayout>
-  //   );
-  // }
-
-  // flashcall
   return (
     <AuthScreenLayout
       avoidKeyboard
@@ -343,14 +246,6 @@ const EnterCode = () => {
               title: "Подтвердить звонком",
               onPress: handleSwitchToCallback,
             }}
-            // TODO: Telegram временно отключён
-            // secondary={{
-            //   title: "Войти через Telegram",
-            //   variant: "secondary",
-            //   loading: isStartingTelegram,
-            //   disabled: isStartingTelegram,
-            //   onPress: handleSwitchToTelegram,
-            // }}
           />
         ) : undefined
       }
@@ -366,12 +261,13 @@ const EnterCode = () => {
 
         <View className="mt-8">
           <OtpConfirm
+            key={flashcallKey}
             length={codeLength}
             onChange={() => setWrongCode(null)}
             onComplete={handleOtpComplete}
             onResend={handleResend}
             disabled={isSubmitting}
-            resendSeconds={resendAfter}
+            resendSeconds={currentResendAfter}
           />
           {wrongCode && (
             <Typography className="text-caption text-accent-red-500 mt-3 text-center">
@@ -387,10 +283,10 @@ const EnterCode = () => {
         )}
       </View>
 
-      {callSession && (
+      {!!callSession && (
         <CallModal
-          visible={callModalVisible}
-          onClose={() => setCallModalVisible(false)}
+          visible
+          onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
           resendAfter={callSession.resend_after}
           onResend={handleCallbackResend}
