@@ -10,11 +10,14 @@ import type {
   Appointment,
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
-import { View, Pressable, Dimensions } from "react-native";
+import { View, Dimensions } from "react-native";
+import { Svg, Line } from "react-native-svg";
 import { router } from "expo-router";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
 import BreakBlock from "./BreakBlock";
 import FilteredSlotBlock from "./FilteredSlotBlock";
+import FreeSlotPressable from "./FreeSlotPressable";
+import FreeSlotStartModal, { type FreeSlotRange } from "./FreeSlotStartModal";
 import TimeLabels from "./TimeLabels";
 import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
 import { parseTime, formatTime } from "./utils";
@@ -123,6 +126,9 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 }) => {
   const isToday = isCurrentDay(date);
   const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
+  const [freeSlotRange, setFreeSlotRange] = useState<FreeSlotRange | null>(
+    null,
+  );
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -170,6 +176,26 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const handleToggleExpand = useCallback((id: number) => {
     setExpandedSlotId((prev) => (prev === id ? null : id));
   }, []);
+
+  const handleFreeSlotPress = useCallback((start: number, end: number) => {
+    setFreeSlotRange({ start, end });
+  }, []);
+
+  const handleCloseFreeSlotModal = useCallback(() => {
+    setFreeSlotRange(null);
+  }, []);
+
+  const handleFreeSlotNext = useCallback(
+    (startMinutes: number) => {
+      router.push(
+        Routers.app.createSlotFlow.selectService({
+          date: date ?? undefined,
+          time: formatTime(startMinutes),
+        }),
+      );
+    },
+    [date],
+  );
 
   const computeTargetScrollY = useCallback(() => {
     if (highlightSlotId) {
@@ -227,125 +253,139 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   if (segments.length === 0) return null;
 
   return (
-    <View className="flex-1 px-screen relative">
-      {/*{isToday && (*/}
-      {/*  <AutoCurrentTimeIndicator*/}
-      {/*    segments={segments}*/}
-      {/*    effectiveStart={effectiveStart}*/}
-      {/*    timelineEnd={timelineEnd}*/}
-      {/*  />*/}
-      {/*)}*/}
-      {segments.map((segment, segIndex) => {
-        const { segStart, segEnd, content } = segment;
-        const isLast = segIndex === segments.length - 1;
+    <>
+      <View className="flex-1 px-screen relative">
+        {isToday && (
+          <AutoCurrentTimeIndicator
+            segments={segments}
+            effectiveStart={effectiveStart}
+            timelineEnd={timelineEnd}
+          />
+        )}
+        {segments.map((segment, segIndex) => {
+          const { segStart, segEnd, content } = segment;
+          const isLast = segIndex === segments.length - 1;
 
-        const segHeight = getSegmentHeight(segment);
-        const gridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
-        const nonOccupyingSlots =
-          content.kind === "slots"
-            ? content.slots.filter((s) => !slotOccupiesTime(s))
-            : [];
-        const cancelledOffset =
-          content.kind === "slots"
-            ? SLOT_GAP +
-              nonOccupyingSlots.reduce((h, s) => h + getSlotMinHeight(s), 0) +
-              SLOT_GAP * nonOccupyingSlots.length
-            : 0;
-        const markTop = (t: number) =>
-          ((t - segStart) / (segEnd - segStart)) * gridHeight;
-        const markTopFreeSlot = (t: number) => cancelledOffset + markTop(t);
+          const segHeight = getSegmentHeight(segment);
+          const gridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
+          const nonOccupyingSlots =
+            content.kind === "slots"
+              ? content.slots.filter((s) => !slotOccupiesTime(s))
+              : [];
+          const cancelledOffset =
+            content.kind === "slots"
+              ? SLOT_GAP +
+                nonOccupyingSlots.reduce((h, s) => h + getSlotMinHeight(s), 0) +
+                SLOT_GAP * nonOccupyingSlots.length
+              : 0;
+          const markTop = (t: number) =>
+            ((t - segStart) / (segEnd - segStart)) * gridHeight;
+          const markTopFreeSlot = (t: number) => cancelledOffset + markTop(t);
 
-        const hourMarks: number[] = [];
-        for (let t = Math.ceil(segStart / 60) * 60; t < segEnd; t += 60)
-          hourMarks.push(t);
-        if (isLast && segEnd % 60 === 0) hourMarks.push(segEnd);
+          const hourMarks: number[] = [];
+          for (let t = Math.ceil(segStart / 60) * 60; t < segEnd; t += 60)
+            hourMarks.push(t);
+          if (isLast && segEnd % 60 === 0) hourMarks.push(segEnd);
 
-        const halfHourMarks: number[] = [];
-        for (
-          let t = Math.floor((segStart + 30) / 60) * 60 + 30;
-          t <= segEnd;
-          t += 60
-        )
-          halfHourMarks.push(t);
+          const halfHourMarks: number[] = [];
+          for (
+            let t = Math.floor((segStart + 30) / 60) * 60 + 30;
+            t <= segEnd;
+            t += 60
+          )
+            halfHourMarks.push(t);
 
-        return (
-          <View
-            key={segStart}
-            className="flex-row relative"
-            style={{ height: segHeight }}
-          >
-            {hourMarks.map((t) => (
-              <View
-                key={`h-${t}`}
-                pointerEvents="none"
-                className="absolute left-0 right-0 bg-neutral-200"
-                style={{ top: markTop(t), height: 1 }}
-              />
-            ))}
-            {halfHourMarks.map((t) => (
-              <View
-                key={`hh-${t}`}
-                pointerEvents="none"
-                className="absolute left-0 right-0"
-                style={{
-                  top: markTopFreeSlot(t),
-                  height: 0,
-                  borderBottomWidth: 1,
-                  borderStyle: "dashed",
-                  borderColor: colors.neutral[200],
-                }}
-              />
-            ))}
-            <View className="border-r border-neutral-200 relative w-[50px]">
-              <TimeLabels
-                segStart={segStart}
-                segEnd={segEnd}
-                gridHeight={gridHeight}
-                isLast={isLast}
-              />
-            </View>
-
+          return (
             <View
-              className="flex-1 pl-2.5 relative"
-              style={{ gap: SLOT_GAP, paddingTop: SLOT_GAP }}
+              key={segStart}
+              className="flex-row relative"
+              style={{ height: segHeight }}
             >
-              {content.kind === "break" ? (
-                <BreakBlock
-                  breakItem={content.breakItem}
-                  workingDayId={workingDayId}
+              {hourMarks.map((t) => (
+                <View
+                  key={`h-${t}`}
+                  pointerEvents="none"
+                  className="absolute left-[50px] right-0 bg-neutral-200"
+                  style={{ top: markTop(t), height: 1 }}
                 />
-              ) : (
-                <>
-                  {content.slots.map((slot) => (
-                    <SlotCard
-                      key={slot.id}
-                      slot={slot}
-                      onPress={() => handleSlotPress(slot.id)}
-                      highlighted={slot.id === highlightSlotId}
-                      isExpanded={slot.id === expandedSlotId}
-                      onToggleExpand={() => handleToggleExpand(slot.id)}
-                      containerStyle={{
-                        ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
-                        minHeight: getSlotMinHeight(slot),
-                      }}
+              ))}
+              {halfHourMarks.map((t) => (
+                <View
+                  key={`hh-${t}`}
+                  pointerEvents="none"
+                  className="absolute left-[50px] right-0"
+                  style={{ top: markTopFreeSlot(t) }}
+                >
+                  <Svg width="100%" height={2}>
+                    <Line
+                      x1="0"
+                      y1="1"
+                      x2="100%"
+                      y2="1"
+                      stroke={colors.neutral[200]}
+                      strokeWidth={1}
+                      strokeDasharray="4 4"
                     />
-                  ))}
-                  {content.filteredBlock && <FilteredSlotBlock />}
-                  {content.showFreeSlotBlock && (
-                    <Pressable
-                      className="flex-1"
-                      onPress={() => {
-                        console.log("Test");
-                      }}
-                    />
-                  )}
-                </>
-              )}
+                  </Svg>
+                </View>
+              ))}
+              <View className="relative w-[50px]">
+                <TimeLabels
+                  segStart={segStart}
+                  segEnd={segEnd}
+                  gridHeight={gridHeight}
+                  isLast={isLast}
+                />
+              </View>
+
+              <View
+                className="flex-1 pl-2.5 relative"
+                style={{ gap: SLOT_GAP, paddingTop: SLOT_GAP }}
+              >
+                {content.kind === "break" ? (
+                  <BreakBlock
+                    breakItem={content.breakItem}
+                    workingDayId={workingDayId}
+                  />
+                ) : (
+                  <>
+                    {content.slots.map((slot) => (
+                      <SlotCard
+                        key={slot.id}
+                        slot={slot}
+                        onPress={() => handleSlotPress(slot.id)}
+                        highlighted={slot.id === highlightSlotId}
+                        isExpanded={slot.id === expandedSlotId}
+                        onToggleExpand={() => handleToggleExpand(slot.id)}
+                        containerStyle={{
+                          ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
+                          minHeight: getSlotMinHeight(slot),
+                        }}
+                      />
+                    ))}
+                    {content.filteredBlock && <FilteredSlotBlock />}
+                    {content.showFreeSlotBlock && (
+                      <FreeSlotPressable
+                        start={content.freeRangeStart}
+                        end={content.freeRangeEnd}
+                        onPress={handleFreeSlotPress}
+                      />
+                    )}
+                  </>
+                )}
+              </View>
             </View>
-          </View>
-        );
-      })}
-    </View>
+          );
+        })}
+      </View>
+
+      <FreeSlotStartModal
+        visible={!!freeSlotRange}
+        range={freeSlotRange}
+        onClose={handleCloseFreeSlotModal}
+        onNext={handleFreeSlotNext}
+      />
+    </>
   );
 };
 

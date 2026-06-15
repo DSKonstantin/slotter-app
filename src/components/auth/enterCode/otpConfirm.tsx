@@ -15,6 +15,8 @@ type OtpConfirmProps = {
   onChange: (value: string) => void;
   onComplete?: (value: string) => void;
   onResend: () => Promise<void>;
+  disabled?: boolean;
+  resendSeconds?: number;
 };
 
 export function OtpConfirm({
@@ -22,6 +24,8 @@ export function OtpConfirm({
   onChange,
   onComplete,
   onResend,
+  disabled = false,
+  resendSeconds = 60,
 }: OtpConfirmProps) {
   const [value, setValue] = useState("");
 
@@ -42,6 +46,7 @@ export function OtpConfirm({
         {...props}
         value={value}
         autoFocus
+        editable={!disabled}
         onChangeText={(text) => {
           setValue(text);
 
@@ -69,7 +74,7 @@ export function OtpConfirm({
         )}
       />
 
-      <ResendCodeButton seconds={60} onResend={onResend} />
+      <ResendCodeButton seconds={resendSeconds} onResend={onResend} />
     </>
   );
 }

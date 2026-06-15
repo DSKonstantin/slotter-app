@@ -1,8 +1,11 @@
 import { api } from "../api";
 import type {
   AuthResponse,
+  ConfirmCodeResponse,
   MeResponse,
   SendCodeResponse,
+  TelegramIntentResponse,
+  TelegramSessionResponse,
   UpdateCredentialsPayload,
   User,
   UserType,
@@ -13,25 +16,56 @@ export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     sendCode: builder.mutation<
       SendCodeResponse,
-      { phone: string; type: UserType }
+      { phone: string; type: UserType; method?: "flashcall" | "callback" }
     >({
-      query: ({ phone, type }) => ({
+      query: ({ phone, type, method }) => ({
         url: "/auth/send_code",
         method: "POST",
-        data: { phone, type },
+        data: { phone, type, ...(method && { method }) },
       }),
     }),
 
     confirmCode: builder.mutation<
-      AuthResponse,
-      { phone: string; code: string; referral_code?: string }
+      ConfirmCodeResponse,
+      {
+        phone: string;
+        type?: UserType;
+        code?: string;
+        referral_code?: string;
+      }
     >({
-      query: ({ phone, code, referral_code }) => ({
+      query: ({ phone, type, code, referral_code }) => ({
         url: "/auth/confirm_code",
         method: "POST",
-        data: { phone, code, ...(referral_code && { referral_code }) },
+        data: {
+          phone,
+          ...(type && { type }),
+          ...(code && { code }),
+          ...(referral_code && { referral_code }),
+        },
       }),
     }),
+
+    createTelegramIntent: builder.mutation<
+      TelegramIntentResponse,
+      { type: UserType }
+    >({
+      query: ({ type }) => ({
+        url: "/auth/telegram_intents",
+        method: "POST",
+        data: { type },
+      }),
+    }),
+
+    getTelegramSession: builder.query<TelegramSessionResponse, { code: string }>(
+      {
+        query: ({ code }) => ({
+          url: "/auth/telegram_sessions",
+          method: "GET",
+          params: { code },
+        }),
+      },
+    ),
 
     login: builder.mutation<
       AuthResponse,
@@ -103,6 +137,8 @@ export const authApi = api.injectEndpoints({
 export const {
   useSendCodeMutation,
   useConfirmCodeMutation,
+  useCreateTelegramIntentMutation,
+  useLazyGetTelegramSessionQuery,
   useLoginMutation,
   useResetPasswordMutation,
   useLazyGetMeQuery,

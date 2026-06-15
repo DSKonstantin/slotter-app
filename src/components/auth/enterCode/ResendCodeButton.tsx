@@ -5,12 +5,14 @@ import { useCountDown } from "@/src/hooks/useCountdown";
 
 type Props = {
   seconds?: number;
+  label?: string;
   onResend: () => Promise<void> | void;
   onCallPress?: () => void;
 };
 
 export const ResendCodeButton: React.FC<Props> = ({
   seconds = 30,
+  label = "Отправить код повторно",
   onResend,
   onCallPress,
 }) => {
@@ -43,7 +45,7 @@ export const ResendCodeButton: React.FC<Props> = ({
         </Typography>
       ) : (
         <Button
-          title="Отправить код повторно"
+          title={label}
           size="sm"
           variant="clear"
           loading={isSending}

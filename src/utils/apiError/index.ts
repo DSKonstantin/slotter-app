@@ -48,6 +48,12 @@ const isApiError = (e: unknown): e is ApiError =>
 
 const isValidMessage = (msg: string) => !msg.startsWith("Translation missing");
 
+export const getApiErrorCode = (e: unknown): string | null => {
+  if (!isApiError(e)) return null;
+  const code = (e.data as { code?: unknown }).code;
+  return typeof code === "string" ? code : null;
+};
+
 export const getApiErrorMessage = (e: unknown, fallback: string): string => {
   if (!isApiError(e)) return fallback;
   const { error, errors } = e.data;

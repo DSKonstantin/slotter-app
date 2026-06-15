@@ -47,12 +47,69 @@ export interface AuthResponse {
   token: string;
   resource_type: "user" | "customer";
   resource: User;
+  is_created?: boolean;
 }
 
 export interface SendCodeResponse {
-  status: "code_sent";
+  status: "verification_started";
+  method: "flashcall" | "callback";
+  call_phone: string | null;
+  code_length: number | null;
   expires_in: number;
+  resend_after: number;
+  is_poll: boolean;
+  poll_interval: number;
 }
+
+// confirm_code always returns 200 — discriminate by status
+export interface ConfirmCodeAuthorizedResponse {
+  status: "authorized";
+  token: string;
+  resource_type: "user" | "customer";
+  resource: User;
+  is_created: boolean;
+  is_referral_applied: boolean;
+  referral_error: string | null;
+}
+
+export interface ConfirmCodeWrongCodeResponse {
+  status: "wrong_code";
+  attempts_left: number;
+}
+
+export interface ConfirmCodeOtherResponse {
+  status: "pending" | "expired" | "deactivated";
+}
+
+export type ConfirmCodeResponse =
+  | ConfirmCodeAuthorizedResponse
+  | ConfirmCodeWrongCodeResponse
+  | ConfirmCodeOtherResponse;
+
+// telegram_intents
+export interface TelegramIntentResponse {
+  url: string;
+  code: string;
+  expires_in: number;
+  poll_interval: number;
+}
+
+// telegram_sessions — always 200, discriminate by status
+export interface TelegramSessionAuthorizedResponse {
+  status: "authorized";
+  token: string;
+  resource_type: "user" | "customer";
+  resource: User;
+  is_created: boolean;
+}
+
+export interface TelegramSessionOtherResponse {
+  status: "pending" | "awaiting_contact" | "consumed" | "expired" | "deactivated";
+}
+
+export type TelegramSessionResponse =
+  | TelegramSessionAuthorizedResponse
+  | TelegramSessionOtherResponse;
 
 export interface MeResponse {
   status: "authorized" | "unauthorized";

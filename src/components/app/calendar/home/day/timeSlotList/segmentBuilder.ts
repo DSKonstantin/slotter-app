@@ -33,6 +33,8 @@ export type SegmentContent =
       slots: Appointment[];
       showFreeSlotBlock: boolean;
       filteredBlock: { minHeight: number } | null;
+      freeRangeStart: number;
+      freeRangeEnd: number;
     };
 
 export type Segment = {
@@ -218,9 +220,44 @@ const buildSegments = (
               SLOT_GAP * Math.max(0, hiddenOccupied.length - 1),
           }
         : null,
+      freeRangeStart: segStart,
+      freeRangeEnd: segEnd,
     };
 
     return { segStart, segEnd, content };
+  });
+
+// ── Free range annotation ─────────────────────────────────────────────
+
+const annotateFreeRanges = (segments: Segment[]): Segment[] =>
+  segments.map((seg, i) => {
+    if (seg.content.kind !== "slots" || !seg.content.showFreeSlotBlock)
+      return seg;
+
+    let rangeStart = seg.segStart;
+    for (let j = i - 1; j >= 0; j--) {
+      const prev = segments[j];
+      if (prev.content.kind === "slots" && prev.content.showFreeSlotBlock) {
+        rangeStart = prev.segStart;
+      } else {
+        break;
+      }
+    }
+
+    let rangeEnd = seg.segEnd;
+    for (let j = i + 1; j < segments.length; j++) {
+      const next = segments[j];
+      if (next.content.kind === "slots" && next.content.showFreeSlotBlock) {
+        rangeEnd = next.segEnd;
+      } else {
+        break;
+      }
+    }
+
+    return {
+      ...seg,
+      content: { ...seg.content, freeRangeStart: rangeStart, freeRangeEnd: rangeEnd },
+    };
   });
 
 // ── Segment height ───────────────────────────────────────────────────
@@ -312,12 +349,14 @@ export const createSegments = (
     blockingAppointments,
   );
 
-  const segments = buildSegments(
-    timePoints,
-    parsedBreaks,
-    parsedAppointments,
-    workingStart,
-    workingEnd,
+  const segments = annotateFreeRanges(
+    buildSegments(
+      timePoints,
+      parsedBreaks,
+      parsedAppointments,
+      workingStart,
+      workingEnd,
+    ),
   );
 
   return { segments, effectiveStart };

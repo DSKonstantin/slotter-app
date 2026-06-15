@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -143,14 +143,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       }
     }
 
-    if (editingField === "comment") {
-      const comment = methods.getValues("comment");
-      if (comment === (slot.comment ?? "")) {
-        setEditingField(null);
-        return;
-      }
-    }
-
     isSavingRef.current = true;
     try {
       await updateAppointment({
@@ -158,9 +150,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         body:
           editingField === "duration"
             ? { duration }
-            : editingField === "price"
-              ? { price_cents: rublesToCents(price) }
-              : { comment: methods.getValues("comment") },
+            : { price_cents: rublesToCents(price) },
       }).unwrap();
       toast.success("Сохранено");
       setEditingField(null);
@@ -170,6 +160,24 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       isSavingRef.current = false;
     }
   };
+
+  const handleSaveComment = useCallback(async () => {
+    if (!slot) return;
+    if (isSavingRef.current) return;
+    const comment = methods.getValues("comment");
+    isSavingRef.current = true;
+    setEditingField("comment");
+    try {
+      await updateAppointment({ id, body: { comment } }).unwrap();
+      toast.success("Сохранено");
+      setEditingField(null);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+      setEditingField(null);
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, [slot, methods, updateAppointment, id]);
 
   const handleUpdatePaymentMethod = async (
     method: "cash" | "sbp" | "online_bank",
@@ -221,6 +229,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       price: String(centsToRubles(slot.price_cents)),
     });
   }, [methods, slot]);
+
+  const commentValue = methods.watch("comment") ?? "";
+  const isCommentDirty = !!slot && commentValue !== (slot.comment ?? "");
 
   return (
     <FormProvider {...methods}>
@@ -581,16 +592,18 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     numberOfLines={4}
                     disabled={!derived!.canEdit}
                     hideErrorText
-                    onFocus={() => setEditingField("comment")}
-                    onBlur={() => {
-                      const comment = methods.getValues("comment");
-                      if (comment === (slot.comment ?? "")) {
-                        setEditingField(null);
-                        return;
-                      }
-                      void handleSave();
-                    }}
                   />
+                  {derived!.canEdit && isCommentDirty && (
+                    <Button
+                      title="Сохранить"
+                      size="sm"
+                      variant="secondary"
+                      buttonClassName="mt-2"
+                      loading={isUpdating && editingField === "comment"}
+                      disabled={isUpdating && editingField === "comment"}
+                      onPress={handleSaveComment}
+                    />
+                  )}
                 </View>
 
                 <SlotActions

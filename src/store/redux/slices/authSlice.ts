@@ -107,7 +107,19 @@ const authSlice = createSlice({
       )
       .addMatcher(
         authApi.endpoints.confirmCode.matchFulfilled,
-        (state, { payload }) => setAuthenticatedUser(state, payload),
+        (state, { payload }) => {
+          if (payload.status === "authorized") {
+            setAuthenticatedUser(state, payload);
+          }
+        },
+      )
+      .addMatcher(
+        authApi.endpoints.getTelegramSession.matchFulfilled,
+        (state, { payload }) => {
+          if (payload.status === "authorized") {
+            setAuthenticatedUser(state, payload);
+          }
+        },
       )
       .addMatcher(
         authApi.endpoints.resetPassword.matchFulfilled,
