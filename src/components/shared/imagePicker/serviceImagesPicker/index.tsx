@@ -1,7 +1,7 @@
 import type { ImagePickerAsset, ImagePickerOptions } from "expo-image-picker";
 import type { DocumentPickerAsset } from "expo-document-picker";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useRef, useCallback } from "react";
 import { Pressable, View } from "react-native";
 import { nanoid } from "nanoid/non-secure";
 
@@ -46,15 +46,12 @@ type PickerAsset = ImagePickerAsset | DocumentPickerAsset;
 export const MAX_ADDITIONAL_PHOTOS = 4;
 const ADDITIONAL_PHOTO_ROW_SIZE = 2;
 
-type MenuState =
-  | { open: false }
-  | {
-      open: true;
-      title: string;
-      onCamera: () => void | Promise<void>;
-      onGallery: () => void | Promise<void>;
-      onFiles: () => void | Promise<void>;
-    };
+type MenuProps = {
+  title: string;
+  onCamera: () => void | Promise<void>;
+  onGallery: () => void | Promise<void>;
+  onFiles: () => void | Promise<void>;
+};
 
 const REQUIREMENTS = [
   "Формат JPG или PNG, до 5 МБ",
@@ -81,8 +78,17 @@ export const createDefaultServicePhotos = (): ServicePhotosValue => ({
   ],
 });
 
+const EMPTY_MENU_PROPS: MenuProps = {
+  title: "",
+  onCamera: () => {},
+  onGallery: () => {},
+  onFiles: () => {},
+};
+
 export function ServiceImagesPicker({ value, onChange }: Props) {
-  const [menu, setMenu] = useState<MenuState>({ open: false });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isClosingRef = useRef(false);
+  const menuPropsRef = useRef<MenuProps>(EMPTY_MENU_PROPS);
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
 
   const additionalRows = useMemo(() => {
@@ -105,8 +111,16 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
     return rows;
   }, []);
 
-  const closeMenu = useCallback(() => setMenu({ open: false }), []);
-  const { scheduleAction, onModalHide } = useModalAction(closeMenu);
+  const closeMenu = useCallback(() => {
+    isClosingRef.current = true;
+    setMenuOpen(false);
+  }, []);
+  const { scheduleAction, onModalHide: baseOnModalHide } =
+    useModalAction(closeMenu);
+  const onModalHide = useCallback(() => {
+    isClosingRef.current = false;
+    baseOnModalHide();
+  }, [baseOnModalHide]);
 
   const update = useCallback(
     (patch: Partial<ServicePhotosValue>) => {
@@ -223,13 +237,17 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
       options: ImagePickerOptions;
       onPick: (assets: PickerAsset[] | null) => void;
     }) => {
-      setMenu({
-        open: true,
+      if (isClosingRef.current) return;
+      menuPropsRef.current = {
         title,
-        onCamera: () => scheduleAction(async () => onPick(await pickFromCamera(options))),
-        onGallery: () => scheduleAction(async () => onPick(await pickFromGallery(options))),
-        onFiles: () => scheduleAction(async () => onPick(await pickFromFiles(options))),
-      });
+        onCamera: () =>
+          scheduleAction(async () => onPick(await pickFromCamera(options))),
+        onGallery: () =>
+          scheduleAction(async () => onPick(await pickFromGallery(options))),
+        onFiles: () =>
+          scheduleAction(async () => onPick(await pickFromFiles(options))),
+      };
+      setMenuOpen(true);
     },
     [scheduleAction, pickFromCamera, pickFromFiles, pickFromGallery],
   );
@@ -280,6 +298,7 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
         title: "Заменить фото услуги",
         options: {
           allowsMultipleSelection: false,
+          allowsEditing: false,
           aspect: [4, 3],
           quality: 1,
         },
@@ -397,18 +416,16 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
         </View>
       </View>
 
-      {menu.open && (
-        <ImagePickerMenu
-          visible
-          title={menu.title}
-          showFiles
-          onClose={closeMenu}
-          onCamera={menu.onCamera}
-          onGallery={menu.onGallery}
-          onFiles={menu.onFiles}
-          onModalHide={onModalHide}
-        />
-      )}
+      <ImagePickerMenu
+        visible={menuOpen}
+        title={menuPropsRef.current.title}
+        showFiles
+        onClose={closeMenu}
+        onCamera={menuPropsRef.current.onCamera}
+        onGallery={menuPropsRef.current.onGallery}
+        onFiles={menuPropsRef.current.onFiles}
+        onModalHide={onModalHide}
+      />
     </>
   );
 }

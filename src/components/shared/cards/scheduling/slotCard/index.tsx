@@ -23,6 +23,22 @@ interface SlotCardProps {
   onToggleExpand?: () => void;
 }
 
+const getSlotCardInfo = (slot: Appointment) => {
+  const serviceNames = slot.services.map((service) => service.name).join(", ");
+  const additionalServicesCount = slot.additional_services?.length ?? 0;
+
+  return {
+    servicesTitle: serviceNames,
+    additionalServicesTitle: additionalServicesCount
+      ? `+ ${additionalServicesCount} доп.`
+      : "",
+    clientName: slot.customer?.name ?? "",
+    hasComment: Boolean(slot.comment?.trim()),
+    timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
+    price: formatRublesFromCents(slot.price_cents),
+  };
+};
+
 const SlotCard = ({
   slot,
   onPress,
@@ -31,10 +47,8 @@ const SlotCard = ({
   isExpanded: controlledExpanded,
   onToggleExpand,
 }: SlotCardProps) => {
-  const timeString = `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`;
+  const slotInfo = getSlotCardInfo(slot);
   const statusConfig = APPOINTMENT_STATUS_CONFIG[slot.status] ?? null;
-  const clientName = slot.customer?.name ?? "";
-  const serviceNames = slot.services.map((s) => s.name).join(", ");
 
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = controlledExpanded ?? internalExpanded;
@@ -72,88 +86,108 @@ const SlotCard = ({
     }).start();
   }, [highlighted, highlightOpacity]);
 
-  const statusLineClass =
-    slot?.status === "pending"
-      ? "bg-accent-yellow-500"
-      : slot?.status === "confirmed"
-        ? "bg-primary-green-500"
-        : null;
+  const renderStatusLine = () => (
+    <View
+      pointerEvents="none"
+      className={`w-2 rounded-full ${statusConfig.statusLineClass}`}
+    />
+  );
+
+  const renderExpandIcon = () => (
+    <Animated.View style={{ transform: [{ rotate }] }}>
+      <StSvg name="Expand_down" size={24} color={colors.neutral[900]} />
+    </Animated.View>
+  );
+
+  const renderServicesTitle = (includeClient = false) => {
+    const hasServicesTitle =
+      Boolean(slotInfo.servicesTitle) ||
+      Boolean(slotInfo.additionalServicesTitle);
+
+    if (!hasServicesTitle && !includeClient) return null;
+
+    return (
+      <Typography className="text-body text-neutral-900" numberOfLines={1}>
+        {slotInfo.servicesTitle}
+        {includeClient && slotInfo.clientName && (
+          <Typography
+            weight="regular"
+            className="text-caption text-neutral-500"
+          >
+            {hasServicesTitle ? " · " : ""}
+            {slotInfo.clientName}
+          </Typography>
+        )}
+      </Typography>
+    );
+  };
 
   const detailContent = (isShort: boolean) => (
-    <Pressable className="flex-row flex-1 active:opacity-70" onPress={onPress}>
-      <View className={`flex-1 py-5 px-4 justify-center`}>
-        <View className="flex-row gap-2.5">
-          {statusLineClass && (
-            <View
-              pointerEvents="none"
-              className={`w-2 rounded-full ${statusLineClass}`}
-            />
-          )}
+    <Pressable
+      className="flex-row flex-1 px-2 py-2.5 justify-center active:opacity-70 gap-2.5"
+      onPress={onPress}
+    >
+      {renderStatusLine()}
 
-          <View className="flex-1">
-            <View className="flex-row items-center justify-between">
-              <Typography className="text-body text-neutral-900">
-                {timeString}
-              </Typography>
-              <View className="flex-row items-center gap-2">
-                {statusConfig && (
-                  <Badge
-                    size="sm"
-                    title={statusConfig.label}
-                    variant={statusConfig.variant}
-                    icon={statusConfig.icon}
-                  />
-                )}
-                {isShort && (
-                  <Pressable
-                    hitSlop={8}
-                    onPress={toggleExpand}
-                    className="active:opacity-70"
-                  >
-                    <Animated.View style={{ transform: [{ rotate }] }}>
-                      <StSvg
-                        name="Expand_down"
-                        size={24}
-                        color={colors.neutral[900]}
-                      />
-                    </Animated.View>
-                  </Pressable>
-                )}
-              </View>
-            </View>
+      <View className="flex-1 justify-center">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row gap-1 items-center">
+            {slotInfo.hasComment && (
+              <StSvg
+                name="Chat_plus"
+                size={20}
+                color={colors.accent.orange[500]}
+              />
+            )}
+            {renderServicesTitle()}
+          </View>
 
-            <Typography
-              weight="medium"
-              className="text-caption text-neutral-500 mb-1"
-            >
-              {clientName && `${clientName} | `}
-              {slot.price_cents > 0 &&
-                `${formatRublesFromCents(slot.price_cents)}`}
-            </Typography>
-
-            {serviceNames && (
-              <Typography
-                weight="regular"
-                className="text-caption text-neutral-400 mb-1"
-                numberOfLines={2}
+          <View className="flex-row items-center gap-2">
+            {statusConfig && (
+              <Badge
+                size="sm"
+                title={statusConfig.label}
+                variant={statusConfig.variant}
+                icon={statusConfig.icon}
+              />
+            )}
+            {isShort && (
+              <Pressable
+                hitSlop={8}
+                onPress={toggleExpand}
+                className="active:opacity-70"
               >
-                {[
-                  serviceNames,
-                  slot.additional_services?.length
-                    ? `+ ${slot.additional_services.length} доп.`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" | ")}
-              </Typography>
+                {renderExpandIcon()}
+              </Pressable>
             )}
           </View>
         </View>
+
+        <View className="flex-row items-center">
+          <Typography
+            weight="regular"
+            numberOfLines={1}
+            className="text-caption text-neutral-500 flex-shrink-0"
+          >
+            {slotInfo.clientName && `${slotInfo.clientName}  · `}
+            {slotInfo.additionalServicesTitle &&
+              `${slotInfo.additionalServicesTitle}  · `}
+            {slotInfo.price}
+          </Typography>
+        </View>
+        <Typography className="text-caption text-neutral-400">
+          {slotInfo.timeString}
+        </Typography>
       </View>
     </Pressable>
   );
 
-  if (slot.duration <= 29) {
+  const isCompactSlot =
+    slot.duration <= 30 ||
+    slot.status === "cancelled" ||
+    slot.status === "declined";
+
+  if (isCompactSlot) {
     return (
       <View
         className="relative"
@@ -172,21 +206,11 @@ const SlotCard = ({
         />
         <Pressable
           onPress={toggleExpand}
-          className="rounded-base flex-row overflow-hidden bg-background-surface py-2 px-4 flex-1 active:opacity-70 gap-2.5"
+          className="rounded-base flex-row overflow-hidden bg-background-surface p-2 flex-1 active:opacity-70 gap-2.5"
         >
-          {statusLineClass && (
-            <View
-              pointerEvents="none"
-              className={`w-2 rounded-full ${statusLineClass}`}
-            />
-          )}
+          {renderStatusLine()}
           <View className="flex-row flex-1 items-center justify-between">
-            <Typography className="text-body text-neutral-900">
-              {timeString}
-              <Typography className="text-caption text-neutral-900">
-                {clientName && ` · ${clientName}`}
-              </Typography>
-            </Typography>
+            <View className="flex-1 mr-2">{renderServicesTitle(true)}</View>
             {statusConfig && (
               <View className="gap-2 flex-row items-center">
                 <Badge
@@ -195,13 +219,7 @@ const SlotCard = ({
                   variant={statusConfig.variant}
                   className="p-0 w-[26px]"
                 />
-                <Animated.View style={{ transform: [{ rotate }] }}>
-                  <StSvg
-                    name="Expand_down"
-                    size={24}
-                    color={colors.neutral[900]}
-                  />
-                </Animated.View>
+                {renderExpandIcon()}
               </View>
             )}
           </View>

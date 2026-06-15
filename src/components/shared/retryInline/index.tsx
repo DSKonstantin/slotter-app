@@ -1,7 +1,8 @@
 import React from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { twMerge } from "tailwind-merge";
-import { StSvg, Typography } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui/Typography";
+import { StSvg } from "@/src/components/ui/StSvg";
 import { colors } from "@/src/styles/colors";
 
 type Props = {

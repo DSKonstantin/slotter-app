@@ -21,7 +21,7 @@ const TrainingScreen = ({
       <Image
         source={source}
         style={{ flex: 1, width: "100%" }}
-        contentFit="fill"
+        contentFit="cover"
       />
     </View>
   );

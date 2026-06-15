@@ -35,6 +35,7 @@ const AccountScreen = () => {
   const auth = useRequiredAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
   const token = useAppSelector((state) => state.auth.token);
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const { logout } = useAuth();
 
   const handleRefresh = async () => {
@@ -50,17 +51,21 @@ const AccountScreen = () => {
   if (!auth) return null;
 
   const NAV_GROUPS: NavItem[][] = [
-    [
-      {
-        title: "Ваша подписка",
-        icon: "Credit-card_fill",
-        rightIcon: "External",
-        route: () =>
-          WebBrowser.openBrowserAsync(
-            `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
-          ),
-      },
-    ],
+    ...(ispe
+      ? [
+          [
+            {
+              title: "Ваша подписка",
+              icon: "Credit-card_fill",
+              rightIcon: "External",
+              route: () =>
+                WebBrowser.openBrowserAsync(
+                  `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
+                ),
+            },
+          ],
+        ]
+      : []),
     [
       {
         title: "О специалисте",
@@ -72,11 +77,6 @@ const AccountScreen = () => {
         subtitle: "(фото на сайт)",
         icon: "Camera",
         route: () => router.push(Routers.app.account.gallery),
-      },
-      {
-        title: "Отзывы",
-        icon: "Chat_alt_3_fill",
-        route: () => {},
       },
       {
         title: "Ссылки",
@@ -91,13 +91,18 @@ const AccountScreen = () => {
         route: () => router.push(Routers.app.account.booking),
       },
     ],
-    [
-      {
-        title: "Уведомления клиентам",
-        icon: "Message_fill",
-        route: () => router.push(Routers.app.account.clientNotifications.root),
-      },
-    ],
+    ...(ispe
+      ? [
+          [
+            {
+              title: "Уведомления клиентам",
+              icon: "Message_fill",
+              route: () =>
+                router.push(Routers.app.account.clientNotifications.root),
+            },
+          ],
+        ]
+      : []),
     [
       {
         title: "Просмотр страницы",

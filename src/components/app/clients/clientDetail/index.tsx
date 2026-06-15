@@ -40,6 +40,7 @@ import { useModalAction } from "@/src/hooks/useModalAction";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import EditNameModal from "./EditNameModal";
 import ChangeCategoryModal from "./changeCategoryModal";
 import ContactsModal from "./contactsModal";
 import ClientMenuModal from "./clientMenuModal";
@@ -54,6 +55,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const [contactsVisible, setContactsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
+  const [editNameVisible, setEditNameVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const {
@@ -400,11 +402,19 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         onClose={handleCloseMenu}
         onModalHide={onMenuModalHide}
         onChangeCategory={() => scheduleMenuAction(handleOpenChangeCategory)}
+        onEditName={() => scheduleMenuAction(() => setEditNameVisible(true))}
       />
 
       <ComingSoonModal
         visible={comingSoonVisible}
         onClose={() => setComingSoonVisible(false)}
+      />
+
+      <EditNameModal
+        visible={editNameVisible}
+        onClose={() => setEditNameVisible(false)}
+        userCustomerId={userCustomer?.id ?? 0}
+        currentName={customer?.name ?? ""}
       />
     </FormProvider>
   );

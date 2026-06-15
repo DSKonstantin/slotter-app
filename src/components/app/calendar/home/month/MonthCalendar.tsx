@@ -133,7 +133,9 @@ const MonthCalendar = ({
             </View>
           )}
 
-          <View className="w-8 h-8 rounded-full items-center justify-center">
+          <View
+            className={`w-[36px] h-[36px] rounded-full items-center justify-center`}
+          >
             <Typography
               weight="regular"
               className={`

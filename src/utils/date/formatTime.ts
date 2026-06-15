@@ -27,8 +27,8 @@ export const formatDayMonth = (date: string) => {
   return format(parseISO(date), "dd.MM");
 };
 
-export const parseTimeString = (value: string): Date | null => {
-  if (!value) return null;
+export const parseTimeString = (value: unknown): Date | null => {
+  if (!value || typeof value !== "string") return null;
   const parts = value.split(":");
   const h = Number(parts[0]);
   const m = Number(parts[1]);

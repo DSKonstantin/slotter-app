@@ -1,5 +1,5 @@
 import React from "react";
-import { TextInput, TextInputProps } from "react-native";
+import { Platform, TextInput, TextInputProps } from "react-native";
 import { Controller, FieldError, useFormContext } from "react-hook-form";
 import { colors } from "@/src/styles/colors";
 
@@ -26,6 +26,9 @@ const EditableRowInput = ({
       className="flex-1 font-inter-regular text-primary px-2"
       placeholderTextColor={colors.neutral[300]}
       textAlign="right"
+      textAlignVertical="center"
+      includeFontPadding={false}
+      style={Platform.OS === "android" ? { paddingVertical: 0 } : undefined}
     />
   );
 };

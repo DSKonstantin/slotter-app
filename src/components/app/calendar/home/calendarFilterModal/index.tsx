@@ -6,19 +6,12 @@ import {
   setFilters,
   type CalendarFilters,
 } from "@/src/store/redux/slices/calendarSlice";
+import { APPOINTMENT_STATUS_CONFIG } from "@/src/constants/appointmentStatuses";
 import FilterOption from "./filterOption";
 
-const filterOptions: { label: string; key: keyof CalendarFilters }[] = [
-  { label: "Подтвержденные", key: "showConfirmed" },
-  { label: "Ожидающие подтверждения", key: "showPending" },
-  { label: "Предложенные", key: "showProposed" },
-  { label: "Пришли", key: "showArrived" },
-  { label: "Опоздали", key: "showLate" },
-  { label: "Завершённые", key: "showCompleted" },
-  { label: "Не явились", key: "showNoShow" },
-  { label: "Отменённые", key: "showCancelled" },
-  { label: "Отклонённые", key: "showDeclined" },
-];
+const filterOptions = Object.values(APPOINTMENT_STATUS_CONFIG).map(
+  ({ filterLabel, filterKey }) => ({ label: filterLabel, key: filterKey }),
+);
 
 type CalendarFilterModalProps = {
   visible: boolean;

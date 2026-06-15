@@ -5,6 +5,7 @@ import authReducer from "@/src/store/redux/slices/authSlice";
 import calendarSlice from "@/src/store/redux/slices/calendarSlice";
 import servicesSlice from "@/src/store/redux/slices/servicesSlice";
 import uiReducer from "@/src/store/redux/slices/uiSlice";
+import appVersionReducer from "@/src/store/redux/slices/appVersionSlice";
 import slotDraftReducer from "@/src/store/redux/slices/slotDraftSlice";
 import clientsReducer from "@/src/store/redux/slices/clientsSlice";
 import { api } from "@/src/store/redux/services/api";
@@ -18,6 +19,7 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   ui: uiReducer,
+  appVersion: appVersionReducer,
   auth: persistReducer(authPersistConfig, authReducer),
   calendar: calendarSlice,
   services: servicesSlice,

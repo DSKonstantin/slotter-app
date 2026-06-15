@@ -1,7 +1,7 @@
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
@@ -10,6 +10,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
+  Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { StatusBar } from "expo-status-bar";
@@ -27,12 +28,14 @@ import { persistor, store } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
 import "@/src/utils/date/date";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
+import { useAppVersionBootstrap } from "@/src/hooks/useAppVersionBootstrap";
 import * as Sentry from "@sentry/react-native";
 import "@/src/services/sentry";
 
 SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
+  const appVersionReady = useAppVersionBootstrap();
   const { isAuthenticated, isOnboardingComplete, isLoading } = useAuth();
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
@@ -40,16 +43,17 @@ function InitialLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Inter_800ExtraBold,
     IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
   });
 
   useEffect(() => {
-    if (fontsLoaded && !isLoading) {
+    if (fontsLoaded && !isLoading && appVersionReady) {
       SplashScreen.hideAsync();
     }
-  }, [isLoading, fontsLoaded]);
+  }, [isLoading, fontsLoaded, appVersionReady]);
 
-  if (!fontsLoaded || isLoading) {
+  if (!fontsLoaded || isLoading || !appVersionReady) {
     return null;
   }
 

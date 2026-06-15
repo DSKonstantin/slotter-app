@@ -1,65 +1,67 @@
-import React, { useCallback } from "react";
-import { skipToken } from "@reduxjs/toolkit/query";
+import React from "react";
 import { useAppSelector } from "@/src/store/redux/store";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useGetUpcomingAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
-import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
-import ShareLinkVariant from "./ShareLinkVariant";
-import NextAppointmentVariant from "./NextAppointmentVariant";
-import RestVariant from "./RestVariant";
-import SetupScheduleVariant from "./SetupScheduleVariant";
-import AssistantSkeleton from "./AssistantSkeleton";
 import RetryInline from "@/src/components/shared/retryInline";
+import { useHomeAssistantState } from "../useHomeAssistantState";
+import AssistantSkeleton from "./AssistantSkeleton";
+import AfterOnboarding from "./AfterOnboarding";
+import SetupScheduleVariant from "./SetupScheduleVariant";
+import ScheduleClosedVariant from "./ScheduleClosedVariant";
+import FreeDayVariant from "./FreeDayVariant";
+import WaitingNext from "./WaitingNext";
+import CurrentAndNext from "./CurrentAndNext";
+import CompletedDay from "./CompletedDay";
 
 const SpecialistHomeAssistant = () => {
-  const auth = useRequiredAuth();
   const nickname = useAppSelector((s) => s.auth.user?.nickname ?? "");
+  const firstName = useAppSelector((s) => s.auth.user?.first_name ?? "");
+  const { state, refetch } = useHomeAssistantState();
 
-  const {
-    data,
-    isLoading: isAppointmentsLoading,
-    isError: isAppointmentsError,
-    refetch: refetchAppointments,
-  } = useGetUpcomingAppointmentsQuery(
-    auth ? { userId: auth.userId } : skipToken,
-  );
+  // const state = {
+  //   kind: "waiting_next",
+  //   hasTodaySchedule: false,
+  //   appointments: {},
+  // };
+  //
+  // // no_schedule
 
-  const {
-    hasTodayWorkingDay,
-    isTodayDayOff,
-    isReady,
-    isError: isScheduleError,
-    refetch: refetchSchedule,
-  } = useTodaySchedule();
-
-  const handleRetry = useCallback(() => {
-    if (isScheduleError) refetchSchedule();
-    if (isAppointmentsError) refetchAppointments();
-  }, [
-    isScheduleError,
-    isAppointmentsError,
-    refetchSchedule,
-    refetchAppointments,
-  ]);
-
-  if (!auth) return null;
-
-  if (isScheduleError || isAppointmentsError) {
-    return <RetryInline onRetry={handleRetry} />;
+  switch (state.kind) {
+    case "loading":
+      return <AssistantSkeleton />;
+    case "error":
+      return <RetryInline onRetry={refetch} />;
+    case "onboarding":
+      return (
+        <AfterOnboarding
+          nickname={nickname}
+          hasTodaySchedule={state.hasTodaySchedule}
+        />
+      );
+    case "no_schedule":
+      return <SetupScheduleVariant />;
+    case "day_off":
+      return <ScheduleClosedVariant />;
+    case "free_day":
+      return (
+        <FreeDayVariant
+          nickname={nickname}
+          startAt={state.startAt}
+          endAt={state.endAt}
+        />
+      );
+    case "waiting_next":
+      return <WaitingNext appointments={state.appointments} />;
+    case "current_and_next":
+      return (
+        <CurrentAndNext
+          current={state.current}
+          appointments={state.appointments}
+        />
+      );
+    case "completed":
+      return <CompletedDay firstName={firstName} />;
+    default:
+      return <AfterOnboarding nickname={nickname} hasTodaySchedule={false} />;
   }
-
-  if (!isReady || isAppointmentsLoading) return <AssistantSkeleton />;
-
-  const appointments = data?.appointments ?? [];
-
-  if (!hasTodayWorkingDay) return <SetupScheduleVariant />;
-  if (appointments.length > 0) {
-    return <NextAppointmentVariant appointments={appointments} />;
-  }
-  if (isTodayDayOff) return <RestVariant />;
-  if (nickname) return <ShareLinkVariant nickname={nickname} />;
-
-  return null;
 };
 
 export default SpecialistHomeAssistant;

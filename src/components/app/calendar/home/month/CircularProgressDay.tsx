@@ -17,8 +17,7 @@ const CircularProgressDayComponent = ({ progress = 0 }: Props) => {
     <View style={styles.container}>
       <Svg width={SIZE} height={SIZE}>
         <Circle
-          stroke={colors.primary.blue[500]}
-          strokeOpacity={0.2}
+          stroke={colors.primary.green[500]}
           fill="none"
           cx={SIZE / 2}
           cy={SIZE / 2}

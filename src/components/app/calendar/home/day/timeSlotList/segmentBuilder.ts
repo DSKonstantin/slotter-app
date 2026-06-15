@@ -4,7 +4,6 @@ import type {
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
 import {
-  COMPRESSED_GAP_HEIGHT,
   LONG_SLOT_MIN_HEIGHT,
   MINUTE_HEIGHT,
   SHORT_SLOT_MIN_HEIGHT,
@@ -33,15 +32,14 @@ export type SegmentContent =
       kind: "slots";
       slots: Appointment[];
       showFreeSlotBlock: boolean;
-      showFilteredBlock: boolean;
-      filteredBlockMinHeight: number;
+      filteredBlock: { minHeight: number } | null;
+      freeRangeStart: number;
+      freeRangeEnd: number;
     };
 
 export type Segment = {
   segStart: number;
   segEnd: number;
-  isOutsideWorking: boolean;
-  isCompressed: boolean;
   content: SegmentContent;
 };
 
@@ -52,19 +50,16 @@ export type CreateSegmentsResult = {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-export const getSlotMinHeight = (slot: Appointment) =>
-  slot.duration > 29 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
+export const getSlotMinHeight = (slot: Appointment) => {
+  if (slot.status === "cancelled" || slot.status === "declined")
+    return SHORT_SLOT_MIN_HEIGHT;
+  return slot.duration > 30 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
+};
 
 export const slotOccupiesTime = (slot: Appointment) =>
   slot.status !== "cancelled" &&
   slot.status !== "declined" &&
   slot.duration > 0;
-
-const occupiesTime = ({ slot }: ParsedAppointment) => slotOccupiesTime(slot);
-
-const stackedHeight = (appts: ParsedAppointment[]) =>
-  appts.reduce((h, a) => h + getSlotMinHeight(a.slot), 0) +
-  SLOT_GAP * Math.max(0, appts.length - 1);
 
 // ── Parsing ──────────────────────────────────────────────────────────
 
@@ -94,7 +89,6 @@ const collectTimePoints = (
   workingEnd: number | undefined,
   parsedBreaks: ParsedBreak[],
   blockingAppointments: ParsedAppointment[],
-  nonBlockingAppointments: ParsedAppointment[],
 ) => {
   const timePoints = new Set<number>([effectiveStart, effectiveEnd]);
 
@@ -132,23 +126,12 @@ const collectTimePoints = (
   });
 
   // Zero-duration appointments nested inside a longer one don't get their own boundary.
-  const nestedZeroStarts = new Set(
-    blockingAppointments
-      .filter(
-        ({ slot, start }) =>
-          slot.duration === 0 &&
-          blockingAppointments.some(
-            (other) =>
-              other.slot.duration > 0 &&
-              other.start < start &&
-              other.end > start,
-          ),
-      )
-      .map(({ start }) => start),
-  );
-
   blockingAppointments.forEach(({ slot, start, end }) => {
-    const isNested = slot.duration === 0 && nestedZeroStarts.has(start);
+    const isNested =
+      slot.duration === 0 &&
+      blockingAppointments.some(
+        (o) => o.slot.duration > 0 && o.start < start && o.end > start,
+      );
 
     if (!isNested && start >= effectiveStart && start <= effectiveEnd) {
       timePoints.add(start);
@@ -167,18 +150,6 @@ const collectTimePoints = (
     if (end > effectiveStart && end <= effectiveEnd) {
       timePoints.add(end);
     }
-  });
-
-  const isInsideBlocking = (t: number) =>
-    blockingAppointments.some(
-      ({ slot, start, end }) => slot.duration > 0 && start < t && end > t,
-    );
-
-  nonBlockingAppointments.forEach(({ start, end }) => {
-    if (!isInsideBlocking(start) && start >= effectiveStart && start <= effectiveEnd)
-      timePoints.add(start);
-    if (!isInsideBlocking(end) && end > effectiveStart && end <= effectiveEnd)
-      timePoints.add(end);
   });
 
   return Array.from(timePoints).sort((a, b) => a - b);
@@ -208,53 +179,90 @@ const buildSegments = (
       return {
         segStart,
         segEnd,
-        isOutsideWorking,
-        isCompressed: false,
         content: { kind: "break", breakItem: matchingBreak.breakItem } as const,
       };
     }
 
     const segmentAppointments = parsedAppointments
       .filter(({ start }) => start >= segStart && start < segEnd)
-      .sort((a, b) => a.start - b.start || a.slot.duration - b.slot.duration);
-    const visibleAppointments = segmentAppointments.filter(
-      ({ isVisible }) => isVisible,
-    );
-    const hiddenOccupied = segmentAppointments.filter(
-      (a) => !a.isVisible && occupiesTime(a),
-    );
+      .sort((a, b) => {
+        const aNB =
+          a.slot.status === "cancelled" || a.slot.status === "declined";
+        const bNB =
+          b.slot.status === "cancelled" || b.slot.status === "declined";
+        if (aNB !== bNB) return aNB ? -1 : 1;
+        return a.start - b.start || a.slot.duration - b.slot.duration;
+      });
+
+    const visibleAppointments: Appointment[] = [];
+    const hiddenOccupied: ParsedAppointment[] = [];
+    for (const a of segmentAppointments) {
+      if (a.isVisible) visibleAppointments.push(a.slot);
+      else if (slotOccupiesTime(a.slot)) hiddenOccupied.push(a);
+    }
 
     const isOverlappedByPrior = parsedAppointments.some(
-      (a) => occupiesTime(a) && a.start <= segStart && a.end > segStart,
+      (a) =>
+        slotOccupiesTime(a.slot) && a.start <= segStart && a.end > segStart,
     );
     const showFreeSlotBlock = !isOutsideWorking && !isOverlappedByPrior;
-    const showFilteredBlock =
+    const hasFilteredBlock =
       hiddenOccupied.length > 0 && visibleAppointments.length === 0;
-    const isCompressed =
-      isOutsideWorking &&
-      visibleAppointments.length === 0 &&
-      !showFilteredBlock;
+
+    const content: SegmentContent = {
+      kind: "slots",
+      slots: visibleAppointments,
+      showFreeSlotBlock,
+      filteredBlock: hasFilteredBlock
+        ? {
+            minHeight:
+              hiddenOccupied.reduce((h, a) => h + getSlotMinHeight(a.slot), 0) +
+              SLOT_GAP * Math.max(0, hiddenOccupied.length - 1),
+          }
+        : null,
+      freeRangeStart: segStart,
+      freeRangeEnd: segEnd,
+    };
+
+    return { segStart, segEnd, content };
+  });
+
+// ── Free range annotation ─────────────────────────────────────────────
+
+const annotateFreeRanges = (segments: Segment[]): Segment[] =>
+  segments.map((seg, i) => {
+    if (seg.content.kind !== "slots" || !seg.content.showFreeSlotBlock)
+      return seg;
+
+    let rangeStart = seg.segStart;
+    for (let j = i - 1; j >= 0; j--) {
+      const prev = segments[j];
+      if (prev.content.kind === "slots" && prev.content.showFreeSlotBlock) {
+        rangeStart = prev.segStart;
+      } else {
+        break;
+      }
+    }
+
+    let rangeEnd = seg.segEnd;
+    for (let j = i + 1; j < segments.length; j++) {
+      const next = segments[j];
+      if (next.content.kind === "slots" && next.content.showFreeSlotBlock) {
+        rangeEnd = next.segEnd;
+      } else {
+        break;
+      }
+    }
 
     return {
-      segStart,
-      segEnd,
-      isOutsideWorking,
-      isCompressed,
-      content: {
-        kind: "slots",
-        slots: visibleAppointments.map(({ slot }) => slot),
-        showFreeSlotBlock,
-        showFilteredBlock,
-        filteredBlockMinHeight: stackedHeight(hiddenOccupied),
-      } as const,
+      ...seg,
+      content: { ...seg.content, freeRangeStart: rangeStart, freeRangeEnd: rangeEnd },
     };
   });
 
 // ── Segment height ───────────────────────────────────────────────────
 
 export const getSegmentHeight = (segment: Segment) => {
-  if (segment.isCompressed) return COMPRESSED_GAP_HEIGHT;
-
   const { segStart, segEnd, content } = segment;
   const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
 
@@ -263,14 +271,17 @@ export const getSegmentHeight = (segment: Segment) => {
   const slotsMinHeight =
     content.slots.reduce((h, slot) => h + getSlotMinHeight(slot), 0) +
     SLOT_GAP * content.slots.length;
-  const freeSlotHeight = content.showFreeSlotBlock ? LONG_SLOT_MIN_HEIGHT : 0;
-  const filteredBlockHeight = content.showFilteredBlock
-    ? Math.max(SHORT_SLOT_MIN_HEIGHT, content.filteredBlockMinHeight)
+  const filteredBlockHeight = content.filteredBlock
+    ? Math.max(SHORT_SLOT_MIN_HEIGHT, content.filteredBlock.minHeight)
+    : 0;
+  // Reserve exactly one gridHeight for the Pressable so time marks map 1:1 to the free slot area.
+  const freeSlotReserve = content.showFreeSlotBlock
+    ? SLOT_GAP + baseGridHeight
     : 0;
 
   return Math.max(
     baseGridHeight,
-    slotsMinHeight + freeSlotHeight + filteredBlockHeight,
+    slotsMinHeight + filteredBlockHeight + freeSlotReserve,
   );
 };
 
@@ -294,12 +305,7 @@ export const createSegments = (
   const blockingAppointments = parsedAppointments.filter(
     ({ slot }) => slot.status !== "cancelled" && slot.status !== "declined",
   );
-  const nonBlockingAppointments = parsedAppointments.filter(
-    ({ slot }) => slot.status === "cancelled" || slot.status === "declined",
-  );
 
-  const blockingStarts = blockingAppointments.map((a) => a.start);
-  const blockingEnds = blockingAppointments.map((a) => Math.max(a.start, a.end));
   const allStarts = parsedAppointments.map((a) => a.start);
   const allEnds = parsedAppointments.map((a) => Math.max(a.start, a.end));
 
@@ -307,12 +313,8 @@ export const createSegments = (
   let effectiveEnd: number;
 
   if (workingStart !== undefined && workingEnd !== undefined) {
-    effectiveStart = blockingStarts.length > 0
-      ? Math.min(workingStart, ...blockingStarts)
-      : workingStart;
-    effectiveEnd = blockingEnds.length > 0
-      ? Math.max(workingEnd, ...blockingEnds)
-      : workingEnd;
+    effectiveStart = workingStart;
+    effectiveEnd = workingEnd;
   } else if (allStarts.length > 0) {
     effectiveStart = Math.min(...allStarts);
     effectiveEnd = Math.max(...allEnds);
@@ -345,15 +347,16 @@ export const createSegments = (
     workingEnd,
     parsedBreaks,
     blockingAppointments,
-    nonBlockingAppointments,
   );
 
-  const segments = buildSegments(
-    timePoints,
-    parsedBreaks,
-    parsedAppointments,
-    workingStart,
-    workingEnd,
+  const segments = annotateFreeRanges(
+    buildSegments(
+      timePoints,
+      parsedBreaks,
+      parsedAppointments,
+      workingStart,
+      workingEnd,
+    ),
   );
 
   return { segments, effectiveStart };

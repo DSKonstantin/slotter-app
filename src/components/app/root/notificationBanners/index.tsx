@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import Constants from "expo-constants";
 import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
@@ -64,6 +66,7 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
 ];
 
 const NotificationBanners = () => {
+  const ispe = useAppSelector((s) => s.appVersion.ispe);
   const membership = useAppSelector(
     (s) => s.auth.user?.subscription_membership,
   );
@@ -128,7 +131,7 @@ const NotificationBanners = () => {
 
   return (
     <View className="gap-2">
-      {subscriptionEnded && !subBannerClosed && (
+      {ispe && subscriptionEnded && !subBannerClosed && (
         <BannerCard
           variant="error"
           iconName="Alarm_fill"
@@ -138,7 +141,7 @@ const NotificationBanners = () => {
           onDismiss={() => setSubBannerClosed(true)}
         />
       )}
-      {expiryDaysLeft !== null && (
+      {ispe && expiryDaysLeft !== null && (
         <BannerCard
           variant="warning"
           iconName="Hhourglass_move_light_fill"

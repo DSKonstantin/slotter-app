@@ -58,13 +58,14 @@ const ClientRow = React.memo(function ClientRow({
         highlight ? (
           <HighlightText
             text={item.customer.name}
+            numberOfLines={4}
             highlight={highlight}
             className="flex-shrink font-inter-medium text-body text-neutral-900"
           />
         ) : undefined
       }
       titleProps={{
-        numberOfLines: 2,
+        numberOfLines: 4,
       }}
       subtitle={
         highlight && item.customer.phone ? (

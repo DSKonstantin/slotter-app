@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
-import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
 import { Button, Typography } from "@/src/components/ui";
 
 type DurationFieldProps = {
@@ -82,11 +82,7 @@ const DurationField = ({
       </View>
 
       {isCustomSelected && (
-        <RhfTextField
-          name={name}
-          placeholder={placeholder}
-          keyboardType="numeric"
-        />
+        <RhfDurationPicker name={name} placeholder={placeholder} />
       )}
     </View>
   );

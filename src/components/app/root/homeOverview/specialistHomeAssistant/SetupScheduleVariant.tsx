@@ -1,35 +1,26 @@
 import React, { memo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
-import { Button, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { Typography } from "@/src/components/ui";
 import { Routers } from "@/src/constants/routers";
-import { formatApiDate } from "@/src/utils/date/formatDate";
+import { LinkView } from "@/src/components/shared/linkView";
 
 function SetupScheduleVariantComponent() {
   return (
     <View className="gap-3">
-      <View className="flex-row items-center gap-2">
-        <StSvg name="Time_light" size={20} color={colors.neutral[900]} />
-        <Typography weight="semibold" className="text-xl">
-          Настройте рабочий день
-        </Typography>
-      </View>
-
-      <Typography className="text-body text-neutral-500">
-        Без созданного рабочего дня клиенты не смогут записаться
+      <Typography weight="semibold" className="text-lg">
+        Расписание закрыто. Клиенты не могут к вам записаться. Откройте его в
+        разделе{" "}
+        <Typography weight="extrabold" className="text-lg">
+          График
+        </Typography>{" "}
+        или по кнопке ниже.
       </Typography>
 
-      <Button
-        title="Настроить график"
-        rightIcon={
-          <StSvg name="Add_round_fill" size={24} color={colors.neutral[0]} />
-        }
-        onPress={() =>
-          router.push(
-            Routers.app.calendar.dayScheduleCreate(formatApiDate(new Date())),
-          )
-        }
+      <LinkView
+        link="Открыть график"
+        iconName="Arrow_alt_lright"
+        onPress={() => router.push(Routers.app.schedule)}
       />
     </View>
   );

@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { useController, useFormContext } from "react-hook-form";
-import { DatePicker } from "@/src/components/ui";
+import { DatePicker } from "@/src/components/ui/fields/DatePicker";
 import { useComposedFieldRef } from "@/src/hooks/useScrollToError";
 
 type DatePickerFieldsProps = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -14,9 +14,19 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
+import { useModalAction } from "@/src/hooks/useModalAction";
+import SlotActionsMenu from "./SlotActionsMenu";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
-import { Avatar, Badge, Card, StSvg, Typography } from "@/src/components/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  StModal,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import {
   useGetAppointmentQuery,
@@ -28,6 +38,7 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
 import RescheduleModal from "@/src/components/app/calendar/slot/rescheduleModal";
+import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
 import { formatDayMonth, formatTimeString } from "@/src/utils/date/formatTime";
 import {
@@ -42,8 +53,14 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
+import EditableDurationRow from "./EditableDurationRow";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
+
+import {
+  PAYMENT_OPTIONS,
+  PAYMENT_METHOD_LABELS,
+} from "@/src/constants/payment";
 
 type EditingField = "duration" | "price" | "comment" | null;
 
@@ -55,6 +72,16 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const auth = useRequiredAuth();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const [actionsVisible, setActionsVisible] = useState(false);
+  const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
+  const { scheduleAction, onModalHide } = useModalAction(() =>
+    setActionsVisible(false),
+  );
+  const {
+    scheduleAction: schedulePaymentAction,
+    onModalHide: onPaymentModalHide,
+  } = useModalAction(() => setPaymentMethodVisible(false));
   const [editingField, setEditingField] = useState<EditingField>(null);
   const isSavingRef = useRef(false);
 
@@ -73,7 +100,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     useUpdateAppointmentMutation();
   const [createChatRoom, { isLoading: isChatCreating }] =
     useCreateChatRoomMutation();
-
   const handleOpenChat = async () => {
     if (!auth || !slot?.customer) return;
     try {
@@ -117,14 +143,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       }
     }
 
-    if (editingField === "comment") {
-      const comment = methods.getValues("comment");
-      if (comment === (slot.comment ?? "")) {
-        setEditingField(null);
-        return;
-      }
-    }
-
     isSavingRef.current = true;
     try {
       await updateAppointment({
@@ -132,9 +150,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         body:
           editingField === "duration"
             ? { duration }
-            : editingField === "price"
-              ? { price_cents: rublesToCents(price) }
-              : { comment: methods.getValues("comment") },
+            : { price_cents: rublesToCents(price) },
       }).unwrap();
       toast.success("Сохранено");
       setEditingField(null);
@@ -142,6 +158,44 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
     } finally {
       isSavingRef.current = false;
+    }
+  };
+
+  const handleSaveComment = useCallback(async () => {
+    if (!slot) return;
+    if (isSavingRef.current) return;
+    const comment = methods.getValues("comment");
+    isSavingRef.current = true;
+    setEditingField("comment");
+    try {
+      await updateAppointment({ id, body: { comment } }).unwrap();
+      toast.success("Сохранено");
+      setEditingField(null);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+      setEditingField(null);
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, [slot, methods, updateAppointment, id]);
+
+  const handleUpdatePaymentMethod = async (
+    method: "cash" | "sbp" | "online_bank",
+  ) => {
+    if (!slot || method === slot.payment_method) {
+      setPaymentMethodVisible(false);
+      return;
+    }
+    try {
+      await updateAppointment({
+        id,
+        body: { payment_method: method },
+      }).unwrap();
+      setPaymentMethodVisible(false);
+    } catch (error) {
+      toast.error(
+        getApiErrorMessage(error, "Не удалось обновить способ оплаты"),
+      );
     }
   };
 
@@ -176,9 +230,32 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     });
   }, [methods, slot]);
 
+  const commentValue = methods.watch("comment") ?? "";
+  const isCommentDirty = !!slot && commentValue !== (slot.comment ?? "");
+
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar title="Детали слота">
+      <ScreenWithToolbar
+        title="Детали слота"
+        rightButton={
+          slot &&
+          (slot.status === "pending" ||
+            slot.status === "confirmed" ||
+            slot.status === "proposed") ? (
+            <SlotActionsMenu
+              status={slot.status}
+              visible={actionsVisible}
+              onOpen={() => setActionsVisible(true)}
+              onClose={() => setActionsVisible(false)}
+              onCloseComplete={onModalHide}
+              onReschedule={() =>
+                scheduleAction(() => setRescheduleVisible(true))
+              }
+              onCancel={() => scheduleAction(() => setCancelVisible(true))}
+            />
+          ) : undefined
+        }
+      >
         {({ topInset, bottomInset }) => {
           if (isLoading) {
             return (
@@ -241,6 +318,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 <View className="px-screen gap-5">
                   <Card
                     title={slot.customer?.name ?? "—"}
+                    titleProps={{
+                      numberOfLines: 4,
+                    }}
                     subtitle={slot.customer?.phone ?? undefined}
                     onPress={() =>
                       slot.customer &&
@@ -405,19 +485,33 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     }
                   />
 
-                  <EditableRow
+                  <EditableDurationRow
                     label="Длительность"
                     displayValue={`${slot.duration} мин`}
-                    fieldName="duration"
-                    editing={editingField === "duration"}
+                    value={slot.duration}
                     canEdit={derived!.canEdit}
-                    isUpdating={isUpdating}
-                    placeholder="мин"
-                    onEdit={() => {
-                      methods.setValue("duration", String(slot.duration));
+                    isUpdating={isUpdating && editingField === "duration"}
+                    onSave={async (minutes) => {
+                      if (!slot || minutes <= 0) return;
+                      if (minutes === slot.duration) return;
+                      if (isSavingRef.current) return;
                       setEditingField("duration");
+                      isSavingRef.current = true;
+                      try {
+                        await updateAppointment({
+                          id,
+                          body: { duration: minutes },
+                        }).unwrap();
+                        toast.success("Сохранено");
+                      } catch (error) {
+                        toast.error(
+                          getApiErrorMessage(error, "Не удалось сохранить"),
+                        );
+                      } finally {
+                        isSavingRef.current = false;
+                        setEditingField(null);
+                      }
                     }}
-                    onSave={handleSave}
                   />
 
                   <EditableRow
@@ -436,8 +530,55 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       setEditingField("price");
                     }}
                     onSave={handleSave}
-                    divider={false}
+                    divider={true}
                   />
+
+                  <InfoRow
+                    label="Способ оплаты"
+                    divider={slot.status === "completed"}
+                    right={
+                      <Pressable
+                        onPress={
+                          derived!.canEdit
+                            ? () => setPaymentMethodVisible(true)
+                            : undefined
+                        }
+                        disabled={!derived!.canEdit}
+                        hitSlop={8}
+                        className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                      >
+                        <Typography
+                          weight="regular"
+                          className="text-body text-neutral-900 flex-shrink text-right"
+                        >
+                          {PAYMENT_METHOD_LABELS[slot.payment_method] ??
+                            slot.payment_method}
+                        </Typography>
+                        {derived!.canEdit && (
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
+                          />
+                        )}
+                      </Pressable>
+                    }
+                  />
+
+                  {slot.status === "completed" && (
+                    <InfoRow
+                      label="Завершено в"
+                      divider={false}
+                      right={
+                        <Typography
+                          weight="semibold"
+                          className="text-body text-primary-green-700 flex-shrink text-right"
+                        >
+                          {formatTimeString(slot.end_time)}
+                        </Typography>
+                      }
+                    />
+                  )}
                 </View>
 
                 <View className="px-screen my-5">
@@ -451,16 +592,18 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     numberOfLines={4}
                     disabled={!derived!.canEdit}
                     hideErrorText
-                    onFocus={() => setEditingField("comment")}
-                    onBlur={() => {
-                      const comment = methods.getValues("comment");
-                      if (comment === (slot.comment ?? "")) {
-                        setEditingField(null);
-                        return;
-                      }
-                      void handleSave();
-                    }}
                   />
+                  {derived!.canEdit && isCommentDirty && (
+                    <Button
+                      title="Сохранить"
+                      size="sm"
+                      variant="secondary"
+                      buttonClassName="mt-2"
+                      loading={isUpdating && editingField === "comment"}
+                      disabled={isUpdating && editingField === "comment"}
+                      onPress={handleSaveComment}
+                    />
+                  )}
                 </View>
 
                 <SlotActions
@@ -475,6 +618,41 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 visible={cancelVisible}
                 appointmentId={id}
                 onClose={() => setCancelVisible(false)}
+              />
+              <StModal
+                visible={paymentMethodVisible}
+                onClose={() => setPaymentMethodVisible(false)}
+                onModalHide={onPaymentModalHide}
+              >
+                <Typography
+                  weight="semibold"
+                  className="text-display text-center mb-4"
+                >
+                  Способ оплаты
+                </Typography>
+                <View className="gap-2">
+                  {PAYMENT_OPTIONS.map(({ key, label, comingSoon }) => (
+                    <Card
+                      key={key}
+                      title={label}
+                      active={slot.payment_method === key}
+                      className={comingSoon ? "opacity-40" : ""}
+                      onPress={() => {
+                        if (comingSoon) {
+                          schedulePaymentAction(() =>
+                            setComingSoonVisible(true),
+                          );
+                          return;
+                        }
+                        void handleUpdatePaymentMethod(key);
+                      }}
+                    />
+                  ))}
+                </View>
+              </StModal>
+              <ComingSoonModal
+                visible={comingSoonVisible}
+                onClose={() => setComingSoonVisible(false)}
               />
               <RescheduleModal
                 visible={rescheduleVisible}

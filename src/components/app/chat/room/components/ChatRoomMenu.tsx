@@ -57,7 +57,7 @@ const ChatRoomMenu = ({ visible, onClose, roomId, interlocutor }: Props) => {
           blurhash={avatar_blurhash}
           size="md"
         />
-        <Typography weight="semibold" className="text-body">
+        <Typography weight="semibold" className="text-body" numberOfLines={4}>
           {name}
         </Typography>
         {phone && (

@@ -37,7 +37,10 @@ const SlotPicker = ({
     isLoading,
     isError,
     refetch,
-  } = useGetAvailableSlotsQuery({ userId, date: formatSlotDate(parseISO(date)), step: stepMinutes });
+  } = useGetAvailableSlotsQuery(
+    { userId, date: formatSlotDate(parseISO(date)), step: stepMinutes },
+    { refetchOnMountOrArgChange: true },
+  );
 
   const slotsByHour = useMemo(() => groupSlotsByHour(slots ?? []), [slots]);
 

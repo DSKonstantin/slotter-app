@@ -22,7 +22,6 @@ export default function AppLayout() {
         />
         <Stack.Screen name="create-slot-flow" />
         <Stack.Screen name="create-client" />
-        <Stack.Screen name="payment/status" />
       </Stack>
       {showTabBar && <StTabBar />}
       <TabMenu />

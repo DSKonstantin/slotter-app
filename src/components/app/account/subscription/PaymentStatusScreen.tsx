@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Linking, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import { useDispatch } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +13,7 @@ import { colors } from "@/src/styles/colors";
 import { api } from "@/src/store/redux/services/api";
 import { useGetSubscriptionPaymentQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
+import { Routers } from "@/src/constants/routers";
 
 type DisplayState = "loading" | "succeeded" | "failed" | "timeout" | "noId";
 
@@ -25,7 +26,12 @@ const PaymentStatusScreen = () => {
   const [isPolling, setIsPolling] = useState(true);
 
   const token = useAppSelector((state) => state.auth.token);
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!ispe) router.replace(Routers.app.root);
+  }, [ispe]);
   const { top, bottom } = useSafeAreaInsets();
   const { payment_id } = useLocalSearchParams<{ payment_id: string }>();
 

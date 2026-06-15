@@ -1,10 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Pressable,
   View,
   useWindowDimensions,
 } from "react-native";
+import debounce from "lodash/debounce";
 import { KeyboardEvents } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
@@ -15,6 +23,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import {
   Avatar,
   Button,
+  HighlightText,
   Input,
   StModal,
   StSvg,
@@ -29,27 +38,42 @@ import {
   clearCreatedCustomer,
   clearSelectedCustomer,
 } from "@/src/store/redux/slices/slotDraftSlice";
-import { useGetUserCustomersQuery } from "@/src/store/redux/services/api/userCustomersApi";
+import { useGetUserCustomersPaginatedInfiniteQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import RetryInline from "@/src/components/shared/retryInline";
 import type { AutocompleteItem } from "@/src/components/ui/fields/Autocomplete";
 import { SCREEN_PADDING } from "@/src/constants/layout";
+import type { UserCustomer } from "@/src/store/redux/services/api-types";
 
 type CustomerOption = AutocompleteItem & {
   avatarUrl?: string | null;
   avatarBlurhash?: string | null;
+  phone?: string | null;
 };
 
 const LIST_MAX_HEIGHT = 400;
 const LIST_MIN_HEIGHT = 200;
+const SEARCH_DEBOUNCE_MS = 300;
 
-const CustomerRow = React.memo(function CustomerRow({
-  item,
-  onPress,
-}: {
-  item: CustomerOption;
-  onPress: (item: CustomerOption) => void;
-}) {
-  return (
+function toOption(uc: UserCustomer): CustomerOption {
+  return {
+    id: String(uc.customer.id),
+    title: uc.customer.name,
+    avatarUrl: uc.customer.avatar_url,
+    avatarBlurhash: uc.customer.avatar_blurhash,
+    phone: uc.customer.phone,
+  };
+}
+
+const CustomerRow = memo(
+  ({
+    item,
+    highlight,
+    onPress,
+  }: {
+    item: CustomerOption;
+    highlight?: string;
+    onPress: (item: CustomerOption) => void;
+  }) => (
     <Pressable
       className="flex-row items-center gap-3 py-3 px-2 active:opacity-70"
       onPress={() => onPress(item)}
@@ -60,12 +84,25 @@ const CustomerRow = React.memo(function CustomerRow({
         name={item.title}
         size="sm"
       />
-      <Typography className="text-body text-neutral-900">
-        {item.title}
-      </Typography>
+      <View className="flex-1">
+        <HighlightText
+          text={item.title}
+          numberOfLines={2}
+          highlight={highlight ?? ""}
+          className="font-inter-medium text-body text-neutral-900"
+        />
+        {item.phone && (
+          <HighlightText
+            text={item.phone}
+            highlight={highlight ?? ""}
+            className="font-inter-regular text-caption text-neutral-500"
+          />
+        )}
+      </View>
     </Pressable>
-  );
-});
+  ),
+);
+CustomerRow.displayName = "CustomerRow";
 
 const Separator = () => <View className="mx-2 h-px bg-neutral-100" />;
 
@@ -73,14 +110,19 @@ type Props = {
   showCreateButton?: boolean;
 };
 
-const CustomerSelect = ({ showCreateButton = true }: Props) => {
-  const auth = useRequiredAuth();
+const CustomerSelectField = ({ showCreateButton = true }: Props) => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
 
+  const debouncedSetSearch = useRef(
+    debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
+  ).current;
+
+  const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const createdCustomer = useAppSelector((s) => s.slotDraft.createdCustomer);
   const selectedCustomerFromDraft = useAppSelector(
@@ -90,43 +132,45 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
 
-  const available = height - top - bottom - keyboardHeight;
+  const {
+    data,
+    isLoading: isCustomersLoading,
+    isFetchingNextPage,
+    isFetching: isCustomersFetching,
+    isError: isCustomersError,
+    hasNextPage,
+    fetchNextPage,
+    refetch: refetchCustomers,
+  } = useGetUserCustomersPaginatedInfiniteQuery(
+    auth
+      ? { userId: auth.userId, query: debouncedSearch || undefined }
+      : skipToken,
+  );
+
   const listHeight = Math.max(
     LIST_MIN_HEIGHT,
-    Math.min(available * 0.5, LIST_MAX_HEIGHT),
+    Math.min((height - top - bottom - keyboardHeight) * 0.5, LIST_MAX_HEIGHT),
   );
 
-  const {
-    data: customersData,
-    isLoading: isCustomersLoading,
-    isError: isCustomersError,
-    refetch: refetchCustomers,
-  } = useGetUserCustomersQuery(auth ? { userId: auth.userId } : skipToken);
-
-  const customerItems = useMemo<CustomerOption[]>(
-    () =>
-      (customersData?.user_customers ?? []).map((uc) => ({
-        id: String(uc.customer.id),
-        title: uc.customer.name,
-        avatarUrl: uc.customer.avatar_url,
-        avatarBlurhash: uc.customer.avatar_blurhash,
-      })),
-    [customersData],
-  );
-
-  const filteredCustomers = useMemo(
-    () =>
-      customerItems.filter((c) =>
-        c.title.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [customerItems, search],
-  );
+  const customerItems = useMemo<CustomerOption[]>(() => {
+    if (!data?.pages) return [];
+    const unique = new Map<string, CustomerOption>();
+    data.pages.forEach((page) =>
+      page.user_customers.forEach((uc) => {
+        const id = String(uc.customer.id);
+        if (!unique.has(id)) unique.set(id, toOption(uc));
+      }),
+    );
+    return [...unique.values()];
+  }, [data?.pages]);
 
   const handleClose = useCallback(() => {
     setModalVisible(false);
     setSearch("");
+    debouncedSetSearch.cancel();
+    setDebouncedSearch("");
     setKeyboardHeight(0);
-  }, []);
+  }, [debouncedSetSearch]);
 
   const handleSelect = useCallback(
     (item: CustomerOption) => {
@@ -137,42 +181,36 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
       });
       setModalVisible(false);
       setSearch("");
+      debouncedSetSearch.cancel();
+      setDebouncedSearch("");
     },
-    [setValue],
+    [setValue, debouncedSetSearch],
   );
+
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const renderItem = useCallback<ListRenderItem<CustomerOption>>(
-    ({ item }) => <CustomerRow item={item} onPress={handleSelect} />,
-    [handleSelect],
+    ({ item }) => (
+      <CustomerRow item={item} highlight={search} onPress={handleSelect} />
+    ),
+    [handleSelect, search],
   );
 
   useEffect(() => {
-    if (!createdCustomer) return;
-    const item: CustomerOption = {
-      id: String(createdCustomer.id),
-      title: createdCustomer.name,
-    };
+    const source = createdCustomer ?? selectedCustomerFromDraft;
+    if (!source) return;
+    const item: CustomerOption = { id: String(source.id), title: source.name };
     setValue("customerId", parseInt(item.id, 10) || 0, {
       shouldDirty: true,
       shouldValidate: true,
     });
     setSelectedCustomer(item);
-    dispatch(clearCreatedCustomer());
-  }, [createdCustomer, dispatch, setValue]);
-
-  useEffect(() => {
-    if (!selectedCustomerFromDraft) return;
-    const item: CustomerOption = {
-      id: String(selectedCustomerFromDraft.id),
-      title: selectedCustomerFromDraft.name,
-    };
-    setValue("customerId", parseInt(item.id, 10) || 0, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-    setSelectedCustomer(item);
-    dispatch(clearSelectedCustomer());
-  }, [selectedCustomerFromDraft, dispatch, setValue]);
+    if (createdCustomer) dispatch(clearCreatedCustomer());
+    else dispatch(clearSelectedCustomer());
+  }, [createdCustomer, selectedCustomerFromDraft, dispatch, setValue]);
 
   useEffect(() => {
     const show = KeyboardEvents.addListener("keyboardWillShow", (e) =>
@@ -225,11 +263,35 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
             </Typography>
             <Input
               value={search}
-              onChangeText={setSearch}
+              onChangeText={(value) => {
+                setSearch(value);
+                debouncedSetSearch(value);
+              }}
               placeholder="Поиск по имени или телефону"
               hideErrorText
               startAdornment={
                 <StSvg name="Search" size={24} color={colors.neutral[500]} />
+              }
+              endAdornment={
+                search !== debouncedSearch ||
+                (!!debouncedSearch && isCustomersFetching) ? (
+                  <ActivityIndicator color={colors.neutral[400]} />
+                ) : search.length > 0 ? (
+                  <Pressable
+                    className="active:opacity-70"
+                    onPress={() => {
+                      setSearch("");
+                      debouncedSetSearch.cancel();
+                      setDebouncedSearch("");
+                    }}
+                  >
+                    <StSvg
+                      name="close_ring_fill_light"
+                      size={20}
+                      color={colors.neutral[400]}
+                    />
+                  </Pressable>
+                ) : undefined
               }
             />
           </View>
@@ -259,14 +321,26 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
           ) : (
             <View style={{ height: listHeight }}>
               <FlashList
-                data={filteredCustomers}
+                data={customerItems}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
                 contentContainerStyle={{
                   paddingHorizontal: SCREEN_PADDING,
+                  flexGrow: 1,
                 }}
                 ItemSeparatorComponent={Separator}
                 keyboardShouldPersistTaps="handled"
+                onEndReached={handleEndReached}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                  isFetchingNextPage ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colors.neutral[400]}
+                      style={{ paddingVertical: 12 }}
+                    />
+                  ) : null
+                }
                 ListEmptyComponent={
                   <View className="flex-1 items-center justify-center gap-2">
                     <StSvg
@@ -288,4 +362,4 @@ const CustomerSelect = ({ showCreateButton = true }: Props) => {
   );
 };
 
-export default CustomerSelect;
+export default CustomerSelectField;

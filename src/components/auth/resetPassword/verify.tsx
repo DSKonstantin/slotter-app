@@ -47,7 +47,7 @@ const ResetPasswordVerify = () => {
           Введите код
         </Typography>
         <Typography className="text-body text-neutral-500">
-          Отправили код на {phone} через SMS, Telegram или WhatsApp
+          Отправили код на {phone} через Telegram
         </Typography>
 
         <View className="mt-8">

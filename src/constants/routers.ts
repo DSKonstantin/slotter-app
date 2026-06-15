@@ -179,13 +179,6 @@ export const Routers = {
           },
         }) as const,
     },
-
-    paymentStatus: (paymentId: number) =>
-      ({
-        pathname: "/(app)/payment/status",
-        params: { payment_id: String(paymentId) },
-      }) as const,
-
     account: {
       root: "/(app)/(tabs)/account" as const,
       personalInformation:

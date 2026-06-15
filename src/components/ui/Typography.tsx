@@ -1,6 +1,6 @@
 import { Text as RNText, TextProps as RNTextProps } from "react-native";
 
-type TextWeight = "regular" | "medium" | "semibold" | "bold";
+type TextWeight = "regular" | "medium" | "semibold" | "bold" | "extrabold";
 
 type TextProps = {
   weight?: TextWeight;
@@ -28,4 +28,5 @@ const styles = {
   medium: "font-inter-medium",
   semibold: "font-inter-semibold",
   bold: "font-inter-bold",
+  extrabold: "font-inter-extrabold",
 };

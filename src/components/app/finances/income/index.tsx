@@ -177,23 +177,6 @@ const FinancesIncomeScreen = () => {
             />
 
             <View className="gap-3">{renderBreakdown()}</View>
-
-            <Divider />
-
-            <Card
-              title="+ 54%"
-              titleProps={{ style: { color: colors.primary.green[400] } }}
-              subtitle="Тренд за период"
-              left={
-                <View className="mb-[18px]">
-                  <StSvg
-                    name="Line_up"
-                    size={24}
-                    color={colors.primary.green[400]}
-                  />
-                </View>
-              }
-            />
           </ScrollView>
         );
       }}

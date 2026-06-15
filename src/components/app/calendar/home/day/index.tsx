@@ -67,6 +67,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           },
         }
       : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   const selectedWorkingDay = useMemo(
@@ -138,27 +139,23 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const content = useMemo(() => {
     if (hasError)
       return (
-        <View className="flex-1">
-          <ErrorScreen
-            title="Не удалось загрузить календарь"
-            isLoading={isRetrying}
-            onRetry={handleRetry}
-          />
-        </View>
+        <ErrorScreen
+          title="Не удалось загрузить календарь"
+          isLoading={isRetrying}
+          onRetry={handleRetry}
+        />
       );
     if (isLoading) return <TimeSlotListSkeleton bottomInset={bottomInset} />;
     if (isEmpty)
       return (
-        <View className="flex-1">
-          <EmptyStateScreen
-            image={require("@/assets/images/app/not-working.png")}
-            title="Этот день свободен"
-            subtitle="Настройте график, чтобы принимать записи  в этот день"
-            buttonTitle="Настроить день"
-            buttonIcon="Edit_fill"
-            onPress={handleEmptyPress}
-          />
-        </View>
+        <EmptyStateScreen
+          image={require("@/assets/images/app/not-working.png")}
+          title="Этот день свободен"
+          subtitle="Настройте график, чтобы принимать записи  в этот день"
+          buttonTitle="Настроить день"
+          buttonIcon="Edit_fill"
+          onPress={handleEmptyPress}
+        />
       );
     return (
       <TimeSlotList
@@ -205,7 +202,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: isEmpty ? 0 : bottomInset + 80,
+          paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
         }}
         onContentSizeChange={() => {
           if (pendingScrollY.current !== null) {
@@ -221,6 +218,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
         }
       >
         <View
+          className="pb-4"
           onLayout={(e) => {
             dateSelectorHeightRef.current = e.nativeEvent.layout.height;
           }}

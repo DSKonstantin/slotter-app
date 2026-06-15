@@ -11,9 +11,12 @@ import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
-import { useGetUpcomingAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
-import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import {
+  useGetAppointmentsQuery,
+  useGetUpcomingAppointmentsQuery,
+} from "@/src/store/redux/services/api/appointmentsApi";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import { formatApiDate } from "@/src/utils/date/formatDate";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview from "@/src/components/app/root/homeOverview";
@@ -22,9 +25,19 @@ import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const Home = () => {
   const auth = useRequiredAuth();
+  const today = formatApiDate(new Date());
 
-  const { refetch: refetchAppointments } = useGetUpcomingAppointmentsQuery(
-    auth ? { userId: auth.userId } : skipToken,
+  const { refetch: refetchAppointments } = useGetAppointmentsQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          params: {
+            date_from: today,
+            date_to: today,
+            status: ["pending", "confirmed", "arrived"],
+          },
+        }
+      : skipToken,
   );
 
   const { refetch: refetchNotifications } = useGetNotificationsQuery({
@@ -32,9 +45,11 @@ const Home = () => {
     is_read: false,
   });
 
-  const [triggerGetMe] = useLazyGetMeQuery();
-
   const { refetch: refetchSchedule } = useTodaySchedule();
+
+  const { refetch: refetchUpcoming } = useGetUpcomingAppointmentsQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
 
   const { bottom } = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
@@ -44,10 +59,15 @@ const Home = () => {
       Promise.all([
         refetchSchedule(),
         refetchAppointments(),
+        refetchUpcoming(),
         refetchNotifications(),
-        triggerGetMe(),
       ]),
-    [refetchSchedule, refetchAppointments, refetchNotifications, triggerGetMe],
+    [
+      refetchSchedule,
+      refetchAppointments,
+      refetchUpcoming,
+      refetchNotifications,
+    ],
   );
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
@@ -57,9 +77,16 @@ const Home = () => {
       if (auth) {
         refetchSchedule();
         refetchAppointments();
+        refetchUpcoming();
         refetchNotifications();
       }
-    }, [auth, refetchSchedule, refetchAppointments, refetchNotifications]),
+    }, [
+      auth,
+      refetchSchedule,
+      refetchAppointments,
+      refetchUpcoming,
+      refetchNotifications,
+    ]),
   );
 
   return (
@@ -68,7 +95,7 @@ const Home = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: 8,
+          paddingBottom: tabBarHeight + bottom + 8,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -77,14 +104,11 @@ const Home = () => {
         <View className="px-screen flex-1 gap-3">
           <HomeOverview />
         </View>
+        <View className="px-screen gap-3 mt-5">
+          <NotificationBanners />
+          <InsightsCarousel />
+        </View>
       </ScrollView>
-      <View
-        className="px-screen gap-3"
-        style={{ paddingBottom: tabBarHeight + bottom + 8 }}
-      >
-        <NotificationBanners />
-        <InsightsCarousel />
-      </View>
     </SafeAreaView>
   );
 };

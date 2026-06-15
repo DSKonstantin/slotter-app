@@ -19,7 +19,7 @@ const BreakBlock: React.FC<Props> = ({ breakItem, workingDayId }) => {
     <TouchableOpacity
       activeOpacity={0.7}
       disabled={!workingDayId}
-      className="flex-1 rounded-base bg-background-surface overflow-hidden px-4 py-4 flex-row justify-between mb-1"
+      className="flex-1 rounded-base bg-background-surface overflow-hidden px-4 py-4 flex-row justify-between"
       onPress={() =>
         workingDayId &&
         router.push(Routers.app.calendar.daySchedule(workingDayId))

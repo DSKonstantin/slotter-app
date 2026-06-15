@@ -177,7 +177,7 @@ const AdditionalList = ({
       ListEmptyComponent={
         <View className="py-6 gap-3">
           <Typography className="text-neutral-500">
-            Дополнительные услуги пока отсутствуют.
+            Дополнительных услуг пока нет.
           </Typography>
           <Button
             title="Создать доп. услугу"

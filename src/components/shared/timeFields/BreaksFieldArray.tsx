@@ -3,7 +3,9 @@ import { View, Pressable } from "react-native";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
-import { Button, StSvg, Typography } from "@/src/components/ui";
+import { Button } from "@/src/components/ui/Button";
+import { StSvg } from "@/src/components/ui/StSvg";
+import { Typography } from "@/src/components/ui/Typography";
 import { colors } from "@/src/styles/colors";
 import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
 
@@ -33,7 +35,7 @@ export const BreaksFieldArray = ({
         </Typography>
       )}
 
-      <View className="gap-2 mb-2">
+      <View className="gap-2">
         {fields.map((field, index) => (
           <View key={field.id} className="flex-row items-center gap-2">
             <View className="flex-1">

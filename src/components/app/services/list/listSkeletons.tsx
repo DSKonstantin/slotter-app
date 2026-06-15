@@ -179,3 +179,37 @@ const AdditionalListSkeletonComponent = () => {
 export const AdditionalListSkeleton = React.memo(
   AdditionalListSkeletonComponent,
 );
+
+const ServicesButtonsRowSkeletonComponent = () => {
+  const { width } = useWindowDimensions();
+  const totalWidth = width - SCREEN_PADDING * 2;
+  const buttonWidth = Math.floor((totalWidth - 10) / 2);
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        gap: 10,
+        paddingHorizontal: SCREEN_PADDING,
+        paddingBottom: 16,
+      }}
+    >
+      {[0, 1].map((i) => (
+        <ContentLoader
+          key={i}
+          speed={LOADER_SPEED}
+          width={buttonWidth}
+          height={48}
+          backgroundColor={BG}
+          foregroundColor={FG}
+        >
+          <Rect x={0} y={0} rx={24} ry={24} width={buttonWidth} height={48} />
+        </ContentLoader>
+      ))}
+    </View>
+  );
+};
+
+export const ServicesButtonsRowSkeleton = React.memo(
+  ServicesButtonsRowSkeletonComponent,
+);

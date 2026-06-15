@@ -43,7 +43,10 @@ const Link = () => {
         },
       }).unwrap();
 
-      router.replace(Routers.auth.root);
+      router.replace({
+        pathname: Routers.app.root as never,
+        params: { fromOnboarding: "1" },
+      });
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Что-то пошло не так"));
     }

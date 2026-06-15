@@ -12,7 +12,7 @@ import {
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import CustomerSelect from "@/src/components/app/calendar/slot/slotCreate/customerSelect";
+import CustomerSelectField from "@/src/components/shared/fields/customerSelectField";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useSendMessageMutation } from "@/src/store/redux/services/api/chatMessagesApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -133,7 +133,9 @@ const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
             onChange={setChannel}
           />
 
-          {channel === "slotter" && <CustomerSelect showCreateButton={false} />}
+          {channel === "slotter" && (
+            <CustomerSelectField showCreateButton={false} />
+          )}
 
           <RhfTextField
             name="message"

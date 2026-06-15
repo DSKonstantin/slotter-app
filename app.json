@@ -47,10 +47,7 @@
           "image": "./assets/images/app-icon/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#ffffff"
-          }
+          "backgroundColor": "#ffffff"
         }
       ],
       [

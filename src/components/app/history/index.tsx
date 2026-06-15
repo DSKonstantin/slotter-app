@@ -5,8 +5,10 @@ import {
   Pressable,
   RefreshControl,
   SectionList,
+  Share,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { isToday, isYesterday } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
@@ -29,6 +31,7 @@ import type {
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { Avatar, Button, StSvg, Typography } from "@/src/components/ui";
+import { useAppSelector } from "@/src/store/redux/store";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { pluralize } from "@/src/utils/text/pluralize";
 import { colors } from "@/src/styles/colors";
@@ -190,6 +193,8 @@ const HistoryScreen = () => {
     useMarkAllNotificationsReadMutation();
   const [markRead] = useMarkNotificationReadMutation();
 
+  const user = useAppSelector((s) => s.auth.user);
+
   const { refreshing, onRefresh } = useRefresh(refetch);
 
   const notifications = useMemo(
@@ -247,6 +252,12 @@ const HistoryScreen = () => {
     if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const handleShareLink = useCallback(async () => {
+    if (!user?.nickname) return;
+    const url = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${user.nickname}`;
+    await Share.share({ url, message: url });
+  }, [user?.nickname]);
 
   return (
     <ScreenWithToolbar
@@ -344,11 +355,41 @@ const HistoryScreen = () => {
               ) : null
             }
             ListEmptyComponent={
-              <View className="flex-1 items-center justify-center gap-4">
-                <StSvg name="Bell_fill" size={60} color={colors.neutral[400]} />
-                <Typography className="text-body text-neutral-500 text-center">
-                  Нет уведомлений
-                </Typography>
+              <View
+                className="flex-1 items-center justify-center gap-5"
+                style={{
+                  marginBottom: bottomInset + 8,
+                }}
+              >
+                <Image
+                  style={{ width: 159, height: 142 }}
+                  source={require("@/assets/images/app/root-box.png")}
+                />
+                <View className="gap-2">
+                  <Typography
+                    weight="semibold"
+                    className="text-display text-center"
+                  >
+                    Пока тихо
+                  </Typography>
+                  <Typography className="text-body text-neutral-500 text-center">
+                    События появятся когда придут  первые записи
+                  </Typography>
+                </View>
+
+                <Button
+                  buttonClassName="w-full"
+                  title="Поделиться ссылкой"
+                  variant="accent"
+                  onPress={handleShareLink}
+                  rightIcon={
+                    <StSvg
+                      name="External-bold"
+                      size={24}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                />
               </View>
             }
           />

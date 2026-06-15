@@ -183,7 +183,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
             />
           }
         >
-          <View className="items-center mb-5">
+          <View className="items-center mb-5 px-screen">
             <View className="flex-row gap-2 bg-background-surface rounded-base py-1 pl-1 pr-2.5 items-center">
               <Avatar
                 size="xs"
@@ -191,7 +191,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                 uri={customer?.avatar_url ?? undefined}
                 blurhash={customer?.avatar_blurhash}
               />
-              <Typography className="text-body">
+              <Typography className="text-body" numberOfLines={4}>
                 {customer?.name ?? ""}
               </Typography>
             </View>

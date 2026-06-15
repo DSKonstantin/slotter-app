@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const AccountPreview = () => {
   const webViewRef = useRef<WebView>(null);
 
-  const id = useAppSelector((s) => s.auth.user?.id);
+  const id = useAppSelector((s) => s.auth.user?.nickname);
   const insets = useSafeAreaInsets();
 
   const shareUrl = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${id}`;

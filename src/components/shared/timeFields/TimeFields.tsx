@@ -2,7 +2,9 @@ import React from "react";
 import { View } from "react-native";
 
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
-import { Divider, StSvg, Typography } from "@/src/components/ui";
+import { Divider } from "@/src/components/ui/Divider";
+import { StSvg } from "@/src/components/ui/StSvg";
+import { Typography } from "@/src/components/ui/Typography";
 import { colors } from "@/src/styles/colors";
 import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
 

@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   RefreshControl,
@@ -24,6 +25,7 @@ import {
   IconButton,
   StImage,
   StSvg,
+  Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { GalleryViewer } from "./galleryViewer";
@@ -411,11 +413,50 @@ const Gallery = () => {
                     Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
                   }
                   contentContainerStyle={{
+                    flexGrow: 1,
                     paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingHorizontal: HORIZONTAL_PADDING,
                     paddingBottom: bottomInset + (isEditMode ? 80 : 16),
                   }}
                   renderItem={renderItem}
+                  ListEmptyComponent={
+                    <View
+                      className="flex-1 items-center justify-center gap-5"
+                      style={{
+                        marginBottom: bottomInset + 8,
+                      }}
+                    >
+                      <Image
+                        style={{ width: 160, height: 142 }}
+                        source={require("@/assets/images/app/gallery-photo.png")}
+                      />
+                      <View className="gap-2">
+                        <Typography
+                          weight="semibold"
+                          className="text-display text-neutral-900 text-center"
+                        >
+                          Здесь пока нет фото
+                        </Typography>
+                        <Typography className="text-body text-neutral-500 text-center">
+                          Добавьте фотографии своих работ и клиенты увидят их в
+                          вашем профиле
+                        </Typography>
+                      </View>
+
+                      <Button
+                        buttonClassName="w-full"
+                        title="Добавить фото"
+                        onPress={handleAddPhoto}
+                        rightIcon={
+                          <StSvg
+                            name="Add_round_fill"
+                            size={24}
+                            color={colors.neutral[0]}
+                          />
+                        }
+                      />
+                    </View>
+                  }
                   refreshControl={
                     <RefreshControl
                       progressViewOffset={Platform.select({

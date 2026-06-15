@@ -8,14 +8,27 @@ import type {
   Service,
 } from "@/src/store/redux/services/api-types";
 import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
+import type { WorkingDayStatus } from "@/src/hooks/useWorkingDaysCalendar";
 import AttachMenu from "./AttachMenu";
 import ServicePicker from "./ServicePicker";
 import AdditionalServicePicker from "./AdditionalServicePicker";
 import DatePicker from "./DatePicker";
 import SlotPicker from "./SlotPicker";
+import NonWorkingDayStage from "./NonWorkingDayStage";
 
 type Mode = "menu" | "service" | "appointment";
-type AppointmentStage = "service" | "additional-service" | "date" | "slot";
+type AppointmentStage =
+  | "service"
+  | "additional-service"
+  | "date"
+  | "slot"
+  | "non-working-day";
+
+type NonWorkingDayInfo = {
+  date: string;
+  status: Exclude<WorkingDayStatus, "working">;
+  workingDayId?: number;
+};
 
 type WizardState = {
   mode: Mode;
@@ -24,6 +37,8 @@ type WizardState = {
   selectedAdditionalService: AdditionalService | null;
   selectedDate: string | null;
   selectedHour: string | null;
+  nonWorkingDayInfo: NonWorkingDayInfo | null;
+  visibleMonth: string | null;
 };
 
 const INITIAL_STATE: WizardState = {
@@ -33,6 +48,8 @@ const INITIAL_STATE: WizardState = {
   selectedAdditionalService: null,
   selectedDate: null,
   selectedHour: null,
+  nonWorkingDayInfo: null,
+  visibleMonth: null,
 };
 
 export type ProposeData = {
@@ -58,6 +75,7 @@ const STAGE_TITLES: Record<AppointmentStage, string> = {
   "additional-service": "Доп. услуга",
   date: "Выберите день",
   slot: "Выберите время",
+  "non-working-day": "Нерабочий день",
 };
 
 const AttachSheet = ({
@@ -78,6 +96,7 @@ const AttachSheet = ({
     selectedAdditionalService,
     selectedDate,
     selectedHour,
+    nonWorkingDayInfo,
   } = state;
 
   const title = useMemo(() => {
@@ -93,6 +112,9 @@ const AttachSheet = ({
         return prev;
       }
       if (prev.mode === "service") return { ...prev, mode: "menu" };
+      if (prev.stage === "non-working-day") {
+        return { ...prev, stage: "date", nonWorkingDayInfo: null };
+      }
       if (prev.stage === "slot") {
         if (prev.selectedHour) return { ...prev, selectedHour: null };
         return { ...prev, stage: "date" };
@@ -126,6 +148,31 @@ const AttachSheet = ({
       ...prev,
       selectedDate: date,
       selectedHour: null,
+      stage: "slot",
+    }));
+  }, []);
+
+  const handleNonWorkingDayPress = useCallback(
+    (
+      date: string,
+      status: Exclude<WorkingDayStatus, "working">,
+      workingDayId?: number,
+    ) => {
+      setState((prev) => ({
+        ...prev,
+        nonWorkingDayInfo: { date, status, workingDayId },
+        stage: "non-working-day",
+      }));
+    },
+    [],
+  );
+
+  const handleNonWorkingDaySuccess = useCallback((date: string) => {
+    setState((prev) => ({
+      ...prev,
+      selectedDate: date,
+      selectedHour: null,
+      nonWorkingDayInfo: null,
       stage: "slot",
     }));
   }, []);
@@ -183,6 +230,17 @@ const AttachSheet = ({
         />
       );
     }
+    if (stage === "non-working-day" && nonWorkingDayInfo) {
+      return (
+        <NonWorkingDayStage
+          date={nonWorkingDayInfo.date}
+          status={nonWorkingDayInfo.status}
+          workingDayId={nonWorkingDayInfo.workingDayId}
+          userId={userId}
+          onSuccess={handleNonWorkingDaySuccess}
+        />
+      );
+    }
     if (stage === "additional-service") {
       return (
         <AdditionalServicePicker
@@ -196,7 +254,17 @@ const AttachSheet = ({
       return <ServicePicker userId={userId} onSelect={handleServiceTapped} />;
     }
     if (stage === "date") {
-      return <DatePicker userId={userId} onPick={handlePickDate} />;
+      return (
+        <DatePicker
+          userId={userId}
+          currentMonth={state.visibleMonth ?? undefined}
+          onPick={handlePickDate}
+          onNonWorkingDayPress={handleNonWorkingDayPress}
+          onMonthChange={(month) =>
+            setState((p) => ({ ...p, visibleMonth: month }))
+          }
+        />
+      );
     }
     if (selectedDate) {
       return (
@@ -226,7 +294,7 @@ const AttachSheet = ({
   }, [visible]);
 
   return (
-    <StModal visible={visible} onClose={onClose}>
+    <StModal visible={visible} onClose={onClose} keyboardAware>
       <View className="flex-row items-center mb-2 gap-2">
         <IconButton
           size="sm"
