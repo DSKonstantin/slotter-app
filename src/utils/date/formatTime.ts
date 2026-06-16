@@ -52,6 +52,14 @@ export const parseTime = (time?: string | number | null) => {
 export const formatMinutes = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
+export const formatDuration = (totalMinutes: number): string => {
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h === 0) return `${m} мин`;
+  if (m === 0) return `${h} ч`;
+  return `${h} ч ${String(m).padStart(2, "0")} мин`;
+};
+
 export const formatTimeFromISO = (iso: string) => {
   if (!iso) return "";
   const isoMatch = iso.match(/T(\d{2}):(\d{2})/);

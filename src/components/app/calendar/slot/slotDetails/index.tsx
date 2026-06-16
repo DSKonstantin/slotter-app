@@ -40,7 +40,11 @@ import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
 import RescheduleModal from "@/src/components/app/calendar/slot/rescheduleModal";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
-import { formatDayMonth, formatTimeString } from "@/src/utils/date/formatTime";
+import {
+  formatDayMonth,
+  formatDuration,
+  formatTimeString,
+} from "@/src/utils/date/formatTime";
 import {
   formatRublesFromCents,
   centsToRubles,
@@ -487,7 +491,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
                   <EditableDurationRow
                     label="Длительность"
-                    displayValue={`${slot.duration} мин`}
+                    displayValue={formatDuration(slot.duration)}
                     value={slot.duration}
                     canEdit={derived!.canEdit}
                     isUpdating={isUpdating && editingField === "duration"}

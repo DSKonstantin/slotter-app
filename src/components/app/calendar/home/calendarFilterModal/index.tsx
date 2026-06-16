@@ -2,15 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
-import {
-  setFilters,
-  type CalendarFilters,
-} from "@/src/store/redux/slices/calendarSlice";
+import { setActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
+import type { AppointmentStatus } from "@/src/store/redux/services/api-types";
 import { APPOINTMENT_STATUS_CONFIG } from "@/src/constants/appointmentStatuses";
 import FilterOption from "./filterOption";
 
 const filterOptions = Object.values(APPOINTMENT_STATUS_CONFIG).map(
-  ({ filterLabel, filterKey }) => ({ label: filterLabel, key: filterKey }),
+  ({ status, filterLabel }) => ({ status, label: filterLabel }),
 );
 
 type CalendarFilterModalProps = {
@@ -23,21 +21,25 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
   onClose,
 }) => {
   const dispatch = useAppDispatch();
-  const filters = useAppSelector((state) => state.calendar.filters);
-  const [draft, setDraft] = useState<CalendarFilters>(filters);
+  const activeStatuses = useAppSelector((s) => s.calendar.activeStatuses);
+  const [draft, setDraft] = useState<AppointmentStatus[]>(activeStatuses);
 
   const handleApply = useCallback(() => {
-    dispatch(setFilters(draft));
+    dispatch(setActiveStatuses(draft));
     onClose();
   }, [dispatch, draft, onClose]);
 
-  const toggleDraft = useCallback((key: keyof CalendarFilters) => {
-    setDraft((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleDraft = useCallback((status: AppointmentStatus) => {
+    setDraft((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status],
+    );
   }, []);
 
   useEffect(() => {
-    if (visible) setDraft(filters);
-  }, [filters, visible]);
+    if (visible) setDraft(activeStatuses);
+  }, [activeStatuses, visible]);
 
   return (
     <StModal
@@ -58,12 +60,12 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
           <Typography className="text-caption text-neutral-500">
             Показывать:
           </Typography>
-          {filterOptions.map(({ label, key }) => (
+          {filterOptions.map(({ status, label }) => (
             <FilterOption
-              key={key}
+              key={status}
               label={label}
-              value={draft[key]}
-              onPress={() => toggleDraft(key)}
+              value={draft.includes(status)}
+              onPress={() => toggleDraft(status)}
             />
           ))}
         </View>

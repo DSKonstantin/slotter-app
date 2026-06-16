@@ -4,6 +4,7 @@ import { Pressable } from "react-native";
 import { Card, IconButton, StSvg, Switch } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 export type AdditionalListItem = {
   id: number;
@@ -51,7 +52,7 @@ const AdditionalServiceItem = ({
   return (
     <Card
       title={item.name}
-      subtitle={`${item.duration} мин | ${formattedPrice}`}
+      subtitle={`${formatDuration(item.duration)} | ${formattedPrice}`}
       onLongPress={onDrag}
       active={isDragActive}
       className={item.is_active ? "" : "opacity-40"}

@@ -20,6 +20,7 @@ import EditAdditionalServiceModal from "@/src/components/app/services/service/cr
 import RetryInline from "@/src/components/shared/retryInline";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import type { AdditionalService } from "@/src/store/redux/services/api-types";
+import {formatDuration} from "@/src/utils/date/formatTime";
 
 type AdditionalServicesFieldValues = {
   additionalServices: {
@@ -154,7 +155,7 @@ const CreateAdditionalService = () => {
               <View className="relative py-2">
                 <Card
                   title={service.name}
-                  subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+                  subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
                   onPress={() => handleToggle(service)}
                   pressArea="content"
                   active={isSelected}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
@@ -37,11 +37,6 @@ const DurationField = ({
       !presetStrings.includes(currentValue)
     );
   });
-
-  const presetValues = useMemo(
-    () => presets.map((preset) => String(preset)),
-    [presets],
-  );
 
   const handlePresetPress = (preset: number | string) => {
     setIsCustomSelected(false);

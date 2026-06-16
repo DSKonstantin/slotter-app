@@ -66,7 +66,10 @@ const EditableDurationRow = ({
             className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
           >
             {isUpdating ? (
-              <ActivityIndicator size="small" color={colors.primary.blue[500]} />
+              <ActivityIndicator
+                size="small"
+                color={colors.primary.blue[500]}
+              />
             ) : (
               <>
                 <Typography
@@ -76,7 +79,11 @@ const EditableDurationRow = ({
                   {displayValue}
                 </Typography>
                 {canEdit && (
-                  <StSvg name="Edit_light" size={20} color={colors.neutral[500]} />
+                  <StSvg
+                    name="Edit_light"
+                    size={20}
+                    color={colors.neutral[500]}
+                  />
                 )}
               </>
             )}

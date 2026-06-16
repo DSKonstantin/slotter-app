@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 import { RefreshControl, ScrollView, View } from "react-native";
 
@@ -67,7 +67,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           },
         }
       : skipToken,
-    { refetchOnMountOrArgChange: true },
   );
 
   const selectedWorkingDay = useMemo(
@@ -188,6 +187,13 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     selectedDay,
     handleHighlightScroll,
   ]);
+
+  // 6. useEffect
+  useFocusEffect(
+    useCallback(() => {
+      refetchAppointments();
+    }, [refetchAppointments, selectedDay]),
+  );
 
   useEffect(() => {
     pendingScrollY.current = null;

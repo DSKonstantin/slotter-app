@@ -30,6 +30,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
@@ -51,7 +52,7 @@ const ServiceRow: React.FC<ServiceRowProps> = ({
 }) => (
   <Card
     title={service.name}
-    subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+    subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
     active={isSelected}
     onPress={() => onPress(service)}
     right={
@@ -444,7 +445,7 @@ const SlotSelectService: React.FC<Props> = ({
                         ) : (
                           <Card
                             title={item.name}
-                            subtitle={`${item.duration} мин | ${formatRublesFromCents(item.price_cents)}`}
+                            subtitle={`${formatDuration(item.duration)} | ${formatRublesFromCents(item.price_cents)}`}
                             active={selectedAdditional.some(
                               (s) => s.id === item.id,
                             )}
