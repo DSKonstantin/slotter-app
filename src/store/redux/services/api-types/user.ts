@@ -61,6 +61,28 @@ export interface SendCodeResponse {
   poll_interval: number;
 }
 
+// reset_password always returns 200 — discriminate by status
+export interface ResetPasswordAuthorizedResponse {
+  status: "authorized";
+  token: string;
+  resource_type: "user";
+  resource: User;
+}
+
+export interface ResetPasswordWrongCodeResponse {
+  status: "wrong_code";
+  attempts_left: number;
+}
+
+export interface ResetPasswordOtherResponse {
+  status: "pending" | "expired";
+}
+
+export type ResetPasswordResponse =
+  | ResetPasswordAuthorizedResponse
+  | ResetPasswordWrongCodeResponse
+  | ResetPasswordOtherResponse;
+
 // confirm_code always returns 200 — discriminate by status
 export interface ConfirmCodeAuthorizedResponse {
   status: "authorized";
@@ -122,6 +144,7 @@ export interface UpdateCredentialsPayload {
   password?: string;
   password_confirmation?: string;
   current_password?: string;
+  onboarding_step?: string;
 }
 
 export type UpdateUserPayload = Partial<

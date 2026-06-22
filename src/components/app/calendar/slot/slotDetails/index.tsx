@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -78,6 +84,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [cancelVisible, setCancelVisible] = useState(false);
   const [actionsVisible, setActionsVisible] = useState(false);
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const { scheduleAction, onModalHide } = useModalAction(() =>
     setActionsVisible(false),
@@ -124,84 +131,43 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
   const id = Number(slotId);
 
-  const handleSave = async () => {
-    if (!slot || !editingField) return;
-    if (isSavingRef.current) return;
+  const handleUpdate = useCallback(
+    async (
+      body: Parameters<typeof updateAppointment>[0]["body"],
+      options?: { onSuccess?: () => void; field?: EditingField },
+    ) => {
+      if (!slot || isSavingRef.current) return;
+      isSavingRef.current = true;
+      if (options?.field) setEditingField(options.field);
+      const fullBody = {
+        duration: slot.duration,
+        price_cents: slot.price_cents,
+        payment_method: slot.payment_method,
+        ...body,
+      };
 
-    const duration = Number(methods.getValues("duration"));
-    const price = Number(methods.getValues("price"));
-
-    if (editingField === "duration") {
-      if (!duration || duration <= 0) return;
-      if (duration === slot.duration) {
-        setEditingField(null);
-        return;
+      try {
+        await updateAppointment({ id, body: fullBody }).unwrap();
+        toast.success("Сохранено");
+        options?.onSuccess?.();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+      } finally {
+        isSavingRef.current = false;
+        if (options?.field) setEditingField(null);
       }
-    }
+    },
+    [slot, updateAppointment, id],
+  );
 
-    if (editingField === "price") {
-      if (price < 0) return;
-      if (rublesToCents(price) === slot.price_cents) {
-        setEditingField(null);
-        return;
-      }
-    }
-
-    isSavingRef.current = true;
-    try {
-      await updateAppointment({
-        id,
-        body:
-          editingField === "duration"
-            ? { duration }
-            : { price_cents: rublesToCents(price) },
-      }).unwrap();
-      toast.success("Сохранено");
-      setEditingField(null);
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
-    } finally {
-      isSavingRef.current = false;
-    }
-  };
-
-  const handleSaveComment = useCallback(async () => {
-    if (!slot) return;
-    if (isSavingRef.current) return;
-    const comment = methods.getValues("comment");
-    isSavingRef.current = true;
-    setEditingField("comment");
-    try {
-      await updateAppointment({ id, body: { comment } }).unwrap();
-      toast.success("Сохранено");
-      setEditingField(null);
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
-      setEditingField(null);
-    } finally {
-      isSavingRef.current = false;
-    }
-  }, [slot, methods, updateAppointment, id]);
-
-  const handleUpdatePaymentMethod = async (
-    method: "cash" | "sbp" | "online_bank",
-  ) => {
-    if (!slot || method === slot.payment_method) {
-      setPaymentMethodVisible(false);
-      return;
-    }
-    try {
-      await updateAppointment({
-        id,
-        body: { payment_method: method },
-      }).unwrap();
-      setPaymentMethodVisible(false);
-    } catch (error) {
-      toast.error(
-        getApiErrorMessage(error, "Не удалось обновить способ оплаты"),
-      );
-    }
-  };
+  const handleSaveComment = useCallback(
+    () =>
+      handleUpdate(
+        { comment: methods.getValues("comment") },
+        { field: "comment" },
+      ),
+    [handleUpdate, methods],
+  );
 
   const derived = useMemo(() => {
     if (!slot) return null;
@@ -392,12 +358,23 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     <InfoRow
                       label="Статус"
                       right={
-                        <Badge
-                          size="sm"
-                          title={derived!.statusConfig.label}
-                          variant={derived!.statusConfig.variant}
-                          icon={derived!.statusConfig.icon}
-                        />
+                        <Pressable
+                          onPress={() => setStatusModalVisible(true)}
+                          hitSlop={8}
+                          className="flex-row items-center gap-1 active:opacity-70"
+                        >
+                          <Badge
+                            size="sm"
+                            title={derived!.statusConfig.label}
+                            variant={derived!.statusConfig.variant}
+                            icon={derived!.statusConfig.icon}
+                          />
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
+                          />
+                        </Pressable>
                       }
                     />
                   )}
@@ -496,25 +473,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     canEdit={derived!.canEdit}
                     isUpdating={isUpdating && editingField === "duration"}
                     onSave={async (minutes) => {
-                      if (!slot || minutes <= 0) return;
-                      if (minutes === slot.duration) return;
-                      if (isSavingRef.current) return;
-                      setEditingField("duration");
-                      isSavingRef.current = true;
-                      try {
-                        await updateAppointment({
-                          id,
-                          body: { duration: minutes },
-                        }).unwrap();
-                        toast.success("Сохранено");
-                      } catch (error) {
-                        toast.error(
-                          getApiErrorMessage(error, "Не удалось сохранить"),
-                        );
-                      } finally {
-                        isSavingRef.current = false;
-                        setEditingField(null);
-                      }
+                      if (minutes < 0 || minutes === slot.duration) return;
+                      await handleUpdate(
+                        { duration: minutes },
+                        { field: "duration" },
+                      );
                     }}
                   />
 
@@ -533,7 +496,20 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       );
                       setEditingField("price");
                     }}
-                    onSave={handleSave}
+                    onSave={async () => {
+                      const price = Number(methods.getValues("price"));
+                      if (
+                        price < 0 ||
+                        rublesToCents(price) === slot.price_cents
+                      ) {
+                        setEditingField(null);
+                        return;
+                      }
+                      await handleUpdate(
+                        { price_cents: rublesToCents(price) },
+                        { field: "price" },
+                      );
+                    }}
                     divider={true}
                   />
 
@@ -600,9 +576,14 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   {derived!.canEdit && isCommentDirty && (
                     <Button
                       title="Сохранить"
-                      size="sm"
-                      variant="secondary"
                       buttonClassName="mt-2"
+                      rightIcon={
+                        <StSvg
+                          name="Save_fill"
+                          size={24}
+                          color={colors.neutral[0]}
+                        />
+                      }
                       loading={isUpdating && editingField === "comment"}
                       disabled={isUpdating && editingField === "comment"}
                       onPress={handleSaveComment}
@@ -623,6 +604,37 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 appointmentId={id}
                 onClose={() => setCancelVisible(false)}
               />
+              <StModal
+                visible={statusModalVisible}
+                onClose={() => setStatusModalVisible(false)}
+              >
+                <Typography
+                  weight="semibold"
+                  className="text-display text-center mb-4"
+                >
+                  Статус записи
+                </Typography>
+                <View className="gap-2">
+                  {Object.values(STATUS_CONFIG).map((config) => (
+                    <Card
+                      key={config.status}
+                      title={config.label}
+                      active={slot.status === config.status}
+                      onPress={
+                        config.status === slot.status
+                          ? () => setStatusModalVisible(false)
+                          : () =>
+                              void handleUpdate(
+                                { status: config.status } as never,
+                                {
+                                  onSuccess: () => setStatusModalVisible(false),
+                                },
+                              )
+                      }
+                    />
+                  ))}
+                </View>
+              </StModal>
               <StModal
                 visible={paymentMethodVisible}
                 onClose={() => setPaymentMethodVisible(false)}
@@ -648,7 +660,14 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           );
                           return;
                         }
-                        void handleUpdatePaymentMethod(key);
+                        if (key !== slot.payment_method) {
+                          void handleUpdate(
+                            { payment_method: key },
+                            { onSuccess: () => setPaymentMethodVisible(false) },
+                          );
+                        } else {
+                          setPaymentMethodVisible(false);
+                        }
                       }}
                     />
                   ))}

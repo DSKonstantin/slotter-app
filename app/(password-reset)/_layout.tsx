@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function ResetPasswordLayout() {
+export default function PasswordResetLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />

@@ -15,7 +15,6 @@ const SpecialistHomeAssistant = () => {
   const nickname = useAppSelector((s) => s.auth.user?.nickname ?? "");
   const firstName = useAppSelector((s) => s.auth.user?.first_name ?? "");
   const { state, refetch } = useHomeAssistantState();
-
   // const state = {
   //   kind: "waiting_next",
   //   hasTodaySchedule: false,

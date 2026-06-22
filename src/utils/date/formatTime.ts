@@ -60,6 +60,12 @@ export const formatDuration = (totalMinutes: number): string => {
   return `${h} ч ${String(m).padStart(2, "0")} мин`;
 };
 
+export const formatCountdown = (totalSeconds: number) => {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
 export const formatTimeFromISO = (iso: string) => {
   if (!iso) return "";
   const isoMatch = iso.match(/T(\d{2}):(\d{2})/);

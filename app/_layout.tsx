@@ -89,6 +89,10 @@ function InitialLayout() {
                       options={{ headerShown: false }}
                     />
                   </Stack.Protected>
+                  <Stack.Screen
+                    name="(password-reset)"
+                    options={{ headerShown: false }}
+                  />
                 </Stack>
                 <Toasts overrideDarkMode={true} />
                 <StatusBar style="auto" />

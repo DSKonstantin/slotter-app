@@ -32,8 +32,6 @@ const TimeSlotListSkeleton = ({ bottomInset }: { bottomInset: number }) => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        <Rect x={LEFT_COL - 1} y={0} width={1} height={totalHeight} />
-
         {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => {
           const rowY = i * HOUR_HEIGHT;
           return (

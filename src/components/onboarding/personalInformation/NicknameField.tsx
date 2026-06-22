@@ -30,6 +30,7 @@ export function NicknameField() {
 
   const checkNicknameRef = useRef(checkNickname);
   checkNicknameRef.current = checkNickname;
+  const suggestionSelectedRef = useRef(false);
 
   const debouncedCheck = useMemo(
     () => debounce((val: string) => checkNicknameRef.current(val), 400),
@@ -84,6 +85,11 @@ export function NicknameField() {
   }, [showQueryError, loading, focused, queryError]);
 
   useEffect(() => {
+    if (suggestionSelectedRef.current) {
+      suggestionSelectedRef.current = false;
+      debouncedCheck.cancel();
+      return () => debouncedCheck.cancel();
+    }
     if (!dirtyFields.nickname || !value || value.length < 3) {
       debouncedCheck.cancel();
       setPending(false);
@@ -177,9 +183,14 @@ export function NicknameField() {
                 title={s}
                 variant="secondary"
                 size="xs"
-                onPress={() =>
-                  setValue("nickname", s, { shouldValidate: true })
-                }
+                onPress={() => {
+                  suggestionSelectedRef.current = true;
+                  setValue("nickname", s, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  checkNickname(s);
+                }}
                 buttonClassName="rounded-xl"
                 textClassName="font-inter-regular"
               />

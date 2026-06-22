@@ -147,7 +147,7 @@ const collectTimePoints = (
       }
     }
 
-    if (end > effectiveStart && end <= effectiveEnd) {
+    if (!isNested && end > effectiveStart && end <= effectiveEnd) {
       timePoints.add(end);
     }
   });
@@ -187,9 +187,13 @@ const buildSegments = (
       .filter(({ start }) => start >= segStart && start < segEnd)
       .sort((a, b) => {
         const aNB =
-          a.slot.status === "cancelled" || a.slot.status === "declined";
+          a.slot.status === "cancelled" ||
+          a.slot.status === "declined" ||
+          a.slot.duration === 0;
         const bNB =
-          b.slot.status === "cancelled" || b.slot.status === "declined";
+          b.slot.status === "cancelled" ||
+          b.slot.status === "declined" ||
+          b.slot.duration === 0;
         if (aNB !== bNB) return aNB ? -1 : 1;
         return a.start - b.start || a.slot.duration - b.slot.duration;
       });
@@ -256,7 +260,11 @@ const annotateFreeRanges = (segments: Segment[]): Segment[] =>
 
     return {
       ...seg,
-      content: { ...seg.content, freeRangeStart: rangeStart, freeRangeEnd: rangeEnd },
+      content: {
+        ...seg.content,
+        freeRangeStart: rangeStart,
+        freeRangeEnd: rangeEnd,
+      },
     };
   });
 

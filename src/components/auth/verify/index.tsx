@@ -12,6 +12,7 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { CallModal } from "@/src/components/auth/verify/CallModal";
 import { useCallbackSession } from "@/src/components/auth/useCallbackSession";
+import RhfCheckbox from "@/src/components/hookForm/rhf-checkbox";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Button, Typography } from "@/src/components/ui";
 import { Routers } from "@/src/constants/routers";
@@ -36,7 +37,9 @@ const Verify = () => {
   const [isSwitchingToFlashcall, setIsSwitchingToFlashcall] = useState(false);
 
   // 2. useRef
-  const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(null);
+  const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(
+    null,
+  );
 
   // 3. Custom hooks + RTK Query
   const ispe = useAppSelector((s) => s.appVersion.ispe);
@@ -45,11 +48,17 @@ const Verify = () => {
     useLazyValidateReferralCodeQuery();
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
-    defaultValues: { phone: "", promoCode: "" },
+    defaultValues: {
+      phone: "",
+      promoCode: "",
+      agreedToTerms: false,
+      agreedToPersonalData: false,
+    },
   });
 
   const rawPhone = methods.watch("phone");
   const promoCode = methods.watch("promoCode") ?? "";
+  const agreedToTerms = methods.watch("agreedToTerms");
   const sessionPhone = `+${unMask(rawPhone)}`;
   const sessionReferralCode = promoCode.trim() || undefined;
 
@@ -103,6 +112,7 @@ const Verify = () => {
               }),
               poll_interval: String(result.poll_interval),
               resend_after: String(result.resend_after),
+              expires_in: String(result.expires_in),
               ...(referralCode && { referralCode }),
             },
           });
@@ -141,6 +151,7 @@ const Verify = () => {
             code_length: String(result.code_length),
           }),
           resend_after: String(result.resend_after),
+          expires_in: String(result.expires_in),
           ...(referralCode && { referralCode }),
         },
       };
@@ -181,7 +192,7 @@ const Verify = () => {
           <AuthFooter
             primary={{
               title: "Продолжить",
-              disabled: isLoading,
+              disabled: isLoading || !agreedToTerms,
               loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
@@ -205,7 +216,7 @@ const Verify = () => {
               hideErrorText
               keyboardType="number-pad"
             />
-            <Typography className="text-caption text-neutral-500 mt-2 mb-9">
+            <Typography className="text-caption text-neutral-500 mt-2 mb-4">
               Продолжая, вы соглашаетесь с{" "}
               <Typography
                 className="text-caption text-black underline"
@@ -250,6 +261,39 @@ const Verify = () => {
                 )}
               </>
             )}
+            <View className="flex-row items-center gap-3 my-3">
+              <RhfCheckbox name="agreedToTerms" />
+              <Typography className="text-caption text-neutral-700 flex-1">
+                Я даю ООО «Slotter» согласие на обработку{" "}
+                <Typography
+                  className="text-caption text-black underline"
+                  onPress={() =>
+                    WebBrowser.openBrowserAsync(
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                    )
+                  }
+                >
+                  обработку персональных данных
+                </Typography>
+              </Typography>
+            </View>
+            <View className="flex-row items-center gap-3 mb-9">
+              <RhfCheckbox name="agreedToPersonalData" />
+              <Typography className="text-caption text-neutral-700 flex-1">
+                Я согласен получать информационные и рекламные сообщения на
+                указанный телефон и email{" "}
+                <Typography
+                  className="text-caption text-black underline"
+                  onPress={() =>
+                    WebBrowser.openBrowserAsync(
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                    )
+                  }
+                >
+                  (условия)
+                </Typography>
+              </Typography>
+            </View>
           </View>
         </View>
       </AuthScreenLayout>
@@ -259,6 +303,7 @@ const Verify = () => {
           visible
           onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
+          expiresIn={callSession.expires_in}
           resendAfter={callSession.resend_after}
           onResend={handleResend}
           onSwitchToFlashcall={handleSwitchToFlashcall}

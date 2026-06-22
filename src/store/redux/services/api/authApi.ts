@@ -3,6 +3,7 @@ import type {
   AuthResponse,
   ConfirmCodeResponse,
   MeResponse,
+  ResetPasswordResponse,
   SendCodeResponse,
   TelegramIntentResponse,
   TelegramSessionResponse,
@@ -57,15 +58,16 @@ export const authApi = api.injectEndpoints({
       }),
     }),
 
-    getTelegramSession: builder.query<TelegramSessionResponse, { code: string }>(
-      {
-        query: ({ code }) => ({
-          url: "/auth/telegram_sessions",
-          method: "GET",
-          params: { code },
-        }),
-      },
-    ),
+    getTelegramSession: builder.query<
+      TelegramSessionResponse,
+      { code: string }
+    >({
+      query: ({ code }) => ({
+        url: "/auth/telegram_sessions",
+        method: "GET",
+        params: { code },
+      }),
+    }),
 
     login: builder.mutation<
       AuthResponse,
@@ -87,7 +89,7 @@ export const authApi = api.injectEndpoints({
       AuthResponse,
       {
         phone: string;
-        code: string;
+        code?: string;
         password: string;
         password_confirmation: string;
         type: UserType;

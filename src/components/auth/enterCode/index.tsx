@@ -27,8 +27,7 @@ const EnterCode = () => {
     method?: string;
     code_length?: string;
     resend_after?: string;
-    telegram_code?: string;
-    poll_interval?: string;
+    expires_in?: string;
   }>();
 
   const phone = String(params.phone ?? "");
@@ -52,9 +51,11 @@ const EnterCode = () => {
   // 3. Custom hooks + RTK Query
   const handleAuthorized = useHandleAuthorized();
   const [confirmCode] = useConfirmCodeMutation();
-  const [sendCode] = useSendCodeMutation();
-  const { callSession, setCallSession, handleResend: handleCallbackResend } =
-    useCallbackSession({ phone, referralCode });
+  const [sendCode, { isLoading: isSendingCode }] = useSendCodeMutation();
+  const { callSession, setCallSession } = useCallbackSession({
+    phone,
+    referralCode,
+  });
 
   // 5. useCallback
   const handleExpiredOrDeactivated = useCallback(
@@ -158,10 +159,12 @@ const EnterCode = () => {
       avoidKeyboard
       header={<AuthHeader />}
       footer={
-        showFlashcallFallback ? (
+        showFlashcallFallback && !callSession ? (
           <AuthFooter
             primary={{
               title: "Подтвердить звонком",
+              loading: isSendingCode,
+              disabled: isSendingCode,
               onPress: handleSwitchToCallback,
             }}
           />
@@ -194,7 +197,7 @@ const EnterCode = () => {
           )}
         </View>
 
-        {showFlashcallFallback && (
+        {showFlashcallFallback && !callSession && (
           <Typography className="text-caption text-neutral-500 mt-4 text-center">
             Звонок не пришёл? Выберите другой способ входа
           </Typography>
@@ -206,8 +209,7 @@ const EnterCode = () => {
           visible
           onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
-          resendAfter={callSession.resend_after}
-          onResend={handleCallbackResend}
+          expiresIn={callSession.expires_in}
         />
       )}
     </AuthScreenLayout>

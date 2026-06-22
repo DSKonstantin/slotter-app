@@ -131,7 +131,7 @@ const SlotCard = ({
 
       <View className="flex-1 justify-center">
         <View className="flex-row items-center justify-between">
-          <View className="flex-row gap-1 items-center">
+          <View className="flex-row gap-1 items-center flex-1 mr-1">
             {slotInfo.hasComment && (
               <StSvg
                 name="Chat_plus"
@@ -210,7 +210,7 @@ const SlotCard = ({
         >
           {renderStatusLine()}
           <View className="flex-row flex-1 items-center justify-between">
-            <View className="flex-1 mr-2">{renderServicesTitle(true)}</View>
+            <View className="flex-1 mr-1">{renderServicesTitle(true)}</View>
             {statusConfig && (
               <View className="gap-2 flex-row items-center">
                 <Badge

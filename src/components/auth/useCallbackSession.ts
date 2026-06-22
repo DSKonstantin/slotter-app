@@ -9,13 +9,19 @@ import { UserType } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { CallSession } from "@/src/components/auth/types";
 import { useHandleAuthorized } from "@/src/components/auth/useHandleAuthorized";
+import type { User } from "@/src/store/redux/services/api-types";
 
 type Params = {
   phone: string;
   referralCode?: string;
+  onAuthorized?: (token: string, resource: User) => void | Promise<void>;
 };
 
-export const useCallbackSession = ({ phone, referralCode }: Params) => {
+export const useCallbackSession = ({
+  phone,
+  referralCode,
+  onAuthorized,
+}: Params) => {
   const [callSession, setCallSession] = useState<CallSession | null>(null);
   const handleAuthorized = useHandleAuthorized();
   const [confirmCode] = useConfirmCodeMutation();
@@ -39,7 +45,9 @@ export const useCallbackSession = ({ phone, referralCode }: Params) => {
 
         if (result.status === "authorized") {
           setCallSession(null);
-          await handleAuthorized(result.token, result.resource);
+          await (onAuthorized
+            ? onAuthorized(result.token, result.resource)
+            : handleAuthorized(result.token, result.resource));
         } else if (
           result.status === "expired" ||
           result.status === "deactivated"
@@ -60,7 +68,14 @@ export const useCallbackSession = ({ phone, referralCode }: Params) => {
       clearTimeout(expiryTimeout);
       clearInterval(pollInterval);
     };
-  }, [callSession, phone, referralCode, confirmCode, handleAuthorized]);
+  }, [
+    callSession,
+    phone,
+    referralCode,
+    confirmCode,
+    handleAuthorized,
+    onAuthorized,
+  ]);
 
   const handleResend = useCallback(async () => {
     try {
