@@ -17,8 +17,12 @@ import {
   RefreshControl,
   Pressable,
   Platform,
+  Keyboard,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+} from "react-native-keyboard-controller";
 
 import { useModalAction } from "@/src/hooks/useModalAction";
 import SlotActionsMenu from "./SlotActionsMenu";
@@ -29,7 +33,6 @@ import {
   Badge,
   Button,
   Card,
-  StModal,
   StSvg,
   Typography,
 } from "@/src/components/ui";
@@ -56,7 +59,7 @@ import {
   centsToRubles,
   rublesToCents,
 } from "@/src/utils/price/formatPrice";
-import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import EditableCommentRow from "./EditableCommentRow";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
@@ -64,15 +67,14 @@ import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
 import EditableDurationRow from "./EditableDurationRow";
+import StatusModal from "./StatusModal";
+import PaymentMethodModal from "./PaymentMethodModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
-import {
-  PAYMENT_OPTIONS,
-  PAYMENT_METHOD_LABELS,
-} from "@/src/constants/payment";
+import { PAYMENT_METHOD_LABELS } from "@/src/constants/payment";
 
-type EditingField = "duration" | "price" | "comment" | null;
+type EditingField = "duration" | "price" | "comment" | "status" | null;
 
 interface Props {
   slotId: string;
@@ -94,6 +96,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     onModalHide: onPaymentModalHide,
   } = useModalAction(() => setPaymentMethodVisible(false));
   const [editingField, setEditingField] = useState<EditingField>(null);
+  const [isCommentFocused, setIsCommentFocused] = useState(false);
   const isSavingRef = useRef(false);
 
   const {
@@ -169,10 +172,14 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     [handleUpdate, methods],
   );
 
+  const commentValue = methods.watch("comment") ?? "";
+  const isCommentDirty = !!slot && commentValue !== (slot.comment ?? "");
+
   const derived = useMemo(() => {
     if (!slot) return null;
     return {
-      canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
+      // canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
+      canEdit: true,
       statusConfig: STATUS_CONFIG[slot.status] ?? null,
       timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
       serviceNames: slot.services.map((s) => s.name).join(", "),
@@ -199,9 +206,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       price: String(centsToRubles(slot.price_cents)),
     });
   }, [methods, slot]);
-
-  const commentValue = methods.watch("comment") ?? "";
-  const isCommentDirty = !!slot && commentValue !== (slot.comment ?? "");
 
   return (
     <FormProvider {...methods}>
@@ -394,7 +398,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                                 )
                             : undefined
                         }
-                        disabled={!derived!.canEdit}
                         hitSlop={8}
                         className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
                       >
@@ -561,35 +564,17 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   )}
                 </View>
 
-                <View className="px-screen my-5">
-                  <Typography className="text-caption text-neutral-500 mb-2">
-                    Комментарий к записи
-                  </Typography>
-                  <RhfTextField
-                    name="comment"
-                    placeholder="Оставьте комментарий"
-                    multiline={true}
-                    numberOfLines={4}
-                    disabled={!derived!.canEdit}
-                    hideErrorText
-                  />
-                  {derived!.canEdit && isCommentDirty && (
-                    <Button
-                      title="Сохранить"
-                      buttonClassName="mt-2"
-                      rightIcon={
-                        <StSvg
-                          name="Save_fill"
-                          size={24}
-                          color={colors.neutral[0]}
-                        />
-                      }
-                      loading={isUpdating && editingField === "comment"}
-                      disabled={isUpdating && editingField === "comment"}
-                      onPress={handleSaveComment}
-                    />
-                  )}
-                </View>
+                <EditableCommentRow
+                  fieldName="comment"
+                  isUpdating={isUpdating && editingField === "comment"}
+                  onFocus={() => setIsCommentFocused(true)}
+                  onBlur={() => {
+                    setIsCommentFocused(false);
+                    const isDirty =
+                      methods.getValues("comment") !== (slot.comment ?? "");
+                    if (isDirty) void handleSaveComment();
+                  }}
+                />
 
                 <SlotActions
                   appointmentId={id}
@@ -599,80 +584,71 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 />
               </KeyboardAwareScrollView>
 
+              {isCommentFocused && (
+                <KeyboardStickyView
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                  }}
+                >
+                  <View className="px-screen py-3 bg-background border-t border-neutral-100">
+                    <Button
+                      title="Сохранить"
+                      loading={isUpdating && editingField === "comment"}
+                      disabled={
+                        !isCommentDirty ||
+                        (isUpdating && editingField === "comment")
+                      }
+                      rightIcon={
+                        <StSvg
+                          name="Save_fill"
+                          size={24}
+                          color={colors.neutral[0]}
+                        />
+                      }
+                      onPress={() => {
+                        void handleSaveComment();
+                        Keyboard.dismiss();
+                      }}
+                    />
+                  </View>
+                </KeyboardStickyView>
+              )}
+
               <CancelModal
                 visible={cancelVisible}
                 appointmentId={id}
                 onClose={() => setCancelVisible(false)}
               />
-              <StModal
+              <StatusModal
                 visible={statusModalVisible}
+                currentStatus={slot.status}
+                isUpdating={isUpdating && editingField === "status"}
                 onClose={() => setStatusModalVisible(false)}
-              >
-                <Typography
-                  weight="semibold"
-                  className="text-display text-center mb-4"
-                >
-                  Статус записи
-                </Typography>
-                <View className="gap-2">
-                  {Object.values(STATUS_CONFIG).map((config) => (
-                    <Card
-                      key={config.status}
-                      title={config.label}
-                      active={slot.status === config.status}
-                      onPress={
-                        config.status === slot.status
-                          ? () => setStatusModalVisible(false)
-                          : () =>
-                              void handleUpdate(
-                                { status: config.status } as never,
-                                {
-                                  onSuccess: () => setStatusModalVisible(false),
-                                },
-                              )
-                      }
-                    />
-                  ))}
-                </View>
-              </StModal>
-              <StModal
+                onSelect={(status) =>
+                  void handleUpdate({ status } as never, {
+                    field: "status",
+                    onSuccess: () => setStatusModalVisible(false),
+                  })
+                }
+              />
+              <PaymentMethodModal
                 visible={paymentMethodVisible}
+                currentMethod={slot.payment_method}
                 onClose={() => setPaymentMethodVisible(false)}
                 onModalHide={onPaymentModalHide}
-              >
-                <Typography
-                  weight="semibold"
-                  className="text-display text-center mb-4"
-                >
-                  Способ оплаты
-                </Typography>
-                <View className="gap-2">
-                  {PAYMENT_OPTIONS.map(({ key, label, comingSoon }) => (
-                    <Card
-                      key={key}
-                      title={label}
-                      active={slot.payment_method === key}
-                      className={comingSoon ? "opacity-40" : ""}
-                      onPress={() => {
-                        if (comingSoon) {
-                          schedulePaymentAction(() =>
-                            setComingSoonVisible(true),
-                          );
-                          return;
-                        }
-                        if (key !== slot.payment_method) {
-                          void handleUpdate(
-                            { payment_method: key },
-                            { onSuccess: () => setPaymentMethodVisible(false) },
-                          );
-                        } else {
-                          setPaymentMethodVisible(false);
-                        }
-                      }}
-                    />
-                  ))}
-                </View>
-              </StModal>
+                onSelect={(method) =>
+                  void handleUpdate(
+                    { payment_method: method },
+                    { onSuccess: () => setPaymentMethodVisible(false) },
+                  )
+                }
+                onComingSoon={() =>
+                  schedulePaymentAction(() => setComingSoonVisible(true))
+                }
+              />
               <ComingSoonModal
                 visible={comingSoonVisible}
                 onClose={() => setComingSoonVisible(false)}

@@ -8,6 +8,8 @@ type Props = {
   placeholder?: string;
 };
 
+const ZERO_DURATION = new Date(0, 0, 0, 0, 0, 0, 0);
+
 const parseDuration = (val: unknown): Date | null => {
   const mins = Number(val);
   if (!mins && mins !== 0) return null;
@@ -26,6 +28,7 @@ export function RhfDurationPicker({ name, label, placeholder }: Props) {
       name={name}
       label={label}
       placeholder={placeholder}
+      defaultDisplayValue={ZERO_DURATION}
       parseValue={parseDuration}
       formatValue={dateToMinutes}
       formatDisplay={displayDuration}

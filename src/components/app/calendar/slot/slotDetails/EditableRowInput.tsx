@@ -27,7 +27,6 @@ const EditableRowInput = ({
       placeholderTextColor={colors.neutral[300]}
       textAlign="right"
       textAlignVertical="center"
-      includeFontPadding={false}
       style={Platform.OS === "android" ? { paddingVertical: 0 } : undefined}
     />
   );

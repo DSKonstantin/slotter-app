@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { colors } from "@/src/styles/colors";
+import { StSvg } from "@/src/components/ui/StSvg";
 
 type RadioProps = {
   value: boolean;
@@ -20,20 +21,18 @@ export function Radio({
   return (
     <Wrapper
       {...(pressable && !disabled ? { onPress: () => onChange?.(!value) } : {})}
-      className="h-[32px] w-[32px] items-center justify-center"
+      className="h-[24px] w-[24px] items-center justify-center rounded-full"
+      style={{
+        backgroundColor: value
+          ? colors.primary.green[500]
+          : colors.neutral[200],
+        borderWidth: 1,
+        borderColor: value ? colors.primary.green[500] : colors.neutral[0],
+      }}
     >
-      <View
-        className={`h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${
-          value ? "border-primary-blue-500" : "border-neutral-300"
-        }`}
-      >
-        {value && (
-          <View
-            style={{ backgroundColor: colors.primary.blue[500] }}
-            className="h-[12px] w-[12px] rounded-full"
-          />
-        )}
-      </View>
+      {value && (
+        <StSvg name="Done_round" size={16} color={colors.neutral[900]} />
+      )}
     </Wrapper>
   );
 }

@@ -226,14 +226,7 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
                       size="sm"
                       disabled={isServiceDeleting}
                       buttonClassName="rounded-xl border border-neutral-200 px-2.5"
-                      rightIcon={
-                        <StSvg
-                          name="Close_round_light"
-                          size={20}
-                          color={colors.neutral[900]}
-                        />
-                      }
-                      onPress={() => handleDeleteService(service.id)}
+                      onPress={() => {}}
                     />
                   ),
                 )}
