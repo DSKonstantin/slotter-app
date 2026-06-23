@@ -190,6 +190,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         date: slot.date,
         time: slot.start_time,
         appointmentId: String(slot.id),
+        duration: String(slot.duration),
         selectedServiceIds: slot.services.map((s) => s.id).join(","),
         selectedAdditionalServiceIds: slot.additional_services
           .map((s) => s.id)

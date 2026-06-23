@@ -7,6 +7,7 @@ const SlotSelectServiceScreen = () => {
     date,
     time,
     appointmentId,
+    duration,
     selectedServiceIds,
     selectedAdditionalServiceIds,
     mode,
@@ -14,6 +15,7 @@ const SlotSelectServiceScreen = () => {
     date?: string;
     time?: string;
     appointmentId?: string;
+    duration?: string;
     selectedServiceIds?: string;
     selectedAdditionalServiceIds?: string;
     mode?: "services" | "additional";
@@ -23,6 +25,7 @@ const SlotSelectServiceScreen = () => {
       date={date}
       time={time}
       appointmentId={appointmentId}
+      duration={duration}
       selectedServiceIds={selectedServiceIds}
       selectedAdditionalServiceIds={selectedAdditionalServiceIds}
       mode={mode}

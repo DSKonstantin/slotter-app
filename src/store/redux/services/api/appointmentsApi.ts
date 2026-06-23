@@ -27,7 +27,6 @@ const appointmentsApi = api.injectEndpoints({
             }
           : undefined,
       }),
-      providesTags: ["Appointments"],
     }),
 
     getAppointment: builder.query<Appointment, number>({
@@ -92,33 +91,26 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: ({ id, body }, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(id, body, dispatch, queryFulfilled),
+      invalidatesTags: (_, __, { id }) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     confirmAppointment: builder.mutation<{ appointment: Appointment }, number>({
       query: (id) => ({ url: `/appointments/${id}/confirm`, method: "PATCH" }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: (id, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(
-          id,
-          { status: "confirmed" },
-          dispatch,
-          queryFulfilled,
-        ),
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     arriveAppointment: builder.mutation<{ appointment: Appointment }, number>({
       query: (id) => ({ url: `/appointments/${id}/arrive`, method: "PATCH" }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: (id, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(
-          id,
-          { status: "arrived" },
-          dispatch,
-          queryFulfilled,
-        ),
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     markLateAppointment: builder.mutation<{ appointment: Appointment }, number>(
@@ -127,14 +119,10 @@ const appointmentsApi = api.injectEndpoints({
           url: `/appointments/${id}/mark_late`,
           method: "PATCH",
         }),
-        invalidatesTags: ["Appointments"],
-        onQueryStarted: (id, { dispatch, queryFulfilled }) =>
-          syncAppointmentCache(
-            id,
-            { status: "late" },
-            dispatch,
-            queryFulfilled,
-          ),
+        invalidatesTags: (_, __, id) => [
+          "Appointments",
+          { type: "Appointment", id },
+        ],
       },
     ),
 
@@ -146,14 +134,10 @@ const appointmentsApi = api.injectEndpoints({
         url: `/appointments/${id}/mark_no_show`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: (id, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(
-          id,
-          { status: "no_show" },
-          dispatch,
-          queryFulfilled,
-        ),
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     completeAppointment: builder.mutation<{ appointment: Appointment }, number>(
@@ -162,14 +146,10 @@ const appointmentsApi = api.injectEndpoints({
           url: `/appointments/${id}/complete`,
           method: "PATCH",
         }),
-        invalidatesTags: ["Appointments"],
-        onQueryStarted: (id, { dispatch, queryFulfilled }) =>
-          syncAppointmentCache(
-            id,
-            { status: "completed" },
-            dispatch,
-            queryFulfilled,
-          ),
+        invalidatesTags: (_, __, id) => [
+          "Appointments",
+          { type: "Appointment", id },
+        ],
       },
     ),
 
@@ -182,14 +162,10 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body ?? {} },
       }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: ({ id }, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(
-          id,
-          { status: "cancelled" },
-          dispatch,
-          queryFulfilled,
-        ),
+      invalidatesTags: (_, __, { id }) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     rescheduleAppointment: builder.mutation<
@@ -201,16 +177,18 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: ({ id, body }, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(id, body, dispatch, queryFulfilled),
+      invalidatesTags: (_, __, { id }) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     remindAppointment: builder.mutation<{ appointment: Appointment }, number>({
       query: (id) => ({ url: `/appointments/${id}/remind`, method: "PATCH" }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: (id, { dispatch, queryFulfilled }) =>
-        syncAppointmentCache(id, null, dispatch, queryFulfilled),
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     cancelAppointmentByToken: builder.mutation<
@@ -221,21 +199,10 @@ const appointmentsApi = api.injectEndpoints({
         url: `/appointments/by_token/${publicToken}/cancel`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Appointments"],
-      onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          dispatch(
-            appointmentsApi.util.updateQueryData(
-              "getAppointment",
-              data.appointment.id,
-              () => data.appointment,
-            ),
-          );
-        } catch {
-          // no optimistic patch to undo
-        }
-      },
+      invalidatesTags: (result) =>
+        result
+          ? ["Appointments", { type: "Appointment", id: result.appointment.id }]
+          : ["Appointments"],
     }),
 
     customerAcceptAppointment: builder.mutation<
@@ -262,32 +229,6 @@ const appointmentsApi = api.injectEndpoints({
   }),
 });
 
-async function syncAppointmentCache(
-  id: number,
-  body: Partial<Appointment> | null | undefined,
-  dispatch: (action: any) => any,
-  queryFulfilled: Promise<{ data: { appointment: Appointment } }>,
-): Promise<void> {
-  const patch = body
-    ? dispatch(
-        appointmentsApi.util.updateQueryData("getAppointment", id, (draft) => {
-          Object.assign(draft, body);
-        }),
-      )
-    : null;
-  try {
-    const { data } = await queryFulfilled;
-    dispatch(
-      appointmentsApi.util.updateQueryData(
-        "getAppointment",
-        id,
-        () => data.appointment,
-      ),
-    );
-  } catch {
-    patch?.undo();
-  }
-}
 
 export const {
   useGetAppointmentsQuery,

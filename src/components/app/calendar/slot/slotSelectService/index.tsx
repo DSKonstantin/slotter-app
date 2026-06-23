@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 
-import { ActivityIndicator, SectionList, View } from "react-native";
+import { ActivityIndicator, Alert, SectionList, View } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -77,6 +77,7 @@ interface Props {
   date?: string;
   time?: string;
   appointmentId?: string;
+  duration?: string;
   selectedServiceIds?: string;
   selectedAdditionalServiceIds?: string;
   mode?: Mode;
@@ -94,6 +95,7 @@ const SlotSelectService: React.FC<Props> = ({
   date,
   time,
   appointmentId,
+  duration,
   selectedServiceIds,
   selectedAdditionalServiceIds,
   mode,
@@ -239,17 +241,34 @@ const SlotSelectService: React.FC<Props> = ({
 
     if (appointmentId) {
       try {
+        const appointmentDuration = duration ? Number(duration) : undefined;
         const body =
           mode === "services"
-            ? { service_ids: selectedServices.map((s) => s.id) }
+            ? {
+                service_ids: selectedServices.map((s) => s.id),
+                duration: appointmentDuration,
+              }
             : mode === "additional"
               ? {
                   additional_service_ids: selectedAdditional.map((s) => s.id),
+                  duration: appointmentDuration,
                 }
               : {
                   service_ids: selectedServices.map((s) => s.id),
                   additional_service_ids: selectedAdditional.map((s) => s.id),
+                  duration: appointmentDuration,
                 };
+
+        await new Promise<void>((resolve, reject) =>
+          Alert.alert(
+            "Изменение услуг",
+            "Длительность записи останется прежней.",
+            [
+              { text: "Отмена", style: "cancel", onPress: reject },
+              { text: "Сохранить", onPress: () => resolve() },
+            ],
+          ),
+        );
 
         await updateAppointment({
           id: Number(appointmentId),
@@ -276,6 +295,7 @@ const SlotSelectService: React.FC<Props> = ({
     selectedServices,
     selectedAdditional,
     appointmentId,
+    duration,
     dispatch,
     date,
     time,
