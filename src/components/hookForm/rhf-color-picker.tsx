@@ -30,23 +30,24 @@ const RhfColorPicker = ({ name, colors }: Props) => {
       render={({ field: { value, onChange } }) => (
         <View className="flex-row gap-4">
           {colors.map((color) => {
-            const isSelected = value === color.value;
+            const colorValue = color.value;
+            const isSelected = value === colorValue;
 
             const handlePress = () => {
               if (isSelected) {
                 onChange(null); // сброс
               } else {
-                onChange(color.value);
+                onChange(colorValue);
               }
             };
 
             return (
               <Pressable
-                key={color.value}
+                key={colorValue}
                 onPress={handlePress}
                 className="w-14 h-14 rounded-full items-center justify-center"
                 style={{
-                  backgroundColor: color.value,
+                  backgroundColor: colorValue,
                 }}
               >
                 {isSelected && (

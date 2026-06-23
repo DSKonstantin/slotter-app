@@ -29,6 +29,7 @@ import "@/src/utils/calendarLocale";
 import "@/src/utils/date/date";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 import { useAppVersionBootstrap } from "@/src/hooks/useAppVersionBootstrap";
+import AppUpdateModal from "@/src/components/shared/modals/AppUpdateModal";
 import * as Sentry from "@sentry/react-native";
 import "@/src/services/sentry";
 
@@ -89,9 +90,14 @@ function InitialLayout() {
                       options={{ headerShown: false }}
                     />
                   </Stack.Protected>
+                  <Stack.Screen
+                    name="(password-reset)"
+                    options={{ headerShown: false }}
+                  />
                 </Stack>
                 <Toasts overrideDarkMode={true} />
                 <StatusBar style="auto" />
+                {appVersionReady && <AppUpdateModal />}
               </BottomSheetModalProvider>
             </AutocompleteDropdownContextProvider>
           </KeyboardProvider>

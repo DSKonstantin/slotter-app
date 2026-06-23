@@ -8,10 +8,15 @@ import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { useNotificationPermission } from "@/src/hooks/useNotificationPermission";
 import { colors } from "@/src/styles/colors";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 
 const Notification = () => {
+  const auth = useRequiredAuth();
   const { canAskAgain, requestOrOpenSettings, refresh } =
     useNotificationPermission();
+
+  const [updateUser] = useUpdateUserMutation();
 
   return (
     <AuthScreenLayout
@@ -21,11 +26,16 @@ const Notification = () => {
           primary={{
             title: canAskAgain ? "Разрешить доступ" : "Открыть настройки",
             onPress: async () => {
+              if (!auth) return;
               await requestOrOpenSettings();
 
               const next = await refresh();
 
               if (next.status === "granted") {
+                await updateUser({
+                  id: auth.userId,
+                  data: { onboarding_step: "link" },
+                }).unwrap();
                 router.push(Routers.onboarding.link);
               }
             },
@@ -33,7 +43,12 @@ const Notification = () => {
           secondary={{
             title: "Настрою потом",
             variant: "clear",
-            onPress: () => {
+            onPress: async () => {
+              if (!auth) return;
+              await updateUser({
+                id: auth.userId,
+                data: { onboarding_step: "link" },
+              }).unwrap();
               router.push(Routers.onboarding.link);
             },
           }}

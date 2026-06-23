@@ -70,7 +70,15 @@ export const useHomeAssistantState = (): Result => {
           params: {
             date_from: today,
             date_to: today,
-            status: ["pending", "confirmed", "arrived"],
+            status: [
+              "pending",
+              "proposed",
+              "confirmed",
+              "arrived",
+              "completed",
+              "no_show",
+              "late",
+            ],
           },
         }
       : skipToken,
@@ -104,7 +112,10 @@ export const useHomeAssistantState = (): Result => {
     if (!todayWd) return { kind: "no_schedule" };
     if (!todayWd.is_active) return { kind: "day_off" };
 
-    if (nowMinutes >= parseTime(todayWd.end_at)) return { kind: "completed" };
+    const endMinutes = parseTime(todayWd.end_at);
+
+    if (endMinutes > 0 && nowMinutes >= endMinutes)
+      return { kind: "completed" };
 
     const todayAppointments =
       (appointmentsData as Record<string, Appointment[]> | undefined)?.[
@@ -128,16 +139,21 @@ export const useHomeAssistantState = (): Result => {
         return nowMinutes >= start && nowMinutes < start + a.duration;
       }) ?? null;
 
-    const next =
-      sorted.find((a) => parseTime(a.start_time) > nowMinutes) ?? null;
-
     const upcomingToday = (upcomingData?.appointments ?? []).filter(
       (a) => a.date === today,
     );
 
     if (current)
       return { kind: "current_and_next", current, appointments: upcomingToday };
-    if (next) return { kind: "waiting_next", appointments: upcomingToday };
+    if (upcomingToday.length > 0)
+      return { kind: "waiting_next", appointments: upcomingToday };
+
+    if (endMinutes === 0 || nowMinutes < endMinutes)
+      return {
+        kind: "free_day",
+        startAt: todayWd.start_at,
+        endAt: todayWd.end_at,
+      };
 
     return { kind: "completed" };
   }, [

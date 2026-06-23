@@ -1,12 +1,12 @@
 import React from "react";
 
 import type { AppointmentStatus } from "@/src/store/redux/services/api-types/appointment";
-import type { CalendarFilters } from "@/src/store/redux/slices/calendarSlice";
 
 export type AppointmentStatusConfig = {
+  status: AppointmentStatus;
   label: string;
   filterLabel: string;
-  filterKey: keyof CalendarFilters;
+  defaultActive: boolean;
   variant:
     | "success"
     | "warning"
@@ -14,6 +14,7 @@ export type AppointmentStatusConfig = {
     | "primary"
     | "secondary"
     | "error"
+    | "arrived"
     | "destructive"
     | "completed";
   icon?: React.ReactNode;
@@ -25,65 +26,74 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
   AppointmentStatusConfig
 > = {
   pending: {
+    status: "pending",
     label: "Ожидает",
     filterLabel: "Ожидающие подтверждения",
-    filterKey: "showPending",
+    defaultActive: true,
     variant: "warning",
     statusLineClass: "bg-accent-yellow-500",
   },
   proposed: {
+    status: "proposed",
     label: "Предложено",
     filterLabel: "Предложенные",
-    filterKey: "showProposed",
+    defaultActive: true,
     variant: "info",
     statusLineClass: "bg-primary-blue-100",
   },
   confirmed: {
+    status: "confirmed",
     label: "Подтверждено",
     filterLabel: "Подтверждённые",
-    filterKey: "showConfirmed",
+    defaultActive: true,
     variant: "success",
     statusLineClass: "bg-primary-green-500",
   },
   arrived: {
+    status: "arrived",
     label: "Пришел",
     filterLabel: "Пришли",
-    filterKey: "showArrived",
-    variant: "info",
-    statusLineClass: "bg-primary-blue-100",
+    defaultActive: true,
+    variant: "arrived",
+    statusLineClass: "bg-primary-blue-500",
   },
   late: {
+    status: "late",
     label: "Опоздание",
     filterLabel: "Опоздали",
-    filterKey: "showLate",
+    defaultActive: true,
     variant: "error",
     statusLineClass: "bg-accent-red-500",
   },
   completed: {
+    status: "completed",
     label: "Завершено",
     filterLabel: "Завершённые",
-    filterKey: "showCompleted",
+    defaultActive: true,
     variant: "completed",
     statusLineClass: "bg-primary-green-100",
   },
   no_show: {
+    status: "no_show",
     label: "Не пришёл",
     filterLabel: "Не явились",
-    filterKey: "showNoShow",
+    defaultActive: true,
     variant: "destructive",
     statusLineClass: "bg-accent-red-500",
   },
   cancelled: {
+    status: "cancelled",
     label: "Отменена",
     filterLabel: "Отменённые",
-    filterKey: "showCancelled",
+    defaultActive: false,
     variant: "destructive",
     statusLineClass: "bg-accent-red-500",
   },
   declined: {
+    status: "declined",
     label: "Отклонено",
     filterLabel: "Отклонённые",
-    filterKey: "showDeclined",
+    defaultActive: false,
     variant: "destructive",
     statusLineClass: "bg-accent-red-500",
   },

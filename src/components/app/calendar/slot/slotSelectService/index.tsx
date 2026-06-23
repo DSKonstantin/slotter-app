@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 
-import { ActivityIndicator, SectionList, View } from "react-native";
+import { ActivityIndicator, Alert, SectionList, View } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -30,6 +30,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
@@ -51,7 +52,7 @@ const ServiceRow: React.FC<ServiceRowProps> = ({
 }) => (
   <Card
     title={service.name}
-    subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+    subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
     active={isSelected}
     onPress={() => onPress(service)}
     right={
@@ -76,6 +77,7 @@ interface Props {
   date?: string;
   time?: string;
   appointmentId?: string;
+  duration?: string;
   selectedServiceIds?: string;
   selectedAdditionalServiceIds?: string;
   mode?: Mode;
@@ -93,6 +95,7 @@ const SlotSelectService: React.FC<Props> = ({
   date,
   time,
   appointmentId,
+  duration,
   selectedServiceIds,
   selectedAdditionalServiceIds,
   mode,
@@ -238,17 +241,34 @@ const SlotSelectService: React.FC<Props> = ({
 
     if (appointmentId) {
       try {
+        const appointmentDuration = duration ? Number(duration) : undefined;
         const body =
           mode === "services"
-            ? { service_ids: selectedServices.map((s) => s.id) }
+            ? {
+                service_ids: selectedServices.map((s) => s.id),
+                duration: appointmentDuration,
+              }
             : mode === "additional"
               ? {
                   additional_service_ids: selectedAdditional.map((s) => s.id),
+                  duration: appointmentDuration,
                 }
               : {
                   service_ids: selectedServices.map((s) => s.id),
                   additional_service_ids: selectedAdditional.map((s) => s.id),
+                  duration: appointmentDuration,
                 };
+
+        await new Promise<void>((resolve, reject) =>
+          Alert.alert(
+            "Изменение услуг",
+            "Длительность записи останется прежней.",
+            [
+              { text: "Отмена", style: "cancel", onPress: reject },
+              { text: "Сохранить", onPress: () => resolve() },
+            ],
+          ),
+        );
 
         await updateAppointment({
           id: Number(appointmentId),
@@ -275,6 +295,7 @@ const SlotSelectService: React.FC<Props> = ({
     selectedServices,
     selectedAdditional,
     appointmentId,
+    duration,
     dispatch,
     date,
     time,
@@ -444,7 +465,7 @@ const SlotSelectService: React.FC<Props> = ({
                         ) : (
                           <Card
                             title={item.name}
-                            subtitle={`${item.duration} мин | ${formatRublesFromCents(item.price_cents)}`}
+                            subtitle={`${formatDuration(item.duration)} | ${formatRublesFromCents(item.price_cents)}`}
                             active={selectedAdditional.some(
                               (s) => s.id === item.id,
                             )}

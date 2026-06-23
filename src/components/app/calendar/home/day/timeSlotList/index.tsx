@@ -11,9 +11,9 @@ import type {
   WorkingDayBreak,
 } from "@/src/store/redux/services/api-types";
 import { View, Dimensions } from "react-native";
-import { Svg, Line } from "react-native-svg";
 import { router } from "expo-router";
 import SlotCard from "@/src/components/shared/cards/scheduling/slotCard";
+import SegmentGridMarks from "./SegmentGridMarks";
 import BreakBlock from "./BreakBlock";
 import FilteredSlotBlock from "./FilteredSlotBlock";
 import FreeSlotPressable from "./FreeSlotPressable";
@@ -21,7 +21,6 @@ import FreeSlotStartModal, { type FreeSlotRange } from "./FreeSlotStartModal";
 import TimeLabels from "./TimeLabels";
 import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
 import { parseTime, formatTime } from "./utils";
-import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
@@ -55,10 +54,19 @@ function computeNowOffset(
 ): number {
   let y = 0;
   for (const seg of segments) {
-    const start = seg.segStart;
-    const end = seg.segEnd;
-    if (currentMinutes >= start && currentMinutes < end) {
-      y += (currentMinutes - start) * MINUTE_HEIGHT;
+    const { segStart, segEnd, content } = seg;
+    if (currentMinutes >= segStart && currentMinutes < segEnd) {
+      const nonOccupying =
+        content.kind === "slots"
+          ? content.slots.filter((s) => !slotOccupiesTime(s))
+          : [];
+      const cancelledOffset =
+        content.kind === "slots"
+          ? SLOT_GAP +
+            nonOccupying.reduce((h, s) => h + getSlotMinHeight(s), 0) +
+            SLOT_GAP * nonOccupying.length
+          : 0;
+      y += cancelledOffset + (currentMinutes - segStart) * MINUTE_HEIGHT;
       return y;
     }
     y += getSegmentHeight(seg);
@@ -268,32 +276,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
           const segHeight = getSegmentHeight(segment);
           const gridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
-          const nonOccupyingSlots =
-            content.kind === "slots"
-              ? content.slots.filter((s) => !slotOccupiesTime(s))
-              : [];
-          const cancelledOffset =
-            content.kind === "slots"
-              ? SLOT_GAP +
-                nonOccupyingSlots.reduce((h, s) => h + getSlotMinHeight(s), 0) +
-                SLOT_GAP * nonOccupyingSlots.length
-              : 0;
-          const markTop = (t: number) =>
-            ((t - segStart) / (segEnd - segStart)) * gridHeight;
-          const markTopFreeSlot = (t: number) => cancelledOffset + markTop(t);
-
-          const hourMarks: number[] = [];
-          for (let t = Math.ceil(segStart / 60) * 60; t < segEnd; t += 60)
-            hourMarks.push(t);
-          if (isLast && segEnd % 60 === 0) hourMarks.push(segEnd);
-
-          const halfHourMarks: number[] = [];
-          for (
-            let t = Math.floor((segStart + 30) / 60) * 60 + 30;
-            t <= segEnd;
-            t += 60
-          )
-            halfHourMarks.push(t);
 
           return (
             <View
@@ -301,34 +283,12 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
               className="flex-row relative"
               style={{ height: segHeight }}
             >
-              {hourMarks.map((t) => (
-                <View
-                  key={`h-${t}`}
-                  pointerEvents="none"
-                  className="absolute left-[50px] right-0 bg-neutral-200"
-                  style={{ top: markTop(t), height: 1 }}
-                />
-              ))}
-              {halfHourMarks.map((t) => (
-                <View
-                  key={`hh-${t}`}
-                  pointerEvents="none"
-                  className="absolute left-[50px] right-0"
-                  style={{ top: markTopFreeSlot(t) }}
-                >
-                  <Svg width="100%" height={2}>
-                    <Line
-                      x1="0"
-                      y1="1"
-                      x2="100%"
-                      y2="1"
-                      stroke={colors.neutral[200]}
-                      strokeWidth={1}
-                      strokeDasharray="4 4"
-                    />
-                  </Svg>
-                </View>
-              ))}
+              <SegmentGridMarks
+                segStart={segStart}
+                segEnd={segEnd}
+                content={content}
+                isLast={isLast}
+              />
               <View className="relative w-[50px]">
                 <TimeLabels
                   segStart={segStart}
@@ -366,7 +326,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                     {content.filteredBlock && <FilteredSlotBlock />}
                     {content.showFreeSlotBlock && (
                       <FreeSlotPressable
-                        start={content.freeRangeStart}
+                        start={segStart}
                         end={content.freeRangeEnd}
                         onPress={handleFreeSlotPress}
                       />

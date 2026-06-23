@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Linking, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 
@@ -8,26 +8,15 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { CallModal } from "@/src/components/auth/verify/CallModal";
+import { useCallbackSession } from "@/src/components/auth/useCallbackSession";
+import { useHandleAuthorized } from "@/src/components/auth/useHandleAuthorized";
 import { Typography } from "@/src/components/ui";
 import {
   useConfirmCodeMutation,
-  useCreateTelegramIntentMutation,
-  useLazyGetTelegramSessionQuery,
   useSendCodeMutation,
 } from "@/src/store/redux/services/api/authApi";
-import type { User } from "@/src/store/redux/services/api-types";
 import { UserType } from "@/src/store/redux/services/api-types";
-import { useAuth } from "@/src/contexts/AuthContext";
-import { colors } from "@/src/styles/colors";
-import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-
-type CallSession = {
-  call_phone: string;
-  poll_interval: number;
-  resend_after: number;
-  expires_in: number;
-};
 
 const FLASHCALL_FALLBACK_DELAY_MS = 45_000;
 
@@ -38,8 +27,7 @@ const EnterCode = () => {
     method?: string;
     code_length?: string;
     resend_after?: string;
-    telegram_code?: string;
-    poll_interval?: string;
+    expires_in?: string;
   }>();
 
   const phone = String(params.phone ?? "");
@@ -51,29 +39,25 @@ const EnterCode = () => {
   const initialResendAfter = Number(params.resend_after ?? "60");
 
   // 1. useState
-  const [callSession, setCallSession] = useState<CallSession | null>(null);
   const [wrongCode, setWrongCode] = useState<{
     attemptsLeft: number;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFlashcallFallback, setShowFlashcallFallback] = useState(false);
-  const [currentResendAfter, setCurrentResendAfter] = useState(initialResendAfter);
+  const [currentResendAfter, setCurrentResendAfter] =
+    useState(initialResendAfter);
   const [flashcallKey, setFlashcallKey] = useState(0);
 
   // 3. Custom hooks + RTK Query
-  const { login } = useAuth();
+  const handleAuthorized = useHandleAuthorized();
   const [confirmCode] = useConfirmCodeMutation();
-  const [sendCode] = useSendCodeMutation();
+  const [sendCode, { isLoading: isSendingCode }] = useSendCodeMutation();
+  const { callSession, setCallSession } = useCallbackSession({
+    phone,
+    referralCode,
+  });
 
   // 5. useCallback
-  const handleAuthorized = useCallback(
-    async (token: string, resource: User) => {
-      await login(token);
-      router.replace(getRedirectPath(resource));
-    },
-    [login],
-  );
-
   const handleExpiredOrDeactivated = useCallback(
     (status: "expired" | "deactivated") => {
       toast.error(
@@ -141,31 +125,7 @@ const EnterCode = () => {
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
     }
-  }, [sendCode, phone]);
-
-  const handleCallbackResend = useCallback(async () => {
-    try {
-      const result = await sendCode({
-        phone,
-        type: UserType.USER,
-        method: "callback",
-      }).unwrap();
-      if (result.call_phone) {
-        setCallSession((prev) =>
-          prev
-            ? {
-                ...prev,
-                call_phone: result.call_phone!,
-                resend_after: result.resend_after,
-                expires_in: result.expires_in,
-              }
-            : null,
-        );
-      }
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
-    }
-  }, [sendCode, phone]);
+  }, [sendCode, phone, setCallSession]);
 
   const handleResend = useCallback(async () => {
     try {
@@ -194,56 +154,17 @@ const EnterCode = () => {
     return () => clearTimeout(timeout);
   }, [isFlashcall, flashcallKey]);
 
-  // Таймер истечения + polling — оба живут пока callSession != null
-  useEffect(() => {
-    if (!callSession) return;
-
-    const expiryTimeout = setTimeout(() => {
-      setCallSession(null);
-      toast.error("Сессия истекла. Попробуйте снова");
-    }, callSession.expires_in * 1000);
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const result = await confirmCode({
-          phone,
-          type: UserType.USER,
-          ...(referralCode && { referral_code: referralCode }),
-        }).unwrap();
-        if (result.status === "authorized") {
-          setCallSession(null);
-          await handleAuthorized(result.token, result.resource);
-        } else if (
-          result.status === "expired" ||
-          result.status === "deactivated"
-        ) {
-          setCallSession(null);
-          toast.error(
-            result.status === "deactivated"
-              ? "Аккаунт деактивирован"
-              : "Сессия истекла. Попробуйте снова",
-          );
-        }
-      } catch {
-        // network error — keep trying
-      }
-    }, callSession.poll_interval * 1000);
-
-    return () => {
-      clearTimeout(expiryTimeout);
-      clearInterval(pollInterval);
-    };
-  }, [callSession, phone, referralCode, confirmCode, handleAuthorized]);
-
   return (
     <AuthScreenLayout
       avoidKeyboard
       header={<AuthHeader />}
       footer={
-        showFlashcallFallback ? (
+        showFlashcallFallback && !callSession ? (
           <AuthFooter
             primary={{
               title: "Подтвердить звонком",
+              loading: isSendingCode,
+              disabled: isSendingCode,
               onPress: handleSwitchToCallback,
             }}
           />
@@ -276,7 +197,7 @@ const EnterCode = () => {
           )}
         </View>
 
-        {showFlashcallFallback && (
+        {showFlashcallFallback && !callSession && (
           <Typography className="text-caption text-neutral-500 mt-4 text-center">
             Звонок не пришёл? Выберите другой способ входа
           </Typography>
@@ -288,11 +209,7 @@ const EnterCode = () => {
           visible
           onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
-          resendAfter={callSession.resend_after}
-          onResend={handleCallbackResend}
-          // TODO: Telegram временно отключён
-          // onSwitchToTelegram={handleSwitchToTelegram}
-          // isSwitchingToTelegram={isStartingTelegram}
+          expiresIn={callSession.expires_in}
         />
       )}
     </AuthScreenLayout>

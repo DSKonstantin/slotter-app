@@ -51,6 +51,11 @@ export const colors = {
     card: "#F2F2F7",
     black: "#111111",
     switch: "#D1D1D1",
+    blue: "#9CC2FF",
+    pink: "#FFA8CA",
+    amber: "#FBB40E",
+    yellow: "#FFF5AA",
+    green: "#C7F5D0",
   },
 
   accent: {

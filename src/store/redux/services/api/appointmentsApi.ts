@@ -27,7 +27,6 @@ const appointmentsApi = api.injectEndpoints({
             }
           : undefined,
       }),
-      providesTags: ["Appointments"],
     }),
 
     getAppointment: builder.query<Appointment, number>({
@@ -35,7 +34,7 @@ const appointmentsApi = api.injectEndpoints({
         url: `/appointments/${id}`,
         method: "GET",
       }),
-      providesTags: ["Appointments"],
+      providesTags: (_, __, id) => [{ type: "Appointment", id }],
     }),
 
     getUpcomingAppointments: builder.query<
@@ -92,17 +91,26 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, { id }) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     confirmAppointment: builder.mutation<{ appointment: Appointment }, number>({
       query: (id) => ({ url: `/appointments/${id}/confirm`, method: "PATCH" }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     arriveAppointment: builder.mutation<{ appointment: Appointment }, number>({
       query: (id) => ({ url: `/appointments/${id}/arrive`, method: "PATCH" }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     markLateAppointment: builder.mutation<{ appointment: Appointment }, number>(
@@ -111,7 +119,10 @@ const appointmentsApi = api.injectEndpoints({
           url: `/appointments/${id}/mark_late`,
           method: "PATCH",
         }),
-        invalidatesTags: ["Appointments"],
+        invalidatesTags: (_, __, id) => [
+          "Appointments",
+          { type: "Appointment", id },
+        ],
       },
     ),
 
@@ -123,7 +134,10 @@ const appointmentsApi = api.injectEndpoints({
         url: `/appointments/${id}/mark_no_show`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     completeAppointment: builder.mutation<{ appointment: Appointment }, number>(
@@ -132,7 +146,10 @@ const appointmentsApi = api.injectEndpoints({
           url: `/appointments/${id}/complete`,
           method: "PATCH",
         }),
-        invalidatesTags: ["Appointments"],
+        invalidatesTags: (_, __, id) => [
+          "Appointments",
+          { type: "Appointment", id },
+        ],
       },
     ),
 
@@ -145,7 +162,10 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body ?? {} },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, { id }) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     rescheduleAppointment: builder.mutation<
@@ -157,12 +177,18 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, { id }) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     remindAppointment: builder.mutation<{ appointment: Appointment }, number>({
       query: (id) => ({ url: `/appointments/${id}/remind`, method: "PATCH" }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
     }),
 
     cancelAppointmentByToken: builder.mutation<
@@ -173,7 +199,10 @@ const appointmentsApi = api.injectEndpoints({
         url: `/appointments/by_token/${publicToken}/cancel`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: (result) =>
+        result
+          ? ["Appointments", { type: "Appointment", id: result.appointment.id }]
+          : ["Appointments"],
     }),
 
     customerAcceptAppointment: builder.mutation<
@@ -199,6 +228,7 @@ const appointmentsApi = api.injectEndpoints({
     }),
   }),
 });
+
 
 export const {
   useGetAppointmentsQuery,

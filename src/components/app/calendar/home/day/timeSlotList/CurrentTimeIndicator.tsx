@@ -27,7 +27,7 @@ const CurrentTimeIndicator = ({ top, time }: CurrentTimeIndicatorProps) => {
           </Text>
         </View>
       </View>
-      <View className="flex-1 h-[2px] bg-neutral-900 mr-screen" />
+      <View className="flex-1 h-[2px] bg-neutral-900/20 mr-screen" />
     </View>
   );
 };

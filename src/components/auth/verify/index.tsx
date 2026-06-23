@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Linking, View } from "react-native";
+import { View } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { FormProvider, useForm } from "react-hook-form";
@@ -11,21 +11,16 @@ import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { CallModal } from "@/src/components/auth/verify/CallModal";
+import { useCallbackSession } from "@/src/components/auth/useCallbackSession";
+import RhfCheckbox from "@/src/components/hookForm/rhf-checkbox";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Button, Typography } from "@/src/components/ui";
 import { Routers } from "@/src/constants/routers";
-import {
-  useConfirmCodeMutation,
-  useCreateTelegramIntentMutation,
-  useSendCodeMutation,
-} from "@/src/store/redux/services/api/authApi";
+import { useSendCodeMutation } from "@/src/store/redux/services/api/authApi";
 import { useLazyValidateReferralCodeQuery } from "@/src/store/redux/services/api/referralApi";
-import type { User } from "@/src/store/redux/services/api-types";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { useAppSelector } from "@/src/store/redux/store";
-import { useAuth } from "@/src/contexts/AuthContext";
 import { maskPhone } from "@/src/utils/mask/maskPhone";
-import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
 import {
   VerifySchema,
@@ -36,45 +31,43 @@ type CodeState = { status: "idle" | "valid" | "invalid"; error: string };
 
 const INITIAL_CODE_STATE: CodeState = { status: "idle", error: "" };
 
-type CallSession = {
-  call_phone: string;
-  poll_interval: number;
-  resend_after: number;
-  expires_in: number;
-};
-
 const Verify = () => {
   // 1. useState
   const [codeState, setCodeState] = useState<CodeState>(INITIAL_CODE_STATE);
-  const [callSession, setCallSession] = useState<CallSession | null>(null);
   const [isSwitchingToFlashcall, setIsSwitchingToFlashcall] = useState(false);
 
   // 2. useRef
-  const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(null);
+  const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(
+    null,
+  );
 
   // 3. Custom hooks + RTK Query
   const ispe = useAppSelector((s) => s.appVersion.ispe);
   const [sendCode, { isLoading }] = useSendCodeMutation();
   const [validateReferralCode, { isFetching: isValidating }] =
     useLazyValidateReferralCodeQuery();
-  const [confirmCode] = useConfirmCodeMutation();
-  const { login } = useAuth();
   const methods = useForm({
     resolver: yupResolver(VerifySchema),
-    defaultValues: { phone: "+79525898088", promoCode: "" },
+    defaultValues: {
+      phone: "",
+      promoCode: "",
+      agreedToTerms: false,
+      agreedToPersonalData: false,
+    },
   });
 
+  const rawPhone = methods.watch("phone");
   const promoCode = methods.watch("promoCode") ?? "";
+  const agreedToTerms = methods.watch("agreedToTerms");
+  const sessionPhone = `+${unMask(rawPhone)}`;
+  const sessionReferralCode = promoCode.trim() || undefined;
+
+  const { callSession, setCallSession, handleResend } = useCallbackSession({
+    phone: sessionPhone,
+    referralCode: sessionReferralCode,
+  });
 
   // 5. useCallback
-  const handleAuthorized = useCallback(
-    async (token: string, resource: User) => {
-      await login(token);
-      router.replace(getRedirectPath(resource));
-    },
-    [login],
-  );
-
   const handleValidateCode = useCallback(async () => {
     const code = promoCode.trim();
     if (!code) return;
@@ -119,6 +112,7 @@ const Verify = () => {
               }),
               poll_interval: String(result.poll_interval),
               resend_after: String(result.resend_after),
+              expires_in: String(result.expires_in),
               ...(referralCode && { referralCode }),
             },
           });
@@ -134,7 +128,7 @@ const Verify = () => {
         }
       }
     },
-    [sendCode],
+    [sendCode, setCallSession],
   );
 
   const handleSwitchToFlashcall = useCallback(async () => {
@@ -157,6 +151,7 @@ const Verify = () => {
             code_length: String(result.code_length),
           }),
           resend_after: String(result.resend_after),
+          expires_in: String(result.expires_in),
           ...(referralCode && { referralCode }),
         },
       };
@@ -171,33 +166,7 @@ const Verify = () => {
     } finally {
       setIsSwitchingToFlashcall(false);
     }
-  }, [methods, sendCode]);
-
-  const handleResend = useCallback(async () => {
-    if (!callSession) return;
-    const phone = `+${unMask(methods.getValues("phone"))}`;
-    try {
-      const result = await sendCode({
-        phone,
-        type: UserType.USER,
-        method: "callback",
-      }).unwrap();
-      if (result.call_phone) {
-        setCallSession((prev) =>
-          prev
-            ? {
-                ...prev,
-                call_phone: result.call_phone!,
-                resend_after: result.resend_after,
-                expires_in: result.expires_in,
-              }
-            : null,
-        );
-      }
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
-    }
-  }, [callSession, methods, sendCode]);
+  }, [methods, sendCode, setCallSession]);
 
   // 6. useEffect
   useEffect(() => {
@@ -211,52 +180,6 @@ const Verify = () => {
     router.push(route);
   }, [callSession]);
 
-  // Таймер истечения + polling — оба живут пока callSession != null
-  useEffect(() => {
-    if (!callSession) return;
-
-    const phone = `+${unMask(methods.getValues("phone"))}`;
-    const referralCode =
-      (methods.getValues("promoCode") ?? "").trim() || undefined;
-
-    const expiryTimeout = setTimeout(() => {
-      setCallSession(null);
-      toast.error("Сессия истекла. Попробуйте снова");
-    }, callSession.expires_in * 1000);
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const result = await confirmCode({
-          phone,
-          type: UserType.USER,
-          ...(referralCode && { referral_code: referralCode }),
-        }).unwrap();
-
-        if (result.status === "authorized") {
-          setCallSession(null);
-          await handleAuthorized(result.token, result.resource);
-        } else if (
-          result.status === "expired" ||
-          result.status === "deactivated"
-        ) {
-          setCallSession(null);
-          toast.error(
-            result.status === "deactivated"
-              ? "Аккаунт деактивирован"
-              : "Сессия истекла. Попробуйте снова",
-          );
-        }
-      } catch {
-        // network error — keep trying
-      }
-    }, callSession.poll_interval * 1000);
-
-    return () => {
-      clearTimeout(expiryTimeout);
-      clearInterval(pollInterval);
-    };
-  }, [callSession, confirmCode, handleAuthorized, methods]);
-
   const trimmedPromo = promoCode.trim();
   const isPromoEntered = trimmedPromo.length >= 4;
 
@@ -269,7 +192,7 @@ const Verify = () => {
           <AuthFooter
             primary={{
               title: "Продолжить",
-              disabled: isLoading,
+              disabled: isLoading || !agreedToTerms,
               loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
@@ -293,7 +216,7 @@ const Verify = () => {
               hideErrorText
               keyboardType="number-pad"
             />
-            <Typography className="text-caption text-neutral-500 mt-2 mb-9">
+            <Typography className="text-caption text-neutral-500 mt-2 mb-4">
               Продолжая, вы соглашаетесь с{" "}
               <Typography
                 className="text-caption text-black underline"
@@ -338,6 +261,39 @@ const Verify = () => {
                 )}
               </>
             )}
+            <View className="flex-row items-center gap-3 my-3">
+              <RhfCheckbox name="agreedToTerms" />
+              <Typography className="text-caption text-neutral-700 flex-1">
+                Я даю ООО «Slotter» согласие на обработку{" "}
+                <Typography
+                  className="text-caption text-black underline"
+                  onPress={() =>
+                    WebBrowser.openBrowserAsync(
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                    )
+                  }
+                >
+                  обработку персональных данных
+                </Typography>
+              </Typography>
+            </View>
+            <View className="flex-row items-center gap-3 mb-9">
+              <RhfCheckbox name="agreedToPersonalData" />
+              <Typography className="text-caption text-neutral-700 flex-1">
+                Я согласен получать информационные и рекламные сообщения на
+                указанный телефон и email{" "}
+                <Typography
+                  className="text-caption text-black underline"
+                  onPress={() =>
+                    WebBrowser.openBrowserAsync(
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                    )
+                  }
+                >
+                  (условия)
+                </Typography>
+              </Typography>
+            </View>
           </View>
         </View>
       </AuthScreenLayout>
@@ -347,6 +303,7 @@ const Verify = () => {
           visible
           onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
+          expiresIn={callSession.expires_in}
           resendAfter={callSession.resend_after}
           onResend={handleResend}
           onSwitchToFlashcall={handleSwitchToFlashcall}

@@ -82,7 +82,7 @@ const ServiceFormBody = ({
         />
         <RhfDurationPicker
           name="duration"
-          label="Длительность (мин)"
+          label="Длительность"
           placeholder="Выберите длительность"
         />
 

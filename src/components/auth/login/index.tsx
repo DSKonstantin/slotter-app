@@ -91,7 +91,7 @@ const Login = () => {
               labelRight={
                 <Pressable
                   className="active:opacity-70"
-                  onPress={() => router.push(Routers.auth.resetPassword.root)}
+                  onPress={() => router.push(Routers.resetPassword.root)}
                 >
                   <Typography className="text-caption text-neutral-500 underline">
                     Забыли пароль?

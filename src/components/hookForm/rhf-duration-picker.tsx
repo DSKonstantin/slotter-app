@@ -1,11 +1,14 @@
 import React from "react";
 import { RhfDatePicker } from "./rhf-date-picker";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 type Props = {
   name: string;
   label?: string;
   placeholder?: string;
 };
+
+const ZERO_DURATION = new Date(0, 0, 0, 0, 0, 0, 0);
 
 const parseDuration = (val: unknown): Date | null => {
   const mins = Number(val);
@@ -15,10 +18,9 @@ const parseDuration = (val: unknown): Date | null => {
   return d;
 };
 
-const formatDuration = (d: Date): number => d.getHours() * 60 + d.getMinutes();
+const dateToMinutes = (d: Date): number => d.getHours() * 60 + d.getMinutes();
 
-const displayDuration = (d: Date): string =>
-  `${d.getHours() * 60 + d.getMinutes()}  `;
+const displayDuration = (d: Date): string => formatDuration(dateToMinutes(d));
 
 export function RhfDurationPicker({ name, label, placeholder }: Props) {
   return (
@@ -26,8 +28,9 @@ export function RhfDurationPicker({ name, label, placeholder }: Props) {
       name={name}
       label={label}
       placeholder={placeholder}
+      defaultDisplayValue={ZERO_DURATION}
       parseValue={parseDuration}
-      formatValue={formatDuration}
+      formatValue={dateToMinutes}
       formatDisplay={displayDuration}
     />
   );

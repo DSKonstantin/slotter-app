@@ -12,7 +12,7 @@ const FreeSlotPressable = ({ start, end, onPress }: FreeSlotPressableProps) => {
     onPress(start, end);
   }, [end, onPress, start]);
 
-  return <Pressable className="flex-1" onPress={handlePress} />;
+  return <Pressable className="flex-1 min-h-[78px]" onPress={handlePress} />;
 };
 
 export default memo(FreeSlotPressable);

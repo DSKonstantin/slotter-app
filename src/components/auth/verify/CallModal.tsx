@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useRef } from "react";
-import { Animated, Easing, Linking, View } from "react-native";
-import { Button, StModal, Typography } from "@/src/components/ui";
-import { formatPhoneDisplay } from "@/src/utils/mask/maskPhone";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Linking, Pressable, View } from "react-native";
+import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
+import { formatCallPhoneDisplay } from "@/src/utils/mask/maskPhone";
+import { formatCountdown } from "@/src/utils/date/formatTime";
 import { useCountDown } from "@/src/hooks/useCountdown";
 import { colors } from "@/src/styles/colors";
 
@@ -9,53 +10,59 @@ type CallModalProps = {
   visible: boolean;
   onClose: () => void;
   call_phone: string;
+  expiresIn?: number;
   resendAfter?: number;
   onResend?: () => Promise<void>;
+  isResending?: boolean;
   onSwitchToFlashcall?: () => void;
   isSwitchingToFlashcall?: boolean;
   onSwitchToTelegram?: () => void;
   isSwitchingToTelegram?: boolean;
 };
 
-const formatCountdown = (totalSeconds: number) => {
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-};
+const HINT_DELAY_MS = 8_000;
 
 export const CallModal = ({
   visible,
   onClose,
   call_phone,
+  expiresIn = 600,
   resendAfter = 60,
   onResend,
+  isResending,
   onSwitchToFlashcall,
   isSwitchingToFlashcall,
-}: // TODO: Telegram временно отключён
-// onSwitchToTelegram,
-// isSwitchingToTelegram,
-CallModalProps) => {
+}: CallModalProps) => {
+  // 1. useState
+  const [showHint, setShowHint] = useState(false);
+
   // 2. useRef
   const dot1 = useRef(new Animated.Value(0.3)).current;
   const dot2 = useRef(new Animated.Value(0.3)).current;
   const dot3 = useRef(new Animated.Value(0.3)).current;
 
   // 3. Custom hooks
-  const { seconds: timeLeft, start: restartCountdown } = useCountDown({
+  const { seconds: sessionTimeLeft } = useCountDown({
+    seconds: expiresIn,
+    autoStart: true,
+  });
+  const { seconds: resendDelay, start: restartResend } = useCountDown({
     seconds: resendAfter,
     autoStart: true,
   });
 
-  const isFinished = timeLeft === 0;
-
-  // 5. useCallback
-  const handleResend = useCallback(async () => {
-    if (!onResend) return;
-    await onResend();
-    restartCountdown();
-  }, [onResend, restartCountdown]);
-
   // 6. useEffect
+  useEffect(() => {
+    const hintTimer = setTimeout(() => setShowHint(true), HINT_DELAY_MS);
+    return () => clearTimeout(hintTimer);
+  }, []);
+
+  useEffect(() => {
+    restartResend();
+  }, [resendAfter, restartResend]);
+
+  const canResend = resendDelay === 0;
+
   useEffect(() => {
     const animate = (
       dot: Animated.Value,
@@ -81,7 +88,6 @@ CallModalProps) => {
         ]),
       );
 
-    // Все циклы = 1800ms: startDelay + 1000ms анимации + endDelay
     const a1 = animate(dot1, 0, 800);
     const a2 = animate(dot2, 300, 500);
     const a3 = animate(dot3, 600, 200);
@@ -98,15 +104,29 @@ CallModalProps) => {
   }, [dot1, dot2, dot3]);
 
   return (
-    <StModal visible={visible} onClose={onClose}>
-      <View className="gap-4 pb-2">
+    <StModal
+      visible={visible}
+      onClose={onClose}
+      swipeDirection={[]}
+      onBackdropPress={undefined}
+      header={
+        <Pressable
+          onPress={onClose}
+          hitSlop={8}
+          className="absolute top-3 right-4 z-10 active:opacity-70"
+        >
+          <StSvg name="Close_round" size={24} color={colors.neutral[500]} />
+        </Pressable>
+      }
+    >
+      <View className="gap-4 mt-4">
         <View className="flex-row justify-between items-center bg-background-surface rounded-base p-4">
           <View className="gap-2">
             <Typography className="text-caption text-neutral-500">
               Авторизоваться по звонку
             </Typography>
             <Typography weight="semibold" className="text-[18px]">
-              {formatPhoneDisplay(call_phone)}
+              {formatCallPhoneDisplay(call_phone)}
             </Typography>
           </View>
           <Button
@@ -120,62 +140,59 @@ CallModalProps) => {
           />
         </View>
 
-        {!isFinished ? (
-          <View className="flex-row items-center justify-between px-1">
-            <View className="flex-row items-center gap-2">
-              <View className="flex-row gap-1">
-                {[dot1, dot2, dot3].map((dot, i) => (
-                  <Animated.View
-                    key={i}
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: colors.neutral[700],
-                      opacity: dot,
-                    }}
-                  />
-                ))}
-              </View>
-              <Typography className="text-caption text-neutral-500">
-                Ожидаем звонок
-              </Typography>
+        <View className="flex-row items-center justify-between px-1">
+          <View className="flex-row items-center gap-2">
+            <View className="flex-row gap-1">
+              {[dot1, dot2, dot3].map((dot, i) => (
+                <Animated.View
+                  key={i}
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: colors.neutral[700],
+                    opacity: dot,
+                  }}
+                />
+              ))}
             </View>
             <Typography className="text-caption text-neutral-500">
-              {formatCountdown(timeLeft)}
+              Ожидаем звонок
             </Typography>
           </View>
-        ) : (
-          <View className="gap-2">
-            <Button
-              title="Сменить номер"
-              variant="accent"
-              onPress={handleResend}
-            />
-            {onSwitchToFlashcall && (
-              <Button
-                title="Позвонить мне"
-                variant="secondary"
-                loading={isSwitchingToFlashcall}
-                disabled={isSwitchingToFlashcall}
-                onPress={onSwitchToFlashcall}
-              />
-            )}
-          </View>
-        )}
+          <Typography className="text-caption text-neutral-500">
+            {formatCountdown(sessionTimeLeft)}
+          </Typography>
+        </View>
 
-        {/*TODO: Telegram временно отключён*/}
-        {/*{onSwitchToTelegram && (*/}
-        {/*  <>*/}
-        {/*    <View className="flex-row items-center gap-2">*/}
-        {/*      <Divider className="flex-1" />*/}
-        {/*      <Typography weight="medium" className="text-neutral-500 text-body">Или</Typography>*/}
-        {/*      <Divider className="flex-1" />*/}
-        {/*    </View>*/}
-        {/*    <Button title="Войти через Telegram" variant="accent" loading={isSwitchingToTelegram} disabled={isSwitchingToTelegram} onPress={onSwitchToTelegram} />*/}
-        {/*    <Typography className="text-caption text-neutral-500 text-center">Откроем бот и подтвердим вход кодом</Typography>*/}
-        {/*  </>*/}
-        {/*)}*/}
+        <View className="gap-2">
+          <Typography className="text-caption text-neutral-500 text-center">
+            Не получается дозвониться?
+          </Typography>
+
+          {onResend && (
+            <Button
+              title={
+                canResend
+                  ? "Обновить номер"
+                  : `Обновить номер · ${formatCountdown(resendDelay)}`
+              }
+              variant="secondary"
+              loading={isResending}
+              disabled={!canResend || isResending}
+              onPress={canResend ? onResend : () => {}}
+            />
+          )}
+
+          {showHint && onSwitchToFlashcall && (
+            <Button
+              title="Позвонить мне"
+              loading={isSwitchingToFlashcall}
+              disabled={isSwitchingToFlashcall}
+              onPress={onSwitchToFlashcall}
+            />
+          )}
+        </View>
       </View>
     </StModal>
   );

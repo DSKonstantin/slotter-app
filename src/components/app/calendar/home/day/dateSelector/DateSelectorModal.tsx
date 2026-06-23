@@ -31,15 +31,11 @@ const DateSelectorModal = ({
         </View>
 
         <Button
-          title="Добавить запись"
+          title="Редактирования графика"
           variant="secondary"
           textVariant="accent"
           rightIcon={
-            <StSvg
-              name="Add_round_fill"
-              size={24}
-              color={colors.primary.blue[500]}
-            />
+            <StSvg name="Edit" size={24} color={colors.primary.blue[500]} />
           }
           onPress={onCreatePress}
         />

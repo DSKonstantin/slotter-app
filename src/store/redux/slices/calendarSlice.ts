@@ -1,31 +1,24 @@
-import { createSlice, createSelector, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { format } from "date-fns";
 import type { AppointmentStatus } from "@/src/store/redux/services/api-types";
 import type { RootState } from "@/src/store/redux/store";
+import { APPOINTMENT_STATUS_CONFIG } from "@/src/constants/appointmentStatuses";
 
 export type CalendarMode = "day" | "month";
-
-export interface CalendarFilters {
-  showPending: boolean;
-  showProposed: boolean;
-  showConfirmed: boolean;
-  showArrived: boolean;
-  showLate: boolean;
-  showCompleted: boolean;
-  showNoShow: boolean;
-  showCancelled: boolean;
-  showDeclined: boolean;
-}
 
 export type ScheduleIntent =
   | { type: "openTemplate" }
   | { type: "duplicateFrom"; date: string }
   | null;
 
+const DEFAULT_ACTIVE_STATUSES = Object.values(APPOINTMENT_STATUS_CONFIG)
+  .filter(({ defaultActive }) => defaultActive)
+  .map(({ status }) => status);
+
 interface CalendarState {
   mode: CalendarMode;
   selectedDay: string;
-  filters: CalendarFilters;
+  activeStatuses: AppointmentStatus[];
   scheduleIntent: ScheduleIntent;
   isFilterModalOpen: boolean;
   highlightSlotId: number | null;
@@ -34,20 +27,10 @@ interface CalendarState {
 const initialState: CalendarState = {
   mode: "day",
   selectedDay: format(new Date(), "yyyy-MM-dd"),
+  activeStatuses: DEFAULT_ACTIVE_STATUSES,
   scheduleIntent: null,
   isFilterModalOpen: false,
   highlightSlotId: null,
-  filters: {
-    showPending: true,
-    showProposed: true,
-    showConfirmed: true,
-    showArrived: true,
-    showLate: true,
-    showCompleted: true,
-    showNoShow: true,
-    showCancelled: false,
-    showDeclined: false,
-  },
 };
 
 const calendarSlice = createSlice({
@@ -62,13 +45,8 @@ const calendarSlice = createSlice({
       state.selectedDay = action.payload;
     },
 
-    toggleFilter(state, action: PayloadAction<keyof CalendarFilters>) {
-      const key = action.payload;
-      state.filters[key] = !state.filters[key];
-    },
-
-    setFilters(state, action: PayloadAction<CalendarFilters>) {
-      state.filters = action.payload;
+    setActiveStatuses(state, action: PayloadAction<AppointmentStatus[]>) {
+      state.activeStatuses = action.payload;
     },
 
     setScheduleIntent(state, action: PayloadAction<ScheduleIntent>) {
@@ -92,30 +70,14 @@ const calendarSlice = createSlice({
 export const {
   setMode,
   setSelectedDay,
-  toggleFilter,
-  setFilters,
+  setActiveStatuses,
   setScheduleIntent,
   setFilterModalOpen,
   setHighlightSlotId,
   clearHighlightSlotId,
 } = calendarSlice.actions;
 
-export const selectActiveStatuses = createSelector(
-  (state: RootState) => state.calendar.filters,
-  (filters): AppointmentStatus[] => {
-    const map: [boolean, AppointmentStatus][] = [
-      [filters.showPending, "pending"],
-      [filters.showProposed, "proposed"],
-      [filters.showConfirmed, "confirmed"],
-      [filters.showArrived, "arrived"],
-      [filters.showLate, "late"],
-      [filters.showCompleted, "completed"],
-      [filters.showNoShow, "no_show"],
-      [filters.showCancelled, "cancelled"],
-      [filters.showDeclined, "declined"],
-    ];
-    return map.filter(([active]) => active).map(([, status]) => status);
-  },
-);
+export const selectActiveStatuses = (state: RootState) =>
+  state.calendar.activeStatuses;
 
 export default calendarSlice.reducer;

@@ -8,26 +8,27 @@ import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
-import { Routers } from "@/src/constants/routers";
+import getRedirectPath from "@/src/utils/getOnboardingStep";
 import {
   RegisterSchema,
   type RegisterFormValues,
 } from "@/src/validation/schemas/register.schema";
 import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { getApiErrorMessage } from "@/src/utils/apiError";
 
 const Register = () => {
   const auth = useRequiredAuth();
 
   const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
+  const [updateUser] = useUpdateUserMutation();
 
   const methods = useForm({
     resolver: yupResolver(RegisterSchema),
     defaultValues: {
       password: "",
-      email: "",
+      passwordConfirmation: "",
     },
   });
 
@@ -36,27 +37,30 @@ const Register = () => {
       if (!auth) return;
 
       try {
-        await updateCredentials({
+        const updatedUser = await updateCredentials({
           resourceType: "user",
           id: auth.userId,
           data: {
-            email: data.email,
             password: data.password,
-            password_confirmation: data.password,
+            password_confirmation: data.passwordConfirmation,
+            onboarding_step: "personal_information",
           },
         }).unwrap();
 
-        router.push(Routers.onboarding.personalInformation);
-      } catch (error) {
-        toast.error(
-          getApiErrorMessage(
-            error,
-            "Не удалось создать профиль. Попробуйте ещё раз.",
-          ),
-        );
+        router.push(getRedirectPath(updatedUser));
+      } catch {
+        try {
+          const updatedUser = await updateUser({
+            id: auth.userId,
+            data: { onboarding_step: "personal_information" },
+          }).unwrap();
+          router.push(getRedirectPath(updatedUser));
+        } catch {
+          toast.error("Не удалось установить пароль. Попробуйте ещё раз.");
+        }
       }
     },
-    [auth, updateCredentials],
+    [auth, updateCredentials, updateUser],
   );
 
   if (!auth) return null;
@@ -69,7 +73,7 @@ const Register = () => {
         footer={
           <AuthFooter
             primary={{
-              title: "Создать профиль",
+              title: "Создать пароль",
               disabled: isLoading,
               loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
@@ -82,17 +86,18 @@ const Register = () => {
             Безопасность
           </Typography>
           <Typography className="text-body text-neutral-500">
-            Защити базу клиентов паролем и привяжи почту для восстановления
+            Защити базу клиентов паролем
           </Typography>
           <View className="gap-2 mt-9">
             <RhfTextField
-              name="email"
-              label="Электронная почта"
-              placeholder="master@example.com"
-            />
-            <RhfTextField
               name="password"
               label="Пароль"
+              placeholder="••••••••"
+              secureTextEntry
+            />
+            <RhfTextField
+              name="passwordConfirmation"
+              label="Повторите пароль"
               placeholder="••••••••"
               secureTextEntry
             />

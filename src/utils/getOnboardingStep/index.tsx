@@ -2,6 +2,7 @@ import type { User } from "@/src/store/redux/services/api-types";
 import { Routers } from "@/src/constants/routers";
 
 export const ONBOARDING_STEPS = {
+  register: Routers.onboarding.register,
   personal_information: Routers.onboarding.personalInformation,
   service: Routers.onboarding.service,
   schedule: Routers.onboarding.schedule,
@@ -21,17 +22,9 @@ export const STEP_PROGRESS: Partial<Record<OnboardingStepKey, number>> = {
 export const TOTAL_STEPS = 3;
 
 const getRedirectPath = (user: User) => {
-  if (!user.email) {
-    return Routers.onboarding.register;
-  }
-
-  if (!user.first_name) {
-    return Routers.onboarding.personalInformation;
-  }
-
   return (
     ONBOARDING_STEPS[user.onboarding_step as OnboardingStepKey] ??
-    Routers.onboarding.personalInformation
+    Routers.onboarding.register
   );
 };
 

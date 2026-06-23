@@ -8,6 +8,8 @@ export const VerifySchema = Yup.object().shape({
       ? schema.min(4, "Минимум 4 символа").max(16, "Максимум 16 символов")
       : schema.optional(),
   ),
+  agreedToTerms: Yup.boolean().oneOf([true]).required(),
+  agreedToPersonalData: Yup.boolean().optional(),
 });
 
 export type VerifyFormValues = Yup.InferType<typeof VerifySchema>;

@@ -5,15 +5,12 @@ import { Button, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { router } from "expo-router";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import {
   useConfirmAppointmentMutation,
   useArriveAppointmentMutation,
-  useMarkLateAppointmentMutation,
   useMarkNoShowAppointmentMutation,
   useCompleteAppointmentMutation,
-  useRemindAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
 
 interface Props {

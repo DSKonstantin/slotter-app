@@ -30,6 +30,7 @@ import { ServiceListSkeleton } from "@/src/components/app/services/list/listSkel
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 type FlatCategoryItem = {
   _id: string;
@@ -291,7 +292,7 @@ const ServiceList = ({
           <Card
             title={service.name}
             titleProps={{ numberOfLines: 1, ellipsizeMode: "tail" }}
-            subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+            subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
             titleAccessory={
               !service.is_active ? <Tag title="скрыто" size="sm" /> : undefined
             }
@@ -332,7 +333,7 @@ const ServiceList = ({
         <Card
           title={service.name}
           titleProps={{ numberOfLines: 1, ellipsizeMode: "tail" }}
-          subtitle={`${service.duration} мин | ${formatRublesFromCents(service.price_cents)}`}
+          subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
           titleAccessory={
             !service.is_active ? <Tag title="скрыто" size="sm" /> : undefined
           }

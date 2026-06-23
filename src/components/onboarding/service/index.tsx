@@ -49,7 +49,8 @@ const Service = () => {
   );
 
   const [createService, { isLoading }] = useCreateServiceMutation();
-  const [updateUser, { isLoading: isSkipping }] = useUpdateUserMutation();
+  const [updateUser, { isLoading: isUpdatingStep }] = useUpdateUserMutation();
+  const [skipUser, { isLoading: isSkipping }] = useUpdateUserMutation();
 
   const methods = useForm<OnboardingServiceFormValues>({
     resolver: yupResolver(OnboardingServiceSchema),
@@ -73,7 +74,7 @@ const Service = () => {
   const handleSkip = async () => {
     if (!auth) return;
     try {
-      await updateUser({
+      await skipUser({
         id: auth.userId,
         data: { onboarding_step: "schedule" },
       }).unwrap();
@@ -128,8 +129,8 @@ const Service = () => {
           <AuthFooter
             primary={{
               title: "Сохранить",
-              loading: isLoading,
-              disabled: isLoading || isCategoryLoading,
+              loading: isLoading || isUpdatingStep,
+              disabled: isLoading || isUpdatingStep || isCategoryLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
             secondary={{

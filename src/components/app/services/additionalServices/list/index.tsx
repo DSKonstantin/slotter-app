@@ -26,6 +26,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import {formatDuration} from "@/src/utils/date/formatTime";
 
 const AdditionalServicesList = () => {
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();
@@ -187,7 +188,7 @@ const AdditionalServicesList = () => {
                   onLongPress={drag}
                   active={isActive}
                   className={item.is_active ? "" : "opacity-40"}
-                  subtitle={`${item.duration} мин | ${formatRublesFromCents(item.price_cents)}`}
+                  subtitle={`${formatDuration(item.duration)} | ${formatRublesFromCents(item.price_cents)}`}
                   left={
                     <Pressable
                       onLongPress={drag}
