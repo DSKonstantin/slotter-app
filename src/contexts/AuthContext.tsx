@@ -11,7 +11,7 @@ import {
   useLazyGetMeQuery,
   useLogoutSessionMutation,
 } from "@/src/store/redux/services/api/authApi";
-import { useDispatch } from "react-redux";
+import { shallowEqual, useDispatch } from "react-redux";
 import { persistor, useAppSelector } from "@/src/store/redux/store";
 import {
   logout as logoutAction,
@@ -32,8 +32,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useDispatch();
-  const user = useAppSelector((s) => s.auth.user);
-  const token = useAppSelector((s) => s.auth.token);
+  const { isAuthenticated, isOnboardingComplete } = useAppSelector(
+    (s) => ({
+      isAuthenticated: Boolean(s.auth.token && s.auth.user),
+      isOnboardingComplete: s.auth.user?.onboarding_step === "completed",
+    }),
+    shallowEqual,
+  );
   const [getMe] = useLazyGetMeQuery();
   const [logoutSession] = useLogoutSessionMutation();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -69,15 +74,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedToken = await accessTokenStorage.get();
         if (storedToken) {
           dispatch(setToken(storedToken));
-          getMe()
-            .unwrap()
-            .catch(async (e) => {
-              if (isAuthError(e)) {
-                await accessTokenStorage.remove();
-                dispatch(logoutAction());
-                await persistor.purge();
-              }
-            });
+          try {
+            await getMe().unwrap();
+          } catch (e) {
+            if (isAuthError(e)) {
+              await accessTokenStorage.remove();
+              dispatch(logoutAction());
+              await persistor.purge();
+            }
+          }
         } else {
           dispatch(logoutAction());
         }
@@ -93,13 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      isAuthenticated: Boolean(token && user),
-      isOnboardingComplete: user?.onboarding_step === "completed",
+      isAuthenticated,
+      isOnboardingComplete,
       isLoading: isInitialLoading,
       login,
       logout,
     }),
-    [token, user, isInitialLoading, login, logout],
+    [isAuthenticated, isOnboardingComplete, isInitialLoading, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

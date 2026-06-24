@@ -5,7 +5,7 @@ export type UserLink = {
 };
 
 export type CreateUserLinkPayload = {
-  name: string;
+  name?: string;
   link: string;
 };
 

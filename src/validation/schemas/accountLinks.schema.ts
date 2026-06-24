@@ -4,7 +4,7 @@ export const AccountLinksSchema = yup.object({
   links: yup.array().of(
     yup.object({
       id: yup.number().optional(),
-      title: yup.string().required("Введите название"),
+      title: yup.string().optional(),
       url: yup.string().url("Некорректная ссылка").required("Введите ссылку"),
     }),
   ),
