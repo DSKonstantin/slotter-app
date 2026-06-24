@@ -16,7 +16,7 @@ import NotificationStoriesModal, {
 import { MOCK_NOTIFICATION_STORIES } from "./mockStories";
 
 const EMPTY_STORIES: Partial<StoriesData> = {};
-const AUTO_PLAY_INTERVAL = 4000;
+const AUTO_PLAY_INTERVAL = 6000;
 
 type Insight = {
   id: number | string;
