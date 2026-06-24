@@ -2,7 +2,7 @@
   "expo": {
     "name": "Slotter",
     "slug": "slotter",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon/icon.png",
     "scheme": "slotter",

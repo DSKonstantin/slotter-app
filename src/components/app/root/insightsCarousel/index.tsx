@@ -1,5 +1,8 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, PanResponder, View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import Carousel, {
+  type ICarouselInstance,
+} from "react-native-reanimated-carousel";
 
 import { PaginationDots } from "@/src/components/ui";
 
@@ -12,8 +15,8 @@ import NotificationStoriesModal, {
 } from "./NotificationStoriesModal";
 import { MOCK_NOTIFICATION_STORIES } from "./mockStories";
 
-const SWIPE_THRESHOLD = 40;
 const EMPTY_STORIES: Partial<StoriesData> = {};
+const AUTO_PLAY_INTERVAL = 4000;
 
 type Insight = {
   id: number | string;
@@ -67,9 +70,9 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
 const InsightsCarousel = () => {
   const [index, setIndex] = useState(0);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
-  const opacity = useRef(new Animated.Value(1)).current;
-  const safeIndexRef = useRef(0);
-  const insightsLengthRef = useRef(0);
+  const isScrollingRef = useRef(false);
+  const carouselRef = useRef<ICarouselInstance>(null);
+  const { width: screenWidth } = useWindowDimensions();
 
   const insights = useMemo(() => getMockInsights(setSelectedStoryId), []);
 
@@ -82,67 +85,62 @@ const InsightsCarousel = () => {
     setSelectedStoryId(null);
   }, []);
 
-  const animateChange = useCallback(
-    (next: number) => {
-      opacity.setValue(0);
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 80,
-        useNativeDriver: true,
-      }).start();
-      setIndex(next);
-    },
-    [opacity],
+  const handleDotSelect = useCallback((i: number) => {
+    setIndex(i);
+    carouselRef.current?.scrollTo({ index: i, animated: true });
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Insight }) => (
+      <View className="px-screen">
+        <InsightCard
+          category={item.category}
+          iconName={item.iconName}
+          title={item.title}
+          body={item.body}
+          onPress={() => {
+            if (!isScrollingRef.current) item.onPress();
+          }}
+        />
+      </View>
+    ),
+    [],
   );
 
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 10,
-        onPanResponderRelease: (_, gesture) => {
-          if (insightsLengthRef.current < 2) return;
-          if (gesture.dx > SWIPE_THRESHOLD) {
-            animateChange(
-              safeIndexRef.current === 0
-                ? insightsLengthRef.current - 1
-                : safeIndexRef.current - 1,
-            );
-          } else if (gesture.dx < -SWIPE_THRESHOLD) {
-            animateChange(
-              (safeIndexRef.current + 1) % insightsLengthRef.current,
-            );
-          }
-        },
-      }),
-    [animateChange],
-  );
-
-  const safeIndex = Math.min(index, Math.max(0, insights.length - 1));
-  const current = safeIndex >= 0 ? insights[safeIndex] : null;
-  safeIndexRef.current = safeIndex;
-  insightsLengthRef.current = insights.length;
-
-  if (!current) return null;
+  if (!insights.length) return null;
 
   return (
     <>
-      <View className="gap-2.5" {...panResponder.panHandlers}>
-        <Animated.View style={{ opacity }}>
-          <InsightCard
-            category={current.category}
-            iconName={current.iconName}
-            title={current.title}
-            body={current.body}
-            onPress={current.onPress}
-          />
-        </Animated.View>
+      <View className="gap-2.5">
+        <Carousel
+          ref={carouselRef}
+          data={insights}
+          renderItem={renderItem}
+          width={screenWidth}
+          height={132}
+          loop
+          autoPlay
+          autoPlayInterval={AUTO_PLAY_INTERVAL}
+          onScrollStart={() => {
+            isScrollingRef.current = true;
+          }}
+          onScrollEnd={() => {
+            isScrollingRef.current = false;
+          }}
+          onSnapToItem={(rawIndex) =>
+            setIndex(
+              ((rawIndex % insights.length) + insights.length) %
+                insights.length,
+            )
+          }
+        />
 
         {insights.length > 1 && (
           <View className="items-center">
             <PaginationDots
               count={insights.length}
-              activeIndex={safeIndex}
-              onSelect={animateChange}
+              activeIndex={index}
+              onSelect={handleDotSelect}
             />
           </View>
         )}

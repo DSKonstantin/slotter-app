@@ -22,6 +22,7 @@ const TrainingScreen = ({
         source={source}
         style={{ flex: 1, width: "100%" }}
         contentFit="cover"
+        contentPosition="top"
       />
     </View>
   );

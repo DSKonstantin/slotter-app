@@ -1,7 +1,7 @@
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
@@ -30,13 +30,19 @@ import "@/src/utils/date/date";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 import { useAppVersionBootstrap } from "@/src/hooks/useAppVersionBootstrap";
 import AppUpdateModal from "@/src/components/shared/modals/AppUpdateModal";
+import NoInternetScreen from "@/src/components/shared/NoInternetScreen";
 import * as Sentry from "@sentry/react-native";
 import "@/src/services/sentry";
 
 SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
-  const appVersionReady = useAppVersionBootstrap();
+  const {
+    ready: appVersionReady,
+    isLoading: isVersionLoading,
+    isError: appVersionError,
+    retry,
+  } = useAppVersionBootstrap();
   const { isAuthenticated, isOnboardingComplete, isLoading } = useAuth();
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
@@ -49,12 +55,26 @@ function InitialLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded && !isLoading && appVersionReady) {
+    if (fontsLoaded && !isLoading && (appVersionReady || appVersionError)) {
       SplashScreen.hideAsync();
     }
-  }, [isLoading, fontsLoaded, appVersionReady]);
+  }, [isLoading, fontsLoaded, appVersionReady, appVersionError]);
 
-  if (!fontsLoaded || isLoading || !appVersionReady) {
+  if (!fontsLoaded || isLoading) {
+    return null;
+  }
+
+  if (appVersionError) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <NoInternetScreen onRetry={retry} isRetrying={isVersionLoading} />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    );
+  }
+
+  if (!appVersionReady) {
     return null;
   }
 

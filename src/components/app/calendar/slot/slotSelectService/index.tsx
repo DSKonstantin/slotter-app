@@ -1,6 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
 
-import { ActivityIndicator, Alert, SectionList, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  SectionList,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -31,6 +37,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import { formatDuration } from "@/src/utils/date/formatTime";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 const VIEW_OPTIONS = [
   { label: "Индивидуальная", value: "individual" },
@@ -151,6 +158,15 @@ const SlotSelectService: React.FC<Props> = ({
     isFetchingNextPage: isAdditionalFetchingNextPage,
   } = useGetAdditionalServicesInfiniteQuery(
     auth && showAdditional ? { userId: auth.userId, params: {} } : skipToken,
+  );
+
+  const { refreshing, onRefresh } = useRefresh(
+    useCallback(async () => {
+      await Promise.all([
+        showServices ? refetchCategories() : Promise.resolve(),
+        showAdditional ? refetchAdditional() : Promise.resolve(),
+      ]);
+    }, [showServices, showAdditional, refetchCategories, refetchAdditional]),
   );
 
   const additionalServices = useMemo(
@@ -397,6 +413,12 @@ const SlotSelectService: React.FC<Props> = ({
                   sections={sections}
                   keyExtractor={(item) => String(item.id)}
                   stickySectionHeadersEnabled={false}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                    />
+                  }
                   renderSectionHeader={() => null}
                   renderSectionFooter={({ section }) => {
                     const categorySections = sections.filter(

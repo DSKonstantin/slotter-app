@@ -21,6 +21,7 @@ export interface User {
   first_name: string | null;
   last_name: string | null;
   about_me: string | null;
+  appointment_conditions: string | null;
   address: string | null;
   nickname: string | null;
   profession: string | null;

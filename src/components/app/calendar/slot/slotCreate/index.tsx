@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
@@ -144,6 +144,20 @@ const SlotCreate: React.FC = () => {
   const onSubmit = useCallback(
     async (values: SlotCreateFormValues) => {
       if (!auth) return;
+
+      if (!values.customerId) {
+        await new Promise<void>((resolve, reject) =>
+          Alert.alert(
+            "Клиент не выбран",
+            "Вы не выбрали клиента. Создать запись без клиента?",
+            [
+              { text: "Отмена", style: "cancel", onPress: reject },
+              { text: "Сохранить", onPress: () => resolve() },
+            ],
+          ),
+        );
+      }
+
       try {
         const result = await createAppointment({
           userId: auth.userId,

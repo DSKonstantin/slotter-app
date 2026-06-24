@@ -48,6 +48,7 @@ import { Routers } from "@/src/constants/routers";
 import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
 import RescheduleModal from "@/src/components/app/calendar/slot/rescheduleModal";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import CustomerPickerModal from "@/src/components/shared/modals/CustomerPickerModal";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
 import {
   formatDayMonth,
@@ -88,6 +89,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
+  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const { scheduleAction, onModalHide } = useModalAction(() =>
     setActionsVisible(false),
   );
@@ -227,6 +229,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 scheduleAction(() => setRescheduleVisible(true))
               }
               onCancel={() => scheduleAction(() => setCancelVisible(true))}
+              onChangeCustomer={
+                slot.customer
+                  ? () => scheduleAction(() => setCustomerPickerVisible(true))
+                  : undefined
+              }
             />
           ) : undefined
         }
@@ -291,37 +298,53 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 }
               >
                 <View className="px-screen gap-5">
-                  <Card
-                    title={slot.customer?.name ?? "—"}
-                    titleProps={{
-                      numberOfLines: 4,
-                    }}
-                    subtitle={slot.customer?.phone ?? undefined}
-                    onPress={() =>
-                      slot.customer &&
-                      router.push(
-                        Routers.app.calendar.clientDetail(
-                          slot.customer.id,
-                          "customer",
-                        ),
-                      )
-                    }
-                    left={
-                      <Avatar
-                        name={slot.customer?.name ?? undefined}
-                        uri={slot.customer?.avatar_url ?? undefined}
-                        blurhash={slot.customer?.avatar_blurhash}
-                        size="sm"
-                      />
-                    }
-                    right={
+                  {slot.customer ? (
+                    <Card
+                      title={slot.customer.name}
+                      titleProps={{ numberOfLines: 4 }}
+                      subtitle={slot.customer.phone ?? undefined}
+                      onPress={() =>
+                        router.push(
+                          Routers.app.calendar.clientDetail(
+                            slot.customer!.id,
+                            "customer",
+                          ),
+                        )
+                      }
+                      left={
+                        <Avatar
+                          name={slot.customer.name}
+                          uri={slot.customer.avatar_url ?? undefined}
+                          blurhash={slot.customer.avatar_blurhash}
+                          size="sm"
+                        />
+                      }
+                      right={
+                        <StSvg
+                          name="Expand_right_light"
+                          size={24}
+                          color={colors.neutral[900]}
+                        />
+                      }
+                    />
+                  ) : (
+                    <Pressable
+                      onPress={() => setCustomerPickerVisible(true)}
+                      className="flex-row items-center justify-center gap-2 rounded-base border border-dashed border-neutral-200 p-4 active:opacity-70 min-h-[60px]"
+                    >
+                      <Typography
+                        weight="medium"
+                        className="text-body text-primary-blue-500"
+                      >
+                        Добавить клиента
+                      </Typography>
                       <StSvg
-                        name="Expand_right_light"
+                        name="Add_round_fill"
                         size={24}
-                        color={colors.neutral[900]}
+                        color={colors.primary.blue[500]}
                       />
-                    }
-                  />
+                    </Pressable>
+                  )}
 
                   <Card
                     title="Написать"
@@ -653,6 +676,15 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <ComingSoonModal
                 visible={comingSoonVisible}
                 onClose={() => setComingSoonVisible(false)}
+              />
+              <CustomerPickerModal
+                visible={customerPickerVisible}
+                onClose={() => setCustomerPickerVisible(false)}
+                onSelect={(customerId) =>
+                  void handleUpdate({ customer_id: customerId } as never, {
+                    onSuccess: () => setCustomerPickerVisible(false),
+                  })
+                }
               />
               <RescheduleModal
                 visible={rescheduleVisible}
