@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { NestableScrollContainer } from "react-native-draggable-flatlist";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -16,6 +16,7 @@ import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import AdditionalList from "@/src/components/app/services/list/additionalList";
 import { AdditionalListItem } from "@/src/components/app/services/list/additionalList/additionalServiceItem";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -64,6 +65,7 @@ const AppServices = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
+  const isEditMode = useAppSelector((s) => s.services.isEditMode);
 
   const {
     data: categoriesData,
@@ -139,6 +141,15 @@ const AppServices = () => {
     if (isAdditionalFetchingNextPage) return;
     refetchAdditionalServices({ refetchCachedPages: false });
   }, [isAdditionalFetchingNextPage, refetchAdditionalServices]);
+
+  const refetchAll = useCallback(async () => {
+    await Promise.all([
+      refetchServiceCategories({ refetchCachedPages: false }),
+      refetchAdditionalServices({ refetchCachedPages: false }),
+    ]);
+  }, [refetchServiceCategories, refetchAdditionalServices]);
+
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   const handleAdditionalLoadMore = useCallback(() => {
     if (!hasAdditionalNextPage || isAdditionalFetchingNextPage) return;
@@ -277,6 +288,14 @@ const AppServices = () => {
                   paddingHorizontal: SCREEN_PADDING,
                   paddingBottom: bottomInset + 8,
                 }}
+                refreshControl={
+                  !isEditMode ? (
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                    />
+                  ) : undefined
+                }
               >
                 <ServiceList
                   categories={categories}

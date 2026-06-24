@@ -1,3 +1,4 @@
+import { toast } from "@backpackapp-io/react-native-toast";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { api } from "../api";
 import type {
@@ -262,7 +263,13 @@ const servicesApi = api.injectEndpoints({
           }),
         ];
 
-        await applyWithRollback(patches, queryFulfilled);
+        try {
+          await queryFulfilled;
+          toast.success("Изменения сохранены");
+        } catch {
+          patches.forEach((patch) => patch.undo());
+          toast.error("Не удалось сохранить изменения");
+        }
       },
     }),
   }),

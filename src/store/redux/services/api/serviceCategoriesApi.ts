@@ -1,3 +1,4 @@
+import { toast } from "@backpackapp-io/react-native-toast";
 import { api } from "../api";
 import type {
   CreateServiceCategoryResponse,
@@ -205,7 +206,13 @@ const serviceCategoriesApi = api.injectEndpoints({
           },
         );
 
-        await applyWithRollback(patches, queryFulfilled);
+        try {
+          await queryFulfilled;
+          toast.success("Изменения сохранены");
+        } catch {
+          patches.forEach((patch) => patch.undo());
+          toast.error("Не удалось сохранить изменения");
+        }
       },
     }),
   }),
