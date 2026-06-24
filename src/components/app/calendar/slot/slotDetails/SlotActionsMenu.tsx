@@ -61,19 +61,22 @@ const SlotActionsMenu: React.FC<Props> = ({
             }
           />
           {onChangeCustomer && (
-            <Button
-              title="Изменить клиента"
-              variant="clear"
-              buttonClassName="justify-start"
-              onPress={onChangeCustomer}
-              rightIcon={
-                <StSvg
-                  name="User_fill"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              }
-            />
+            <>
+              <Divider />
+              <Button
+                title="Изменить клиента"
+                variant="clear"
+                buttonClassName="justify-start"
+                onPress={onChangeCustomer}
+                rightIcon={
+                  <StSvg
+                    name="User_fill"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                }
+              />
+            </>
           )}
           <Divider />
         </>

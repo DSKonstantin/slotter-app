@@ -43,6 +43,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
     isLoading: isServiceLoading,
     isFetching: isServiceFetching,
     isError: isServiceError,
+    refetch,
   } = useGetServiceQuery(
     hasValidIds
       ? {
@@ -184,9 +185,11 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
           return (
             <ServiceFormBody
               insets={insets}
-              loading={isLoading || isDeleting}
+              loading={isLoading}
+              disabled={isDeleting}
               onSubmit={onSubmit}
               onDelete={handleDelete}
+              refetch={refetch}
               isEdit
             />
           );

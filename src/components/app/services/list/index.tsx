@@ -169,7 +169,9 @@ const AppServices = () => {
         title="Услуги"
         showBack={false}
         rightButton={
-          categories.length > 1 ? <ServicesToolbarActions /> : undefined
+          categories.length > 0 || additionalServices.length > 0 ? (
+            <ServicesToolbarActions />
+          ) : undefined
         }
       >
         {({ topInset, bottomInset }) => {
