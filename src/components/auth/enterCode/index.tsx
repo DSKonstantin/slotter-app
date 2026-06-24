@@ -210,6 +210,9 @@ const EnterCode = () => {
           onClose={() => setCallSession(null)}
           call_phone={callSession.call_phone}
           expiresIn={callSession.expires_in}
+          resendAfter={callSession.resend_after}
+          onResend={handleSwitchToCallback}
+          isResending={isSendingCode}
         />
       )}
     </AuthScreenLayout>

@@ -192,7 +192,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   useFocusEffect(
     useCallback(() => {
       refetchAppointments();
-    }, [refetchAppointments, selectedDay]),
+    }, [refetchAppointments]),
   );
 
   useEffect(() => {
