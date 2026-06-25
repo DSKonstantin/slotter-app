@@ -222,7 +222,7 @@ const Verify = () => {
                 className="text-caption text-black underline"
                 onPress={() =>
                   WebBrowser.openBrowserAsync(
-                    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/user-agreement`,
                   )
                 }
               >
@@ -270,7 +270,7 @@ const Verify = () => {
                   className="text-caption text-black underline"
                   onPress={() =>
                     WebBrowser.openBrowserAsync(
-                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
                     )
                   }
                 >
@@ -287,7 +287,7 @@ const Verify = () => {
                   className="text-caption text-black underline"
                   onPress={() =>
                     WebBrowser.openBrowserAsync(
-                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
                     )
                   }
                 >
