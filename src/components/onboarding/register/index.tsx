@@ -18,6 +18,7 @@ import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 
+
 const Register = () => {
   const auth = useRequiredAuth();
 
@@ -37,7 +38,7 @@ const Register = () => {
       if (!auth) return;
 
       try {
-        const updatedUser = await updateCredentials({
+        const { user } = await updateCredentials({
           resourceType: "user",
           id: auth.userId,
           data: {
@@ -47,14 +48,14 @@ const Register = () => {
           },
         }).unwrap();
 
-        router.push(getRedirectPath(updatedUser));
+        router.push(getRedirectPath(user!));
       } catch {
         try {
-          const updatedUser = await updateUser({
+          const { user } = await updateUser({
             id: auth.userId,
             data: { onboarding_step: "personal_information" },
           }).unwrap();
-          router.push(getRedirectPath(updatedUser));
+          router.push(getRedirectPath(user));
         } catch {
           toast.error("Не удалось установить пароль. Попробуйте ещё раз.");
         }

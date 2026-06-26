@@ -104,7 +104,7 @@ const Home = () => {
         <View className="px-screen flex-1 gap-3">
           <HomeOverview />
         </View>
-        <View className="px-screen gap-3 mt-5">
+        <View className="gap-3 mt-5">
           <NotificationBanners />
           <InsightsCarousel />
         </View>

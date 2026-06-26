@@ -125,8 +125,8 @@ const NonWorkingDayPanel = ({
     <View className="gap-4 flex-1 justify-between">
       <View className="gap-2">
         <Typography className="text-body text-neutral-500">
-          {dateLabel} не добавлен в расписание. Укажите рабочие часы, чтобы
-          выбрать эту дату.
+          Для {dateLabel} ещё не настроено расписание. Укажите рабочие часы для
+          создания и приёма записей.
         </Typography>
         <FormProvider {...methods}>
           <WorkingHoursFields

@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
 import { Button, Divider, Item, StSvg } from "@/src/components/ui";
@@ -16,6 +16,7 @@ import ServiceCategorySelect from "@/src/components/app/services/service/service
 import CreateAdditionalService from "@/src/components/app/services/service/createAdditionalService";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
+import { useRefresh } from "@/src/hooks/useRefresh";
 
 export const defaultServicePhotos: ServicePhotosValue = {
   ...createDefaultServicePhotos(),
@@ -24,7 +25,9 @@ export const defaultServicePhotos: ServicePhotosValue = {
 type ServiceFormBodyProps = {
   onSubmit: () => void;
   onDelete?: () => void;
+  refetch?: () => Promise<unknown> | unknown;
   loading: boolean;
+  disabled?: boolean;
   insets: { topInset: number; bottomInset: number };
   isEdit?: boolean;
 };
@@ -33,10 +36,17 @@ const ServiceFormBody = ({
   isEdit,
   onSubmit,
   onDelete,
+  refetch,
   loading,
+  disabled = false,
   insets,
 }: ServiceFormBodyProps) => {
-  const { control, handleSubmit } = useFormContext();
+  const {
+    control,
+    handleSubmit,
+    formState: { isDirty },
+  } = useFormContext();
+  const { refreshing, onRefresh } = useRefresh(refetch ?? (() => {}));
   const scrollRef = useRef<ScrollView>(null);
 
   const scrollToTop = () =>
@@ -65,6 +75,11 @@ const ServiceFormBody = ({
         paddingTop: insets.topInset,
         paddingBottom: insets.bottomInset + 8,
       }}
+      refreshControl={
+        refetch && !isDirty ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ) : undefined
+      }
     >
       <ServiceCategorySelect />
 
@@ -114,7 +129,7 @@ const ServiceFormBody = ({
         <Button
           title="Сохранить услугу"
           buttonClassName="mt-4"
-          disabled={loading}
+          disabled={loading || disabled}
           loading={loading}
           onPress={handleSubmit(onSubmit, scrollToTop)}
           rightIcon={
@@ -125,7 +140,7 @@ const ServiceFormBody = ({
           title={isActive ? "Скрыть услугу" : "Показать услугу"}
           variant="clear"
           buttonClassName="mt-4"
-          disabled={loading}
+          disabled={loading || disabled}
           onPress={() => setIsActive(!isActive)}
           rightIcon={
             <StSvg
@@ -142,7 +157,7 @@ const ServiceFormBody = ({
             variant="clear"
             buttonClassName="mt-16"
             textClassName="text-accent-red-500"
-            disabled={loading}
+            disabled={loading || disabled}
             onPress={onDelete ? onDelete : () => {}}
             rightIcon={
               <StSvg name="Trash" size={24} color={colors.accent.red[500]} />

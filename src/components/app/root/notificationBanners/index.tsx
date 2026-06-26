@@ -130,7 +130,7 @@ const NotificationBanners = () => {
     return null;
 
   return (
-    <View className="gap-2">
+    <View className="gap-2 px-screen">
       {ispe && subscriptionEnded && !subBannerClosed && (
         <BannerCard
           variant="error"

@@ -70,8 +70,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
     label: "Завершено",
     filterLabel: "Завершённые",
     defaultActive: true,
-    variant: "completed",
-    statusLineClass: "bg-primary-green-100",
+    variant: "success",
+    statusLineClass: "bg-primary-green-500",
   },
   no_show: {
     status: "no_show",

@@ -68,7 +68,6 @@ export const CalendarDatePicker = ({
     isError,
     refetch,
     onMonthChange,
-    minDate,
     getDayStatus,
     getWorkingDayId,
   } = useWorkingDaysCalendar(userId);
@@ -238,7 +237,6 @@ export const CalendarDatePicker = ({
               ) : (
                 <Calendar
                   current={visibleMonth ?? value ?? today}
-                  minDate={minDate}
                   onDayPress={(day) => handleDayPress(day.dateString)}
                   onMonthChange={(month) => {
                     setVisibleMonth(month.dateString);

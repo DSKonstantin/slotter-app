@@ -8,7 +8,7 @@ type Props = {
   placeholder?: string;
 };
 
-const ZERO_DURATION = new Date(0, 0, 0, 0, 0, 0, 0);
+const ZERO_DURATION = new Date(2020, 0, 0);
 
 const parseDuration = (val: unknown): Date | null => {
   const mins = Number(val);

@@ -13,6 +13,7 @@ interface Props {
   onCloseComplete: () => void;
   onReschedule: () => void;
   onCancel: () => void;
+  onChangeCustomer?: () => void;
 }
 
 const SlotActionsMenu: React.FC<Props> = ({
@@ -23,6 +24,7 @@ const SlotActionsMenu: React.FC<Props> = ({
   onCloseComplete,
   onReschedule,
   onCancel,
+  onChangeCustomer,
 }) => (
   <Popover
     isVisible={visible}
@@ -58,6 +60,24 @@ const SlotActionsMenu: React.FC<Props> = ({
               />
             }
           />
+          {onChangeCustomer && (
+            <>
+              <Divider />
+              <Button
+                title="Изменить клиента"
+                variant="clear"
+                buttonClassName="justify-start"
+                onPress={onChangeCustomer}
+                rightIcon={
+                  <StSvg
+                    name="User_fill"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                }
+              />
+            </>
+          )}
           <Divider />
         </>
       )}

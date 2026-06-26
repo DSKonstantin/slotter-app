@@ -8,7 +8,6 @@ export const Routers = {
   auth: {
     root: "/(auth)",
     login: "/(auth)/login",
-    restoreLogin: "/(auth)/restore-login",
     verify: "/(auth)/verify",
     enterCode: "/(auth)/enter-code",
   },

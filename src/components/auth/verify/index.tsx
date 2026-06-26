@@ -222,7 +222,7 @@ const Verify = () => {
                 className="text-caption text-black underline"
                 onPress={() =>
                   WebBrowser.openBrowserAsync(
-                    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/user-agreement`,
                   )
                 }
               >
@@ -238,6 +238,7 @@ const Verify = () => {
                   hideErrorText
                   autoCapitalize="characters"
                   maxLength={16}
+                  success={codeState.status === "valid"}
                 />
                 <View className="mt-2">
                   <Button
@@ -250,8 +251,8 @@ const Verify = () => {
                   />
                 </View>
                 {codeState.status === "valid" && (
-                  <Typography className="text-caption text-accent-green-500 mt-2">
-                    Вы получите 30 дней Pro бесплатно
+                  <Typography className="text-caption text-primary-green-700 mt-2">
+                    Промокод действителен
                   </Typography>
                 )}
                 {codeState.status === "invalid" && (
@@ -269,7 +270,7 @@ const Verify = () => {
                   className="text-caption text-black underline"
                   onPress={() =>
                     WebBrowser.openBrowserAsync(
-                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
                     )
                   }
                 >
@@ -286,7 +287,7 @@ const Verify = () => {
                   className="text-caption text-black underline"
                   onPress={() =>
                     WebBrowser.openBrowserAsync(
-                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/terms`,
+                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
                     )
                   }
                 >

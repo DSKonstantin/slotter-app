@@ -3,6 +3,7 @@ import { FlatList, Image, Modal, Pressable, View } from "react-native";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Toasts } from "@backpackapp-io/react-native-toast";
 import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { CropView } from "../cropView";
@@ -13,7 +14,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 type Props = {
   photos: PendingPhoto[];
   isUploading: boolean;
-  errorMessage: string | null;
   onClose: () => void;
   onUpload: (photos: PendingPhoto[]) => void;
 };
@@ -21,7 +21,6 @@ type Props = {
 export function PhotoUploadPreview({
   photos: initialPhotos,
   isUploading,
-  errorMessage,
   onClose,
   onUpload,
 }: Props) {
@@ -61,6 +60,7 @@ export function PhotoUploadPreview({
   return (
     <Modal animationType="slide" statusBarTranslucent>
       <GestureHandlerRootView className="flex-1">
+        <Toasts overrideDarkMode={true} />
         {cropIndex !== null ? (
           <CropView
             originalUri={photos[cropIndex].uri}
@@ -157,14 +157,6 @@ export function PhotoUploadPreview({
               className="absolute left-4 right-4"
               style={{ bottom: insets.bottom + 8 }}
             >
-              {errorMessage && (
-                <Typography
-                  className="text-caption text-center mb-2"
-                  style={{ color: colors.accent.red[500] }}
-                >
-                  {errorMessage}
-                </Typography>
-              )}
               <Button
                 title={`Загрузить (${photos.length})`}
                 loading={isUploading}

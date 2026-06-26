@@ -8,7 +8,7 @@ export const usersApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
     updateUser: builder.mutation<
-      User,
+      { user: User },
       { id: number; data: Partial<UpdateUserPayload> | FormData }
     >({
       query: ({ id, data }) => ({

@@ -174,8 +174,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     [segments, currentMinutes],
   );
 
-  const isNowInRange =
-    currentMinutes >= effectiveStart && currentMinutes <= timelineEnd;
+  const isNowInRange = currentMinutes >= effectiveStart;
 
   const handleSlotPress = useCallback((id: number) => {
     router.push(Routers.app.calendar.slot(id));
@@ -340,6 +339,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       </View>
 
       <FreeSlotStartModal
+        key={freeSlotRange?.start}
         visible={!!freeSlotRange}
         range={freeSlotRange}
         onClose={handleCloseFreeSlotModal}

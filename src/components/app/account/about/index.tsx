@@ -33,6 +33,7 @@ const AboutSpecialist = () => {
     defaultValues: {
       nickname: user?.nickname ?? "",
       aboutMe: user?.about_me ?? "",
+      appointmentConditions: user?.appointment_conditions ?? "",
       tags: [],
       address: user?.address ?? "",
       hideAddress: false,
@@ -53,6 +54,7 @@ const AboutSpecialist = () => {
           data: {
             nickname: data.nickname,
             about_me: data.aboutMe,
+            appointment_conditions: data.appointmentConditions,
             address: data.address,
             is_home_work: data.atHome,
             is_online_work: data.online,
@@ -89,6 +91,16 @@ const AboutSpecialist = () => {
                   label="О себе"
                   placeholder="Расскажите о себе и своём опыте"
                   multiline
+                  hideErrorText
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+                <RhfTextField
+                  name="appointmentConditions"
+                  label="Условия записи"
+                  placeholder="Опишите условия записи"
+                  multiline
+                  hideErrorText
                   numberOfLines={4}
                   textAlignVertical="top"
                 />

@@ -110,15 +110,15 @@ const Booking = () => {
         {({ topInset }) => (
           <View style={{ paddingTop: topInset }} className="px-screen">
             <View className="overflow-hidden gap-2">
-              <Item
-                title="Авто-подтверждение"
-                right={
-                  <RHFSwitch
-                    name="autoConfirm"
-                    onChange={() => methods.handleSubmit(onSubmit)()}
-                  />
-                }
-              />
+              {/*<Item*/}
+              {/*  title="Авто-подтверждение"*/}
+              {/*  right={*/}
+              {/*    <RHFSwitch*/}
+              {/*      name="autoConfirm"*/}
+              {/*      onChange={() => methods.handleSubmit(onSubmit)()}*/}
+              {/*    />*/}
+              {/*  }*/}
+              {/*/>*/}
               <BookingStepField
                 onSelect={() => methods.handleSubmit(onSubmit)()}
               />

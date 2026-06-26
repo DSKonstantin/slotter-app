@@ -134,7 +134,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   const handleContactSelect = useCallback(
     ({ name, phone }: PickedContact) => {
       setValue("name", name, { shouldValidate: true });
-      setValue("phone", phone, { shouldValidate: true });
+      setValue("phone", maskPhone(phone), { shouldValidate: true });
     },
     [setValue],
   );

@@ -63,7 +63,12 @@ const StatusModal: React.FC<Props> = ({
                 </View>
               }
               onPress={() => setSelectedStatus(config.status)}
-              right={<Radio value={selectedStatus === config.status} />}
+              right={
+                <Radio
+                  value={selectedStatus === config.status}
+                  onChange={() => setSelectedStatus(config.status)}
+                />
+              }
             />
           );
         })}

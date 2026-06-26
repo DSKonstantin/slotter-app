@@ -168,7 +168,6 @@ const Gallery = () => {
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
     null,
   );
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
 
@@ -261,9 +260,8 @@ const Gallery = () => {
         },
       }).unwrap();
       setPendingPhotos(null);
-      setUploadError(null);
     } catch (error) {
-      setUploadError(getApiErrorMessage(error, "Не удалось загрузить фото"));
+      toast.error(getApiErrorMessage(error, "Не удалось загрузить фото"));
     }
   };
 
@@ -418,7 +416,8 @@ const Gallery = () => {
                     flexGrow: 1,
                     paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingHorizontal: HORIZONTAL_PADDING,
-                    paddingBottom: bottomInset + (isEditMode ? 80 : 16),
+                    paddingBottom:
+                      bottomInset + (isEditMode && photos.length > 0 ? 80 : 16),
                   }}
                   renderItem={renderItem}
                   ListEmptyComponent={
@@ -534,11 +533,7 @@ const Gallery = () => {
         <PhotoUploadPreview
           photos={pendingPhotos}
           isUploading={isUploading}
-          errorMessage={uploadError}
-          onClose={() => {
-            setPendingPhotos(null);
-            setUploadError(null);
-          }}
+          onClose={() => setPendingPhotos(null)}
           onUpload={handleUploadAll}
         />
       )}

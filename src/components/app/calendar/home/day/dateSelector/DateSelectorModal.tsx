@@ -31,7 +31,7 @@ const DateSelectorModal = ({
         </View>
 
         <Button
-          title="Редактирования графика"
+          title="Редактировать график"
           variant="secondary"
           textVariant="accent"
           rightIcon={
