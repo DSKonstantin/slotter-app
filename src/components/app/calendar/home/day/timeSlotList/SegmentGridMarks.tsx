@@ -59,7 +59,7 @@ const SegmentGridMarks = memo(function SegmentGridMarks({
           key={`h-${t}`}
           pointerEvents="none"
           className="absolute left-[50px] right-0 bg-neutral-200"
-          style={{ top: markTopFreeSlot(t), height: 1 }}
+          style={{ top: markTop(t), height: 1 }}
         />
       ))}
       {halfHourMarks.map((t) => (

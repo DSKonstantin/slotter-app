@@ -180,7 +180,9 @@ const AppServices = () => {
         title="Услуги"
         showBack={false}
         rightButton={
-          categories.length > 0 || additionalServices.length > 0 ? (
+          !isCategoriesLoading &&
+          !isAdditionalLoading &&
+          (categories.length > 0 || additionalServices.length > 0) ? (
             <ServicesToolbarActions />
           ) : undefined
         }

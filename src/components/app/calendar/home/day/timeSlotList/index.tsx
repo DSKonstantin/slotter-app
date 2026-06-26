@@ -339,6 +339,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       </View>
 
       <FreeSlotStartModal
+        key={freeSlotRange?.start}
         visible={!!freeSlotRange}
         range={freeSlotRange}
         onClose={handleCloseFreeSlotModal}

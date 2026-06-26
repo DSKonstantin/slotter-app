@@ -51,7 +51,8 @@ import {
   useCustomerAcceptAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { getApiErrorMessage } from "@/src/utils/apiError";
+import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
+import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import type { Service } from "@/src/store/redux/services/api-types";
 
 type Props = { roomId: string };
@@ -69,6 +70,7 @@ export default function ChatRoom({ roomId }: Props) {
   const [roomMenuVisible, setRoomMenuVisible] = useState(false);
   const [attachVisible, setAttachVisible] = useState(false);
   const [isProposing, setIsProposing] = useState(false);
+  const [slotLimitVisible, setSlotLimitVisible] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatIMessage | null>(null);
   const [inputBarHeight, setInputBarHeight] = useState(0);
   const loadingMoreRef = useRef(false);
@@ -390,9 +392,13 @@ export default function ChatRoom({ roomId }: Props) {
 
         setAttachVisible(false);
       } catch (error) {
-        toast.error(
-          getApiErrorMessage(error, "Не удалось отправить предложение"),
-        );
+        if (isQuotaExceeded(error)) {
+          setSlotLimitVisible(true);
+        } else {
+          toast.error(
+            getApiErrorMessage(error, "Не удалось отправить предложение"),
+          );
+        }
       } finally {
         setIsProposing(false);
       }
@@ -692,6 +698,11 @@ export default function ChatRoom({ roomId }: Props) {
         isOwnMessage={menuMessage?.user?._id === currentGiftedId}
         onReply={handleReply}
         onCopy={handleCopy}
+      />
+
+      <SlotLimitModal
+        visible={slotLimitVisible}
+        onClose={() => setSlotLimitVisible(false)}
       />
     </>
   );

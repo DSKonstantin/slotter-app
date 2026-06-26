@@ -7,9 +7,8 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
-import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
-import { formatTime } from "@/src/utils/date/formatTime";
+import { RhfWorkingDayTimePickerField } from "@/src/components/hookForm/rhf-working-day-time-picker-field";
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -39,15 +38,17 @@ import {
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import CustomerSelectField from "@/src/components/shared/fields/customerSelectField";
 import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
-import { getApiErrorMessage } from "@/src/utils/apiError";
+import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
+import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { PAYMENT_OPTIONS } from "@/src/constants/payment";
 
 const SlotCreate: React.FC = () => {
   const auth = useRequiredAuth();
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
+  const [slotLimitVisible, setSlotLimitVisible] = useState(false);
 
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.slotDraft);
@@ -183,7 +184,11 @@ const SlotCreate: React.FC = () => {
         router.dismissAll();
         router.replace(Routers.app.calendar.root(values.date));
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
+        if (isQuotaExceeded(error)) {
+          setSlotLimitVisible(true);
+        } else {
+          toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
+        }
       }
     },
     [auth, createAppointment, draft.additionalServices, dispatch, methods],
@@ -356,25 +361,11 @@ const SlotCreate: React.FC = () => {
                       />
                     </View>
                     <View className="flex-1">
-                      <RhfDatePicker
+                      <RhfWorkingDayTimePickerField
                         name="time"
+                        dateName="date"
+                        userId={auth!.userId}
                         label="Время"
-                        placeholder="чч:мм"
-                        formatValue={(date: Date) => formatTime(date)}
-                        parseValue={(value) => {
-                          if (!value || typeof value !== "string") return null;
-                          const [hours, minutes] = value.split(":").map(Number);
-                          const d = new Date();
-                          d.setHours(hours, minutes, 0, 0);
-                          return d;
-                        }}
-                        endAdornment={
-                          <StSvg
-                            name="Time_light"
-                            size={24}
-                            color={colors.neutral[500]}
-                          />
-                        }
                       />
                     </View>
                   </View>
@@ -455,6 +446,11 @@ const SlotCreate: React.FC = () => {
           <ComingSoonModal
             visible={comingSoonVisible}
             onClose={() => setComingSoonVisible(false)}
+          />
+
+          <SlotLimitModal
+            visible={slotLimitVisible}
+            onClose={() => setSlotLimitVisible(false)}
           />
         </>
       )}

@@ -48,6 +48,11 @@ const isApiError = (e: unknown): e is ApiError =>
 
 const isValidMessage = (msg: string) => !msg.startsWith("Translation missing");
 
+export const isQuotaExceeded = (e: unknown): boolean => {
+  if (!isApiError(e)) return false;
+  return (e.data as { error?: unknown }).error === "QUOTA_EXCEEDED";
+};
+
 export const getApiErrorCode = (e: unknown): string | null => {
   if (!isApiError(e)) return null;
   const code = (e.data as { code?: unknown }).code;

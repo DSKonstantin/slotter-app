@@ -34,7 +34,6 @@ const DatePicker = ({
     isError,
     refetch,
     onMonthChange,
-    minDate,
     getDayStatus,
     getWorkingDayId,
   } = useWorkingDaysCalendar(userId, currentMonth);
@@ -63,7 +62,11 @@ const DatePicker = ({
     if (onNonWorkingDayPress) {
       const status = getDayStatus(day.dateString);
       if (status !== "working") {
-        onNonWorkingDayPress(day.dateString, status, getWorkingDayId(day.dateString));
+        onNonWorkingDayPress(
+          day.dateString,
+          status,
+          getWorkingDayId(day.dateString),
+        );
         return;
       }
     } else if (markedDates[day.dateString]?.disabled) {
@@ -75,7 +78,6 @@ const DatePicker = ({
   return (
     <Calendar
       current={currentMonth}
-      minDate={minDate}
       markedDates={markedDates}
       onDayPress={handleDayPress}
       onMonthChange={(month) => {

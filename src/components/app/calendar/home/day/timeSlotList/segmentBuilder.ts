@@ -274,7 +274,7 @@ export const getSegmentHeight = (segment: Segment) => {
   const { segStart, segEnd, content } = segment;
   const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
 
-  if (content.kind === "break") return baseGridHeight;
+  if (content.kind === "break") return Math.max(SHORT_SLOT_MIN_HEIGHT, baseGridHeight);
 
   const slotsMinHeight =
     content.slots.reduce((h, slot) => h + getSlotMinHeight(slot), 0) +
