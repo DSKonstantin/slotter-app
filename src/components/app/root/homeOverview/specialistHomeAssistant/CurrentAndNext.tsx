@@ -64,7 +64,7 @@ function CurrentAndNextComponent({ current, appointments }: Props) {
         </Typography>
         <StSvg name="Money_fill" size={20} color={colors.neutral[900]} />
         <Typography weight="semibold" className="text-lg text-neutral-900">
-          {formatRublesFromCents(current.price_cents)}
+          {formatRublesFromCents(current.price_cents ?? 0)}
         </Typography>
       </View>
 

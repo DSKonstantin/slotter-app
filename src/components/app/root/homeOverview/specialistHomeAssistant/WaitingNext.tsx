@@ -66,7 +66,7 @@ function NextAppointmentVariantComponent({ appointments }: Props) {
       </Typography>
       <StSvg name="Money_fill" size={20} color={colors.neutral[900]} />
       <Typography weight="semibold" className="text-lg text-neutral-900">
-        {formatRublesFromCents(next.price_cents)}
+        {formatRublesFromCents(next.price_cents ?? 0)}
       </Typography>
       {additionalCount > 0 ? (
         <>

@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -16,7 +16,10 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { colors } from "@/src/styles/colors";
 import { parseISO } from "date-fns";
-import { formatDayMonthLong, formatSlotDate } from "@/src/utils/date/formatDate";
+import {
+  formatDayMonthLong,
+  formatSlotDate,
+} from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
@@ -117,6 +120,17 @@ const RescheduleModal = ({
     });
     onClose();
   };
+
+  useEffect(() => {
+    if (!visible) return;
+    setHourPickerOpen(null);
+    methods.reset({
+      date: defaultDate,
+      start_time: "",
+      reason: "",
+      send_notification: true,
+    });
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <StModal

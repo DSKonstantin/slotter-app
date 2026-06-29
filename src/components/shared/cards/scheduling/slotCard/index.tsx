@@ -35,7 +35,7 @@ const getSlotCardInfo = (slot: Appointment) => {
     clientName: slot.customer?.name ?? "",
     hasComment: Boolean(slot.comment?.trim()),
     timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
-    price: formatRublesFromCents(slot.price_cents),
+    price: formatRublesFromCents(slot.price_cents ?? 0),
   };
 };
 
@@ -183,9 +183,7 @@ const SlotCard = ({
   );
 
   const isCompactSlot =
-    slot.duration <= 30 ||
-    slot.status === "cancelled" ||
-    slot.status === "declined";
+    slot.duration <= 30 || slot.status === "cancelled";
 
   if (isCompactSlot) {
     return (

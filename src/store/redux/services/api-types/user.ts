@@ -21,7 +21,6 @@ export interface User {
   first_name: string | null;
   last_name: string | null;
   about_me: string | null;
-  appointment_conditions: string | null;
   address: string | null;
   nickname: string | null;
   profession: string | null;
@@ -34,8 +33,8 @@ export interface User {
   phone_confirmed_at: string | null;
   telegram_id: number | null;
   onboarding_step: string;
-  is_auto_approve: boolean;
   appointment_step: AppointmentStep;
+  appointment_conditions: string | null;
   is_notify_new_appointment: boolean;
   is_notify_customer_cancel: boolean;
   is_notify_reminders: boolean;
@@ -127,7 +126,12 @@ export interface TelegramSessionAuthorizedResponse {
 }
 
 export interface TelegramSessionOtherResponse {
-  status: "pending" | "awaiting_contact" | "consumed" | "expired" | "deactivated";
+  status:
+    | "pending"
+    | "awaiting_contact"
+    | "consumed"
+    | "expired"
+    | "deactivated";
 }
 
 export type TelegramSessionResponse =

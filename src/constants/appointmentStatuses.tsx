@@ -10,6 +10,7 @@ export type AppointmentStatusConfig = {
   variant:
     | "success"
     | "warning"
+    | "pending"
     | "info"
     | "primary"
     | "secondary"
@@ -25,21 +26,21 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
   AppointmentStatus,
   AppointmentStatusConfig
 > = {
+  requested: {
+    status: "requested",
+    label: "Запрос услуги",
+    filterLabel: "Новые заявки",
+    defaultActive: true,
+    variant: "arrived",
+    statusLineClass: "bg-primary-blue-500",
+  },
   pending: {
     status: "pending",
     label: "Ожидает",
     filterLabel: "Ожидающие подтверждения",
     defaultActive: true,
-    variant: "warning",
+    variant: "pending",
     statusLineClass: "bg-accent-yellow-500",
-  },
-  proposed: {
-    status: "proposed",
-    label: "Предложено",
-    filterLabel: "Предложенные",
-    defaultActive: true,
-    variant: "info",
-    statusLineClass: "bg-primary-blue-100",
   },
   confirmed: {
     status: "confirmed",
@@ -57,13 +58,13 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
     variant: "arrived",
     statusLineClass: "bg-primary-blue-500",
   },
-  late: {
-    status: "late",
-    label: "Опоздание",
+  delayed: {
+    status: "delayed",
+    label: "Опоздал",
     filterLabel: "Опоздали",
     defaultActive: true,
-    variant: "error",
-    statusLineClass: "bg-accent-red-500",
+    variant: "warning",
+    statusLineClass: "bg-accent-yellow-500",
   },
   completed: {
     status: "completed",
@@ -73,8 +74,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
     variant: "success",
     statusLineClass: "bg-primary-green-500",
   },
-  no_show: {
-    status: "no_show",
+  missed: {
+    status: "missed",
     label: "Не пришёл",
     filterLabel: "Не явились",
     defaultActive: true,
@@ -85,14 +86,6 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
     status: "cancelled",
     label: "Отменена",
     filterLabel: "Отменённые",
-    defaultActive: false,
-    variant: "destructive",
-    statusLineClass: "bg-accent-red-500",
-  },
-  declined: {
-    status: "declined",
-    label: "Отклонено",
-    filterLabel: "Отклонённые",
     defaultActive: false,
     variant: "destructive",
     statusLineClass: "bg-accent-red-500",

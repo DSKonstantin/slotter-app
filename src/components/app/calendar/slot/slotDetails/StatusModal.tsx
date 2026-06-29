@@ -39,7 +39,7 @@ const StatusModal: React.FC<Props> = ({
         Изменить статус записи
       </Typography>
       <View className="gap-2 mb-4">
-        {(["pending", "confirmed", "arrived", "no_show"] as const).map((s) => {
+        {(["pending", "delayed", "arrived", "missed"] as const).map((s) => {
           const config = STATUS_CONFIG[s];
           return (
             <Card

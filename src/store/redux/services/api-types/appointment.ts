@@ -1,13 +1,12 @@
 export type AppointmentStatus =
+  | "requested"
   | "pending"
-  | "proposed"
   | "confirmed"
   | "arrived"
   | "completed"
-  | "late"
-  | "no_show"
-  | "cancelled"
-  | "declined";
+  | "delayed"
+  | "missed"
+  | "cancelled";
 
 export type PaymentMethod = "cash" | "sbp" | "online_bank";
 
@@ -36,11 +35,11 @@ export interface AppointmentService {
 export interface Appointment {
   id: number;
   status: AppointmentStatus;
-  payment_method: PaymentMethod;
+  payment_method: PaymentMethod | null;
   start_time: string;
   end_time: string;
   duration: number;
-  price_cents: number;
+  price_cents: number | null;
   price_currency: string;
   comment: string | null;
   cancel_reason: string | null;
@@ -73,18 +72,17 @@ export interface UpcomingAppointmentCustomer {
 export interface UpcomingAppointment {
   id: number;
   status: AppointmentStatus;
-  payment_method: PaymentMethod;
+  payment_method: PaymentMethod | null;
   start_time: string;
   end_time: string;
   duration: number;
-  price_cents: number;
+  price_cents: number | null;
   price_currency: string;
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
   public_token: string;
   date: string;
-  customer_confirmed_at: string | null;
   customer: UpcomingAppointmentCustomer;
   services: AppointmentService[];
   additional_services: AppointmentService[];

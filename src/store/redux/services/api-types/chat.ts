@@ -81,7 +81,6 @@ export interface ChatMessageWidgetAppointment {
   cancel_reason?: string | null;
   send_notification?: boolean;
   public_token?: string;
-  customer_confirmed_at?: string | null;
   customer?: {
     id: number;
     name: string;

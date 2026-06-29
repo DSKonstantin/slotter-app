@@ -1,4 +1,9 @@
-import type { AppointmentStep } from "@/src/store/redux/services/api-types";
+export type AppointmentStep =
+  | "five_minutes"
+  | "ten_minutes"
+  | "fifteen_minutes"
+  | "thirty_minutes"
+  | "one_hour";
 
 export type AppointmentStepMinutes = 5 | 10 | 15 | 30 | 60;
 

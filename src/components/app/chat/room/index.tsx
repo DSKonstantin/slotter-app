@@ -371,7 +371,7 @@ export default function ChatRoom({ roomId }: Props) {
                   end_time: appointment.end_time,
                   date: appointment.date,
                   duration: appointment.duration,
-                  price_cents: appointment.price_cents,
+                  price_cents: appointment.price_cents ?? 0,
                   price_currency: appointment.price_currency,
                 },
               },

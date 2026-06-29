@@ -68,7 +68,11 @@ const KIND_BADGE: Record<
     icon: "Clock_fill",
     color: colors.primary.blue[500],
   },
-  appointment_customer_confirmed: {
+  appointment_requested: {
+    icon: "Add_round_fill",
+    color: colors.primary.blue[500],
+  },
+  appointment_request_accepted: {
     icon: "Check_fill",
     color: colors.primary.green[500],
   },

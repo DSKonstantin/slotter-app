@@ -7,7 +7,8 @@ export type NotificationKind =
   | "appointment_cancelled"
   | "appointment_rescheduled"
   | "appointment_reminder"
-  | "appointment_customer_confirmed"
+  | "appointment_requested"
+  | "appointment_request_accepted"
   | "appointment_customer_accepted"
   | "appointment_customer_declined"
   | "appointment_reschedule_requested"
@@ -58,7 +59,6 @@ export interface AppointmentNotificationSubject {
   start_time: string;
   end_time: string;
   status: string;
-  customer_confirmed_at: string | null;
   customer: NotificationSubjectCustomer;
   user: NotificationSubjectUser;
 }
