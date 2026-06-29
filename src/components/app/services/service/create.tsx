@@ -29,7 +29,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
       price: "",
       categoryId: Number(categoryId),
       description: "",
-      isAvailableOnline: false,
+      isAvailableOnline: true,
       isActive: true,
       additionalServices: [],
       photos: defaultServicePhotos,

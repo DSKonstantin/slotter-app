@@ -295,7 +295,10 @@ export function NewChatSheet({ visible, onClose }: Props) {
               renderItem={renderItem}
               ItemSeparatorComponent={Separator}
               ListEmptyComponent={
-                <View className="flex-1 items-center justify-center gap-4">
+                <View
+                  className="items-center justify-center gap-4"
+                  style={{ height: listHeight }}
+                >
                   <StSvg
                     name="Chat_search"
                     size={60}

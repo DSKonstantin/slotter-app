@@ -117,7 +117,7 @@ const ChatAppointmentWidget = ({
               </Typography>
             )}
           </View>
-          {priceCents && (
+          {!!priceCents && (
             <Typography
               weight="semibold"
               className="text-base text-neutral-900"
@@ -140,10 +140,15 @@ const ChatAppointmentWidget = ({
         <View className="items-center justify-center py-3 h-[50px]">
           <Typography
             weight="semibold"
-            className="text-caption text-neutral-500"
+            className="text-body text-accent-red-500"
           >
-            {appointment.status === "declined" ? "Отклонено" : "Отменено"}
+            Отменено
           </Typography>
+          <StSvg
+            name="Close_round_fill"
+            size={20}
+            color={colors.accent.red[500]}
+          />
         </View>
       ) : (
         <View
