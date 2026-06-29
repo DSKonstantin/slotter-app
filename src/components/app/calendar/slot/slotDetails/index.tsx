@@ -146,8 +146,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       if (options?.field) setEditingField(options.field);
       const fullBody = {
         duration: slot.duration,
-        price_cents: slot.price_cents,
-        payment_method: slot.payment_method,
+        ...(slot.price_cents != null && { price_cents: slot.price_cents }),
+        ...(slot.payment_method != null && {
+          payment_method: slot.payment_method,
+        }),
         ...body,
       };
 
@@ -206,7 +208,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     methods.reset({
       comment: slot.comment ?? "",
       duration: String(slot.duration),
-      price: String(centsToRubles(slot.price_cents)),
+      price: String(centsToRubles(slot.price_cents ?? 0)),
     });
   }, [methods, slot]);
 
@@ -218,7 +220,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
           slot &&
           (slot.status === "pending" ||
             slot.status === "confirmed" ||
-            slot.status === "proposed") ? (
+            slot.status === "requested") ? (
             <SlotActionsMenu
               status={slot.status}
               visible={actionsVisible}
@@ -510,7 +512,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
                   <EditableRow
                     label="Стоимость"
-                    displayValue={formatRublesFromCents(slot.price_cents)}
+                    displayValue={formatRublesFromCents(slot.price_cents ?? 0)}
                     fieldName="price"
                     editing={editingField === "price"}
                     canEdit={derived!.canEdit}
@@ -519,7 +521,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     onEdit={() => {
                       methods.setValue(
                         "price",
-                        String(centsToRubles(slot.price_cents)),
+                        String(centsToRubles(slot.price_cents ?? 0)),
                       );
                       setEditingField("price");
                     }}
@@ -558,8 +560,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           weight="regular"
                           className="text-body text-neutral-900 flex-shrink text-right"
                         >
-                          {PAYMENT_METHOD_LABELS[slot.payment_method] ??
-                            slot.payment_method}
+                          {slot.payment_method != null
+                            ? (PAYMENT_METHOD_LABELS[slot.payment_method] ??
+                              slot.payment_method)
+                            : "—"}
                         </Typography>
                         {derived!.canEdit && (
                           <StSvg
@@ -660,7 +664,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               />
               <PaymentMethodModal
                 visible={paymentMethodVisible}
-                currentMethod={slot.payment_method}
+                currentMethod={slot.payment_method ?? "cash"}
                 onClose={() => setPaymentMethodVisible(false)}
                 onModalHide={onPaymentModalHide}
                 onSelect={(method) =>

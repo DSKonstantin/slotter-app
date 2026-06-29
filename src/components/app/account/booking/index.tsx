@@ -8,7 +8,6 @@ import {
 } from "@/src/validation/schemas/accountBooking.schema";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Item, StModal, StSvg, Typography } from "@/src/components/ui";
-import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
@@ -24,9 +23,8 @@ const BOOKING_STEPS: { label: string; value: AppointmentStep }[] = [
   { label: "1 час", value: "one_hour" },
 ];
 
-const formatStep = (value: AppointmentStep) => {
-  return BOOKING_STEPS.find((s) => s.value === value)?.label ?? value;
-};
+const formatStep = (value: AppointmentStep) =>
+  BOOKING_STEPS.find((s) => s.value === value)?.label ?? value;
 
 function BookingStepField({ onSelect }: { onSelect: () => void }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -84,7 +82,6 @@ const Booking = () => {
   const methods = useForm<AccountBookingFormValues>({
     resolver: yupResolver(AccountBookingSchema),
     defaultValues: {
-      autoConfirm: user?.is_auto_approve ?? true,
       bookingStep: user?.appointment_step ?? "one_hour",
     },
   });
@@ -94,10 +91,7 @@ const Booking = () => {
     try {
       await updateUser({
         id: user.id,
-        data: {
-          is_auto_approve: values.autoConfirm,
-          appointment_step: values.bookingStep,
-        },
+        data: { appointment_step: values.bookingStep },
       }).unwrap();
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
@@ -109,20 +103,9 @@ const Booking = () => {
       <ScreenWithToolbar title="Бронирование">
         {({ topInset }) => (
           <View style={{ paddingTop: topInset }} className="px-screen">
-            <View className="overflow-hidden gap-2">
-              {/*<Item*/}
-              {/*  title="Авто-подтверждение"*/}
-              {/*  right={*/}
-              {/*    <RHFSwitch*/}
-              {/*      name="autoConfirm"*/}
-              {/*      onChange={() => methods.handleSubmit(onSubmit)()}*/}
-              {/*    />*/}
-              {/*  }*/}
-              {/*/>*/}
-              <BookingStepField
-                onSelect={() => methods.handleSubmit(onSubmit)()}
-              />
-            </View>
+            <BookingStepField
+              onSelect={() => methods.handleSubmit(onSubmit)()}
+            />
           </View>
         )}
       </ScreenWithToolbar>

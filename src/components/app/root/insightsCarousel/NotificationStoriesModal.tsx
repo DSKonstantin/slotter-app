@@ -35,6 +35,8 @@ export type Story = {
 export type StoriesData = Record<StoryCategory, Story[]>;
 
 const SWIPE_THRESHOLD = 40;
+const CLOSE_THRESHOLD = 100;
+const CLOSE_VELOCITY = 800;
 
 type Props = {
   isVisible: boolean;
@@ -46,11 +48,12 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   const [storyIndex, setStoryIndex] = useState(0);
 
   const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
   const storyIndexRef = useRef(storyIndex);
   const allStoriesLengthRef = useRef(0);
 
   const { top } = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   const allStories = useMemo(
     () =>
@@ -72,12 +75,13 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   const handleAnimateIn = useCallback(() => {
     setStoryIndex(0);
     opacity.setValue(0);
+    translateY.setValue(0);
     Animated.timing(opacity, {
       toValue: 1,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [opacity]);
+  }, [opacity, translateY]);
 
   const handleClose = useCallback(() => {
     Animated.timing(opacity, {
@@ -87,10 +91,53 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
     }).start(() => onClose());
   }, [opacity, onClose]);
 
+  const verticalPan = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetY([0, 10])
+        .failOffsetX([-10, 10])
+        .runOnJS(true)
+        .onUpdate((event) => {
+          if (event.translationY <= 0) return;
+          translateY.setValue(event.translationY);
+          opacity.setValue(Math.max(0, 1 - event.translationY / 300));
+        })
+        .onEnd((event) => {
+          if (
+            event.translationY > CLOSE_THRESHOLD ||
+            event.velocityY > CLOSE_VELOCITY
+          ) {
+            Animated.timing(translateY, {
+              toValue: height,
+              duration: 250,
+              useNativeDriver: true,
+            }).start(() => {
+              translateY.setValue(0);
+              onClose();
+            });
+          } else {
+            Animated.parallel([
+              Animated.spring(translateY, {
+                toValue: 0,
+                useNativeDriver: true,
+                bounciness: 8,
+              }),
+              Animated.timing(opacity, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+              }),
+            ]).start();
+          }
+        }),
+    [translateY, opacity, height, onClose],
+  );
+
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
         .activeOffsetX([-10, 10])
+        .failOffsetY([-10, 10])
         .runOnJS(true)
         .onEnd((event) => {
           if (event.translationX > SWIPE_THRESHOLD) handleSwipe("right");
@@ -112,8 +159,8 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
   );
 
   const composedGesture = useMemo(
-    () => Gesture.Exclusive(panGesture, tapGesture),
-    [panGesture, tapGesture],
+    () => Gesture.Exclusive(verticalPan, panGesture, tapGesture),
+    [verticalPan, panGesture, tapGesture],
   );
 
   storyIndexRef.current = storyIndex;
@@ -132,7 +179,7 @@ const NotificationStoriesModal = ({ isVisible, onClose, stories }: Props) => {
       <GestureHandlerRootView className="flex-1">
         <Animated.View
           className="flex-1 bg-background-surface"
-          style={{ opacity }}
+          style={{ opacity, transform: [{ translateY }] }}
         >
           <GestureDetector gesture={composedGesture}>
             <View className="flex-1">

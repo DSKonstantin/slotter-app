@@ -51,15 +51,12 @@ export type CreateSegmentsResult = {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 export const getSlotMinHeight = (slot: Appointment) => {
-  if (slot.status === "cancelled" || slot.status === "declined")
-    return SHORT_SLOT_MIN_HEIGHT;
+  if (slot.status === "cancelled") return SHORT_SLOT_MIN_HEIGHT;
   return slot.duration > 30 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
 };
 
 export const slotOccupiesTime = (slot: Appointment) =>
-  slot.status !== "cancelled" &&
-  slot.status !== "declined" &&
-  slot.duration > 0;
+  slot.status !== "cancelled" && slot.duration > 0;
 
 // ── Parsing ──────────────────────────────────────────────────────────
 
@@ -186,14 +183,8 @@ const buildSegments = (
     const segmentAppointments = parsedAppointments
       .filter(({ start }) => start >= segStart && start < segEnd)
       .sort((a, b) => {
-        const aNB =
-          a.slot.status === "cancelled" ||
-          a.slot.status === "declined" ||
-          a.slot.duration === 0;
-        const bNB =
-          b.slot.status === "cancelled" ||
-          b.slot.status === "declined" ||
-          b.slot.duration === 0;
+        const aNB = a.slot.status === "cancelled" || a.slot.duration === 0;
+        const bNB = b.slot.status === "cancelled" || b.slot.duration === 0;
         if (aNB !== bNB) return aNB ? -1 : 1;
         return a.start - b.start || a.slot.duration - b.slot.duration;
       });
@@ -274,7 +265,8 @@ export const getSegmentHeight = (segment: Segment) => {
   const { segStart, segEnd, content } = segment;
   const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
 
-  if (content.kind === "break") return Math.max(SHORT_SLOT_MIN_HEIGHT, baseGridHeight);
+  if (content.kind === "break")
+    return Math.max(SHORT_SLOT_MIN_HEIGHT, baseGridHeight);
 
   const slotsMinHeight =
     content.slots.reduce((h, slot) => h + getSlotMinHeight(slot), 0) +
@@ -311,7 +303,7 @@ export const createSegments = (
   }));
   const parsedAppointments = parseAppointments(appointments, visibleStatuses);
   const blockingAppointments = parsedAppointments.filter(
-    ({ slot }) => slot.status !== "cancelled" && slot.status !== "declined",
+    ({ slot }) => slot.status !== "cancelled",
   );
 
   const allStarts = parsedAppointments.map((a) => a.start);

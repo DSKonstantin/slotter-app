@@ -84,7 +84,7 @@ const SlotActionsMenu: React.FC<Props> = ({
 
       {(status === "pending" ||
         status === "confirmed" ||
-        status === "proposed") && (
+        status === "requested") && (
         <Button
           title="Отменить запись"
           variant="clear"

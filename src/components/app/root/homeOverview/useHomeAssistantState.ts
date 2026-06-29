@@ -71,13 +71,13 @@ export const useHomeAssistantState = (): Result => {
             date_from: today,
             date_to: today,
             status: [
+              "requested",
               "pending",
-              "proposed",
               "confirmed",
               "arrived",
               "completed",
-              "no_show",
-              "late",
+              "missed",
+              "delayed",
             ],
           },
         }

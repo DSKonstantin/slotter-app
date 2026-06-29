@@ -17,6 +17,7 @@ type BadgeVariant =
   | "arrived"
   | "mint"
   | "success"
+  | "pending"
   | "completed"
   | "warning"
   | "neutral"
@@ -126,6 +127,10 @@ const variants: Record<BadgeVariant, { container: string; text: string }> = {
   tertiary: {
     container: "bg-background-surface border border-neutral-200",
     text: "text-neutral-800",
+  },
+  pending: {
+    container: "bg-accent-yellow-50",
+    text: "text-accent-orange-500",
   },
   accent: { container: "bg-primary-blue-500", text: "text-neutral-0" },
   arrived: { container: "bg-primary-blue-500", text: "text-accent-azure-500" },

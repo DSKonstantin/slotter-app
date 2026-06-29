@@ -16,15 +16,14 @@ const STATUS_MAP: Record<
       | "secondary";
   }
 > = {
+  requested: { label: "Заявка", variant: "info" },
   pending: { label: "Ожидание", variant: "warning" },
-  proposed: { label: "Предложено", variant: "info" },
   confirmed: { label: "Подтверждена", variant: "info" },
   arrived: { label: "Пришёл", variant: "accent" },
   completed: { label: "Завершена", variant: "success" },
-  late: { label: "Опоздал", variant: "warning" },
-  no_show: { label: "Не пришёл", variant: "tertiary" },
+  delayed: { label: "Опоздал", variant: "warning" },
+  missed: { label: "Не пришёл", variant: "tertiary" },
   cancelled: { label: "Отменена", variant: "primary" },
-  declined: { label: "Отклонено", variant: "secondary" },
 };
 
 type Props = { status: AppointmentStatus };

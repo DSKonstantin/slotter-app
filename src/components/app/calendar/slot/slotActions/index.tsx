@@ -1,15 +1,16 @@
 import React, { memo, useCallback } from "react";
 import { Alert, View } from "react-native";
 
-import { Button, StSvg } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import {
-  useConfirmAppointmentMutation,
+  useUserAcceptAppointmentMutation,
+  useUserDeclineAppointmentMutation,
   useArriveAppointmentMutation,
-  useMarkNoShowAppointmentMutation,
+  useMarkMissedAppointmentMutation,
   useCompleteAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
 
@@ -26,31 +27,51 @@ const SlotActions: React.FC<Props> = ({
   onReschedule,
   onCancel,
 }) => {
-  const [confirm, { isLoading: isConfirming }] =
-    useConfirmAppointmentMutation();
+  const [userAccept, { isLoading: isAccepting }] =
+    useUserAcceptAppointmentMutation();
+  const [userDecline, { isLoading: isDeclining }] =
+    useUserDeclineAppointmentMutation();
   const [arrive, { isLoading: isArriving }] = useArriveAppointmentMutation();
-  const [markNoShow, { isLoading: isMarkingNoShow }] =
-    useMarkNoShowAppointmentMutation();
+
+  const [markMissed, { isLoading: isMarkingMissed }] =
+    useMarkMissedAppointmentMutation();
   const [complete, { isLoading: isCompleting }] =
     useCompleteAppointmentMutation();
 
-  const handleConfirm = useCallback(() => {
-    Alert.alert("Подтвердить запись?", "", [
+  const handleAccept = useCallback(() => {
+    Alert.alert("Принять заявку?", "", [
       { text: "Отмена", style: "cancel" },
       {
-        text: "Подтвердить",
+        text: "Принять",
         onPress: async () => {
           try {
-            await confirm(appointmentId).unwrap();
+            await userAccept(appointmentId).unwrap();
+          } catch (error) {
+            toast.error(getApiErrorMessage(error, "Не удалось принять заявку"));
+          }
+        },
+      },
+    ]);
+  }, [appointmentId, userAccept]);
+
+  const handleDecline = useCallback(() => {
+    Alert.alert("Отклонить заявку?", "", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Отклонить",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await userDecline(appointmentId).unwrap();
           } catch (error) {
             toast.error(
-              getApiErrorMessage(error, "Не удалось подтвердить запись"),
+              getApiErrorMessage(error, "Не удалось отклонить заявку"),
             );
           }
         },
       },
     ]);
-  }, [appointmentId, confirm]);
+  }, [appointmentId, userDecline]);
 
   const handleArrive = useCallback(() => {
     Alert.alert("Клиент пришёл?", "", [
@@ -70,32 +91,25 @@ const SlotActions: React.FC<Props> = ({
     ]);
   }, [appointmentId, arrive]);
 
-  const handleNoShow = useCallback(() => {
-    const doMarkNoShow = async () => {
+  const handleMissed = useCallback(() => {
+    const doMissed = async () => {
       try {
-        await markNoShow(appointmentId).unwrap();
+        await markMissed(appointmentId).unwrap();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось обновить статус"));
       }
     };
 
     Alert.alert(
-      "Клиент не явился?",
+      "Не явился?",
       "Вы можете заблокировать этому клиенту возможность самостоятельной онлайн-записи",
       [
-        {
-          text: "Не нужно",
-          onPress: doMarkNoShow,
-        },
-        {
-          text: "Заблокировать",
-          style: "destructive",
-          onPress: doMarkNoShow,
-        },
+        { text: "Не нужно", onPress: doMissed },
+        { text: "Заблокировать", style: "destructive", onPress: doMissed },
         { text: "Закрыть", style: "cancel" },
       ],
     );
-  }, [appointmentId, markNoShow]);
+  }, [appointmentId, markMissed]);
 
   const handleComplete = useCallback(() => {
     Alert.alert("Завершить запись?", "", [
@@ -117,24 +131,24 @@ const SlotActions: React.FC<Props> = ({
 
   const renderActions = () => {
     switch (status) {
-      case "pending":
+      case "requested":
         return (
           <>
             <Button
-              title="Подтвердить"
-              variant="accent"
-              onPress={handleConfirm}
-              loading={isConfirming}
-              rightIcon={
-                <StSvg
-                  name="Check_round_fill"
-                  size={24}
-                  color={colors.neutral[0]}
-                />
-              }
+              title="Подтвердить запрос"
+              onPress={handleAccept}
+              loading={isAccepting}
+            />
+            <Button
+              title="Отменить запрос"
+              variant="clear"
+              textClassName="text-accent-red-500"
+              onPress={handleDecline}
+              loading={isDeclining}
             />
           </>
         );
+      case "pending":
       case "confirmed":
         return (
           <>
@@ -157,28 +171,13 @@ const SlotActions: React.FC<Props> = ({
                   color={colors.accent.red[500]}
                 />
               }
-              onPress={handleNoShow}
-              loading={isMarkingNoShow}
+              onPress={handleMissed}
+              loading={isMarkingMissed}
             />
           </>
         );
-      case "proposed":
-        return (
-          <Button
-            title="Отменить запись"
-            variant="clear"
-            textClassName="text-accent-red-500"
-            rightIcon={
-              <StSvg
-                name="Dell_fill"
-                size={24}
-                color={colors.accent.red[500]}
-              />
-            }
-            onPress={onCancel}
-          />
-        );
       case "arrived":
+      case "delayed":
         return (
           <Button
             title="Завершить"

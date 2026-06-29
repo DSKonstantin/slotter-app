@@ -53,15 +53,17 @@ const appointmentsApi = api.injectEndpoints({
         userId: number;
         date: string;
         step?: 5 | 10 | 15 | 30 | 60;
+        service_id?: number;
         appointment_id?: number;
       }
     >({
-      query: ({ userId, date, step = 15, appointment_id }) => ({
+      query: ({ userId, date, step, service_id, appointment_id }) => ({
         url: `/users/${userId}/available_slots`,
         method: "GET",
         params: {
           date,
-          step,
+          ...(step && { step }),
+          ...(service_id && { service_id }),
           ...(appointment_id && { appointment_id }),
         },
       }),
@@ -83,7 +85,7 @@ const appointmentsApi = api.injectEndpoints({
     }),
 
     updateAppointment: builder.mutation<
-      { appointment: Appointment },
+      Appointment,
       { id: number; body: UpdateAppointmentPayload }
     >({
       query: ({ id, body }) => ({
@@ -91,14 +93,43 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: (_, __, { id }) => [
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            appointmentsApi.util.updateQueryData(
+              "getAppointment",
+              id,
+              () => data,
+            ),
+          );
+        } catch {}
+      },
+    }),
+
+    userAcceptAppointment: builder.mutation<
+      { appointment: Appointment },
+      number
+    >({
+      query: (id) => ({
+        url: `/appointments/${id}/user_accept`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (_, __, id) => [
         "Appointments",
         { type: "Appointment", id },
       ],
     }),
 
-    confirmAppointment: builder.mutation<{ appointment: Appointment }, number>({
-      query: (id) => ({ url: `/appointments/${id}/confirm`, method: "PATCH" }),
+    userDeclineAppointment: builder.mutation<
+      { appointment: Appointment },
+      number
+    >({
+      query: (id) => ({
+        url: `/appointments/${id}/user_decline`,
+        method: "PATCH",
+      }),
       invalidatesTags: (_, __, id) => [
         "Appointments",
         { type: "Appointment", id },
@@ -113,25 +144,26 @@ const appointmentsApi = api.injectEndpoints({
       ],
     }),
 
-    markLateAppointment: builder.mutation<{ appointment: Appointment }, number>(
-      {
-        query: (id) => ({
-          url: `/appointments/${id}/mark_late`,
-          method: "PATCH",
-        }),
-        invalidatesTags: (_, __, id) => [
-          "Appointments",
-          { type: "Appointment", id },
-        ],
-      },
-    ),
-
-    markNoShowAppointment: builder.mutation<
+    markDelayedAppointment: builder.mutation<
       { appointment: Appointment },
       number
     >({
       query: (id) => ({
-        url: `/appointments/${id}/mark_no_show`,
+        url: `/appointments/${id}/mark_delayed`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (_, __, id) => [
+        "Appointments",
+        { type: "Appointment", id },
+      ],
+    }),
+
+    markMissedAppointment: builder.mutation<
+      { appointment: Appointment },
+      number
+    >({
+      query: (id) => ({
+        url: `/appointments/${id}/mark_missed`,
         method: "PATCH",
       }),
       invalidatesTags: (_, __, id) => [
@@ -229,7 +261,6 @@ const appointmentsApi = api.injectEndpoints({
   }),
 });
 
-
 export const {
   useGetAppointmentsQuery,
   useGetAppointmentQuery,
@@ -237,10 +268,11 @@ export const {
   useGetAvailableSlotsQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentMutation,
-  useConfirmAppointmentMutation,
+  useUserAcceptAppointmentMutation,
+  useUserDeclineAppointmentMutation,
   useArriveAppointmentMutation,
-  useMarkLateAppointmentMutation,
-  useMarkNoShowAppointmentMutation,
+  useMarkDelayedAppointmentMutation,
+  useMarkMissedAppointmentMutation,
   useCompleteAppointmentMutation,
   useCancelAppointmentMutation,
   useRescheduleAppointmentMutation,

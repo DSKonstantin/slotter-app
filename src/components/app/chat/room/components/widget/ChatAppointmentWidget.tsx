@@ -70,7 +70,7 @@ const ChatAppointmentWidget = ({
   // formatTimeFromISO вытаскивает HH:MM из T-части без конвертации timezone.
   const timeLabel = startTime ? formatTimeFromISO(startTime) : "";
 
-  const isAwaitingCustomer = appointment.status === "proposed";
+  const isAwaitingCustomer = appointment.status === "pending";
 
   return (
     <Pressable
@@ -117,7 +117,7 @@ const ChatAppointmentWidget = ({
               </Typography>
             )}
           </View>
-          {priceCents && (
+          {!!priceCents && (
             <Typography
               weight="semibold"
               className="text-base text-neutral-900"
@@ -131,24 +131,31 @@ const ChatAppointmentWidget = ({
         <Button title="Записаться" onPress={() => onAccept?.()} />
       ) : isAwaitingCustomer && isOwnMessage ? (
         <View className="items-center justify-center py-3 h-[50px]">
-          <Typography className="text-caption text-neutral-500">
+          <Typography className="text-body text-neutral-500">
             Ожидает подтверждения
           </Typography>
         </View>
-      ) : appointment.status === "declined" ||
-        appointment.status === "cancelled" ? (
-        <View className="items-center justify-center py-3 h-[50px]">
+      ) : appointment.status === "cancelled" ? (
+        <View
+          className="rounded-2xl flex-row items-center justify-center gap-2 py-3 h-[50px]"
+          style={{ backgroundColor: colors.accent.red[100] }}
+        >
           <Typography
             weight="semibold"
-            className="text-caption text-neutral-500"
+            className="text-body text-accent-red-500"
           >
-            {appointment.status === "declined" ? "Отклонено" : "Отменено"}
+            Отменено
           </Typography>
+          <StSvg
+            name="Close_round_fill"
+            size={20}
+            color={colors.accent.red[500]}
+          />
         </View>
       ) : (
         <View
           className="rounded-2xl flex-row items-center justify-center gap-2 py-3 h-[50px]"
-          style={{ backgroundColor: "#D4F5E6" }}
+          style={{ backgroundColor: colors.primary.green[100] }}
         >
           <Typography
             weight="semibold"
@@ -156,7 +163,11 @@ const ChatAppointmentWidget = ({
           >
             Записано
           </Typography>
-          <StSvg name="Check_fill" size={24} color="#34C759" />
+          <StSvg
+            name="Check_fill"
+            size={24}
+            color={colors.primary.green[400]}
+          />
         </View>
       )}
     </Pressable>
