@@ -43,7 +43,13 @@ function InitialLayout() {
     isError: appVersionError,
     retry,
   } = useAppVersionBootstrap();
-  const { isAuthenticated, isOnboardingComplete, isLoading } = useAuth();
+  const {
+    isAuthenticated,
+    isOnboardingComplete,
+    isLoading,
+    isError: isAuthError,
+    retry: retryAuth,
+  } = useAuth();
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -64,11 +70,14 @@ function InitialLayout() {
     return null;
   }
 
-  if (appVersionError) {
+  if (appVersionError || isAuthError) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <NoInternetScreen onRetry={retry} isRetrying={isVersionLoading} />
+          <NoInternetScreen
+            onRetry={appVersionError ? retry : retryAuth}
+            isRetrying={appVersionError ? isVersionLoading : isLoading}
+          />
         </SafeAreaProvider>
       </GestureHandlerRootView>
     );

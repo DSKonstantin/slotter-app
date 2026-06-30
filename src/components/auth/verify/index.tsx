@@ -10,6 +10,7 @@ import { unMask } from "react-native-mask-text";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
+import { AccountDeactivatedModal } from "@/src/components/auth/verify/AccountDeactivatedModal";
 import { CallModal } from "@/src/components/auth/verify/CallModal";
 import { useCallbackSession } from "@/src/components/auth/useCallbackSession";
 import RhfCheckbox from "@/src/components/hookForm/rhf-checkbox";
@@ -35,6 +36,8 @@ const Verify = () => {
   // 1. useState
   const [codeState, setCodeState] = useState<CodeState>(INITIAL_CODE_STATE);
   const [isSwitchingToFlashcall, setIsSwitchingToFlashcall] = useState(false);
+  const [accountDeactivatedVisible, setAccountDeactivatedVisible] =
+    useState(false);
 
   // 2. useRef
   const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(
@@ -119,7 +122,9 @@ const Verify = () => {
         }
       } catch (e) {
         const code = getApiErrorCode(e);
-        if (code === "spend_unavailable") {
+        if (code === "account_deactivated") {
+          setAccountDeactivatedVisible(true);
+        } else if (code === "spend_unavailable") {
           toast.error("Звонки временно недоступны. Попробуйте позже");
         } else if (code === "gonec_unavailable") {
           toast.error("Сервис временно недоступен. Попробуйте позже");
@@ -158,7 +163,9 @@ const Verify = () => {
       setCallSession(null);
     } catch (e) {
       const code = getApiErrorCode(e);
-      if (code === "flashcall_rate_limited") {
+      if (code === "account_deactivated") {
+        setAccountDeactivatedVisible(true);
+      } else if (code === "flashcall_rate_limited") {
         toast.error("Лимит звонков исчерпан. Попробуйте другой способ");
       } else {
         toast.error(getApiErrorMessage(e, "Не удалось отправить звонок"));
@@ -298,6 +305,11 @@ const Verify = () => {
           </View>
         </View>
       </AuthScreenLayout>
+
+      <AccountDeactivatedModal
+        visible={accountDeactivatedVisible}
+        onClose={() => setAccountDeactivatedVisible(false)}
+      />
 
       {!!callSession && (
         <CallModal

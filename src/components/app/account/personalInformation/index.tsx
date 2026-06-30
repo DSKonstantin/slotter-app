@@ -198,13 +198,13 @@ const PersonalInformation = () => {
                 <Button
                   title="Удалить"
                   variant="destructive"
+                  buttonClassName="bg-background-surface"
                   onPress={handleConfirmDelete}
                   loading={isDeleting}
                   disabled={isDeleting}
                 />
                 <Button
                   title="Отмена"
-                  variant="clear"
                   onPress={() => setDeleteModalVisible(false)}
                   disabled={isDeleting}
                 />

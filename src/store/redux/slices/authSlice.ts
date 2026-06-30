@@ -9,7 +9,7 @@ type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 interface AuthState {
   token: string | null;
   user: User | null;
-  resourceType: "user" | "customer" | null;
+  resourceType: "user" | null;
   status: AuthStatus;
 }
 
@@ -40,20 +40,21 @@ function extractUser(payload: UserPayload): User | null {
 }
 
 function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
-  const user = extractUser(payload);
-  if (!user) return;
-
-  state.user = user;
-  state.status = "authenticated";
-
   if (
     payload &&
     typeof payload === "object" &&
     "resource_type" in payload &&
-    payload.resource_type
+    payload.resource_type !== "user"
   ) {
-    state.resourceType = payload.resource_type as "user" | "customer";
+    return;
   }
+
+  const user = extractUser(payload);
+  if (!user) return;
+
+  state.user = user;
+  state.resourceType = "user";
+  state.status = "authenticated";
 }
 
 function setUserOnly(state: AuthState, payload: UserPayload) {
@@ -87,12 +88,15 @@ const authSlice = createSlice({
       .addMatcher(
         authApi.endpoints.getMe.matchFulfilled,
         (state, { payload }) => {
+          if (payload.resource_type !== "user") {
+            state.user = null;
+            state.status = "unauthenticated";
+            return;
+          }
           const user = extractUser(payload);
           state.user = user;
+          state.resourceType = "user";
           state.status = user ? "authenticated" : "unauthenticated";
-          if ("resource_type" in payload && payload.resource_type) {
-            state.resourceType = payload.resource_type as "user" | "customer";
-          }
         },
       )
       .addMatcher(authApi.endpoints.getMe.matchRejected, (state, action) => {
