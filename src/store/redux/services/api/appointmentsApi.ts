@@ -10,6 +10,21 @@ import type {
   CancelPayload,
 } from "@/src/store/redux/services/api-types";
 
+const pessimisticAppointment =
+  <TArg>(getId: (arg: TArg) => number) =>
+  async (arg: TArg, { dispatch, queryFulfilled }: any): Promise<void> => {
+    try {
+      const { data } = await queryFulfilled;
+      dispatch(
+        appointmentsApi.util.updateQueryData(
+          "getAppointment",
+          getId(arg),
+          () => data,
+        ),
+      );
+    } catch {}
+  };
+
 const appointmentsApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
@@ -108,85 +123,59 @@ const appointmentsApi = api.injectEndpoints({
       },
     }),
 
-    userAcceptAppointment: builder.mutation<
-      { appointment: Appointment },
-      number
-    >({
+    userAcceptAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/user_accept`,
         method: "PATCH",
       }),
-      invalidatesTags: (_, __, id) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
     }),
 
-    userDeclineAppointment: builder.mutation<
-      { appointment: Appointment },
-      number
-    >({
+    userDeclineAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/user_decline`,
         method: "PATCH",
       }),
-      invalidatesTags: (_, __, id) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
     }),
 
-    arriveAppointment: builder.mutation<{ appointment: Appointment }, number>({
+    arriveAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({ url: `/appointments/${id}/arrive`, method: "PATCH" }),
-      invalidatesTags: (_, __, id) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
     }),
 
-    markDelayedAppointment: builder.mutation<
-      { appointment: Appointment },
-      number
-    >({
+    markDelayedAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/mark_delayed`,
         method: "PATCH",
       }),
-      invalidatesTags: (_, __, id) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
     }),
 
-    markMissedAppointment: builder.mutation<
-      { appointment: Appointment },
-      number
-    >({
+    markMissedAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/mark_missed`,
         method: "PATCH",
       }),
-      invalidatesTags: (_, __, id) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
     }),
 
-    completeAppointment: builder.mutation<{ appointment: Appointment }, number>(
-      {
-        query: (id) => ({
-          url: `/appointments/${id}/complete`,
-          method: "PATCH",
-        }),
-        invalidatesTags: (_, __, id) => [
-          "Appointments",
-          { type: "Appointment", id },
-        ],
-      },
-    ),
+    completeAppointment: builder.mutation<Appointment, number>({
+      query: (id) => ({
+        url: `/appointments/${id}/complete`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
+    }),
 
     cancelAppointment: builder.mutation<
-      { appointment: Appointment },
+      Appointment,
       { id: number; body?: CancelPayload }
     >({
       query: ({ id, body }) => ({
@@ -194,14 +183,12 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body ?? {} },
       }),
-      invalidatesTags: (_, __, { id }) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment(({ id }) => id),
     }),
 
     rescheduleAppointment: builder.mutation<
-      { appointment: Appointment },
+      Appointment,
       { id: number; body: ReschedulePayload }
     >({
       query: ({ id, body }) => ({
@@ -209,13 +196,11 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: (_, __, { id }) => [
-        "Appointments",
-        { type: "Appointment", id },
-      ],
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment(({ id }) => id),
     }),
 
-    remindAppointment: builder.mutation<{ appointment: Appointment }, number>({
+    remindAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({ url: `/appointments/${id}/remind`, method: "PATCH" }),
       invalidatesTags: (_, __, id) => [
         "Appointments",
@@ -237,10 +222,7 @@ const appointmentsApi = api.injectEndpoints({
           : ["Appointments"],
     }),
 
-    customerAcceptAppointment: builder.mutation<
-      { appointment: Appointment },
-      number
-    >({
+    customerAcceptAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/customer_accept`,
         method: "PATCH",
@@ -248,10 +230,7 @@ const appointmentsApi = api.injectEndpoints({
       invalidatesTags: ["Appointments"],
     }),
 
-    customerDeclineAppointment: builder.mutation<
-      { appointment: Appointment },
-      number
-    >({
+    customerDeclineAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/customer_decline`,
         method: "PATCH",
