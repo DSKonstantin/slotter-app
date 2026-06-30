@@ -3,6 +3,7 @@ import type { DocumentPickerAsset } from "expo-document-picker";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { convertHeicAsset } from "@/src/utils/files/convertHeicAsset";
 
 export function useImagePicker() {
   const pickFromGallery = async (
@@ -27,7 +28,7 @@ export function useImagePicker() {
 
     if (res.canceled) return null;
 
-    return res.assets;
+    return Promise.all(res.assets.map(convertHeicAsset));
   };
 
   const pickFromCamera = async (
@@ -45,7 +46,7 @@ export function useImagePicker() {
 
     if (res.canceled) return null;
 
-    return res.assets;
+    return Promise.all(res.assets.map(convertHeicAsset));
   };
 
   const pickFromFiles = async (
@@ -58,7 +59,7 @@ export function useImagePicker() {
     });
 
     if (res.canceled) return null;
-    return res.assets;
+    return Promise.all(res.assets.map(convertHeicAsset));
   };
 
   return {
