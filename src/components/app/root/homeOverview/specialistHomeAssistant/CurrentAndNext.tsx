@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Button, StSvg, Typography } from "@/src/components/ui";
@@ -22,7 +22,9 @@ const Dot = () => (
 );
 
 function CurrentAndNextComponent({ current, appointments }: Props) {
+  const [expanded, setExpanded] = useState(false);
   const serviceName = current.services[0]?.name;
+  const hasAppointments = appointments.length > 0;
 
   return (
     <View className="gap-2">
@@ -68,7 +70,26 @@ function CurrentAndNextComponent({ current, appointments }: Props) {
         </Typography>
       </View>
 
-      <WaitingNext appointments={appointments} />
+      {hasAppointments && (
+        <View className="gap-1">
+          <Button
+            title={expanded ? "Спрятать" : "Показать больше"}
+            size="xs"
+            variant="clear"
+            buttonClassName="gap-1 self-start px-0"
+            textClassName="text-neutral-500 text-[13px]"
+            onPress={() => setExpanded((v) => !v)}
+            rightIcon={
+              <StSvg
+                name={expanded ? "Expand_up_light" : "Expand_down_light"}
+                size={16}
+                color={colors.neutral[500]}
+              />
+            }
+          />
+          {expanded && <WaitingNext appointments={appointments} label="следующая" />}
+        </View>
+      )}
     </View>
   );
 }

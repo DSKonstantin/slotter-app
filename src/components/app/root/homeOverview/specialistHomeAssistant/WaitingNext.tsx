@@ -12,26 +12,36 @@ import type { UpcomingAppointment } from "@/src/store/redux/services/api-types";
 
 type Props = {
   appointments: UpcomingAppointment[];
+  label?: string;
 };
 
-function NextAppointmentVariantComponent({ appointments }: Props) {
+function NextAppointmentVariantComponent({ appointments, label }: Props) {
   const list = Array.isArray(appointments) ? appointments : [];
   const next = list[0];
   if (!next) return null;
 
   const totalCount = list.length;
+  const now = new Date();
+  const isNow =
+    new Date(next.start_time) <= now && now <= new Date(next.end_time);
+  const resolvedLabel = label ?? (isNow ? "Сейчас" : "ближайшая");
   const statusConfig = APPOINTMENT_STATUS_CONFIG[next.status];
   const additionalCount = next.additional_services?.length ?? 0;
 
   return (
     <View className="flex-row flex-wrap items-center gap-1">
       <StSvg name="Date_range_fill" size={16} color={colors.neutral[900]} />
-      <Typography weight="semibold" className="text-lg text-neutral-900">
-        {totalCount} {pluralize(totalCount, ["запись", "записи", "записей"])}
-      </Typography>
-      <Dot />
+      {resolvedLabel !== "Сейчас" && (
+        <>
+          <Typography weight="semibold" className="text-lg text-neutral-900">
+            {totalCount}{" "}
+            {pluralize(totalCount, ["запись", "записи", "записей"])}
+          </Typography>
+          <Dot />
+        </>
+      )}
       <Typography weight="semibold" className="text-lg text-neutral-500">
-        ближайшая
+        {resolvedLabel}
       </Typography>
       <Button
         size="xs"
