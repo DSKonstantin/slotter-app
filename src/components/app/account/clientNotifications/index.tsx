@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -41,8 +41,13 @@ const TELEGRAM_BOTS = [
   {
     title: "Telegram Bot",
     icon: <StSvg name="SocialTelegram" size={24} color="#37B5DB" />,
+    url: "https://t.me/slotter_robot",
   },
-  { title: "Макс Bot", icon: <MaxLogo size={24} /> },
+  {
+    title: "Макс Bot",
+    icon: <MaxLogo size={24} />,
+    url: "https://max.ru/id6163237617_1_bot",
+  },
 ];
 
 const DIRECT_CHANNELS = [
@@ -187,12 +192,12 @@ const ClientNotifications = () => {
             </View>
 
             <View className="my-2 flex-row gap-2">
-              {TELEGRAM_BOTS.map(({ title, icon }) => (
+              {TELEGRAM_BOTS.map(({ title, icon, url }) => (
                 <Card
                   key={title}
                   title={title}
                   left={icon}
-                  onPress={() => {}}
+                  onPress={() => Linking.openURL(url)}
                   className="flex-1"
                   right={
                     <StSvg
