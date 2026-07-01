@@ -13,7 +13,11 @@
       "infoPlist": {
         "CFBundleLocalizations": ["ru", "en"],
         "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
+      },
+      "entitlements": {
+        "aps-environment": "production"
       },
       "bundleIdentifier": "com.slotter.application"
     },
@@ -81,6 +85,13 @@
           "url": "https://sentry.io/",
           "project": "slotter-app",
           "organization": "gcode-ay"
+        }
+      ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "production",
+          "disableLocation": true
         }
       ]
     ],

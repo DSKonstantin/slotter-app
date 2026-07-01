@@ -44,7 +44,6 @@ const ChangePassword = () => {
       if (!auth) return;
       try {
         await updateCredentials({
-          resourceType: "user",
           id: auth.userId,
           data: {
             current_password: values.current_password,

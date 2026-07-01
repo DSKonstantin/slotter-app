@@ -31,7 +31,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
 
   return (
     <View className="flex-1 ">
-      <View className="flex-1 items-center justify-center gap-4 px-screen">
+      <View className="flex-1 items-center justify-center gap-4 px-screen pb-8">
         <Image
           source={image}
           style={{ width: 160, height: 160 }}

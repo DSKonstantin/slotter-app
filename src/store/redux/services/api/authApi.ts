@@ -117,18 +117,14 @@ export const authApi = api.injectEndpoints({
     }),
 
     updateCredentials: builder.mutation<
-      { user?: User; customer?: User },
+      { user?: User },
       {
-        resourceType: "user" | "customer";
         id: number;
         data: UpdateCredentialsPayload;
       }
     >({
-      query: ({ resourceType, id, data }) => ({
-        url:
-          resourceType === "customer"
-            ? `/customers/${id}/credentials`
-            : `/users/${id}/credentials`,
+      query: ({ id, data }) => ({
+        url: `/users/${id}/credentials`,
         method: "PATCH",
         data,
       }),

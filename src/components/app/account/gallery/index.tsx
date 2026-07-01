@@ -100,8 +100,6 @@ const GalleryItem = memo(function GalleryItem({
   onToggle,
   onOpen,
 }: GalleryItemProps) {
-  console.log(item.blurhash, "item.blurhash");
-
   return (
     <View style={[styles.item, index % 2 === 0 && styles.itemLeftColumn]}>
       <Pressable

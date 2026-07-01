@@ -24,8 +24,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isOnboardingComplete: boolean;
   isLoading: boolean;
+  isError: boolean;
   login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
+  retry: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [getMe] = useLazyGetMeQuery();
   const [logoutSession] = useLogoutSessionMutation();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   const login = useCallback(
     async (newToken: string) => {
@@ -68,30 +71,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [dispatch, logoutSession]);
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const storedToken = await accessTokenStorage.get();
-        if (storedToken) {
-          dispatch(setToken(storedToken));
-          try {
-            await getMe().unwrap();
-          } catch (e) {
-            if (isAuthError(e)) {
-              await accessTokenStorage.remove();
-              dispatch(logoutAction());
-              await persistor.purge();
-            }
+  const runBootstrap = useCallback(async () => {
+    setIsInitialLoading(true);
+    setIsError(false);
+    try {
+      const storedToken = await accessTokenStorage.get();
+      if (storedToken) {
+        dispatch(setToken(storedToken));
+        try {
+          await getMe().unwrap();
+        } catch (e) {
+          if (isAuthError(e)) {
+            await accessTokenStorage.remove();
+            dispatch(logoutAction());
+            await persistor.purge();
+          } else {
+            setIsError(true);
           }
-        } else {
-          dispatch(logoutAction());
         }
-      } finally {
-        setIsInitialLoading(false);
+      } else {
+        dispatch(logoutAction());
       }
-    };
+    } finally {
+      setIsInitialLoading(false);
+    }
+  }, [dispatch, getMe]);
 
-    bootstrap();
+  const retry = useCallback(() => {
+    runBootstrap();
+  }, [runBootstrap]);
+
+  useEffect(() => {
+    runBootstrap();
     // Run auth bootstrap only once on app start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -101,10 +112,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       isOnboardingComplete,
       isLoading: isInitialLoading,
+      isError,
       login,
       logout,
+      retry,
     }),
-    [isAuthenticated, isOnboardingComplete, isInitialLoading, login, logout],
+    [
+      isAuthenticated,
+      isOnboardingComplete,
+      isInitialLoading,
+      isError,
+      login,
+      logout,
+      retry,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

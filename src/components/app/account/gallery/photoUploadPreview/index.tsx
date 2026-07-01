@@ -108,7 +108,7 @@ export function PhotoUploadPreview({
                   }}
                 >
                   <Pressable
-                    className="flex-1"
+                    className="flex-1 active:opacity-70"
                     onPress={() => setCropIndex(index)}
                   >
                     <Image
@@ -116,24 +116,6 @@ export function PhotoUploadPreview({
                       style={{ width: "100%", height: "100%" }}
                       resizeMode="cover"
                     />
-
-                    {item.cropData && (
-                      <View className="absolute top-1.5 left-1.5 bg-primary-blue-500 rounded-full p-1">
-                        <StSvg
-                          name="Done_round"
-                          size={12}
-                          color={colors.neutral[0]}
-                        />
-                      </View>
-                    )}
-
-                    <View className="absolute bottom-0 left-0 right-0 bg-black/40 py-1 items-center">
-                      <StSvg
-                        name="Edit_light"
-                        size={16}
-                        color={colors.neutral[0]}
-                      />
-                    </View>
                   </Pressable>
 
                   <Pressable
@@ -144,7 +126,7 @@ export function PhotoUploadPreview({
                     <View className="bg-black/50 rounded-full p-0.5">
                       <StSvg
                         name="Close_round"
-                        size={16}
+                        size={24}
                         color={colors.neutral[0]}
                       />
                     </View>

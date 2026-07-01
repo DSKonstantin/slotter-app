@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Image, ActivityIndicator } from "react-native";
 import { CropZoom, type CropZoomRefType } from "react-native-zoom-toolkit";
 import { Button, IconButton, StSvg } from "@/src/components/ui";
@@ -23,17 +23,36 @@ export function CropView({
   onDone,
   onCancel,
 }: CropViewProps) {
+  const [savingMode, setSavingMode] = useState<"crop" | "original" | null>(
+    null,
+  );
   const cropRef = useRef<CropZoomRefType>(null);
   const { resolution, isLoading } = useResolution(originalUri);
 
+  useEffect(() => {
+    if (!isSaving) setSavingMode(null);
+  }, [isSaving]);
+
   const handleCrop = () => {
     if (!cropRef.current) return;
+    setSavingMode("crop");
     const { crop } = cropRef.current.crop();
     onDone({
       originX: crop.originX,
       originY: crop.originY,
       width: crop.width,
       height: crop.height,
+    });
+  };
+
+  const handleSaveOriginal = () => {
+    if (!resolution) return;
+    setSavingMode("original");
+    onDone({
+      originX: 0,
+      originY: 0,
+      width: resolution.width,
+      height: resolution.height,
     });
   };
 
@@ -72,9 +91,16 @@ export function CropView({
         <Button
           title="Сохранить"
           variant="secondary"
+          buttonClassName="mb-2"
           onPress={handleCrop}
           disabled={isSaving}
-          loading={isSaving}
+          loading={isSaving && savingMode === "crop"}
+        />
+        <Button
+          title="Оригинал"
+          onPress={handleSaveOriginal}
+          disabled={isSaving}
+          loading={isSaving && savingMode === "original"}
         />
       </BottomGradientBar>
     </View>

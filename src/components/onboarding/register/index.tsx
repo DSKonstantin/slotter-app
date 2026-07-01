@@ -39,7 +39,6 @@ const Register = () => {
 
       try {
         const { user } = await updateCredentials({
-          resourceType: "user",
           id: auth.userId,
           data: {
             password: data.password,
