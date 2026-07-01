@@ -13,17 +13,20 @@ import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { getApiErrorMessage } from "@/src/utils/apiError";
+import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
 import { identifierMask } from "@/src/utils/mask/maskPhone";
 import { useAuth } from "@/src/contexts/AuthContext";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { Routers } from "@/src/constants/routers";
+import { AccountDeactivatedModal } from "@/src/components/auth/verify/AccountDeactivatedModal";
 
 const Login = () => {
   const [loginMutation, { isLoading }] = useLoginMutation();
   const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [accountDeactivatedVisible, setAccountDeactivatedVisible] =
+    useState(false);
 
   const methods = useForm({
     resolver: yupResolver(loginSchema),
@@ -48,7 +51,12 @@ const Login = () => {
         await login(result.token);
         router.replace(getRedirectPath(result.resource));
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Произошла ошибка"));
+        const code = getApiErrorCode(error);
+        if (code === "account_deactivated") {
+          setAccountDeactivatedVisible(true);
+        } else {
+          toast.error(getApiErrorMessage(error, "Произошла ошибка"));
+        }
       }
     },
     [login, loginMutation],
@@ -110,6 +118,10 @@ const Login = () => {
           </View>
         </View>
       </AuthScreenLayout>
+      <AccountDeactivatedModal
+        visible={accountDeactivatedVisible}
+        onClose={() => setAccountDeactivatedVisible(false)}
+      />
     </FormProvider>
   );
 };

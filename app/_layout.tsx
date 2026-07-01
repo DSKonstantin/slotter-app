@@ -4,7 +4,7 @@ import "dayjs/locale/ru";
 import { useEffect } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -24,7 +24,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { persistor, store } from "@/src/store/redux/store";
+import { persistor, store, useAppSelector } from "@/src/store/redux/store";
 import "@/src/utils/calendarLocale";
 import "@/src/utils/date/date";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
@@ -33,10 +33,39 @@ import AppUpdateModal from "@/src/components/shared/modals/AppUpdateModal";
 import NoInternetScreen from "@/src/components/shared/NoInternetScreen";
 import * as Sentry from "@sentry/react-native";
 import "@/src/services/sentry";
+import {
+  useOneSignal,
+  loginOneSignal,
+  logoutOneSignal,
+} from "@/src/services/oneSignal";
+import { Routers } from "@/src/constants/routers";
 
 SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
+  const router = useRouter();
+  const authUser = useAppSelector((s) => s.auth.user);
+  const authStatus = useAppSelector((s) => s.auth.status);
+
+  useOneSignal((event) => {
+    const { kind, subject_id } = (event.notification.additionalData ?? {}) as {
+      kind?: string;
+      subject_id?: number;
+    };
+
+    if (
+      kind?.startsWith("appointment_") ||
+      kind?.startsWith("rebook_") ||
+      kind === "review_request"
+    ) {
+      if (subject_id) router.push(Routers.app.calendar.slot(subject_id));
+    } else if (kind === "chat_new_activity") {
+      if (subject_id) router.push(Routers.app.chat.room(subject_id));
+    } else {
+      router.push(Routers.app.account.notifications);
+    }
+  });
+
   const {
     ready: appVersionReady,
     isLoading: isVersionLoading,
@@ -65,6 +94,14 @@ function InitialLayout() {
       SplashScreen.hideAsync();
     }
   }, [isLoading, fontsLoaded, appVersionReady, appVersionError]);
+
+  useEffect(() => {
+    if (authStatus === "authenticated" && authUser) {
+      loginOneSignal("user", authUser.id);
+    } else if (authStatus === "unauthenticated") {
+      logoutOneSignal();
+    }
+  }, [authUser?.id, authStatus, authUser]);
 
   if (!fontsLoaded || isLoading) {
     return null;

@@ -10,6 +10,7 @@ import { useNotificationPermission } from "@/src/hooks/useNotificationPermission
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
+import { requestOneSignalPermission } from "@/src/services/oneSignal";
 
 const Notification = () => {
   const auth = useRequiredAuth();
@@ -32,6 +33,7 @@ const Notification = () => {
               const next = await refresh();
 
               if (next.status === "granted") {
+                requestOneSignalPermission();
                 await updateUser({
                   id: auth.userId,
                   data: { onboarding_step: "link" },
