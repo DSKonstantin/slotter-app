@@ -46,6 +46,8 @@ export function Autocomplete({
   emptyText = "Ничего не найдено",
 }: AutocompleteProps) {
   const dropdownController = useRef<IAutocompleteDropdownRef | null>(null);
+  const currentTextRef = useRef<string>(initialItem?.title ?? value ?? "");
+  const suppressNextSelect = useRef(false);
 
   return (
     <BaseField
@@ -74,16 +76,21 @@ export function Autocomplete({
             ) : undefined
           }
           onChangeText={(text) => {
-            if (!text?.trim()) {
-              dropdownController.current?.setItem?.({ id: "" });
-            }
+            currentTextRef.current = text ?? "";
             onChangeText?.(text ?? "");
           }}
-          onSelectItem={(item) =>
+          onSelectItem={(item) => {
+            if (suppressNextSelect.current) {
+              suppressNextSelect.current = false;
+              return;
+            }
+            if (item?.title) {
+              currentTextRef.current = item.title;
+            }
             onSelectItem?.(
               item ? { id: item.id, title: item.title ?? "" } : null,
-            )
-          }
+            );
+          }}
           dataSet={dataSet ?? []}
           emptyResultText={emptyText}
           containerStyle={{ flex: 1 }}
@@ -131,6 +138,13 @@ export function Autocomplete({
           }}
           onBlur={() => {
             setFocused(false);
+            const text = currentTextRef.current;
+            setTimeout(() => {
+              // setInputText won't work if searchText already equals text (no state change → effect skips).
+              // setItem always creates a new object reference, so the effect always fires → inputValue updates.
+              suppressNextSelect.current = true;
+              dropdownController.current?.setItem?.({ id: text, title: text });
+            }, 0);
           }}
         />
       )}
