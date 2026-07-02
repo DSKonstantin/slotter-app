@@ -211,8 +211,6 @@ export const WorkingDayTimePickerField = ({
   isLoading,
 }: Props) => {
   const [open, setOpen] = useState(false);
-  const disabled =
-    isLoading || startMinutes === undefined || endMinutes === undefined;
 
   // All heavy data is pre-computed here when working day loads,
   // so TimePicker has nothing to compute when the modal opens.
@@ -226,6 +224,17 @@ export const WorkingDayTimePickerField = ({
       (t) => !breaks.some((b) => t >= b.startMinutes && t < b.endMinutes),
     );
   }, [startMinutes, endMinutes, breaks]);
+
+  const noSlots =
+    !isLoading &&
+    startMinutes !== undefined &&
+    endMinutes !== undefined &&
+    timeOptions.length === 0;
+  const disabled =
+    isLoading ||
+    startMinutes === undefined ||
+    endMinutes === undefined ||
+    noSlots;
 
   const hourOptions = useMemo(() => {
     const hours = Array.from(
@@ -276,10 +285,11 @@ export const WorkingDayTimePickerField = ({
             <Text
               className="font-inter-regular text-[16px] px-4"
               style={{
-                color: value ? colors.neutral[900] : colors.neutral[300],
+                color:
+                  noSlots || !value ? colors.neutral[300] : colors.neutral[900],
               }}
             >
-              {value || "чч:мм"}
+              {noSlots ? "Все занято" : value || "чч:мм"}
             </Text>
           </Pressable>
         )}

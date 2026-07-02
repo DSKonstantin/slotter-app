@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
@@ -77,9 +77,27 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
   const handleSave = useCallback(
     async (values: ScheduleTemplateFormValues) => {
       await save(values);
-      onClose();
+      const hasEnabledDays = values.days.some((day) => day.isEnabled);
+      if (!hasEnabledDays) {
+        onClose();
+        return;
+      }
+      Alert.alert(
+        "Шаблон сохранён",
+        "Хотите применить шаблон к текущему месяцу?",
+        [
+          {
+            text: "Применить",
+            onPress: () => {
+              onApply?.(values);
+              onClose();
+            },
+          },
+          { text: "Отмена", style: "cancel", onPress: onClose },
+        ],
+      );
     },
-    [onClose, save],
+    [onApply, onClose, save],
   );
 
   const handleApply = useCallback(

@@ -8,7 +8,9 @@ export const VerifySchema = Yup.object().shape({
       ? schema.min(4, "Минимум 4 символа").max(16, "Максимум 16 символов")
       : schema.optional(),
   ),
-  agreedToTerms: Yup.boolean().oneOf([true]).required(),
+  agreedToTerms: Yup.boolean()
+    .oneOf([true], "Необходимо принять условия")
+    .required("Необходимо принять условия"),
   agreedToPersonalData: Yup.boolean().optional(),
 });
 

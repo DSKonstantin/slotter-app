@@ -364,6 +364,7 @@ const SlotCreate: React.FC = () => {
                       <RhfWorkingDayTimePickerField
                         name="time"
                         dateName="date"
+                        durationName="duration"
                         userId={auth!.userId}
                         label="Время"
                       />

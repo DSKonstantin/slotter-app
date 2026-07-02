@@ -1,6 +1,14 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { Routers } from "@/src/constants/routers";
 
 export default function OnboardingLayout() {
+  const { isOnboardingComplete } = useAuth();
+
+  if (isOnboardingComplete) {
+    return <Redirect href={Routers.app.calendar.root()} />;
+  }
+
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />

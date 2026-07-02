@@ -11,7 +11,7 @@ import { colors } from "@/src/styles/colors";
 const DatabaseSuccess = () => {
   return (
     <AuthScreenLayout
-      header={<AuthHeader />}
+      header={<AuthHeader showLogout />}
       footer={
         <AuthFooter
           primary={{

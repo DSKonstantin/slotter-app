@@ -123,6 +123,15 @@ const appointmentsApi = api.injectEndpoints({
       },
     }),
 
+    confirmAppointment: builder.mutation<Appointment, number>({
+      query: (id) => ({
+        url: `/appointments/${id}/confirm`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Appointments"],
+      onQueryStarted: pessimisticAppointment((id) => id),
+    }),
+
     userAcceptAppointment: builder.mutation<Appointment, number>({
       query: (id) => ({
         url: `/appointments/${id}/user_accept`,
@@ -241,6 +250,7 @@ const appointmentsApi = api.injectEndpoints({
 });
 
 export const {
+  useConfirmAppointmentMutation,
   useGetAppointmentsQuery,
   useGetAppointmentQuery,
   useGetUpcomingAppointmentsQuery,

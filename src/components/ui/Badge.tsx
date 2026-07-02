@@ -61,7 +61,7 @@ export function Badge({
   );
 
   const textClass = twMerge(
-    "font-inter-semibold tracking-wide",
+    "font-inter-semibold",
     sizes.text[size],
     variants[variant].text,
   );

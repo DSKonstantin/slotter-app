@@ -135,7 +135,7 @@ const Schedule = () => {
     <FormProvider {...methods}>
       <AuthScreenLayout
         disableHorizontalPadding
-        header={<AuthHeader />}
+        header={<AuthHeader showLogout />}
         avoidKeyboard
         footer={
           <AuthFooter

@@ -105,7 +105,7 @@ const PersonalInformation = () => {
           contentRef={contentRef}
           header={
             <>
-              <AuthHeader />
+              <AuthHeader showLogout />
               <View className="mt-4">
                 <StepProgress
                   steps={TOTAL_STEPS}

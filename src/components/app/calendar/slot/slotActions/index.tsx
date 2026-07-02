@@ -7,6 +7,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import {
+  useConfirmAppointmentMutation,
   useUserAcceptAppointmentMutation,
   useUserDeclineAppointmentMutation,
   useArriveAppointmentMutation,
@@ -27,6 +28,8 @@ const SlotActions: React.FC<Props> = ({
   onReschedule,
   onCancel,
 }) => {
+  const [confirm, { isLoading: isConfirming }] =
+    useConfirmAppointmentMutation();
   const [userAccept, { isLoading: isAccepting }] =
     useUserAcceptAppointmentMutation();
   const [userDecline, { isLoading: isDeclining }] =
@@ -37,6 +40,24 @@ const SlotActions: React.FC<Props> = ({
     useMarkMissedAppointmentMutation();
   const [complete, { isLoading: isCompleting }] =
     useCompleteAppointmentMutation();
+
+  const handleConfirm = useCallback(() => {
+    Alert.alert("Подтвердить запись?", "", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Подтвердить",
+        onPress: async () => {
+          try {
+            await confirm(appointmentId).unwrap();
+          } catch (error) {
+            toast.error(
+              getApiErrorMessage(error, "Не удалось подтвердить запись"),
+            );
+          }
+        },
+      },
+    ]);
+  }, [appointmentId, confirm]);
 
   const handleAccept = useCallback(() => {
     Alert.alert("Принять заявку?", "", [
@@ -149,6 +170,21 @@ const SlotActions: React.FC<Props> = ({
           </>
         );
       case "pending":
+        return (
+          <Button
+            title="Подтвердить"
+            variant="accent"
+            onPress={handleConfirm}
+            loading={isConfirming}
+            rightIcon={
+              <StSvg
+                name="Check_round_fill"
+                size={24}
+                color={colors.neutral[0]}
+              />
+            }
+          />
+        );
       case "confirmed":
         return (
           <>
