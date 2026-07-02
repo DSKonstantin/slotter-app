@@ -1,4 +1,4 @@
-import React from "react";
+    import React from "react";
 import { View } from "react-native";
 import { Stack, useSegments } from "expo-router";
 import StTabBar from "@/src/components/navigation/tabBar";

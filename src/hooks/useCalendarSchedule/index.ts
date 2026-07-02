@@ -61,8 +61,8 @@ export const useCalendarSchedule = (current: Date) => {
     const templateConfigured = templateValues.days.some((day) => day.isEnabled);
 
     if (!templateConfigured) {
-      // setModalTemplate(true);
       dispatch(setScheduleIntent(null));
+      setTimeout(() => setModalTemplate(true), 500);
       return;
     }
 

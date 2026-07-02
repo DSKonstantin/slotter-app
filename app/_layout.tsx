@@ -101,7 +101,7 @@ function InitialLayout() {
     } else if (authStatus === "unauthenticated") {
       logoutOneSignal();
     }
-  }, [authUser?.id, authStatus, authUser]);
+  }, [authUser, authStatus]);
 
   if (!fontsLoaded || isLoading) {
     return null;
@@ -142,9 +142,7 @@ function InitialLayout() {
                       options={{ headerShown: false }}
                     />
                   </Stack.Protected>
-                  <Stack.Protected
-                    guard={isAuthenticated && !isOnboardingComplete}
-                  >
+                  <Stack.Protected guard={isAuthenticated}>
                     <Stack.Screen
                       name="(onboarding)"
                       options={{ headerShown: false }}

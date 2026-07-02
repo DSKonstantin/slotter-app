@@ -199,7 +199,7 @@ const Verify = () => {
           <AuthFooter
             primary={{
               title: "Продолжить",
-              disabled: isLoading || !agreedToTerms,
+              disabled: isLoading,
               loading: isLoading,
               onPress: methods.handleSubmit(onSubmit),
             }}
@@ -269,21 +269,28 @@ const Verify = () => {
                 )}
               </>
             )}
-            <View className="flex-row items-center gap-3 my-3">
-              <RhfCheckbox name="agreedToTerms" />
-              <Typography className="text-caption text-neutral-700 flex-1">
-                Я даю ООО «Slotter» согласие на обработку{" "}
-                <Typography
-                  className="text-caption text-black underline"
-                  onPress={() =>
-                    WebBrowser.openBrowserAsync(
-                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
-                    )
-                  }
-                >
-                  обработку персональных данных
+            <View className="my-3">
+              <View className="flex-row items-center gap-3">
+                <RhfCheckbox name="agreedToTerms" />
+                <Typography className="text-caption text-neutral-700 flex-1">
+                  Я даю ООО «Slotter» согласие на обработку{" "}
+                  <Typography
+                    className="text-caption text-black underline"
+                    onPress={() =>
+                      WebBrowser.openBrowserAsync(
+                        `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
+                      )
+                    }
+                  >
+                    обработку персональных данных
+                  </Typography>
                 </Typography>
-              </Typography>
+              </View>
+              {methods.formState.errors.agreedToTerms && (
+                <Typography className="text-caption text-accent-red-500 mt-1 ml-1">
+                  {methods.formState.errors.agreedToTerms.message}
+                </Typography>
+              )}
             </View>
             <View className="flex-row items-center gap-3 mb-9">
               <RhfCheckbox name="agreedToPersonalData" />

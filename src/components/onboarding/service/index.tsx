@@ -123,7 +123,7 @@ const Service = () => {
   return (
     <FormProvider {...methods}>
       <AuthScreenLayout
-        header={<AuthHeader />}
+        header={<AuthHeader showLogout />}
         avoidKeyboard
         footer={
           <AuthFooter

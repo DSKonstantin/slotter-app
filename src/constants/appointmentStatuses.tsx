@@ -1,6 +1,8 @@
 import React from "react";
 
 import type { AppointmentStatus } from "@/src/store/redux/services/api-types/appointment";
+import { StSvg } from "@/src/components/ui/StSvg";
+import { colors } from "@/src/styles/colors";
 
 export type AppointmentStatusConfig = {
   status: AppointmentStatus;
@@ -41,6 +43,9 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
     defaultActive: true,
     variant: "pending",
     statusLineClass: "bg-accent-yellow-500",
+    icon: (
+      <StSvg name="Expand_right" size={16} color={colors.accent.orange[500]} />
+    ),
   },
   confirmed: {
     status: "confirmed",

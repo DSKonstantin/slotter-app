@@ -21,7 +21,7 @@ const Notification = () => {
 
   return (
     <AuthScreenLayout
-      header={<AuthHeader />}
+      header={<AuthHeader showLogout />}
       footer={
         <AuthFooter
           primary={{

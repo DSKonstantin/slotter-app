@@ -11,7 +11,7 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 const Database = () => {
   return (
     <AuthScreenLayout
-      header={<AuthHeader />}
+      header={<AuthHeader showLogout />}
       footer={
         <AuthFooter
           primary={{

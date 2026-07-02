@@ -56,7 +56,7 @@ const Link = () => {
 
   return (
     <AuthScreenLayout
-      header={<AuthHeader />}
+      header={<AuthHeader showLogout />}
       footer={
         <AuthFooter
           primary={{
