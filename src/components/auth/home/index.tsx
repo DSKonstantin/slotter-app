@@ -5,11 +5,19 @@ import { Image } from "expo-image";
 import authHomeImage from "@/assets/images/auth/auth-home.png";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import AuthHeader from "@/src/components/auth/layout/header";
 import { colors } from "@/src/styles/colors";
+import { LinearGradient } from "expo-linear-gradient";
+
+const HEADER_HEIGHT = 120;
 
 const AuthHome = () => {
+  const { top } = useSafeAreaInsets();
+
   const handleRegister = useCallback(() => {
     router.push(Routers.auth.verify);
   }, []);
@@ -25,6 +33,17 @@ const AuthHome = () => {
         style={StyleSheet.absoluteFill}
         contentFit="cover"
         accessible={false}
+      />
+      <LinearGradient
+        colors={["rgba(0,0,0,0.55)", "transparent"]}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: top + HEADER_HEIGHT,
+        }}
+        pointerEvents="none"
       />
       <SafeAreaView className="flex-1">
         <View className="px-screen">
