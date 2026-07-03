@@ -1,7 +1,6 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { View } from "react-native";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
-import debounce from "lodash/debounce";
 import { Autocomplete } from "@/src/components/ui/fields/Autocomplete";
 import { useDaDataSuggestions } from "@/src/hooks/useDaDataSuggestions";
 
@@ -9,13 +8,8 @@ export function AddressField() {
   const { control } = useFormContext();
   const hideAddress = useWatch({ name: "hideAddress" });
   const [query, setQuery] = useState("");
-  const { suggestions } = useDaDataSuggestions(query);
+  const { suggestions, isLoading } = useDaDataSuggestions(query);
   const justSelected = useRef(false);
-
-  const debouncedSetQuery = useMemo(
-    () => debounce((text: string) => setQuery(text), 500),
-    [],
-  );
 
   return (
     <View className="gap-2">
@@ -31,18 +25,19 @@ export function AddressField() {
             hideErrorText
             disabled={hideAddress}
             dataSet={suggestions}
+            loading={isLoading}
+            debounceDelay={800}
             onChangeText={(text) => {
               onChange(text);
               if (justSelected.current) {
                 justSelected.current = false;
               } else {
-                debouncedSetQuery(text);
+                setQuery(text);
               }
             }}
             onSelectItem={(item) => {
               if (item) {
                 onChange(item.id);
-                debouncedSetQuery.cancel();
                 justSelected.current = true;
               }
             }}

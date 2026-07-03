@@ -12,6 +12,7 @@ export function useDaDataSuggestions(query: string) {
   useEffect(() => {
     if (!query.trim() || !API_KEY) {
       setSuggestions([]);
+      setIsLoading(false);
       return;
     }
 
@@ -47,7 +48,6 @@ export function useDaDataSuggestions(query: string) {
 
     return () => {
       cancelled = true;
-      setIsLoading(false);
     };
   }, [query]);
 

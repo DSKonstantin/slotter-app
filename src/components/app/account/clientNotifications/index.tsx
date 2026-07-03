@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Linking, ScrollView, View } from "react-native";
+import { Alert, ScrollView, Share, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
+import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Badge,
@@ -78,6 +80,20 @@ const DIRECT_CHANNELS = [
 const ClientNotifications = () => {
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
+
+  const handleBotPress = (url: string) => {
+    Alert.alert("Отправьте клиенту ссылку бот", url, [
+      {
+        text: "Скопировать",
+        onPress: async () => {
+          await Clipboard.setStringAsync(url);
+          toast.success("Ссылка скопирована");
+        },
+      },
+      { text: "Поделиться", onPress: () => Share.share({ message: url }) },
+      { text: "Отмена", style: "cancel" },
+    ]);
+  };
 
   return (
     <>
@@ -197,7 +213,7 @@ const ClientNotifications = () => {
                   key={title}
                   title={title}
                   left={icon}
-                  onPress={() => Linking.openURL(url)}
+                  onPress={() => handleBotPress(url)}
                   className="flex-1"
                   right={
                     <StSvg

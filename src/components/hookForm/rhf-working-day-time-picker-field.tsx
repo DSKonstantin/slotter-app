@@ -45,13 +45,20 @@ export function RhfWorkingDayTimePickerField({
     : undefined;
   const dateTo = parsedDate ? formatApiDate(endOfMonth(parsedDate)) : undefined;
 
-  const { data: workingDays, isFetching } = useGetWorkingDaysQuery(
+  const {
+    data: workingDays,
+    isFetching,
+    refetch: refetchWorkingDays,
+  } = useGetWorkingDaysQuery(
     { userId, date_from: dateFrom!, date_to: dateTo! },
     { skip: !dateFrom },
   );
 
-  const { data: appointmentsData, isFetching: isFetchingAppointments } =
-    useGetAppointmentsQuery({ userId, params: { date } }, { skip: !date });
+  const {
+    data: appointmentsData,
+    isFetching: isFetchingAppointments,
+    refetch: refetchAppointments,
+  } = useGetAppointmentsQuery({ userId, params: { date } }, { skip: !date });
 
   // Plain derived values
   const workingDay = date && workingDays ? workingDays[date] : null;
@@ -117,7 +124,11 @@ export function RhfWorkingDayTimePickerField({
       startMinutes={startMinutes}
       endMinutes={adjustedEndMinutes}
       breaks={breaks}
-      isLoading={!!date && (isFetching || isFetchingAppointments)}
+      isLoading={isFetching || isFetchingAppointments}
+      onOpen={() => {
+        refetchWorkingDays();
+        refetchAppointments();
+      }}
     />
   );
 }

@@ -17,25 +17,14 @@ import {
   RefreshControl,
   Pressable,
   Platform,
-  Keyboard,
 } from "react-native";
-import {
-  KeyboardAwareScrollView,
-  KeyboardStickyView,
-} from "react-native-keyboard-controller";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { useModalAction } from "@/src/hooks/useModalAction";
 import SlotActionsMenu from "./SlotActionsMenu";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
-import {
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Avatar, Badge, Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import {
   useGetAppointmentQuery,
@@ -64,7 +53,7 @@ import EditableCommentRow from "./EditableCommentRow";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
-import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
+import { STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
 import EditableDurationRow from "./EditableDurationRow";
@@ -98,7 +87,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     onModalHide: onPaymentModalHide,
   } = useModalAction(() => setPaymentMethodVisible(false));
   const [editingField, setEditingField] = useState<EditingField>(null);
-  const [isCommentFocused, setIsCommentFocused] = useState(false);
   const isSavingRef = useRef(false);
 
   const {
@@ -175,9 +163,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       ),
     [handleUpdate, methods],
   );
-
-  const commentValue = methods.watch("comment") ?? "";
-  const isCommentDirty = !!slot && commentValue !== (slot.comment ?? "");
 
   const derived = useMemo(() => {
     if (!slot) return null;
@@ -595,9 +580,8 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 <EditableCommentRow
                   fieldName="comment"
                   isUpdating={isUpdating && editingField === "comment"}
-                  onFocus={() => setIsCommentFocused(true)}
+                  onFocus={() => {}}
                   onBlur={() => {
-                    setIsCommentFocused(false);
                     const isDirty =
                       methods.getValues("comment") !== (slot.comment ?? "");
                     if (isDirty) void handleSaveComment();
@@ -611,39 +595,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   onCancel={() => setCancelVisible(true)}
                 />
               </KeyboardAwareScrollView>
-
-              {isCommentFocused && (
-                <KeyboardStickyView
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                  }}
-                >
-                  <View className="px-screen py-3 bg-background border-t border-neutral-100">
-                    <Button
-                      title="Сохранить"
-                      loading={isUpdating && editingField === "comment"}
-                      disabled={
-                        !isCommentDirty ||
-                        (isUpdating && editingField === "comment")
-                      }
-                      rightIcon={
-                        <StSvg
-                          name="Save_fill"
-                          size={24}
-                          color={colors.neutral[0]}
-                        />
-                      }
-                      onPress={() => {
-                        void handleSaveComment();
-                        Keyboard.dismiss();
-                      }}
-                    />
-                  </View>
-                </KeyboardStickyView>
-              )}
 
               <CancelModal
                 visible={cancelVisible}

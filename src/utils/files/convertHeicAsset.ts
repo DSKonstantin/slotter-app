@@ -1,6 +1,10 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 
-type HeicAsset = { uri: string; mimeType?: string | null; fileName?: string | null };
+type HeicAsset = {
+  uri: string;
+  mimeType?: string | null;
+  fileName?: string | null;
+};
 
 const HEIC_MIME_TYPES = new Set(["image/heic", "image/heif"]);
 
