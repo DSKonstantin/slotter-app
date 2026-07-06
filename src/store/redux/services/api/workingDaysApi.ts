@@ -98,8 +98,19 @@ const workingDaysApi = api.injectEndpoints({
         },
       }),
       transformResponse: unwrapWorkingDay,
+      onQueryStarted: async ({ userId, id }, { dispatch, queryFulfilled }) => {
+        try {
+          const { data: updatedWorkingDay } = await queryFulfilled;
+          dispatch(
+            workingDaysApi.util.updateQueryData(
+              "getWorkingDay",
+              { userId, id },
+              () => updatedWorkingDay,
+            ),
+          );
+        } catch {}
+      },
       invalidatesTags: (_result, _error, arg) => [
-        { type: "WorkingDays", id: arg.id },
         { type: "WorkingDays", id: `LIST-${arg.userId}` },
         { type: "WorkingDayBreaks", id: `LIST-${arg.id}` },
       ],

@@ -2,6 +2,7 @@ import type { Pagination } from "./common";
 
 export type NotificationKind =
   | "appointment_created"
+  | "appointment_booked"
   | "appointment_pending_approval"
   | "appointment_confirmed"
   | "appointment_cancelled"

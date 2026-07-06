@@ -82,6 +82,7 @@ const additionalServicesApi = api.injectEndpoints({
         method: "POST",
         data: data instanceof FormData ? data : { additional_service: data },
       }),
+      transformResponse: unwrapResponse<Service>("additional_service"),
       invalidatesTags: [TAG],
     }),
 

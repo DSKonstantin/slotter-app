@@ -48,6 +48,10 @@ const KIND_BADGE: Record<
     icon: "Add_round_fill",
     color: colors.primary.blue[500],
   },
+  appointment_booked: {
+    icon: "Add_round_fill",
+    color: colors.primary.blue[500],
+  },
   appointment_pending_approval: {
     icon: "Add_round_fill",
     color: colors.primary.blue[500],

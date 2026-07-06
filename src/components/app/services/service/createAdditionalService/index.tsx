@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import {
   Button,
   Card,
+  Checkbox,
   IconButton,
   StSvg,
   Typography,
@@ -13,14 +14,13 @@ import { useFieldArray, useFormContext } from "react-hook-form";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetAdditionalServicesInfiniteQuery } from "@/src/store/redux/services/api/additionalServicesApi";
-import { router } from "expo-router";
-import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import EditAdditionalServiceModal from "@/src/components/app/services/service/createAdditionalService/editAdditionalServiceModal";
+import CreateAdditionalServiceModal from "@/src/components/app/services/service/createAdditionalService/createAdditionalServiceModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import type { AdditionalService } from "@/src/store/redux/services/api-types";
-import {formatDuration} from "@/src/utils/date/formatTime";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 type AdditionalServicesFieldValues = {
   additionalServices: {
@@ -64,6 +64,7 @@ const AdditionalServicesSkeleton = () => (
 const CreateAdditionalService = () => {
   const [editingService, setEditingService] =
     useState<AdditionalService | null>(null);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
   const { control } = useFormContext<AdditionalServicesFieldValues>();
   const auth = useRequiredAuth();
 
@@ -107,22 +108,6 @@ const CreateAdditionalService = () => {
         <Typography className="text-caption text-neutral-500">
           Дополнительные услуги
         </Typography>
-        <Button
-          title="Все"
-          variant="clear"
-          buttonClassName="h-[24px] p-0 rounded-none gap-0"
-          textClassName="text-[13px] text-neutral-500"
-          onPress={() => {
-            router.push(Routers.app.services.additionalServices.root);
-          }}
-          rightIcon={
-            <StSvg
-              name="Expand_right_light"
-              size={16}
-              color={colors.neutral[500]}
-            />
-          }
-        />
       </View>
 
       {isLoading ? (
@@ -135,70 +120,80 @@ const CreateAdditionalService = () => {
           />
         </View>
       ) : (
-        <FlatList
-          className="mb-2"
-          horizontal
-          data={additionalServicesFromApi}
-          keyExtractor={(service) => String(service.id)}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: SCREEN_PADDING,
-            gap: 8,
-          }}
-          renderItem={({ item: service }) => {
-            const selectedIndex = fields.findIndex(
-              (item) => item.serviceId === service.id,
-            );
-            const isSelected = selectedIndex !== -1;
+        <>
+          <FlatList
+            className="mb-2"
+            horizontal
+            data={additionalServicesFromApi}
+            keyExtractor={(service) => String(service.id)}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: SCREEN_PADDING,
+              gap: 8,
+            }}
+            renderItem={({ item: service }) => {
+              const selectedIndex = fields.findIndex(
+                (item) => item.serviceId === service.id,
+              );
+              const isSelected = selectedIndex !== -1;
 
-            return (
-              <View className="relative py-2">
-                <Card
-                  title={service.name}
-                  subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
-                  onPress={() => handleToggle(service)}
-                  pressArea="content"
-                  active={isSelected}
-                  right={
-                    <IconButton
-                      size="xs"
-                      hitSlop={{ top: 16, bottom: 16, left: 8, right: 16 }}
-                      onPress={() => setEditingService(service)}
-                      icon={
-                        <StSvg
-                          name="Edit_light"
-                          size={24}
-                          color={colors.neutral[500]}
-                        />
-                      }
-                    />
-                  }
-                />
-
-                {isSelected && (
-                  <IconButton
-                    onPress={() => remove(selectedIndex)}
-                    size="xs"
-                    buttonClassName="absolute top-0 right-0 bg-background rounded-full"
-                    icon={
-                      <StSvg
-                        name="Close_round_fill_light"
-                        size={18}
-                        color={colors.neutral[900]}
+              return (
+                <View className="relative py-2">
+                  <Card
+                    title={service.name}
+                    subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
+                    onPress={() => handleToggle(service)}
+                    pressArea="content"
+                    left={
+                      <Checkbox
+                        value={isSelected}
+                        onChange={() => handleToggle(service)}
+                      />
+                    }
+                    right={
+                      <IconButton
+                        size="xs"
+                        hitSlop={{ top: 16, bottom: 16, left: 8, right: 16 }}
+                        onPress={() => setEditingService(service)}
+                        icon={
+                          <StSvg
+                            name="Edit_light"
+                            size={24}
+                            color={colors.neutral[500]}
+                          />
+                        }
                       />
                     }
                   />
-                )}
-              </View>
-            );
-          }}
-        />
+                </View>
+              );
+            }}
+          />
+          <Button
+            title="Создать доп. услугу"
+            buttonClassName="mx-screen"
+            variant="clear"
+            onPress={() => setCreateModalVisible(true)}
+            rightIcon={
+              <StSvg
+                name="Add_round_fill"
+                size={24}
+                color={colors.neutral[900]}
+              />
+            }
+          />
+        </>
       )}
 
       <EditAdditionalServiceModal
         visible={!!editingService}
         service={editingService}
         onClose={() => setEditingService(null)}
+      />
+      <CreateAdditionalServiceModal
+        visible={createModalVisible}
+        onClose={() => setCreateModalVisible(false)}
+        onCreated={(serviceId) => append({ serviceId })}
       />
     </>
   );
