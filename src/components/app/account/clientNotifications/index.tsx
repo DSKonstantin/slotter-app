@@ -11,7 +11,6 @@ import {
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Platform,
   RefreshControl,
   ScrollView,
@@ -114,7 +113,7 @@ const DIRECT_CHANNELS = [
 ];
 
 const ClientNotifications = () => {
-  const [activePeriod, setActivePeriod] = useState(2);
+  const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
   const auth = useRequiredAuth();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
@@ -170,8 +169,6 @@ const ClientNotifications = () => {
     ];
   }, [statsData]);
 
-  const hasStats = (statsData?.notification_stats.totals.sent ?? 0) > 0;
-
   const handleBotPress = (url: string) => {
     Alert.alert("Отправьте клиенту ссылку бот", url, [
       {
@@ -209,95 +206,74 @@ const ClientNotifications = () => {
               />
             }
           >
-            {isStatsLoading ? (
-              <View className="h-[132px] items-center justify-center">
-                <ActivityIndicator color={colors.neutral[400]} />
-              </View>
-            ) : isStatsError ? (
-              <RetryInline
-                text="Не удалось загрузить статистику"
-                onRetry={refetchStats}
-                layout="column"
-              />
-            ) : hasStats ? (
-              <>
-                <View className="flex-row justify-between items-center mb-2">
-                  <Typography weight="semibold" className="text-body">
-                    Статистика
-                  </Typography>
-                  <Button
-                    title="Подробнее"
-                    size="xs"
-                    buttonClassName="gap-0"
-                    textClassName="text-neutral-500 text-[13px]"
-                    variant="clear"
-                    onPress={() =>
-                      router.push(
-                        Routers.app.account.clientNotifications.statistics,
-                      )
-                    }
-                    rightIcon={
-                      <StSvg
-                        name="Expand_right"
-                        size={16}
-                        color={colors.neutral[500]}
-                      />
-                    }
+            <View className="flex-row justify-between items-center mb-2">
+              <Typography weight="semibold" className="text-body">
+                Статистика
+              </Typography>
+              <Button
+                title="Подробнее"
+                size="xs"
+                buttonClassName="gap-0"
+                textClassName="text-neutral-500 text-[13px]"
+                variant="clear"
+                onPress={() =>
+                  router.push(
+                    Routers.app.account.clientNotifications.statistics,
+                  )
+                }
+                rightIcon={
+                  <StSvg
+                    name="Expand_right"
+                    size={16}
+                    color={colors.neutral[500]}
                   />
-                </View>
-                <View className="bg-background-surface p-4 rounded-base gap-5">
-                  <View className="flex-row flex-wrap gap-2">
-                    {FILTER_PERIODS.map((period, i) => (
-                      <Badge
-                        key={period}
-                        title={period}
-                        variant={i === activePeriod ? "accent" : "ghost"}
-                        onPress={() => setActivePeriod(i)}
-                      />
-                    ))}
-                  </View>
+                }
+              />
+            </View>
 
-                  <View className="flex-row flex-wrap gap-2">
-                    {stats.map(({ value, label, color }) => (
-                      <View key={label} className="flex-1">
-                        <Typography
-                          weight="semibold"
-                          className={`text-display ${color}`}
-                        >
-                          {value}
-                        </Typography>
-                        <Typography
-                          weight="regular"
-                          className="text-neutral-500 text-caption"
-                        >
-                          {label}
-                        </Typography>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              </>
-            ) : (
-              <View className="flex-row gap-4 px-screen pt-5">
-                <Image
-                  source={require("@/assets/images/app/notifications-clients.png")}
-                  style={{ width: 80, height: 80 }}
-                  resizeMode="contain"
-                />
-                <View className="gap-1 flex-1">
-                  <Typography weight="semibold" className="text-body">
-                    Уведомления не отправлялись
-                  </Typography>
-                  <Typography
-                    weight="regular"
-                    className="text-body text-neutral-500"
-                  >
-                    Подключи каналы и клиенты начнут получать напоминания о
-                    записях
-                  </Typography>
-                </View>
+            <View className="bg-background-surface p-4 rounded-base gap-5">
+              <View className="flex-row flex-wrap gap-2">
+                {FILTER_PERIODS.map((period, i) => (
+                  <Badge
+                    key={period}
+                    title={period}
+                    variant={i === activePeriod ? "accent" : "ghost"}
+                    onPress={() => setActivePeriod(i)}
+                  />
+                ))}
               </View>
-            )}
+
+              {isStatsLoading ? (
+                <View className="h-[52px] items-center justify-center">
+                  <ActivityIndicator color={colors.neutral[400]} />
+                </View>
+              ) : isStatsError ? (
+                <RetryInline
+                  text="Не удалось загрузить статистику"
+                  onRetry={refetchStats}
+                  layout="column"
+                />
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {stats.map(({ value, label, color }) => (
+                    <View key={label} className="flex-1">
+                      <Typography
+                        weight="semibold"
+                        className={`text-display ${color}`}
+                      >
+                        {value}
+                      </Typography>
+                      <Typography
+                        weight="regular"
+                        className="text-neutral-500 text-caption"
+                      >
+                        {label}
+                      </Typography>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Бесплатные каналы
