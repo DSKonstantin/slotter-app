@@ -1,5 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
+  format,
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
+import {
+  ActivityIndicator,
   Alert,
   Image,
   Platform,
@@ -13,9 +23,13 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import RetryInline from "@/src/components/shared/retryInline";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import { useGetNotificationSettingsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import {
+  useGetNotificationSettingsQuery,
+  useGetNotificationStatsQuery,
+} from "@/src/store/redux/services/api/notificationsApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import {
   Badge,
@@ -33,11 +47,27 @@ import { Routers } from "@/src/constants/routers";
 
 const FILTER_PERIODS = ["Сегодня", "Неделя", "Месяц"] as const;
 
-const STATS = [
-  { value: "142", label: "Отправлено", color: "text-primary-blue-500" },
-  { value: "138", label: "Доставлено", color: "text-green-700" },
-  { value: "4", label: "Ошибки", color: "text-accent-red-500" },
-] as const;
+const DATE_FORMAT = "yyyy-MM-dd";
+
+function getPeriodRange(periodIndex: number): { from: string; to: string } {
+  const now = new Date();
+  if (periodIndex === 0) {
+    return {
+      from: format(startOfDay(now), DATE_FORMAT),
+      to: format(endOfDay(now), DATE_FORMAT),
+    };
+  }
+  if (periodIndex === 1) {
+    return {
+      from: format(startOfWeek(now, { weekStartsOn: 1 }), DATE_FORMAT),
+      to: format(endOfWeek(now, { weekStartsOn: 1 }), DATE_FORMAT),
+    };
+  }
+  return {
+    from: format(startOfMonth(now), DATE_FORMAT),
+    to: format(endOfMonth(now), DATE_FORMAT),
+  };
+}
 
 const APP_FEATURES = [
   {
@@ -84,7 +114,7 @@ const DIRECT_CHANNELS = [
 ];
 
 const ClientNotifications = () => {
-  const [activePeriod, setActivePeriod] = useState(0);
+  const [activePeriod, setActivePeriod] = useState(2);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
   const auth = useRequiredAuth();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
@@ -92,7 +122,26 @@ const ClientNotifications = () => {
   const { data: settingsData, refetch: refetchSettings } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
 
-  const { refreshing, onRefresh } = useRefresh(refetchSettings);
+  const periodRange = useMemo(
+    () => getPeriodRange(activePeriod),
+    [activePeriod],
+  );
+
+  const {
+    data: statsData,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+    refetch: refetchStats,
+  } = useGetNotificationStatsQuery(
+    auth ? { userId: auth.userId, ...periodRange } : skipToken,
+    { refetchOnMountOrArgChange: true },
+  );
+
+  const { refreshing, onRefresh } = useRefresh(
+    useCallback(async () => {
+      await Promise.all([refetchSettings(), refetchStats()]);
+    }, [refetchSettings, refetchStats]),
+  );
 
   const notificationSettingsSummary = useMemo(() => {
     const all = settingsData?.notification_settings ?? [];
@@ -100,7 +149,28 @@ const ClientNotifications = () => {
     return { enabled, total: all.length };
   }, [settingsData]);
 
-  const hasStats = false;
+  const stats = useMemo(() => {
+    const t = statsData?.notification_stats.totals;
+    return [
+      {
+        value: String(t?.sent ?? 0),
+        label: "Отправлено",
+        color: "text-primary-blue-500",
+      },
+      {
+        value: String((t?.sent ?? 0) - (t?.failed ?? 0)),
+        label: "Доставлено",
+        color: "text-green-700",
+      },
+      {
+        value: String(t?.failed ?? 0),
+        label: "Ошибки",
+        color: "text-accent-red-500",
+      },
+    ];
+  }, [statsData]);
+
+  const hasStats = (statsData?.notification_stats.totals.sent ?? 0) > 0;
 
   const handleBotPress = (url: string) => {
     Alert.alert("Отправьте клиенту ссылку бот", url, [
@@ -139,65 +209,75 @@ const ClientNotifications = () => {
               />
             }
           >
-            {hasStats && (
-              <View className="flex-row justify-between items-center mb-2">
-                <Typography weight="semibold" className="text-body">
-                  Статистика
-                </Typography>
-                <Button
-                  title="Подробнее"
-                  size="xs"
-                  buttonClassName="gap-0"
-                  textClassName="text-neutral-500 text-[13px]"
-                  variant="clear"
-                  onPress={() =>
-                    router.push(
-                      Routers.app.account.clientNotifications.statistics,
-                    )
-                  }
-                  rightIcon={
-                    <StSvg
-                      name="Expand_right"
-                      size={16}
-                      color={colors.neutral[500]}
-                    />
-                  }
-                />
+            {isStatsLoading ? (
+              <View className="h-[132px] items-center justify-center">
+                <ActivityIndicator color={colors.neutral[400]} />
               </View>
-            )}
-
-            {hasStats ? (
-              <View className="bg-background-surface p-4 rounded-base gap-5">
-                <View className="flex-row flex-wrap gap-2">
-                  {FILTER_PERIODS.map((period, i) => (
-                    <Badge
-                      key={period}
-                      title={period}
-                      variant={i === activePeriod ? "accent" : "ghost"}
-                      onPress={() => setActivePeriod(i)}
+            ) : isStatsError ? (
+              <RetryInline
+                text="Не удалось загрузить статистику"
+                onRetry={refetchStats}
+                layout="column"
+              />
+            ) : hasStats ? (
+                <>
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Typography weight="semibold" className="text-body">
+                      Статистика
+                    </Typography>
+                    <Button
+                        title="Подробнее"
+                        size="xs"
+                        buttonClassName="gap-0"
+                        textClassName="text-neutral-500 text-[13px]"
+                        variant="clear"
+                        onPress={() =>
+                            router.push(
+                                Routers.app.account.clientNotifications.statistics,
+                            )
+                        }
+                        rightIcon={
+                          <StSvg
+                              name="Expand_right"
+                              size={16}
+                              color={colors.neutral[500]}
+                          />
+                        }
                     />
-                  ))}
-                </View>
-
-                <View className="flex-row flex-wrap gap-2">
-                  {STATS.map(({ value, label, color }) => (
-                    <View key={label} className="flex-1">
-                      <Typography
-                        weight="semibold"
-                        className={`text-display ${color}`}
-                      >
-                        {value}
-                      </Typography>
-                      <Typography
-                        weight="regular"
-                        className="text-neutral-500 text-caption"
-                      >
-                        {label}
-                      </Typography>
+                  </View>
+                  <View className="bg-background-surface p-4 rounded-base gap-5" >
+                    <View className="flex-row flex-wrap gap-2">
+                      {FILTER_PERIODS.map((period, i) => (
+                          <Badge
+                              key={period}
+                              title={period}
+                              variant={i === activePeriod ? "accent" : "ghost"}
+                              onPress={() => setActivePeriod(i)}
+                          />
+                      ))}
                     </View>
-                  ))}
-                </View>
-              </View>
+
+                    <View className="flex-row flex-wrap gap-2">
+                      {stats.map(({ value, label, color }) => (
+                          <View key={label} className="flex-1">
+                            <Typography
+                                weight="semibold"
+                                className={`text-display ${color}`}
+                            >
+                              {value}
+                            </Typography>
+                            <Typography
+                                weight="regular"
+                                className="text-neutral-500 text-caption"
+                            >
+                              {label}
+                            </Typography>
+                          </View>
+                      ))}
+                    </View>
+                  </View>
+                </>
+
             ) : (
               <View className="flex-row gap-4 px-screen pt-5">
                 <Image
