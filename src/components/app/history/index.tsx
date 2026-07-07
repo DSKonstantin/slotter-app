@@ -23,7 +23,6 @@ import {
 } from "@/src/store/redux/services/api/notificationsApi";
 import type {
   Notification,
-  NotificationKind,
   AppointmentNotificationSubject,
   ChatNotificationSubject,
 } from "@/src/store/redux/services/api-types";
@@ -36,75 +35,11 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { pluralize } from "@/src/utils/text/pluralize";
 import { colors } from "@/src/styles/colors";
 import { SCREEN_PADDING } from "@/src/constants/layout";
+import {
+  NOTIFICATION_KIND_CONFIG,
+  DEFAULT_NOTIFICATION_BADGE,
+} from "@/src/constants/notificationKinds";
 import HistorySkeleton from "./HistorySkeleton";
-
-// ── Badge config ─────────────────────────────────────────────────────────────
-
-const KIND_BADGE: Record<
-  NotificationKind,
-  { icon: string; color: string; rotate?: number; bgColor?: string }
-> = {
-  appointment_created: {
-    icon: "Add_round_fill",
-    color: colors.primary.blue[500],
-  },
-  appointment_booked: {
-    icon: "Add_round_fill",
-    color: colors.primary.blue[500],
-  },
-  appointment_pending_approval: {
-    icon: "Add_round_fill",
-    color: colors.primary.blue[500],
-  },
-  appointment_confirmed: {
-    icon: "Check_fill",
-    color: colors.primary.green[700],
-  },
-  appointment_cancelled: {
-    icon: "Close_round_fill",
-    color: colors.accent.red[500],
-  },
-  appointment_rescheduled: {
-    icon: "Clock_fill",
-    color: colors.accent.yellow[700],
-  },
-  appointment_reminder: {
-    icon: "Clock_fill",
-    color: colors.primary.blue[500],
-  },
-  appointment_requested: {
-    icon: "Add_round_fill",
-    color: colors.primary.blue[500],
-  },
-  appointment_request_accepted: {
-    icon: "Check_fill",
-    color: colors.primary.green[500],
-  },
-  appointment_customer_accepted: {
-    icon: "Check_fill",
-    color: colors.primary.green[500],
-  },
-  appointment_customer_declined: {
-    icon: "Close_round_fill",
-    color: colors.accent.red[500],
-  },
-  appointment_reschedule_requested: {
-    icon: "Sort_arrow",
-    color: colors.neutral[0],
-    bgColor: colors.accent.orange[500],
-    rotate: 90,
-  },
-  rebook_suggestion: {
-    icon: "Star_fill",
-    color: colors.accent.yellow[700],
-  },
-  chat_new_activity: {
-    icon: "Chat_fill",
-    color: colors.accent.purple[500],
-  },
-};
-
-const DEFAULT_BADGE = { icon: "Clock_fill", color: colors.neutral[400] };
 
 // ── Notification row ──────────────────────────────────────────────────────────
 
@@ -120,7 +55,8 @@ function isAppointmentSubject(
 }
 
 const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
-  const badge = KIND_BADGE[item.kind] ?? DEFAULT_BADGE;
+  const badge =
+    NOTIFICATION_KIND_CONFIG[item.kind]?.badge ?? DEFAULT_NOTIFICATION_BADGE;
   const person = item.subject
     ? isAppointmentSubject(item.subject)
       ? item.subject.customer

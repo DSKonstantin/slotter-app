@@ -4,6 +4,8 @@ import type {
   GetNotificationsResponse,
   MarkAllNotificationsReadResponse,
   MarkNotificationReadResponse,
+  GetNotificationSettingsResponse,
+  UpdateNotificationSettingsPayload,
 } from "@/src/store/redux/services/api-types";
 
 const notificationsApi = api.injectEndpoints({
@@ -62,6 +64,47 @@ const notificationsApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Notifications"],
     }),
+
+    getNotificationSettings: builder.query<
+      GetNotificationSettingsResponse,
+      number
+    >({
+      query: (userId) => ({
+        url: `/users/${userId}/notification_settings`,
+        method: "GET",
+      }),
+      providesTags: ["NotificationSettings"],
+    }),
+
+    updateNotificationSettings: builder.mutation<
+      GetNotificationSettingsResponse,
+      UpdateNotificationSettingsPayload
+    >({
+      query: ({ userId, settings }) => ({
+        url: `/users/${userId}/notification_settings`,
+        method: "PATCH",
+        data: { settings },
+      }),
+      async onQueryStarted({ userId, settings }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (api as any).util.updateQueryData(
+            "getNotificationSettings",
+            userId,
+            (draft: GetNotificationSettingsResponse) => {
+              draft.notification_settings.forEach((s) => {
+                if (s.kind in settings) s.enabled = settings[s.kind]!;
+              });
+            },
+          ),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
   }),
 });
 
@@ -70,4 +113,6 @@ export const {
   useGetNotificationsPaginatedInfiniteQuery,
   useMarkNotificationReadMutation,
   useMarkAllNotificationsReadMutation,
+  useGetNotificationSettingsQuery,
+  useUpdateNotificationSettingsMutation,
 } = notificationsApi;

@@ -12,12 +12,12 @@ import {
 import { colors } from "@/src/styles/colors";
 import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
 
-type Channel = "telegram" | "max" | "whatsapp";
+type Channel = "telegram" | "max";
 
 const CHANNEL_CONFIG: Record<
   Channel,
   {
-    icon: "SocialTelegram" | "SocialWhatsApp" | "SocialMax";
+    icon: "SocialTelegram" | "SocialMax";
     iconNode?: React.ReactNode;
     iconColor: string;
     name: string;
@@ -44,19 +44,6 @@ const CHANNEL_CONFIG: Record<
     iconNode: <MaxLogo size={80} />,
     iconColor: "#7B61FF",
     name: "Макс",
-    description:
-      "Уведомления клиентам от вашего имени — без дополнительных действий с их стороны",
-    features: [
-      "Сообщения приходят от вашего аккаунта",
-      "Клиент видит ваше имя, а не бота",
-      "Работает без подписки клиента",
-    ],
-    price: "1 000 ₽/мес",
-  },
-  whatsapp: {
-    icon: "SocialWhatsApp",
-    iconColor: "#41C252",
-    name: "WhatsApp",
     description:
       "Уведомления клиентам от вашего имени — без дополнительных действий с их стороны",
     features: [
@@ -124,22 +111,25 @@ const DirectNotifications = () => {
               ))}
             </View>
 
-            <Typography weight="semibold" className="text-body mb-3">
+            <Typography
+              weight="semibold"
+              className="text-body mb-3 text-neutral-500"
+            >
               Как подключить
             </Typography>
 
-            <View className="bg-background-surface p-4 rounded-base gap-4 mb-5">
+            <View className="rounded-base gap-4 mb-5">
               {HOW_TO_STEPS.map((step, i) => (
                 <View key={step} className="flex-row gap-3 items-center">
-                  <View className="w-7 h-7 rounded-full bg-neutral-100 items-center justify-center">
+                  <View className="w-[28px] h-[28px] rounded-full bg-primary-blue-500 items-center justify-center">
                     <Typography
-                      weight="semibold"
-                      className="text-caption text-neutral-500"
+                      weight="regular"
+                      className="text-body text-neutral-0"
                     >
                       {i + 1}
                     </Typography>
                   </View>
-                  <Typography weight="regular" className="text-body flex-1">
+                  <Typography weight="regular" className="text-body">
                     {step}
                   </Typography>
                 </View>

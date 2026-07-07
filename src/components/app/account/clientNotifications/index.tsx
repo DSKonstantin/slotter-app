@@ -1,9 +1,22 @@
-import React, { useState } from "react";
-import { Alert, Image, ScrollView, Share, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  Alert,
+  Image,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  Share,
+  View,
+} from "react-native";
 import * as Clipboard from "expo-clipboard";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import { useGetNotificationSettingsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import { useAppSelector } from "@/src/store/redux/store";
 import {
   Badge,
   Button,
@@ -68,18 +81,24 @@ const DIRECT_CHANNELS = [
     name: "Макс",
     price: "от 1 000 ₽/мес",
   },
-  {
-    channel: "whatsapp" as const,
-    icon: "SocialWhatsApp" as const,
-    iconColor: "#41C252",
-    name: "WhatsApp",
-    price: "от 1 000 ₽/мес",
-  },
 ];
 
 const ClientNotifications = () => {
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
+  const auth = useRequiredAuth();
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
+
+  const { data: settingsData, refetch: refetchSettings } =
+    useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+
+  const { refreshing, onRefresh } = useRefresh(refetchSettings);
+
+  const notificationSettingsSummary = useMemo(() => {
+    const all = settingsData?.notification_settings ?? [];
+    const enabled = all.filter((s) => s.enabled).length;
+    return { enabled, total: all.length };
+  }, [settingsData]);
 
   const hasStats = false;
 
@@ -104,10 +123,21 @@ const ClientNotifications = () => {
           <ScrollView
             className="px-screen"
             showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
             }}
+            refreshControl={
+              <RefreshControl
+                progressViewOffset={Platform.select({ android: topInset })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
           >
             {hasStats && (
               <View className="flex-row justify-between items-center mb-2">
@@ -169,7 +199,7 @@ const ClientNotifications = () => {
                 </View>
               </View>
             ) : (
-              <View className="flex-row gap-4 px-screen py-4">
+              <View className="flex-row gap-4 px-screen pt-5">
                 <Image
                   source={require("@/assets/images/app/notifications-clients.png")}
                   style={{ width: 80, height: 80 }}
@@ -183,7 +213,8 @@ const ClientNotifications = () => {
                     weight="regular"
                     className="text-body text-neutral-500"
                   >
-                    Подключи каналы и клиенты начнут получать напоминания о записях
+                    Подключи каналы и клиенты начнут получать напоминания о
+                    записях
                   </Typography>
                 </View>
               </View>
@@ -260,71 +291,84 @@ const ClientNotifications = () => {
               приложение
             </Typography>
 
-            <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-              Прямые уведомления
-            </Typography>
+            {ispe && (
+              <>
+                <Typography className="text-caption text-neutral-500 mt-5 mb-2">
+                  Прямые уведомления
+                </Typography>
 
-            <Card
-              title="Чем отличается от бесплатных?"
-              left={
-                <StSvg
-                  name="Info_alt_fill"
-                  size={28}
-                  color={colors.neutral[500]}
-                />
-              }
-              right={
-                <StSvg
-                  name="Expand_right_light"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              }
-              onPress={() => setDiffModalVisible(true)}
-            />
-
-            <View className="bg-background-surface p-4 rounded-base mt-2">
-              {DIRECT_CHANNELS.map(
-                ({ channel, icon, iconNode, iconColor, name, price }, i) => (
-                  <React.Fragment key={name}>
-                    <Card
-                      className="p-0"
-                      titleNode={
-                        <View className="flex-row items-center gap-1.5">
-                          {iconNode ?? (
-                            <StSvg name={icon!} size={28} color={iconColor} />
-                          )}
-                          <Typography className="text-body">{name}</Typography>
-                        </View>
-                      }
-                      subtitle={price}
-                      right={
-                        <View className="flex-row items-center gap-1">
-                          <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">
-                            Подключить
-                          </Typography>
-                          <StSvg
-                            name="Add_round"
-                            size={16}
-                            color={colors.primary.blue[500]}
-                          />
-                        </View>
-                      }
-                      onPress={() =>
-                        router.push({
-                          pathname:
-                            Routers.app.account.clientNotifications.direct,
-                          params: { channel },
-                        })
-                      }
+                <Card
+                  title="Чем отличается от бесплатных?"
+                  left={
+                    <StSvg
+                      name="Info_alt_fill"
+                      size={28}
+                      color={colors.neutral[500]}
                     />
-                    {i < DIRECT_CHANNELS.length - 1 && (
-                      <Divider className="my-4" />
-                    )}
-                  </React.Fragment>
-                ),
-              )}
-            </View>
+                  }
+                  right={
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={() => setDiffModalVisible(true)}
+                />
+
+                <View className="bg-background-surface p-4 rounded-base mt-2">
+                  {DIRECT_CHANNELS.map(
+                    (
+                      { channel, icon, iconNode, iconColor, name, price },
+                      i,
+                    ) => (
+                      <React.Fragment key={name}>
+                        <Card
+                          className="p-0"
+                          titleNode={
+                            <View className="flex-row items-center gap-1.5">
+                              {iconNode ?? (
+                                <StSvg
+                                  name={icon!}
+                                  size={28}
+                                  color={iconColor}
+                                />
+                              )}
+                              <Typography className="text-body">
+                                {name}
+                              </Typography>
+                            </View>
+                          }
+                          subtitle={price}
+                          right={
+                            <View className="flex-row items-center gap-1">
+                              <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">
+                                Подключить
+                              </Typography>
+                              <StSvg
+                                name="Add_round"
+                                size={16}
+                                color={colors.primary.blue[500]}
+                              />
+                            </View>
+                          }
+                          onPress={() =>
+                            router.push({
+                              pathname:
+                                Routers.app.account.clientNotifications.direct,
+                              params: { channel },
+                            })
+                          }
+                        />
+                        {i < DIRECT_CHANNELS.length - 1 && (
+                          <Divider className="my-4" />
+                        )}
+                      </React.Fragment>
+                    ),
+                  )}
+                </View>
+              </>
+            )}
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Настройки
@@ -332,7 +376,11 @@ const ClientNotifications = () => {
 
             <Card
               title="Виды уведомлений"
-              subtitle="Подключено: 4 / 8"
+              subtitle={
+                notificationSettingsSummary.total > 0
+                  ? `Включено: ${notificationSettingsSummary.enabled} / ${notificationSettingsSummary.total}`
+                  : undefined
+              }
               subtitleProps={{
                 style: {
                   color: colors.primary.green[600],

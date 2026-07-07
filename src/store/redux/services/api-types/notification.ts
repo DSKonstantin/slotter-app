@@ -14,6 +14,10 @@ export type NotificationKind =
   | "appointment_customer_declined"
   | "appointment_reschedule_requested"
   | "rebook_suggestion"
+  | "rebook_after_cancel"
+  | "review_request"
+  | "birthday_greeting"
+  | "referral_signup"
   | "chat_new_activity";
 
 export type NotificationCancelVariant =
@@ -107,4 +111,19 @@ export interface MarkNotificationReadResponse {
 
 export interface MarkAllNotificationsReadResponse {
   unread_count: number;
+}
+
+export interface NotificationSetting {
+  kind: NotificationKind;
+  enabled: boolean;
+  title: string;
+}
+
+export interface GetNotificationSettingsResponse {
+  notification_settings: NotificationSetting[];
+}
+
+export interface UpdateNotificationSettingsPayload {
+  userId: number;
+  settings: Partial<Record<NotificationKind, boolean>>;
 }

@@ -200,6 +200,10 @@ export const Routers = {
         statistics:
           "/(app)/(tabs)/account/client-notifications/statistics" as const,
         types: "/(app)/(tabs)/account/client-notifications/types" as const,
+        reminder:
+          "/(app)/(tabs)/account/client-notifications/reminder" as const,
+        reschedule:
+          "/(app)/(tabs)/account/client-notifications/reschedule" as const,
       },
       support: "/(app)/(tabs)/account/support" as const,
       subscription: "/(app)/(tabs)/account/subscription" as const,

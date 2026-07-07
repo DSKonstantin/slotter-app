@@ -159,6 +159,9 @@ export type {
   GetNotificationsResponse,
   MarkNotificationReadResponse,
   MarkAllNotificationsReadResponse,
+  NotificationSetting,
+  GetNotificationSettingsResponse,
+  UpdateNotificationSettingsPayload,
 } from "./notification";
 export type {
   UserLink,
