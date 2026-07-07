@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from "react";
 import { Alert, View } from "react-native";
 
-import { Button, StSvg, Typography } from "@/src/components/ui";
+import { Button, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";

@@ -4,8 +4,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Divider, Item, StSvg, Switch, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { Divider, Item, Switch, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
   useGetNotificationSettingsQuery,

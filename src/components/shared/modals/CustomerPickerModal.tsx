@@ -141,7 +141,8 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
     const unique = new Map<number, CustomerOption>();
     data.pages.forEach((page) =>
       page.user_customers.forEach((uc) => {
-        if (!unique.has(uc.customer.id)) unique.set(uc.customer.id, toOption(uc));
+        if (!unique.has(uc.customer.id))
+          unique.set(uc.customer.id, toOption(uc));
       }),
     );
     return [...unique.values()];

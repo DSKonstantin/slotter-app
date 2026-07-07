@@ -59,10 +59,6 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
   const [deleteCategory, { isLoading: isDeletingCategory }] =
     useDeleteServiceCategoryMutation();
 
-  const handleDeleteService = (serviceId: number) => {
-    setPendingDeleteIds((prev) => [...prev, serviceId]);
-  };
-
   const handleFormSubmit = methods.handleSubmit(async (values) => {
     if (!category) return;
 

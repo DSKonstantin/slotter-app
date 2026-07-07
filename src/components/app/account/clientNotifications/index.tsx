@@ -220,64 +220,63 @@ const ClientNotifications = () => {
                 layout="column"
               />
             ) : hasStats ? (
-                <>
-                  <View className="flex-row justify-between items-center mb-2">
-                    <Typography weight="semibold" className="text-body">
-                      Статистика
-                    </Typography>
-                    <Button
-                        title="Подробнее"
-                        size="xs"
-                        buttonClassName="gap-0"
-                        textClassName="text-neutral-500 text-[13px]"
-                        variant="clear"
-                        onPress={() =>
-                            router.push(
-                                Routers.app.account.clientNotifications.statistics,
-                            )
-                        }
-                        rightIcon={
-                          <StSvg
-                              name="Expand_right"
-                              size={16}
-                              color={colors.neutral[500]}
-                          />
-                        }
-                    />
+              <>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Typography weight="semibold" className="text-body">
+                    Статистика
+                  </Typography>
+                  <Button
+                    title="Подробнее"
+                    size="xs"
+                    buttonClassName="gap-0"
+                    textClassName="text-neutral-500 text-[13px]"
+                    variant="clear"
+                    onPress={() =>
+                      router.push(
+                        Routers.app.account.clientNotifications.statistics,
+                      )
+                    }
+                    rightIcon={
+                      <StSvg
+                        name="Expand_right"
+                        size={16}
+                        color={colors.neutral[500]}
+                      />
+                    }
+                  />
+                </View>
+                <View className="bg-background-surface p-4 rounded-base gap-5">
+                  <View className="flex-row flex-wrap gap-2">
+                    {FILTER_PERIODS.map((period, i) => (
+                      <Badge
+                        key={period}
+                        title={period}
+                        variant={i === activePeriod ? "accent" : "ghost"}
+                        onPress={() => setActivePeriod(i)}
+                      />
+                    ))}
                   </View>
-                  <View className="bg-background-surface p-4 rounded-base gap-5" >
-                    <View className="flex-row flex-wrap gap-2">
-                      {FILTER_PERIODS.map((period, i) => (
-                          <Badge
-                              key={period}
-                              title={period}
-                              variant={i === activePeriod ? "accent" : "ghost"}
-                              onPress={() => setActivePeriod(i)}
-                          />
-                      ))}
-                    </View>
 
-                    <View className="flex-row flex-wrap gap-2">
-                      {stats.map(({ value, label, color }) => (
-                          <View key={label} className="flex-1">
-                            <Typography
-                                weight="semibold"
-                                className={`text-display ${color}`}
-                            >
-                              {value}
-                            </Typography>
-                            <Typography
-                                weight="regular"
-                                className="text-neutral-500 text-caption"
-                            >
-                              {label}
-                            </Typography>
-                          </View>
-                      ))}
-                    </View>
+                  <View className="flex-row flex-wrap gap-2">
+                    {stats.map(({ value, label, color }) => (
+                      <View key={label} className="flex-1">
+                        <Typography
+                          weight="semibold"
+                          className={`text-display ${color}`}
+                        >
+                          {value}
+                        </Typography>
+                        <Typography
+                          weight="regular"
+                          className="text-neutral-500 text-caption"
+                        >
+                          {label}
+                        </Typography>
+                      </View>
+                    ))}
                   </View>
-                </>
-
+                </View>
+              </>
             ) : (
               <View className="flex-row gap-4 px-screen pt-5">
                 <Image

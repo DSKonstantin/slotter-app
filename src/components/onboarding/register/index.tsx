@@ -19,7 +19,6 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import EyeToggle from "@/src/components/shared/EyeToggle";
 
-
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);

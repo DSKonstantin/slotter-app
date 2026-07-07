@@ -47,7 +47,8 @@ function CurrentAndNextComponent({ current, appointments }: Props) {
         </Typography>
 
         <Typography weight="semibold" className="text-xl text-neutral-900">
-          {formatTimeFromISO(current.end_time)}{current.customer ? ` · ${current.customer.name}` : ""}
+          {formatTimeFromISO(current.end_time)}
+          {current.customer ? ` · ${current.customer.name}` : ""}
         </Typography>
         {serviceName && (
           <>
@@ -87,7 +88,9 @@ function CurrentAndNextComponent({ current, appointments }: Props) {
               />
             }
           />
-          {expanded && <WaitingNext appointments={appointments} label="следующая" />}
+          {expanded && (
+            <WaitingNext appointments={appointments} label="следующая" />
+          )}
         </View>
       )}
     </View>

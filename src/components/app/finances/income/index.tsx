@@ -9,10 +9,8 @@ import {
   Card,
   Divider,
   SegmentedControl,
-  StSvg,
   Typography,
 } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
 import { useGetFinancesIncomeQuery } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";

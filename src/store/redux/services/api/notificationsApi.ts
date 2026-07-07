@@ -10,7 +10,7 @@ import type {
   GetNotificationStatsParams,
 } from "@/src/store/redux/services/api-types";
 
-const notificationsApi = api.injectEndpoints({
+let notificationsApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
     getNotifications: builder.query<
@@ -100,11 +100,10 @@ const notificationsApi = api.injectEndpoints({
       }),
       async onQueryStarted({ userId, settings }, { dispatch, queryFulfilled }) {
         const patch = dispatch(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (api as any).util.updateQueryData(
+          notificationsApi.util.updateQueryData(
             "getNotificationSettings",
             userId,
-            (draft: GetNotificationSettingsResponse) => {
+            (draft) => {
               draft.notification_settings.forEach((s) => {
                 if (s.kind in settings) s.enabled = settings[s.kind]!;
               });

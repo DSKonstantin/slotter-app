@@ -28,10 +28,7 @@ const BreakBlock: React.FC<Props> = ({ breakItem, workingDayId }) => {
         router.push(Routers.app.calendar.daySchedule(workingDayId))
       }
     >
-      <Typography
-        className={`text-body text-neutral-900`}
-        numberOfLines={1}
-      >
+      <Typography className={`text-body text-neutral-900`} numberOfLines={1}>
         {timeLabel}
       </Typography>
 

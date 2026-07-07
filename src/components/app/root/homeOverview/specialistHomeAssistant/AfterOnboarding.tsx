@@ -1,10 +1,9 @@
 import React, { memo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
-import { Button, StSvg, Typography } from "@/src/components/ui";
+import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
-import { formatApiDate } from "@/src/utils/date/formatDate";
 import { CopyLinkButton } from "@/src/components/shared/copyLinkButton";
 import { LinkView } from "@/src/components/shared/linkView";
 

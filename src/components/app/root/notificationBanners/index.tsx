@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
-import Constants from "expo-constants";
 import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";

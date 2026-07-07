@@ -28,13 +28,7 @@ type Props = {
   onPress: () => void;
 };
 
-const InsightCard = ({
-  category,
-  iconName,
-  title,
-  body,
-  onPress,
-}: Props) => {
+const InsightCard = ({ category, iconName, title, body, onPress }: Props) => {
   const styles = INSIGHT_CATEGORY_CONFIG[category];
 
   return (

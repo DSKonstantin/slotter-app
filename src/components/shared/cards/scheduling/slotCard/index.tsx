@@ -182,8 +182,7 @@ const SlotCard = ({
     </Pressable>
   );
 
-  const isCompactSlot =
-    slot.duration <= 30 || slot.status === "cancelled";
+  const isCompactSlot = slot.duration <= 30 || slot.status === "cancelled";
 
   if (isCompactSlot) {
     return (
