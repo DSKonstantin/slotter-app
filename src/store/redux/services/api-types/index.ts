@@ -162,6 +162,10 @@ export type {
   NotificationSetting,
   GetNotificationSettingsResponse,
   UpdateNotificationSettingsPayload,
+  NotificationStatsByChannel,
+  NotificationStatsTotals,
+  NotificationStatsResponse,
+  GetNotificationStatsParams,
 } from "./notification";
 export type {
   UserLink,

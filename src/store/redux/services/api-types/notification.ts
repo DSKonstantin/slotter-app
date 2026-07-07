@@ -127,3 +127,30 @@ export interface UpdateNotificationSettingsPayload {
   userId: number;
   settings: Partial<Record<NotificationKind, boolean>>;
 }
+
+export interface NotificationStatsByChannel {
+  channel: string;
+  sent: number;
+  delivered: number;
+  failed: number;
+}
+
+export interface NotificationStatsTotals {
+  sent: number;
+  delivered: number;
+  failed: number;
+}
+
+export interface NotificationStatsResponse {
+  notification_stats: {
+    period: { from: string; to: string };
+    by_channel: NotificationStatsByChannel[];
+    totals: NotificationStatsTotals;
+  };
+}
+
+export interface GetNotificationStatsParams {
+  userId: number;
+  from: string;
+  to: string;
+}

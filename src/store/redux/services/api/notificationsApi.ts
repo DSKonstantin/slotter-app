@@ -6,6 +6,8 @@ import type {
   MarkNotificationReadResponse,
   GetNotificationSettingsResponse,
   UpdateNotificationSettingsPayload,
+  NotificationStatsResponse,
+  GetNotificationStatsParams,
 } from "@/src/store/redux/services/api-types";
 
 const notificationsApi = api.injectEndpoints({
@@ -76,6 +78,17 @@ const notificationsApi = api.injectEndpoints({
       providesTags: ["NotificationSettings"],
     }),
 
+    getNotificationStats: builder.query<
+      NotificationStatsResponse,
+      GetNotificationStatsParams
+    >({
+      query: ({ userId, from, to }) => ({
+        url: `/users/${userId}/notification_stats`,
+        method: "GET",
+        params: { from, to },
+      }),
+    }),
+
     updateNotificationSettings: builder.mutation<
       GetNotificationSettingsResponse,
       UpdateNotificationSettingsPayload
@@ -115,4 +128,5 @@ export const {
   useMarkAllNotificationsReadMutation,
   useGetNotificationSettingsQuery,
   useUpdateNotificationSettingsMutation,
+  useGetNotificationStatsQuery,
 } = notificationsApi;
