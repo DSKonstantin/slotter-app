@@ -68,6 +68,13 @@ const CHANNEL_CONFIG: Record<
   },
 };
 
+const HOW_TO_STEPS = [
+  "Оплатите подписку",
+  "Введите номер аккаунта канала",
+  "Введите код из приложения канала",
+  "Готово — сообщения уходят от вас",
+];
+
 const DirectNotifications = () => {
   const { channel } = useLocalSearchParams<{ channel: Channel }>();
   const config = CHANNEL_CONFIG[channel ?? "telegram"];
@@ -113,6 +120,28 @@ const DirectNotifications = () => {
                   {i < config.features.length - 1 && (
                     <Divider className="my-4" />
                   )}
+                </View>
+              ))}
+            </View>
+
+            <Typography weight="semibold" className="text-body mb-3">
+              Как подключить
+            </Typography>
+
+            <View className="bg-background-surface p-4 rounded-base gap-4 mb-5">
+              {HOW_TO_STEPS.map((step, i) => (
+                <View key={step} className="flex-row gap-3 items-center">
+                  <View className="w-7 h-7 rounded-full bg-neutral-100 items-center justify-center">
+                    <Typography
+                      weight="semibold"
+                      className="text-caption text-neutral-500"
+                    >
+                      {i + 1}
+                    </Typography>
+                  </View>
+                  <Typography weight="regular" className="text-body flex-1">
+                    {step}
+                  </Typography>
                 </View>
               ))}
             </View>

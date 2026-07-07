@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, ScrollView, Share, View } from "react-native";
+import { Alert, Image, ScrollView, Share, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -81,6 +81,8 @@ const ClientNotifications = () => {
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
 
+  const hasStats = false;
+
   const handleBotPress = (url: string) => {
     Alert.alert("Отправьте клиенту ссылку бот", url, [
       {
@@ -107,62 +109,85 @@ const ClientNotifications = () => {
               paddingBottom: bottomInset + 8,
             }}
           >
-            <View className="flex-row justify-between items-center mb-2">
-              <Typography weight="semibold" className="text-body">
-                Статистика
-              </Typography>
-              <Button
-                title="Подробнее"
-                size="xs"
-                buttonClassName="gap-0"
-                textClassName="text-neutral-500 text-[13px]"
-                variant="clear"
-                onPress={() =>
-                  router.push(
-                    Routers.app.account.clientNotifications.statistics,
-                  )
-                }
-                rightIcon={
-                  <StSvg
-                    name="Expand_right"
-                    size={16}
-                    color={colors.neutral[500]}
-                  />
-                }
-              />
-            </View>
-
-            <View className="bg-background-surface p-4 rounded-base gap-5">
-              <View className="flex-row flex-wrap gap-2">
-                {FILTER_PERIODS.map((period, i) => (
-                  <Badge
-                    key={period}
-                    title={period}
-                    variant={i === activePeriod ? "accent" : "ghost"}
-                    onPress={() => setActivePeriod(i)}
-                  />
-                ))}
+            {hasStats && (
+              <View className="flex-row justify-between items-center mb-2">
+                <Typography weight="semibold" className="text-body">
+                  Статистика
+                </Typography>
+                <Button
+                  title="Подробнее"
+                  size="xs"
+                  buttonClassName="gap-0"
+                  textClassName="text-neutral-500 text-[13px]"
+                  variant="clear"
+                  onPress={() =>
+                    router.push(
+                      Routers.app.account.clientNotifications.statistics,
+                    )
+                  }
+                  rightIcon={
+                    <StSvg
+                      name="Expand_right"
+                      size={16}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                />
               </View>
+            )}
 
-              <View className="flex-row flex-wrap gap-2">
-                {STATS.map(({ value, label, color }) => (
-                  <View key={label} className="flex-1">
-                    <Typography
-                      weight="semibold"
-                      className={`text-display ${color}`}
-                    >
-                      {value}
-                    </Typography>
-                    <Typography
-                      weight="regular"
-                      className="text-neutral-500 text-caption"
-                    >
-                      {label}
-                    </Typography>
-                  </View>
-                ))}
+            {hasStats ? (
+              <View className="bg-background-surface p-4 rounded-base gap-5">
+                <View className="flex-row flex-wrap gap-2">
+                  {FILTER_PERIODS.map((period, i) => (
+                    <Badge
+                      key={period}
+                      title={period}
+                      variant={i === activePeriod ? "accent" : "ghost"}
+                      onPress={() => setActivePeriod(i)}
+                    />
+                  ))}
+                </View>
+
+                <View className="flex-row flex-wrap gap-2">
+                  {STATS.map(({ value, label, color }) => (
+                    <View key={label} className="flex-1">
+                      <Typography
+                        weight="semibold"
+                        className={`text-display ${color}`}
+                      >
+                        {value}
+                      </Typography>
+                      <Typography
+                        weight="regular"
+                        className="text-neutral-500 text-caption"
+                      >
+                        {label}
+                      </Typography>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
+            ) : (
+              <View className="flex-row gap-4 px-screen py-4">
+                <Image
+                  source={require("@/assets/images/app/notifications-clients.png")}
+                  style={{ width: 80, height: 80 }}
+                  resizeMode="contain"
+                />
+                <View className="gap-1 flex-1">
+                  <Typography weight="semibold" className="text-body">
+                    Уведомления не отправлялись
+                  </Typography>
+                  <Typography
+                    weight="regular"
+                    className="text-body text-neutral-500"
+                  >
+                    Подключи каналы и клиенты начнут получать напоминания о записях
+                  </Typography>
+                </View>
+              </View>
+            )}
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Бесплатные каналы
@@ -200,6 +225,7 @@ const ClientNotifications = () => {
               <Button
                 title="Поделиться приложением"
                 onPress={() => {}}
+                disabled
                 variant="accent"
                 rightIcon={
                   <StSvg name="link_alt" size={24} color={colors.neutral[0]} />
