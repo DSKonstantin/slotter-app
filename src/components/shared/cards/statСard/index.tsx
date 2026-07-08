@@ -14,7 +14,7 @@ type Props = {
 const StatCard = ({ value, label, tag }: Props) => {
   return (
     <View className="flex-1 bg-background-surface rounded-base p-4 gap-1">
-      <View className="flex-row gap-2 justify-between mb-5">
+      <View className="flex-row gap-2 justify-between min-h-9">
         <Typography weight="semibold" className="text-body text-neutral-900">
           {value}
         </Typography>

@@ -25,7 +25,7 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
     badge: { icon: "Add_round_fill", color: colors.primary.blue[500] },
   },
   appointment_pending_approval: {
-    title: "Запись на подтверждение",
+    title: "Запись на подтверждении",
     badge: { icon: "Add_round_fill", color: colors.primary.blue[500] },
   },
   appointment_confirmed: {
