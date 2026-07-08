@@ -7,6 +7,8 @@ export default function ClientNotificationsLayout() {
       <Stack.Screen name="direct" />
       <Stack.Screen name="statistics" />
       <Stack.Screen name="types" />
+      <Stack.Screen name="reminder" />
+      <Stack.Screen name="reschedule" />
     </Stack>
   );
 }

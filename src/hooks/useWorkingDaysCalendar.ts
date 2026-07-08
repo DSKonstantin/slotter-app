@@ -19,7 +19,10 @@ const makeInitialMonth = () => {
   };
 };
 
-export const useWorkingDaysCalendar = (userId?: number, initialMonth?: string) => {
+export const useWorkingDaysCalendar = (
+  userId?: number,
+  initialMonth?: string,
+) => {
   const [visibleMonth, setVisibleMonth] = useState(() => {
     if (initialMonth) {
       const date = parseISO(initialMonth);

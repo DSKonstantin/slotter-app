@@ -5,6 +5,7 @@ import { twMerge } from "tailwind-merge";
 type ItemProps = {
   title: string;
   subtitle?: string;
+  titleAccessory?: React.ReactNode;
   left?: React.ReactNode;
   right?: React.ReactNode;
   onPress?: () => void;
@@ -17,6 +18,7 @@ type ItemProps = {
 export function Item({
   title,
   subtitle,
+  titleAccessory,
   left,
   right,
   onPress,
@@ -55,6 +57,7 @@ export function Item({
         >
           {title}
         </Text>
+        {titleAccessory}
         {subtitle && (
           <Text
             numberOfLines={1}

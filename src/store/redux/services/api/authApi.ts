@@ -3,7 +3,6 @@ import type {
   AuthResponse,
   ConfirmCodeResponse,
   MeResponse,
-  ResetPasswordResponse,
   SendCodeResponse,
   TelegramIntentResponse,
   TelegramSessionResponse,

@@ -9,6 +9,7 @@ type InputProps = {
   label?: string;
   labelRight?: ReactNode;
   error?: FieldError;
+  hint?: ReactNode;
   success?: boolean;
   disabled?: boolean;
   hideErrorText?: boolean;
@@ -25,6 +26,7 @@ export function Input({
   label,
   labelRight,
   error,
+  hint,
   success,
   hideErrorText,
   disabled,
@@ -42,6 +44,7 @@ export function Input({
       label={label}
       labelRight={labelRight}
       error={error}
+      hint={hint}
       success={success}
       hideErrorText={hideErrorText}
       disabled={disabled}

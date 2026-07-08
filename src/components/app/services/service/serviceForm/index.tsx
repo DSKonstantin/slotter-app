@@ -1,8 +1,17 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
-import { Button, Divider, Item, StSvg } from "@/src/components/ui";
+import {
+  Button,
+  Divider,
+  IconButton,
+  Item,
+  StModal,
+  StSvg,
+  Switch,
+  Typography,
+} from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
@@ -48,6 +57,8 @@ const ServiceFormBody = ({
   } = useFormContext();
   const { refreshing, onRefresh } = useRefresh(refetch ?? (() => {}));
   const scrollRef = useRef<ScrollView>(null);
+
+  const [infoVisible, setInfoVisible] = useState(false);
 
   const scrollToTop = () =>
     scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -117,8 +128,39 @@ const ServiceFormBody = ({
 
         <Item
           title="Доступно для онлайн-записи"
+          titleAccessory={
+            <IconButton
+              size="xs"
+              onPress={() => setInfoVisible(true)}
+              icon={
+                <StSvg
+                  name="Info_alt_fill"
+                  size={26}
+                  color={colors.primary.blue[500]}
+                />
+              }
+            />
+          }
           right={<RHFSwitch name="isAvailableOnline" />}
         />
+
+        <StModal visible={infoVisible} onClose={() => setInfoVisible(false)}>
+          <View className="my-5 gap-5">
+            <View className="flex-row items-center gap-3">
+              <Switch width={50} value={true} onChange={() => {}} />
+              <Typography className="text-body flex-1">
+                клиент бронирует услугу сам,  в свободное время
+              </Typography>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <Switch width={50} value={false} onChange={() => {}} />
+              <Typography className="text-body flex-1">
+                клиент оставляет заявку, вы сами связываетесь и подтверждаете
+              </Typography>
+            </View>
+          </View>
+          <Button title="Понятно" onPress={() => setInfoVisible(false)} />
+        </StModal>
       </View>
 
       <CreateAdditionalService />

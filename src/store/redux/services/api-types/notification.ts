@@ -2,6 +2,7 @@ import type { Pagination } from "./common";
 
 export type NotificationKind =
   | "appointment_created"
+  | "appointment_booked"
   | "appointment_pending_approval"
   | "appointment_confirmed"
   | "appointment_cancelled"
@@ -13,6 +14,10 @@ export type NotificationKind =
   | "appointment_customer_declined"
   | "appointment_reschedule_requested"
   | "rebook_suggestion"
+  | "rebook_after_cancel"
+  | "review_request"
+  | "birthday_greeting"
+  | "referral_signup"
   | "chat_new_activity";
 
 export type NotificationCancelVariant =
@@ -106,4 +111,46 @@ export interface MarkNotificationReadResponse {
 
 export interface MarkAllNotificationsReadResponse {
   unread_count: number;
+}
+
+export interface NotificationSetting {
+  kind: NotificationKind;
+  enabled: boolean;
+  title: string;
+}
+
+export interface GetNotificationSettingsResponse {
+  notification_settings: NotificationSetting[];
+}
+
+export interface UpdateNotificationSettingsPayload {
+  userId: number;
+  settings: Partial<Record<NotificationKind, boolean>>;
+}
+
+export interface NotificationStatsByChannel {
+  channel: string;
+  sent: number;
+  delivered: number;
+  failed: number;
+}
+
+export interface NotificationStatsTotals {
+  sent: number;
+  delivered: number;
+  failed: number;
+}
+
+export interface NotificationStatsResponse {
+  notification_stats: {
+    period: { from: string; to: string };
+    by_channel: NotificationStatsByChannel[];
+    totals: NotificationStatsTotals;
+  };
+}
+
+export interface GetNotificationStatsParams {
+  userId: number;
+  from: string;
+  to: string;
 }

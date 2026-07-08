@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
@@ -17,9 +17,12 @@ import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/aut
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
-
+import EyeToggle from "@/src/components/shared/EyeToggle";
 
 const Register = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const auth = useRequiredAuth();
 
   const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
@@ -93,13 +96,26 @@ const Register = () => {
               name="password"
               label="Пароль"
               placeholder="••••••••"
-              secureTextEntry
+              hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
+              secureTextEntry={!showPassword}
+              endAdornment={
+                <EyeToggle
+                  visible={showPassword}
+                  onPress={() => setShowPassword((v) => !v)}
+                />
+              }
             />
             <RhfTextField
               name="passwordConfirmation"
               label="Повторите пароль"
               placeholder="••••••••"
-              secureTextEntry
+              secureTextEntry={!showConfirm}
+              endAdornment={
+                <EyeToggle
+                  visible={showConfirm}
+                  onPress={() => setShowConfirm((v) => !v)}
+                />
+              }
             />
           </View>
         </View>

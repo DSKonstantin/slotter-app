@@ -1,7 +1,34 @@
-import React, { useState } from "react";
-import { Linking, ScrollView, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  format,
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  Share,
+  View,
+} from "react-native";
+import * as Clipboard from "expo-clipboard";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
+import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import RetryInline from "@/src/components/shared/retryInline";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import {
+  useGetNotificationSettingsQuery,
+  useGetNotificationStatsQuery,
+} from "@/src/store/redux/services/api/notificationsApi";
 import {
   Badge,
   Button,
@@ -18,11 +45,27 @@ import { Routers } from "@/src/constants/routers";
 
 const FILTER_PERIODS = ["Сегодня", "Неделя", "Месяц"] as const;
 
-const STATS = [
-  { value: "142", label: "Отправлено", color: "text-primary-blue-500" },
-  { value: "138", label: "Доставлено", color: "text-green-700" },
-  { value: "4", label: "Ошибки", color: "text-accent-red-500" },
-] as const;
+const DATE_FORMAT = "yyyy-MM-dd";
+
+function getPeriodRange(periodIndex: number): { from: string; to: string } {
+  const now = new Date();
+  if (periodIndex === 0) {
+    return {
+      from: format(startOfDay(now), DATE_FORMAT),
+      to: format(endOfDay(now), DATE_FORMAT),
+    };
+  }
+  if (periodIndex === 1) {
+    return {
+      from: format(startOfWeek(now, { weekStartsOn: 1 }), DATE_FORMAT),
+      to: format(endOfWeek(now, { weekStartsOn: 1 }), DATE_FORMAT),
+    };
+  }
+  return {
+    from: format(startOfMonth(now), DATE_FORMAT),
+    to: format(endOfMonth(now), DATE_FORMAT),
+  };
+}
 
 const APP_FEATURES = [
   {
@@ -66,18 +109,77 @@ const DIRECT_CHANNELS = [
     name: "Макс",
     price: "от 1 000 ₽/мес",
   },
-  {
-    channel: "whatsapp" as const,
-    icon: "SocialWhatsApp" as const,
-    iconColor: "#41C252",
-    name: "WhatsApp",
-    price: "от 1 000 ₽/мес",
-  },
 ];
 
 const ClientNotifications = () => {
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
+  const auth = useRequiredAuth();
+
+  const { data: settingsData, refetch: refetchSettings } =
+    useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+
+  const periodRange = useMemo(
+    () => getPeriodRange(activePeriod),
+    [activePeriod],
+  );
+
+  const {
+    data: statsData,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+    refetch: refetchStats,
+  } = useGetNotificationStatsQuery(
+    auth ? { userId: auth.userId, ...periodRange } : skipToken,
+    { refetchOnMountOrArgChange: true },
+  );
+
+  const { refreshing, onRefresh } = useRefresh(
+    useCallback(async () => {
+      await Promise.all([refetchSettings(), refetchStats()]);
+    }, [refetchSettings, refetchStats]),
+  );
+
+  const notificationSettingsSummary = useMemo(() => {
+    const all = settingsData?.notification_settings ?? [];
+    const enabled = all.filter((s) => s.enabled).length;
+    return { enabled, total: all.length };
+  }, [settingsData]);
+
+  const stats = useMemo(() => {
+    const t = statsData?.notification_stats.totals;
+    return [
+      {
+        value: String(t?.sent ?? 0),
+        label: "Отправлено",
+        color: "text-primary-blue-500",
+      },
+      {
+        value: String((t?.sent ?? 0) - (t?.failed ?? 0)),
+        label: "Доставлено",
+        color: "text-green-700",
+      },
+      {
+        value: String(t?.failed ?? 0),
+        label: "Ошибки",
+        color: "text-accent-red-500",
+      },
+    ];
+  }, [statsData]);
+
+  const handleBotPress = (url: string) => {
+    Alert.alert("Отправьте клиенту ссылку бот", url, [
+      {
+        text: "Скопировать",
+        onPress: async () => {
+          await Clipboard.setStringAsync(url);
+          toast.success("Ссылка скопирована");
+        },
+      },
+      { text: "Поделиться", onPress: () => Share.share({ message: url }) },
+      { text: "Отмена", style: "cancel" },
+    ]);
+  };
 
   return (
     <>
@@ -86,10 +188,21 @@ const ClientNotifications = () => {
           <ScrollView
             className="px-screen"
             showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
             }}
+            refreshControl={
+              <RefreshControl
+                progressViewOffset={Platform.select({ android: topInset })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
           >
             <View className="flex-row justify-between items-center mb-2">
               <Typography weight="semibold" className="text-body">
@@ -128,24 +241,36 @@ const ClientNotifications = () => {
                 ))}
               </View>
 
-              <View className="flex-row flex-wrap gap-2">
-                {STATS.map(({ value, label, color }) => (
-                  <View key={label} className="flex-1">
-                    <Typography
-                      weight="semibold"
-                      className={`text-display ${color}`}
-                    >
-                      {value}
-                    </Typography>
-                    <Typography
-                      weight="regular"
-                      className="text-neutral-500 text-caption"
-                    >
-                      {label}
-                    </Typography>
-                  </View>
-                ))}
-              </View>
+              {isStatsLoading ? (
+                <View className="h-[52px] items-center justify-center">
+                  <ActivityIndicator color={colors.neutral[400]} />
+                </View>
+              ) : isStatsError ? (
+                <RetryInline
+                  text="Не удалось загрузить статистику"
+                  onRetry={refetchStats}
+                  layout="column"
+                />
+              ) : (
+                <View className="flex-row flex-wrap gap-2">
+                  {stats.map(({ value, label, color }) => (
+                    <View key={label} className="flex-1">
+                      <Typography
+                        weight="semibold"
+                        className={`text-display ${color}`}
+                      >
+                        {value}
+                      </Typography>
+                      <Typography
+                        weight="regular"
+                        className="text-neutral-500 text-caption"
+                      >
+                        {label}
+                      </Typography>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
@@ -184,6 +309,7 @@ const ClientNotifications = () => {
               <Button
                 title="Поделиться приложением"
                 onPress={() => {}}
+                disabled
                 variant="accent"
                 rightIcon={
                   <StSvg name="link_alt" size={24} color={colors.neutral[0]} />
@@ -197,7 +323,7 @@ const ClientNotifications = () => {
                   key={title}
                   title={title}
                   left={icon}
-                  onPress={() => Linking.openURL(url)}
+                  onPress={() => handleBotPress(url)}
                   className="flex-1"
                   right={
                     <StSvg
@@ -219,78 +345,16 @@ const ClientNotifications = () => {
             </Typography>
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-              Прямые уведомления
-            </Typography>
-
-            <Card
-              title="Чем отличается от бесплатных?"
-              left={
-                <StSvg
-                  name="Info_alt_fill"
-                  size={28}
-                  color={colors.neutral[500]}
-                />
-              }
-              right={
-                <StSvg
-                  name="Expand_right_light"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
-              }
-              onPress={() => setDiffModalVisible(true)}
-            />
-
-            <View className="bg-background-surface p-4 rounded-base mt-2">
-              {DIRECT_CHANNELS.map(
-                ({ channel, icon, iconNode, iconColor, name, price }, i) => (
-                  <React.Fragment key={name}>
-                    <Card
-                      className="p-0"
-                      titleNode={
-                        <View className="flex-row items-center gap-1.5">
-                          {iconNode ?? (
-                            <StSvg name={icon!} size={28} color={iconColor} />
-                          )}
-                          <Typography className="text-body">{name}</Typography>
-                        </View>
-                      }
-                      subtitle={price}
-                      right={
-                        <View className="flex-row items-center gap-1">
-                          <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">
-                            Подключить
-                          </Typography>
-                          <StSvg
-                            name="Add_round"
-                            size={16}
-                            color={colors.primary.blue[500]}
-                          />
-                        </View>
-                      }
-                      onPress={() =>
-                        router.push({
-                          pathname:
-                            Routers.app.account.clientNotifications.direct,
-                          params: { channel },
-                        })
-                      }
-                    />
-                    {i < DIRECT_CHANNELS.length - 1 && (
-                      <Divider className="my-4" />
-                    )}
-                  </React.Fragment>
-                ),
-              )}
-            </View>
-
-            <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Настройки
             </Typography>
 
             <Card
               title="Виды уведомлений"
-              subtitle="Подключено: 4 / 8"
+              subtitle={
+                notificationSettingsSummary.total > 0
+                  ? `Включено: ${notificationSettingsSummary.enabled} / ${notificationSettingsSummary.total}`
+                  : undefined
+              }
               subtitleProps={{
                 style: {
                   color: colors.primary.green[600],

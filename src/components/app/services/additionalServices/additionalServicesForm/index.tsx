@@ -12,6 +12,7 @@ type AdditionalServiceFormBodyProps = {
   onSubmit: () => void;
   onDelete?: () => void;
   loading: boolean;
+  loadingDelete: boolean;
   insets: { topInset: number; bottomInset: number };
   isEdit?: boolean;
 };
@@ -21,6 +22,7 @@ const AdditionalServicesForm = ({
   onSubmit,
   onDelete,
   loading,
+  loadingDelete,
   insets,
 }: AdditionalServiceFormBodyProps) => {
   return (
@@ -54,11 +56,7 @@ const AdditionalServicesForm = ({
             label="Стоимость (₽)"
             placeholder="Введите цену услуги"
           />
-          <DurationField
-            name="duration"
-            placeholder="60"
-            presets={[0, 30, 60, 90]}
-          />
+          <DurationField name="duration" />
         </View>
       </KeyboardAwareScrollView>
       <View
@@ -69,7 +67,7 @@ const AdditionalServicesForm = ({
       >
         <Button
           title={isEdit ? "Сохранить" : "Создать"}
-          disabled={loading}
+          disabled={loadingDelete || loading}
           loading={loading}
           onPress={onSubmit}
           rightIcon={
@@ -80,6 +78,8 @@ const AdditionalServicesForm = ({
           <Button
             title="Удалить услугу"
             variant="clear"
+            disabled={loadingDelete || loading}
+            loading={loadingDelete}
             textClassName="text-accent-red-500"
             onPress={onDelete}
             rightIcon={

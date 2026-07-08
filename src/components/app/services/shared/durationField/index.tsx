@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
@@ -37,6 +37,15 @@ const DurationField = ({
       !presetStrings.includes(currentValue)
     );
   });
+
+  useEffect(() => {
+    const presetStrings = presets.map((preset) => String(preset));
+    const isCustom =
+      currentValue.length > 0 &&
+      currentValue !== "0" &&
+      !presetStrings.includes(currentValue);
+    if (isCustom) setIsCustomSelected(true);
+  }, [currentValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePresetPress = (preset: number | string) => {
     setIsCustomSelected(false);

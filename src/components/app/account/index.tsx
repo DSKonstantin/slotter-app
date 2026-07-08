@@ -91,18 +91,13 @@ const AccountScreen = () => {
         route: () => router.push(Routers.app.account.booking),
       },
     ],
-    ...(ispe
-      ? [
-          [
-            {
-              title: "Уведомления клиентам",
-              icon: "Message_fill",
-              route: () =>
-                router.push(Routers.app.account.clientNotifications.root),
-            },
-          ],
-        ]
-      : []),
+    [
+      {
+        title: "Уведомления клиентам",
+        icon: "Message_fill",
+        route: () => router.push(Routers.app.account.clientNotifications.root),
+      },
+    ],
     [
       {
         title: "Просмотр страницы",

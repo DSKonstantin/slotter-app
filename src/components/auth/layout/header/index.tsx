@@ -60,11 +60,7 @@ export default function AuthHeader({
           {showSupport ? (
             <IconButton
               icon={
-                <StSvg
-                  name="Headphones_fill"
-                  size={24}
-                  color={colors.neutral[900]}
-                />
+                <StSvg name="Support" size={24} color={colors.neutral[900]} />
               }
               onPress={openSupport}
             />

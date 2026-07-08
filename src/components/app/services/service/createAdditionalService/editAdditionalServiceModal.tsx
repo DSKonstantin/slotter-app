@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StModal } from "@/src/components/ui";
+import { StModal, Typography } from "@/src/components/ui";
 import { Alert } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import AdditionalServicesForm from "@/src/components/app/services/additionalServices/additionalServicesForm";
@@ -128,14 +128,24 @@ const EditAdditionalServiceModal = ({ visible, service, onClose }: Props) => {
   if (!auth) return null;
 
   return (
-    <StModal visible={visible} onClose={onClose} horizontalPadding={false}>
+    <StModal
+      visible={visible}
+      onClose={onClose}
+      horizontalPadding={false}
+      header={
+        <Typography weight="semibold" className="text-display text-center mb-4">
+          Дополнительная услуга
+        </Typography>
+      }
+    >
       <FormProvider {...methods}>
         <AdditionalServicesForm
           insets={{
             topInset: 0,
             bottomInset: 0,
           }}
-          loading={isUpdating || isDeleting}
+          loading={isUpdating}
+          loadingDelete={isDeleting}
           onSubmit={onSubmit}
           onDelete={handleDelete}
           isEdit

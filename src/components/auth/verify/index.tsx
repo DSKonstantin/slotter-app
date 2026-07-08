@@ -61,7 +61,6 @@ const Verify = () => {
 
   const rawPhone = methods.watch("phone");
   const promoCode = methods.watch("promoCode") ?? "";
-  const agreedToTerms = methods.watch("agreedToTerms");
   const sessionPhone = `+${unMask(rawPhone)}`;
   const sessionReferralCode = promoCode.trim() || undefined;
 

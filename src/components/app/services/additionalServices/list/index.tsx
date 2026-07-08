@@ -26,7 +26,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import {formatDuration} from "@/src/utils/date/formatTime";
+import { formatDuration } from "@/src/utils/date/formatTime";
 
 const AdditionalServicesList = () => {
   const [updateAdditionalService] = useUpdateAdditionalServiceMutation();

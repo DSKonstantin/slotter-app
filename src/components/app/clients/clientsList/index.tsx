@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import debounce from "lodash/debounce";
 import { View, FlatList, ActivityIndicator } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import {
@@ -202,6 +202,13 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
     // tagId intentionally excluded: capture only at the moment search opens
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchMode, dispatch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchTags();
+      refetch({ refetchCachedPages: false });
+    }, [refetchTags, refetch]),
+  );
 
   return (
     <View className="flex-1 gap-4" style={{ paddingTop: topInset }}>

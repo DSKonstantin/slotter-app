@@ -1,14 +1,15 @@
 import * as Yup from "yup";
 
+const PASSWORD_REQUIREMENTS_MESSAGE =
+  "Пароль не соответствует требованиям. Минимум 8 символов, строчные и заглавные буквы, цифры";
+
 export const passwordField = Yup.string()
-  .min(8, "Пароль должен содержать минимум 8 символов")
+  .min(8, PASSWORD_REQUIREMENTS_MESSAGE)
   .matches(
     /^[A-Za-z0-9!@#$%^&*()_+=\-{}[\]:;"'<>,.?/\\|~`]+$/,
-    "Пароль может содержать только латинские буквы и допустимые символы",
+    PASSWORD_REQUIREMENTS_MESSAGE,
   )
-  .matches(
-    /[A-Z]/,
-    "Пароль должен содержать минимум одну заглавную латинскую букву",
-  )
-  .matches(/\d/, "Пароль должен содержать минимум одну цифру")
-  .required("Введите пароль");
+  .matches(/[a-z]/, PASSWORD_REQUIREMENTS_MESSAGE)
+  .matches(/[A-Z]/, PASSWORD_REQUIREMENTS_MESSAGE)
+  .matches(/\d/, PASSWORD_REQUIREMENTS_MESSAGE)
+  .required(PASSWORD_REQUIREMENTS_MESSAGE);

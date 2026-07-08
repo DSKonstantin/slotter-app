@@ -1,7 +1,13 @@
 import { ReactNode, Ref, RefCallback } from "react";
 import { View, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+} from "react-native-keyboard-controller";
 
 type AuthScreenLayoutProps = {
   header?: ReactNode;
@@ -25,10 +31,11 @@ export function AuthScreenLayout({
   scrollRef,
   contentRef,
 }: AuthScreenLayoutProps) {
+  const { bottom } = useSafeAreaInsets();
   const ScrollWrapper = avoidKeyboard ? KeyboardAwareScrollView : ScrollView;
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       <View className="px-screen py-2 bg-background">{header}</View>
       <ScrollWrapper
         ref={scrollRef as never}
@@ -45,7 +52,21 @@ export function AuthScreenLayout({
           {children}
         </View>
       </ScrollWrapper>
-      {footer && <View className="px-screen py-2 bg-background">{footer}</View>}
+      {footer && avoidKeyboard ? (
+        <KeyboardStickyView
+          offset={{ closed: 0, opened: bottom }}
+          style={{ paddingBottom: bottom }}
+        >
+          <View className="px-screen py-2 bg-background">{footer}</View>
+        </KeyboardStickyView>
+      ) : footer ? (
+        <View
+          className="px-screen py-2 bg-background"
+          style={{ paddingBottom: bottom }}
+        >
+          {footer}
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }

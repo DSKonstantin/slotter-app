@@ -7,7 +7,6 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useCancelAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 
 type Props = {
   visible: boolean;

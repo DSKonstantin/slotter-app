@@ -33,6 +33,7 @@ export const api = createApi({
     "ChatRooms",
     "ChatMessages",
     "Notifications",
+    "NotificationSettings",
     "UserLinks",
     "SubscriptionMembership",
     "SubscriptionPlans",

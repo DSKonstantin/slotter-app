@@ -29,6 +29,8 @@ export type AutocompleteProps = {
   onChangeText?: (text: string) => void;
   placeholder?: string;
   emptyText?: string;
+  loading?: boolean;
+  debounceDelay?: number;
 };
 
 export function Autocomplete({
@@ -44,6 +46,8 @@ export function Autocomplete({
   initialItem,
   placeholder = "Введите",
   emptyText = "Ничего не найдено",
+  loading = false,
+  debounceDelay = 0,
 }: AutocompleteProps) {
   const dropdownController = useRef<IAutocompleteDropdownRef | null>(null);
   const currentTextRef = useRef<string>(initialItem?.title ?? value ?? "");
@@ -91,6 +95,8 @@ export function Autocomplete({
               item ? { id: item.id, title: item.title ?? "" } : null,
             );
           }}
+          loading={loading}
+          debounce={debounceDelay}
           dataSet={dataSet ?? []}
           emptyResultText={emptyText}
           containerStyle={{ flex: 1 }}

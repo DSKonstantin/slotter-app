@@ -5,7 +5,6 @@ import { colors } from "@/src/styles/colors";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { setFilterModalOpen } from "@/src/store/redux/slices/calendarSlice";
 import Svg, { Defs, Pattern, Line, Rect } from "react-native-svg";
-import { SLOT_GAP } from "@/src/components/app/calendar/home/day/timeSlotList/constants";
 
 const HatchPattern: React.FC = () => (
   <View style={StyleSheet.absoluteFill} pointerEvents="none">

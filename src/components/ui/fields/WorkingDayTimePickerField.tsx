@@ -26,6 +26,28 @@ const FADE_COLOR = colors.background.DEFAULT;
 // 20 × up to 12 items/hour = up to 240 items; center is ~120 swipes from either edge
 const LOOP_COUNT = 1;
 
+const TimePickerSkeleton = memo(function TimePickerSkeleton() {
+  const { width: screenWidth } = useWindowDimensions();
+  const pickerWidth = Math.min(320, screenWidth - 64);
+
+  return (
+    <View>
+      <View
+        style={{
+          height: PICKER_HEIGHT,
+          width: pickerWidth,
+          alignSelf: "center",
+        }}
+        className="flex-row gap-3 mb-4"
+      >
+        <View className="flex-1 rounded-base bg-neutral-100" />
+      </View>
+      <View className="h-12 rounded-large bg-neutral-100 mb-1" />
+      <View className="h-12 rounded-large bg-neutral-100" />
+    </View>
+  );
+});
+
 export type Break = { startMinutes: number; endMinutes: number };
 
 type MinuteOption = { value: number; label: string };
@@ -198,6 +220,7 @@ type Props = {
   endMinutes?: number;
   breaks?: Break[];
   isLoading?: boolean;
+  onOpen?: () => void;
 };
 
 export const WorkingDayTimePickerField = ({
@@ -209,6 +232,7 @@ export const WorkingDayTimePickerField = ({
   endMinutes,
   breaks = [],
   isLoading,
+  onOpen,
 }: Props) => {
   const [open, setOpen] = useState(false);
 
@@ -280,7 +304,12 @@ export const WorkingDayTimePickerField = ({
           <Pressable
             className="flex-1 justify-center"
             disabled={disabled}
-            onPress={() => !disabled && setOpen(true)}
+            onPress={() => {
+              if (!disabled) {
+                setOpen(true);
+                onOpen?.();
+              }
+            }}
           >
             <Text
               className="font-inter-regular text-[16px] px-4"
@@ -305,19 +334,23 @@ export const WorkingDayTimePickerField = ({
         >
           Выберите время
         </Typography>
-        {!disabled && (
-          <TimePicker
-            key={`${startMinutes}-${endMinutes}`}
-            timeOptions={timeOptions}
-            hourOptions={hourOptions}
-            minuteDataPerHour={minuteDataPerHour}
-            valueMinutes={value ? parseTime(value) : undefined}
-            onPick={(time) => {
-              onChange(time);
-              setOpen(false);
-            }}
-            onCancel={() => setOpen(false)}
-          />
+        {isLoading ? (
+          <TimePickerSkeleton />
+        ) : (
+          !disabled && (
+            <TimePicker
+              key={`${startMinutes}-${endMinutes}`}
+              timeOptions={timeOptions}
+              hourOptions={hourOptions}
+              minuteDataPerHour={minuteDataPerHour}
+              valueMinutes={value ? parseTime(value) : undefined}
+              onPick={(time) => {
+                onChange(time);
+                setOpen(false);
+              }}
+              onCancel={() => setOpen(false)}
+            />
+          )
         )}
       </StModal>
     </View>

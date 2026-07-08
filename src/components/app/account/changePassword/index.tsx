@@ -101,6 +101,7 @@ const ChangePassword = () => {
                   name="password"
                   label="Новый пароль"
                   placeholder="Минимум 8 символов"
+                  hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
                   secureTextEntry={!showNew}
                   endAdornment={
                     <EyeToggle

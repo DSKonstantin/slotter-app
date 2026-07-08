@@ -4,9 +4,13 @@ import type {
   GetNotificationsResponse,
   MarkAllNotificationsReadResponse,
   MarkNotificationReadResponse,
+  GetNotificationSettingsResponse,
+  UpdateNotificationSettingsPayload,
+  NotificationStatsResponse,
+  GetNotificationStatsParams,
 } from "@/src/store/redux/services/api-types";
 
-const notificationsApi = api.injectEndpoints({
+let notificationsApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
     getNotifications: builder.query<
@@ -62,6 +66,57 @@ const notificationsApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Notifications"],
     }),
+
+    getNotificationSettings: builder.query<
+      GetNotificationSettingsResponse,
+      number
+    >({
+      query: (userId) => ({
+        url: `/users/${userId}/notification_settings`,
+        method: "GET",
+      }),
+      providesTags: ["NotificationSettings"],
+    }),
+
+    getNotificationStats: builder.query<
+      NotificationStatsResponse,
+      GetNotificationStatsParams
+    >({
+      query: ({ userId, from, to }) => ({
+        url: `/users/${userId}/notification_stats`,
+        method: "GET",
+        params: { from, to },
+      }),
+    }),
+
+    updateNotificationSettings: builder.mutation<
+      GetNotificationSettingsResponse,
+      UpdateNotificationSettingsPayload
+    >({
+      query: ({ userId, settings }) => ({
+        url: `/users/${userId}/notification_settings`,
+        method: "PATCH",
+        data: { settings },
+      }),
+      async onQueryStarted({ userId, settings }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          notificationsApi.util.updateQueryData(
+            "getNotificationSettings",
+            userId,
+            (draft) => {
+              draft.notification_settings.forEach((s) => {
+                if (s.kind in settings) s.enabled = settings[s.kind]!;
+              });
+            },
+          ),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
   }),
 });
 
@@ -70,4 +125,7 @@ export const {
   useGetNotificationsPaginatedInfiniteQuery,
   useMarkNotificationReadMutation,
   useMarkAllNotificationsReadMutation,
+  useGetNotificationSettingsQuery,
+  useUpdateNotificationSettingsMutation,
+  useGetNotificationStatsQuery,
 } = notificationsApi;

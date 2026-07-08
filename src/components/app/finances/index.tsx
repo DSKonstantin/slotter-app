@@ -19,7 +19,6 @@ import {
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { SummaryExpense } from "@/src/store/redux/services/api-types";
-import { Image } from "expo-image";
 import {
   Card,
   Divider,

@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 
-import { Pressable, Share, View } from "react-native";
+import { View } from "react-native";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 
 import * as Clipboard from "expo-clipboard";
@@ -8,9 +8,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { toast } from "@backpackapp-io/react-native-toast";
 
-import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
-
-import { colors } from "@/src/styles/colors";
+import { Button, StModal, Typography } from "@/src/components/ui";
 
 type ProfileActionsModalProps = {
   visible: boolean;
@@ -52,10 +50,6 @@ const ProfileLinkModal = ({
 
     onClose();
   }, [profileLink, onClose]);
-
-  const handleShare = useCallback(async () => {
-    onClose();
-  }, [onClose]);
 
   return (
     <StModal visible={visible} onClose={onClose}>
