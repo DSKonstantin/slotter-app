@@ -66,6 +66,8 @@ const Login = () => {
     <FormProvider {...methods}>
       <AuthScreenLayout
         header={<AuthHeader />}
+        avoidKeyboard
+        stickyFooter
         footer={
           <AuthFooter
             primary={{

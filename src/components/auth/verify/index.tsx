@@ -193,6 +193,7 @@ const Verify = () => {
     <FormProvider {...methods}>
       <AuthScreenLayout
         avoidKeyboard
+        stickyFooter
         header={<AuthHeader />}
         footer={
           <AuthFooter

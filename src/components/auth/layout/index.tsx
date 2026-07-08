@@ -15,6 +15,7 @@ type AuthScreenLayoutProps = {
   footer?: ReactNode;
 
   avoidKeyboard?: boolean;
+  stickyFooter?: boolean;
   contentBottomPadding?: number;
   disableHorizontalPadding?: boolean;
 
@@ -27,6 +28,7 @@ export function AuthScreenLayout({
   children,
   footer,
   avoidKeyboard = false,
+  stickyFooter = false,
   disableHorizontalPadding = false,
   scrollRef,
   contentRef,
@@ -39,6 +41,7 @@ export function AuthScreenLayout({
       <View className="px-screen py-2 bg-background">{header}</View>
       <ScrollWrapper
         ref={scrollRef as never}
+        showsVerticalScrollIndicator={false}
         className={`flex-1${disableHorizontalPadding ? "" : " px-screen"}`}
         {...(avoidKeyboard
           ? { bottomOffset: 20 }
@@ -52,12 +55,12 @@ export function AuthScreenLayout({
           {children}
         </View>
       </ScrollWrapper>
-      {footer && avoidKeyboard ? (
+      {footer && stickyFooter ? (
         <KeyboardStickyView
           offset={{ closed: 0, opened: bottom }}
           style={{ paddingBottom: bottom }}
         >
-          <View className="px-screen py-2 bg-background">{footer}</View>
+          <View className="px-screen py-2">{footer}</View>
         </KeyboardStickyView>
       ) : footer ? (
         <View
