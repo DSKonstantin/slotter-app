@@ -11,6 +11,7 @@ type BaseFieldProps = {
   labelRight?: ReactNode;
   hideErrorText?: boolean;
   error?: FieldError;
+  hint?: ReactNode;
   success?: boolean;
   disabled?: boolean;
   size?: FieldSize;
@@ -33,6 +34,7 @@ export function BaseField({
   label,
   labelRight,
   error,
+  hint,
   success,
   disabled,
   size = "md",
@@ -109,7 +111,9 @@ export function BaseField({
       </Animated.View>
 
       {!hideErrorText && (
-        <Text className={styles.errorText}>{error?.message ?? " "}</Text>
+        <Text className={error ? styles.errorText : styles.hintText}>
+          {error?.message ?? hint ?? " "}
+        </Text>
       )}
     </View>
   );
@@ -136,4 +140,6 @@ const styles = {
 
   errorText:
     "min-h-[20px] font-inter-medium mt-[2px] text-accent-red-500 text-caption",
+  hintText:
+    "min-h-[20px] font-inter-medium mt-[2px] text-neutral-500 text-caption",
 };

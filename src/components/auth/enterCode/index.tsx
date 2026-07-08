@@ -42,6 +42,7 @@ const EnterCode = () => {
   const [wrongCode, setWrongCode] = useState<{
     attemptsLeft: number;
   } | null>(null);
+  const [otpValue, setOtpValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFlashcallFallback, setShowFlashcallFallback] = useState(false);
   const [currentResendAfter, setCurrentResendAfter] =
@@ -127,6 +128,11 @@ const EnterCode = () => {
     }
   }, [sendCode, phone, setCallSession]);
 
+  const handleSubmitPress = useCallback(() => {
+    if (otpValue.length !== codeLength) return;
+    handleOtpComplete(otpValue);
+  }, [otpValue, codeLength, handleOtpComplete]);
+
   const handleResend = useCallback(async () => {
     try {
       const result = await sendCode({
@@ -159,16 +165,24 @@ const EnterCode = () => {
       avoidKeyboard
       header={<AuthHeader />}
       footer={
-        showFlashcallFallback && !callSession ? (
-          <AuthFooter
-            primary={{
-              title: "Подтвердить звонком",
-              loading: isSendingCode,
-              disabled: isSendingCode,
-              onPress: handleSwitchToCallback,
-            }}
-          />
-        ) : undefined
+        <AuthFooter
+          primary={{
+            title: "Далее",
+            loading: isSubmitting,
+            disabled: otpValue.length !== codeLength || isSubmitting,
+            onPress: handleSubmitPress,
+          }}
+          secondary={
+            showFlashcallFallback && !callSession
+              ? {
+                  title: "Подтвердить звонком",
+                  loading: isSendingCode,
+                  disabled: isSendingCode,
+                  onPress: handleSwitchToCallback,
+                }
+              : undefined
+          }
+        />
       }
     >
       <View className="mt-14">
@@ -184,8 +198,10 @@ const EnterCode = () => {
           <OtpConfirm
             key={flashcallKey}
             length={codeLength}
-            onChange={() => setWrongCode(null)}
-            onComplete={handleOtpComplete}
+            onChange={(value) => {
+              setWrongCode(null);
+              setOtpValue(value);
+            }}
             onResend={handleResend}
             disabled={isSubmitting}
             resendSeconds={currentResendAfter}

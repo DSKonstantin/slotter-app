@@ -29,7 +29,6 @@ import {
   useGetNotificationSettingsQuery,
   useGetNotificationStatsQuery,
 } from "@/src/store/redux/services/api/notificationsApi";
-import { useAppSelector } from "@/src/store/redux/store";
 import {
   Badge,
   Button,
@@ -116,7 +115,6 @@ const ClientNotifications = () => {
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
   const auth = useRequiredAuth();
-  const ispe = useAppSelector((state) => state.appVersion.ispe);
 
   const { data: settingsData, refetch: refetchSettings } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
@@ -345,85 +343,6 @@ const ClientNotifications = () => {
               Клиент получит уведомление, если подписался на бота или установил
               приложение
             </Typography>
-
-            {ispe && (
-              <>
-                <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-                  Прямые уведомления
-                </Typography>
-
-                <Card
-                  title="Чем отличается от бесплатных?"
-                  left={
-                    <StSvg
-                      name="Info_alt_fill"
-                      size={28}
-                      color={colors.neutral[500]}
-                    />
-                  }
-                  right={
-                    <StSvg
-                      name="Expand_right_light"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                  onPress={() => setDiffModalVisible(true)}
-                />
-
-                <View className="bg-background-surface p-4 rounded-base mt-2">
-                  {DIRECT_CHANNELS.map(
-                    (
-                      { channel, icon, iconNode, iconColor, name, price },
-                      i,
-                    ) => (
-                      <React.Fragment key={name}>
-                        <Card
-                          className="p-0"
-                          titleNode={
-                            <View className="flex-row items-center gap-1.5">
-                              {iconNode ?? (
-                                <StSvg
-                                  name={icon!}
-                                  size={28}
-                                  color={iconColor}
-                                />
-                              )}
-                              <Typography className="text-body">
-                                {name}
-                              </Typography>
-                            </View>
-                          }
-                          subtitle={price}
-                          right={
-                            <View className="flex-row items-center gap-1">
-                              <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">
-                                Подключить
-                              </Typography>
-                              <StSvg
-                                name="Add_round"
-                                size={16}
-                                color={colors.primary.blue[500]}
-                              />
-                            </View>
-                          }
-                          onPress={() =>
-                            router.push({
-                              pathname:
-                                Routers.app.account.clientNotifications.direct,
-                              params: { channel },
-                            })
-                          }
-                        />
-                        {i < DIRECT_CHANNELS.length - 1 && (
-                          <Divider className="my-4" />
-                        )}
-                      </React.Fragment>
-                    ),
-                  )}
-                </View>
-              </>
-            )}
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Настройки

@@ -9,6 +9,7 @@ type RHFTextFieldProps = {
   name: string;
   label?: string;
   labelRight?: ReactNode;
+  hint?: ReactNode;
   hideErrorText?: boolean;
   disabled?: boolean;
   success?: boolean;
@@ -23,6 +24,7 @@ export function RhfTextField({
   name,
   label,
   labelRight,
+  hint,
   startAdornment,
   endAdornment,
   onEndAdornmentPress,
@@ -50,6 +52,7 @@ export function RhfTextField({
       label={label}
       labelRight={labelRight}
       error={error}
+      hint={hint}
       hideErrorText={hideErrorText}
       success={success}
       size={size}

@@ -96,6 +96,7 @@ const Register = () => {
               name="password"
               label="Пароль"
               placeholder="••••••••"
+              hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
               secureTextEntry={!showPassword}
               endAdornment={
                 <EyeToggle
