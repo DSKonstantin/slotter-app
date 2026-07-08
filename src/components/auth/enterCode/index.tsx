@@ -163,6 +163,7 @@ const EnterCode = () => {
   return (
     <AuthScreenLayout
       avoidKeyboard
+      stickyFooter
       header={<AuthHeader />}
       footer={
         <AuthFooter
