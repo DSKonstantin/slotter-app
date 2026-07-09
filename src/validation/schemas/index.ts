@@ -1,5 +1,4 @@
 export * from "./accountAbout.schema";
-export * from "./accountNotifications.schema";
 export * from "./accountBooking.schema";
 export * from "./accountLinks.schema";
 export * from "./accountPersonalInformation.schema";

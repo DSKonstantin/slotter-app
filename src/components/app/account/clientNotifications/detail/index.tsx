@@ -11,30 +11,28 @@ import {
   useUpdateNotificationSettingsMutation,
 } from "@/src/store/redux/services/api/notificationsApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { asArray } from "@/src/utils/asArray";
 import type { NotificationKind } from "@/src/store/redux/services/api-types";
 
 type DetailKind = "reminder" | "reschedule";
 
 const KIND_MAP: Record<DetailKind, NotificationKind> = {
   reminder: "appointment_reminder",
-  reschedule: "appointment_reschedule_requested",
+  reschedule: "appointment_rescheduled",
 };
 
 const CONFIG: Record<
   DetailKind,
   {
-    title: string;
     toggleLabel: string;
     onlineTimeValue: string;
   }
 > = {
   reminder: {
-    title: "Напоминание о визите",
     toggleLabel: "Уведомление напоминания",
     onlineTimeValue: "За 2 часа, За день",
   },
   reschedule: {
-    title: "Перенос записи",
     toggleLabel: "Уведомление переноса",
     onlineTimeValue: "За 2 часа, За день",
   },
@@ -54,15 +52,17 @@ const NotificationDetailScreen = ({ kind }: Props) => {
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
-  const enabled =
-    data?.notification_settings.find((s) => s.kind === notificationKind)
-      ?.enabled ?? false;
+  const settingItem = asArray(data?.customer)
+    .flatMap((group) => asArray(group.items))
+    .find((s) => s.kind === notificationKind);
+
+  const enabled = settingItem?.enabled ?? false;
 
   const handleToggle = useCallback(() => {
     if (!auth) return;
     updateSettings({
       userId: auth.userId,
-      settings: { [notificationKind]: !enabled },
+      customer: { [notificationKind]: !enabled },
     })
       .unwrap()
       .catch((e: unknown) => {
@@ -71,7 +71,7 @@ const NotificationDetailScreen = ({ kind }: Props) => {
   }, [auth, updateSettings, notificationKind, enabled]);
 
   return (
-    <ScreenWithToolbar title={config.title}>
+    <ScreenWithToolbar title={settingItem?.title}>
       {({ topInset, bottomInset }) => (
         <ScrollView
           showsVerticalScrollIndicator={false}

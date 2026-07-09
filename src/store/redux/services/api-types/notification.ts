@@ -119,13 +119,21 @@ export interface NotificationSetting {
   title: string;
 }
 
+export interface NotificationSettingsCustomerGroup {
+  stage: string;
+  title: string;
+  items: NotificationSetting[];
+}
+
 export interface GetNotificationSettingsResponse {
-  notification_settings: NotificationSetting[];
+  self: NotificationSetting[];
+  customer: NotificationSettingsCustomerGroup[];
 }
 
 export interface UpdateNotificationSettingsPayload {
   userId: number;
-  settings: Partial<Record<NotificationKind, boolean>>;
+  self?: Partial<Record<NotificationKind, boolean>>;
+  customer?: Partial<Record<NotificationKind, boolean>>;
 }
 
 export interface NotificationStatsByChannel {

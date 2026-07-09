@@ -50,8 +50,9 @@ export function Item({
       <View className="flex-1 flex-row items-center gap-1.5">
         <Text
           className={twMerge(
-            "font-inter-regular text-body",
-            active && "font-inter-semibold text-body text-primary-blue-500",
+            active
+              ? "font-inter-regular text-primary-blue-500 text-[16px]"
+              : "font-inter-regular text-body",
             titleClassName,
           )}
         >

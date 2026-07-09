@@ -1,24 +1,30 @@
-import React, { useEffect, useRef } from "react";
-import { Alert, AppState, View } from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  AccountNotificationsSchema,
-  type AccountNotificationsFormValues,
-} from "@/src/validation/schemas/accountNotifications.schema";
+import React, { useCallback, useEffect, useRef } from "react";
+import { ActivityIndicator, Alert, AppState, View } from "react-native";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { toast } from "@backpackapp-io/react-native-toast";
+
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Item, Switch } from "@/src/components/ui";
-import RHFSwitch from "@/src/components/hookForm/rhf-switch";
-import { useAppSelector } from "@/src/store/redux/store";
-import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import {
+  useGetNotificationSettingsQuery,
+  useUpdateNotificationSettingsMutation,
+} from "@/src/store/redux/services/api/notificationsApi";
+import type { NotificationKind } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useNotificationPermission } from "@/src/hooks/useNotificationPermission";
 import { requestOneSignalPermission } from "@/src/services/oneSignal";
+import { asArray } from "@/src/utils/asArray";
+
+const showSystemSettingsAlert = (title: string, openSettings: () => void) => {
+  Alert.alert(title, "Настройте уведомления в настройках приложения.", [
+    { text: "Отмена", style: "cancel" },
+    { text: "Перейти в настройки", onPress: openSettings },
+  ]);
+};
 
 const AccountNotifications = () => {
-  const user = useAppSelector((s) => s.auth.user);
-  const [updateUser] = useUpdateUserMutation();
+  const auth = useRequiredAuth();
   const {
     isGranted,
     canAskAgain,
@@ -27,34 +33,44 @@ const AccountNotifications = () => {
     refresh,
   } = useNotificationPermission();
 
-  const methods = useForm<AccountNotificationsFormValues>({
-    resolver: yupResolver(AccountNotificationsSchema),
-    defaultValues: {
-      newBooking: user?.is_notify_new_appointment ?? true,
-      clientCancellation: user?.is_notify_customer_cancel ?? true,
-      reminders: user?.is_notify_reminders ?? false,
+  const { data, isLoading } = useGetNotificationSettingsQuery(
+    auth ? auth.userId : skipToken,
+  );
+
+  const [updateSettings] = useUpdateNotificationSettingsMutation();
+
+  const handleToggle = useCallback(
+    (kind: NotificationKind, currentEnabled: boolean) => {
+      if (!auth) return;
+      updateSettings({
+        userId: auth.userId,
+        self: { [kind]: !currentEnabled },
+      })
+        .unwrap()
+        .catch((e: unknown) => {
+          toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
+        });
     },
-  });
-
-  const onSubmit = async (values: AccountNotificationsFormValues) => {
-    if (!user) return;
-    try {
-      await updateUser({
-        id: user.id,
-        data: {
-          is_notify_new_appointment: values.newBooking,
-          is_notify_customer_cancel: values.clientCancellation,
-          is_notify_reminders: values.reminders,
-        },
-      }).unwrap();
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
-    }
-  };
-
-  const submit = () => methods.handleSubmit(onSubmit)();
+    [auth, updateSettings],
+  );
 
   const appState = useRef(AppState.currentState);
+
+  const handleTogglePush = async (value: boolean) => {
+    if (!value) {
+      showSystemSettingsAlert("Отключить уведомления", openSettings);
+      return;
+    }
+    if (!canAskAgain) {
+      showSystemSettingsAlert("Включить уведомления", openSettings);
+      return;
+    }
+    const result = await requestOrOpenSettings();
+    if (result.status === "granted") {
+      requestOneSignalPermission();
+    }
+    await refresh();
+  };
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
@@ -67,73 +83,35 @@ const AccountNotifications = () => {
   }, [refresh]);
 
   return (
-    <FormProvider {...methods}>
-      <ScreenWithToolbar title="Уведомления">
-        {({ topInset }) => (
-          <View style={{ paddingTop: topInset }} className="px-screen">
-            <View className="overflow-hidden gap-2">
-              <Item
-                title="Push-уведомления"
-                right={
-                  <Switch
-                    value={isGranted}
-                    onChange={async (value) => {
-                      if (value) {
-                        if (!canAskAgain) {
-                          Alert.alert(
-                            "Включить уведомления",
-                            "Управление уведомлениями доступно в системных настройках устройства",
-                            [
-                              { text: "Отмена", style: "cancel" },
-                              {
-                                text: "Открыть настройки",
-                                onPress: openSettings,
-                              },
-                            ],
-                          );
-                          return;
-                        }
-                        const result = await requestOrOpenSettings();
-                        if (result.status === "granted") {
-                          requestOneSignalPermission();
-                        }
-                        await refresh();
-                      } else {
-                        Alert.alert(
-                          "Отключить уведомления",
-                          "Управление уведомлениями доступно в системных настройках устройства",
-                          [
-                            { text: "Отмена", style: "cancel" },
-                            {
-                              text: "Открыть настройки",
-                              onPress: openSettings,
-                            },
-                          ],
-                        );
-                      }
-                    }}
-                  />
-                }
-              />
-              <Item
-                title="Новая запись"
-                right={<RHFSwitch name="newBooking" onChange={submit} />}
-              />
-              <Item
-                title="Отмена клиентом"
-                right={
-                  <RHFSwitch name="clientCancellation" onChange={submit} />
-                }
-              />
-              <Item
-                title="Напоминания"
-                right={<RHFSwitch name="reminders" onChange={submit} />}
-              />
-            </View>
+    <ScreenWithToolbar title="Уведомления">
+      {({ topInset }) => (
+        <View style={{ paddingTop: topInset }} className="px-screen">
+          <View className="overflow-hidden gap-2">
+            <Item
+              title="Push-уведомления"
+              right={<Switch value={isGranted} onChange={handleTogglePush} />}
+            />
+
+            {isLoading ? (
+              <ActivityIndicator />
+            ) : (
+              asArray(data?.self).map((item) => (
+                <Item
+                  key={item.kind}
+                  title={item.title}
+                  right={
+                    <Switch
+                      value={item.enabled}
+                      onChange={() => handleToggle(item.kind, item.enabled)}
+                    />
+                  }
+                />
+              ))
+            )}
           </View>
-        )}
-      </ScreenWithToolbar>
-    </FormProvider>
+        </View>
+      )}
+    </ScreenWithToolbar>
   );
 };
 
