@@ -1,4 +1,5 @@
 import { api } from "../api";
+import { asArray } from "@/src/utils/asArray";
 import type {
   GetNotificationsParams,
   GetNotificationsResponse,
@@ -111,13 +112,13 @@ let notificationsApi = api.injectEndpoints({
             userId,
             (draft) => {
               if (self) {
-                draft.self.forEach((s) => {
+                asArray(draft.self).forEach((s) => {
                   if (s.kind in self) s.enabled = self[s.kind]!;
                 });
               }
               if (customer) {
-                draft.customer.forEach((group) => {
-                  group.items.forEach((s) => {
+                asArray(draft.customer).forEach((group) => {
+                  asArray(group.items).forEach((s) => {
                     if (s.kind in customer) s.enabled = customer[s.kind]!;
                   });
                 });

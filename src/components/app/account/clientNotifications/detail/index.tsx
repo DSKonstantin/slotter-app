@@ -24,18 +24,15 @@ const KIND_MAP: Record<DetailKind, NotificationKind> = {
 const CONFIG: Record<
   DetailKind,
   {
-    title: string;
     toggleLabel: string;
     onlineTimeValue: string;
   }
 > = {
   reminder: {
-    title: "Напоминание о визите",
     toggleLabel: "Уведомление напоминания",
     onlineTimeValue: "За 2 часа, За день",
   },
   reschedule: {
-    title: "Перенос записи",
     toggleLabel: "Уведомление переноса",
     onlineTimeValue: "За 2 часа, За день",
   },
@@ -55,10 +52,11 @@ const NotificationDetailScreen = ({ kind }: Props) => {
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
-  const enabled =
-    asArray(data?.customer)
-      .flatMap((group) => asArray(group.items))
-      .find((s) => s.kind === notificationKind)?.enabled ?? false;
+  const settingItem = asArray(data?.customer)
+    .flatMap((group) => asArray(group.items))
+    .find((s) => s.kind === notificationKind);
+
+  const enabled = settingItem?.enabled ?? false;
 
   const handleToggle = useCallback(() => {
     if (!auth) return;
@@ -73,7 +71,7 @@ const NotificationDetailScreen = ({ kind }: Props) => {
   }, [auth, updateSettings, notificationKind, enabled]);
 
   return (
-    <ScreenWithToolbar title={config.title}>
+    <ScreenWithToolbar title={settingItem?.title}>
       {({ topInset, bottomInset }) => (
         <ScrollView
           showsVerticalScrollIndicator={false}
