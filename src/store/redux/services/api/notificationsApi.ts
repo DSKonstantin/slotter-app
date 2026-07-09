@@ -93,20 +93,35 @@ let notificationsApi = api.injectEndpoints({
       GetNotificationSettingsResponse,
       UpdateNotificationSettingsPayload
     >({
-      query: ({ userId, settings }) => ({
+      query: ({ userId, self, customer }) => ({
         url: `/users/${userId}/notification_settings`,
         method: "PATCH",
-        data: { settings },
+        data: {
+          ...(self ? { self } : {}),
+          ...(customer ? { customer } : {}),
+        },
       }),
-      async onQueryStarted({ userId, settings }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { userId, self, customer },
+        { dispatch, queryFulfilled },
+      ) {
         const patch = dispatch(
           notificationsApi.util.updateQueryData(
             "getNotificationSettings",
             userId,
             (draft) => {
-              draft.notification_settings.forEach((s) => {
-                if (s.kind in settings) s.enabled = settings[s.kind]!;
-              });
+              if (self) {
+                draft.self.forEach((s) => {
+                  if (s.kind in self) s.enabled = self[s.kind]!;
+                });
+              }
+              if (customer) {
+                draft.customer.forEach((group) => {
+                  group.items.forEach((s) => {
+                    if (s.kind in customer) s.enabled = customer[s.kind]!;
+                  });
+                });
+              }
             },
           ),
         );

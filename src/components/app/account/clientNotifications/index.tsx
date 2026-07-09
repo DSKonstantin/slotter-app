@@ -42,6 +42,7 @@ import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
 import DirectDiffModal from "./DirectDiffModal";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
+import { asArray } from "@/src/utils/asArray";
 
 const FILTER_PERIODS = ["Сегодня", "Неделя", "Месяц"] as const;
 
@@ -141,7 +142,9 @@ const ClientNotifications = () => {
   );
 
   const notificationSettingsSummary = useMemo(() => {
-    const all = settingsData?.notification_settings ?? [];
+    const all = asArray(settingsData?.customer).flatMap((group) =>
+      asArray(group.items),
+    );
     const enabled = all.filter((s) => s.enabled).length;
     return { enabled, total: all.length };
   }, [settingsData]);

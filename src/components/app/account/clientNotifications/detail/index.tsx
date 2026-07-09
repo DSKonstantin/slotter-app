@@ -11,13 +11,14 @@ import {
   useUpdateNotificationSettingsMutation,
 } from "@/src/store/redux/services/api/notificationsApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { asArray } from "@/src/utils/asArray";
 import type { NotificationKind } from "@/src/store/redux/services/api-types";
 
 type DetailKind = "reminder" | "reschedule";
 
 const KIND_MAP: Record<DetailKind, NotificationKind> = {
   reminder: "appointment_reminder",
-  reschedule: "appointment_reschedule_requested",
+  reschedule: "appointment_rescheduled",
 };
 
 const CONFIG: Record<
@@ -55,14 +56,15 @@ const NotificationDetailScreen = ({ kind }: Props) => {
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
   const enabled =
-    data?.notification_settings.find((s) => s.kind === notificationKind)
-      ?.enabled ?? false;
+    asArray(data?.customer)
+      .flatMap((group) => asArray(group.items))
+      .find((s) => s.kind === notificationKind)?.enabled ?? false;
 
   const handleToggle = useCallback(() => {
     if (!auth) return;
     updateSettings({
       userId: auth.userId,
-      settings: { [notificationKind]: !enabled },
+      customer: { [notificationKind]: !enabled },
     })
       .unwrap()
       .catch((e: unknown) => {

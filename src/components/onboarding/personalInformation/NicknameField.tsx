@@ -117,7 +117,7 @@ export function NicknameField() {
           <Input
             value={val != null ? String(val) : ""}
             onChangeText={onChange}
-            label="Никнейм"
+            label="Никнейм*"
             placeholder="ivan_ivanov"
             hideErrorText
             inputClassName="pl-0"

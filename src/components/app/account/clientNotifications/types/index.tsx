@@ -15,10 +15,8 @@ import {
 import type { NotificationKind } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
-import {
-  NOTIFICATION_KIND_CONFIG,
-  NOTIFICATION_SECTIONS,
-} from "@/src/constants/notificationKinds";
+import { NOTIFICATION_KIND_CONFIG } from "@/src/constants/notificationKinds";
+import { asArray } from "@/src/utils/asArray";
 
 const NotificationTypes = () => {
   const auth = useRequiredAuth();
@@ -28,20 +26,12 @@ const NotificationTypes = () => {
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
-  const settingsMap = React.useMemo(() => {
-    const map: Partial<Record<NotificationKind, { enabled: boolean }>> = {};
-    data?.notification_settings.forEach((s) => {
-      map[s.kind] = { enabled: s.enabled };
-    });
-    return map;
-  }, [data]);
-
   const handleToggle = useCallback(
     (kind: NotificationKind, currentEnabled: boolean) => {
       if (!auth) return;
       updateSettings({
         userId: auth.userId,
-        settings: { [kind]: !currentEnabled },
+        customer: { [kind]: !currentEnabled },
       })
         .unwrap()
         .catch((e: unknown) => {
@@ -84,67 +74,60 @@ const NotificationTypes = () => {
             }}
             className="px-screen"
           >
-            {NOTIFICATION_SECTIONS.map((group) => {
-              const visibleItems = group.kinds
-                .map((kind) => ({ kind, ...settingsMap[kind] }))
-                .filter((item) => item.enabled !== undefined);
+            {asArray(data?.customer).map((group) => (
+              <View key={group.stage} className="mb-5">
+                <Typography className="text-caption text-neutral-500 mb-2">
+                  {group.title}
+                </Typography>
 
-              if (visibleItems.length === 0) return null;
+                <View className="bg-background-surface rounded-base px-4">
+                  {asArray(group.items).map((item, ii) => {
+                    const detailRoute =
+                      NOTIFICATION_KIND_CONFIG[item.kind]?.detailRoute;
 
-              return (
-                <View key={group.section} className="mb-5">
-                  <Typography className="text-caption text-neutral-500 mb-2">
-                    {group.section}
-                  </Typography>
-
-                  <View className="bg-background-surface rounded-base px-4">
-                    {visibleItems.map((item, ii) => {
-                      const kindConfig = NOTIFICATION_KIND_CONFIG[item.kind];
-                      const detailRoute = kindConfig?.detailRoute;
-                      return (
-                        <React.Fragment key={item.kind}>
-                          {ii > 0 && <Divider />}
-                          <Pressable
-                            className="flex-row items-center justify-between py-3 active:opacity-70"
-                            onPress={
-                              detailRoute
-                                ? () => router.push(detailRoute as any)
-                                : undefined
-                            }
-                          >
-                            <View>
-                              <Typography weight="medium" className="text-body">
-                                {kindConfig?.title ?? item.kind}
-                              </Typography>
-                              <Typography
-                                weight="regular"
-                                className={`text-caption ${item.enabled ? "text-primary-green-600" : "text-neutral-400"}`}
-                              >
-                                {item.enabled ? "Включено" : "Выключено"}
-                              </Typography>
-                            </View>
-                            {detailRoute ? (
-                              <StSvg
-                                name="Expand_right_light"
-                                size={24}
-                                color={colors.neutral[900]}
-                              />
-                            ) : (
-                              <Switch
-                                value={item.enabled!}
-                                onChange={() =>
-                                  handleToggle(item.kind, item.enabled!)
-                                }
-                              />
-                            )}
-                          </Pressable>
-                        </React.Fragment>
-                      );
-                    })}
-                  </View>
+                    return (
+                      <React.Fragment key={item.kind}>
+                        {ii > 0 && <Divider />}
+                        <Pressable
+                          className="flex-row items-center justify-between py-3 active:opacity-70"
+                          onPress={
+                            detailRoute
+                              ? () => router.push(detailRoute as any)
+                              : undefined
+                          }
+                        >
+                          <View>
+                            <Typography weight="medium" className="text-body">
+                              {item.title}
+                            </Typography>
+                            <Typography
+                              weight="regular"
+                              className={`text-caption ${item.enabled ? "text-primary-green-600" : "text-neutral-400"}`}
+                            >
+                              {item.enabled ? "Включено" : "Выключено"}
+                            </Typography>
+                          </View>
+                          {detailRoute ? (
+                            <StSvg
+                              name="Expand_right_light"
+                              size={24}
+                              color={colors.neutral[900]}
+                            />
+                          ) : (
+                            <Switch
+                              value={item.enabled}
+                              onChange={() =>
+                                handleToggle(item.kind, item.enabled)
+                              }
+                            />
+                          )}
+                        </Pressable>
+                      </React.Fragment>
+                    );
+                  })}
                 </View>
-              );
-            })}
+              </View>
+            ))}
           </ScrollView>
         );
       }}

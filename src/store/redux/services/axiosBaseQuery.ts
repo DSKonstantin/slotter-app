@@ -105,7 +105,7 @@ const fetchMultipart = async (
   const baseURL = axios.defaults.baseURL ?? "";
   const url = requestConfig.url?.startsWith("http")
     ? requestConfig.url
-    : `${baseURL}${requestConfig.url ?? ""}`;
+    : `${baseURL.replace(/\/+$/, "")}/${(requestConfig.url ?? "").replace(/^\/+/, "")}`;
 
   // Copy prepared headers, excluding Content-Type so the native layer can set
   // it with the correct multipart boundary.
