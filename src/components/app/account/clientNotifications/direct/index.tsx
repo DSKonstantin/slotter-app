@@ -1,6 +1,9 @@
-import React from "react";
-import { ScrollView, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import React, { useEffect } from "react";
+import { ActivityIndicator, Linking, ScrollView, View } from "react-native";
+import { useLocalSearchParams, router } from "expo-router";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { toast } from "@backpackapp-io/react-native-toast";
+
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Button,
@@ -11,8 +14,26 @@ import {
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import {
+  useGetSubscriptionDirectPlansQuery,
+  useGetSubscriptionDirectChannelsQuery,
+  useCheckoutDirectChannelMutation,
+} from "@/src/store/redux/services/api/subscriptionDirectApi";
+import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
+import { asArray } from "@/src/utils/asArray";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import { Routers } from "@/src/constants/routers";
 
 type Channel = "telegram" | "max";
+
+const KIND_MAP: Record<Channel, DirectChannelKind> = {
+  telegram: "telegram_direct",
+  max: "max_direct",
+};
+
+const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
 
 const CHANNEL_CONFIG: Record<
   Channel,
@@ -23,7 +44,6 @@ const CHANNEL_CONFIG: Record<
     name: string;
     description: string;
     features: string[];
-    price: string;
   }
 > = {
   telegram: {
@@ -37,7 +57,6 @@ const CHANNEL_CONFIG: Record<
       "Клиент видит ваше имя, а не бота",
       "Работает без подписки клиента",
     ],
-    price: "1 000 ₽/мес",
   },
   max: {
     icon: "SocialMax",
@@ -51,7 +70,6 @@ const CHANNEL_CONFIG: Record<
       "Клиент видит ваше имя, а не бота",
       "Работает без подписки клиента",
     ],
-    price: "1 000 ₽/мес",
   },
 };
 
@@ -65,6 +83,76 @@ const HOW_TO_STEPS = [
 const DirectNotifications = () => {
   const { channel } = useLocalSearchParams<{ channel: Channel }>();
   const config = CHANNEL_CONFIG[channel ?? "telegram"];
+  const kind = KIND_MAP[channel ?? "telegram"];
+
+  const auth = useRequiredAuth();
+
+  const { data: plans } = useGetSubscriptionDirectPlansQuery();
+  const plan = asArray(plans).find((p) => p.kind === kind && p.is_active);
+
+  const { data: channelsData } = useGetSubscriptionDirectChannelsQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
+
+  const existingChannel = asArray(
+    channelsData?.subscription_direct_channels,
+  ).find(
+    (c) => c.kind === kind && !INACTIVE_DIRECT_CHANNEL_STATUSES.has(c.status),
+  );
+
+  const [checkoutDirectChannel, { isLoading: isCheckingOut }] =
+    useCheckoutDirectChannelMutation();
+
+  const needsRedirect =
+    !!existingChannel && existingChannel.status !== "active";
+
+  useEffect(() => {
+    if (!existingChannel || existingChannel.status === "active") return;
+
+    if (existingChannel.provisioning_status === "awaiting_auth") {
+      router.replace({
+        pathname: Routers.app.account.clientNotifications.directAuth,
+        params: { channel },
+      });
+    } else {
+      router.replace({
+        pathname: Routers.app.account.clientNotifications.directCheckoutStatus,
+        params: { channel },
+      });
+    }
+  }, [existingChannel, channel]);
+
+  const handleCheckout = async () => {
+    if (!auth) return;
+    try {
+      const result = await checkoutDirectChannel({
+        userId: auth.userId,
+        kind,
+      }).unwrap();
+      await Linking.openURL(result.confirmation_url);
+      router.push({
+        pathname: Routers.app.account.clientNotifications.directCheckoutStatus,
+        params: { channel },
+      });
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Не удалось начать оплату"));
+    }
+  };
+
+  if (needsRedirect) {
+    return (
+      <ScreenWithToolbar title="Прямые уведомления">
+        {({ topInset }) => (
+          <View
+            style={{ paddingTop: topInset }}
+            className="flex-1 items-center justify-center"
+          >
+            <ActivityIndicator size="large" color={colors.primary.blue[500]} />
+          </View>
+        )}
+      </ScreenWithToolbar>
+    );
+  }
 
   return (
     <ScreenWithToolbar title="Прямые уведомления">
@@ -137,11 +225,26 @@ const DirectNotifications = () => {
             </View>
           </ScrollView>
           <FloatingFooter offset={bottomInset + 8}>
-            <Button
-              title={`Подключить за ${config.price}`}
-              onPress={() => {}}
-              variant="accent"
-            />
+            {existingChannel?.status === "active" ? (
+              <Button
+                title="Канал уже подключён"
+                onPress={() => {}}
+                disabled
+                variant="accent"
+              />
+            ) : (
+              <Button
+                title={
+                  plan
+                    ? `Подключить за ${formatRublesFromCents(plan.price_cents)}/мес`
+                    : "Подключить"
+                }
+                onPress={handleCheckout}
+                loading={isCheckingOut}
+                disabled={isCheckingOut || !plan}
+                variant="accent"
+              />
+            )}
           </FloatingFooter>
         </>
       )}

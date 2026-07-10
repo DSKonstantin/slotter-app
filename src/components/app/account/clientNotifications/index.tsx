@@ -30,6 +30,15 @@ import {
   useGetNotificationStatsQuery,
 } from "@/src/store/redux/services/api/notificationsApi";
 import {
+  useGetSubscriptionDirectPlansQuery,
+  useGetSubscriptionDirectChannelsQuery,
+} from "@/src/store/redux/services/api/subscriptionDirectApi";
+import type {
+  DirectChannelKind,
+  SubscriptionDirectChannel,
+} from "@/src/store/redux/services/api-types";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import {
   Badge,
   Button,
   Card,
@@ -43,6 +52,7 @@ import DirectDiffModal from "./DirectDiffModal";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { asArray } from "@/src/utils/asArray";
+import { useAppSelector } from "@/src/store/redux/store";
 
 const FILTER_PERIODS = ["Сегодня", "Неделя", "Месяц"] as const;
 
@@ -94,31 +104,66 @@ const TELEGRAM_BOTS = [
   },
 ];
 
-const DIRECT_CHANNELS = [
+const DIRECT_CHANNEL_UI_CONFIG: Record<
+  "telegram" | "max",
   {
-    channel: "telegram" as const,
-    icon: "SocialTelegram" as const,
+    kind: DirectChannelKind;
+    icon: "SocialTelegram" | null;
+    iconNode?: React.ReactNode;
+    iconColor: string;
+    name: string;
+  }
+> = {
+  telegram: {
+    kind: "telegram_direct",
+    icon: "SocialTelegram",
     iconColor: "#37B5DB",
     name: "Telegram",
-    price: "от 1 000 ₽/мес",
   },
-  {
-    channel: "max" as const,
+  max: {
+    kind: "max_direct",
     icon: null,
     iconNode: <MaxLogo size={28} />,
     iconColor: "#7B61FF",
     name: "Макс",
-    price: "от 1 000 ₽/мес",
   },
-];
+};
+
+const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
+
+function getDirectChannelStatusLabel(channel: SubscriptionDirectChannel) {
+  if (channel.status === "active") {
+    return channel.period_ends_at
+      ? `Активен до ${format(new Date(channel.period_ends_at), "dd.MM.yyyy")}`
+      : "Активен";
+  }
+  if (channel.provisioning_status === "awaiting_auth") {
+    return "Ожидает привязки";
+  }
+  if (channel.status === "grace") {
+    return "Требуется оплата";
+  }
+  return "Настраиваем канал…";
+}
 
 const ClientNotifications = () => {
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
   const auth = useRequiredAuth();
 
   const { data: settingsData, refetch: refetchSettings } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+
+  const { data: directPlansData, isLoading: isDirectPlansLoading } =
+    useGetSubscriptionDirectPlansQuery(undefined, { skip: !ispe });
+
+  const { data: directChannelsData, isLoading: isDirectChannelsLoading } =
+    useGetSubscriptionDirectChannelsQuery(
+      auth && ispe ? { userId: auth.userId } : skipToken,
+    );
+
+  const isDirectLoading = isDirectPlansLoading || isDirectChannelsLoading;
 
   const periodRange = useMemo(
     () => getPeriodRange(activePeriod),
@@ -148,6 +193,25 @@ const ClientNotifications = () => {
     const enabled = all.filter((s) => s.enabled).length;
     return { enabled, total: all.length };
   }, [settingsData]);
+
+  const directChannelRows = useMemo(() => {
+    const activePlans = asArray(directPlansData).filter((p) => p.is_active);
+    const existingChannels = asArray(
+      directChannelsData?.subscription_direct_channels,
+    );
+
+    return (["telegram", "max"] as const).map((channel) => {
+      const config = DIRECT_CHANNEL_UI_CONFIG[channel];
+      const plan = activePlans.find((p) => p.kind === config.kind);
+      const existing = existingChannels.find(
+        (c) =>
+          c.kind === config.kind &&
+          !INACTIVE_DIRECT_CHANNEL_STATUSES.has(c.status),
+      );
+
+      return { channel, config, plan, existing };
+    });
+  }, [directPlansData, directChannelsData]);
 
   const stats = useMemo(() => {
     const t = statsData?.notification_stats.totals;
@@ -346,6 +410,101 @@ const ClientNotifications = () => {
               Клиент получит уведомление, если подписался на бота или установил
               приложение
             </Typography>
+
+            {ispe && (
+              <>
+                <Typography className="text-caption text-neutral-500 mt-5 mb-2">
+                  Прямые уведомления
+                </Typography>
+
+                <Card
+                  title="Чем отличается от бесплатных?"
+                  left={
+                    <StSvg
+                      name="Info_alt_fill"
+                      size={28}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                  right={
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={() => setDiffModalVisible(true)}
+                />
+
+                <View className="bg-background-surface p-4 rounded-base mt-2">
+                  {isDirectLoading ? (
+                    <View className="items-center py-4">
+                      <ActivityIndicator color={colors.neutral[400]} />
+                    </View>
+                  ) : (
+                    directChannelRows.map(
+                      ({ channel, config, plan, existing }, i) => (
+                        <React.Fragment key={channel}>
+                          <Card
+                            className="p-0"
+                            titleNode={
+                              <View className="flex-row items-center gap-1.5">
+                                {config.iconNode ?? (
+                                  <StSvg
+                                    name={config.icon!}
+                                    size={28}
+                                    color={config.iconColor}
+                                  />
+                                )}
+                                <Typography className="text-body">
+                                  {config.name}
+                                </Typography>
+                              </View>
+                            }
+                            subtitle={
+                              existing
+                                ? undefined
+                                : plan
+                                  ? `${formatRublesFromCents(plan.price_cents)}/мес`
+                                  : undefined
+                            }
+                            right={
+                              existing ? (
+                                <Typography className="text-caption text-neutral-500">
+                                  {getDirectChannelStatusLabel(existing)}
+                                </Typography>
+                              ) : (
+                                <View className="flex-row items-center gap-1">
+                                  <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">
+                                    Подключить
+                                  </Typography>
+                                  <StSvg
+                                    name="Add_round"
+                                    size={16}
+                                    color={colors.primary.blue[500]}
+                                  />
+                                </View>
+                              )
+                            }
+                            onPress={() =>
+                              router.push({
+                                pathname:
+                                  Routers.app.account.clientNotifications
+                                    .direct,
+                                params: { channel },
+                              })
+                            }
+                          />
+                          {i < directChannelRows.length - 1 && (
+                            <Divider className="my-4" />
+                          )}
+                        </React.Fragment>
+                      ),
+                    )
+                  )}
+                </View>
+              </>
+            )}
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Настройки

@@ -9,9 +9,9 @@ const axios = AxiosClient.create({
 });
 
 axios.interceptors.request.use((config) => {
-  config.headers["X-App-Version"] =
-    Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? "dev";
-  config.headers["X-Platform"] = Platform.OS;
+  // config.headers["X-App-Version"] =
+  //   Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? "dev";
+  // config.headers["X-Platform"] = Platform.OS;
   return config;
 });
 

@@ -185,3 +185,17 @@ export type {
   SubscriptionPayment,
   SubscriptionPaymentStatus,
 } from "./subscription";
+export type {
+  DirectChannelKind,
+  DirectChannelStatus,
+  DirectChannelProvisioningStatus,
+  SubscriptionDirectPlan,
+  SubscriptionDirectChannel,
+  GetSubscriptionDirectChannelsResponse,
+  DirectChannelCheckoutResponse,
+  DirectChannelAuthStartResponse,
+  DirectChannelAuthCodeResponse,
+  DirectChannelAuthPasswordResponse,
+  DirectChannelAuthStatus,
+  DirectChannelAuthStatusResponse,
+} from "./subscriptionDirect";
