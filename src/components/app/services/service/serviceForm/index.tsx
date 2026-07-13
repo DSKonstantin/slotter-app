@@ -115,16 +115,14 @@ const ServiceFormBody = ({
         <RhfTextField
           name="description"
           label="Описание"
-          hideErrorText
           multiline
           numberOfLines={4}
-          maxLength={40}
           placeholder="Расскажите об услуге подробнее"
         />
       </View>
 
       <View className="px-screen">
-        <Divider className="mt-8 mb-4" />
+        <Divider className="mt-1 mb-6" />
 
         <Item
           title="Доступно для онлайн-записи"

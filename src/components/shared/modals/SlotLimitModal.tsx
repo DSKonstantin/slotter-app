@@ -17,11 +17,11 @@ const SlotLimitModal = ({ visible, onClose }: Props) => {
   const token = useAppSelector((state) => state.auth.token);
   const ispe = useAppSelector((state) => state.appVersion.ispe);
 
-  const handleUpgrade = () => {
-    onClose();
-    void WebBrowser.openBrowserAsync(
+  const handleUpgrade = async () => {
+    await WebBrowser.openBrowserAsync(
       `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
     );
+    onClose();
   };
 
   return (
