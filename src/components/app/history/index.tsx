@@ -139,7 +139,9 @@ const HistoryScreen = () => {
 
   const user = useAppSelector((s) => s.auth.user);
 
-  const { refreshing, onRefresh } = useRefresh(refetch);
+  const { refreshing, onRefresh } = useRefresh(
+    useCallback(() => refetch({ refetchCachedPages: false }), [refetch]),
+  );
 
   const notifications = useMemo(
     () => data?.pages?.flatMap((p) => p.notifications) ?? [],

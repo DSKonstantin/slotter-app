@@ -22,6 +22,7 @@ import {
 } from "@/src/store/redux/services/api/subscriptionDirectApi";
 import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
 import { asArray } from "@/src/utils/asArray";
+import { isDirectChannelActive } from "@/src/utils/directChannel";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { Routers } from "@/src/constants/routers";
@@ -44,6 +45,7 @@ const CHANNEL_CONFIG: Record<
     name: string;
     description: string;
     features: string[];
+    howToSteps: string[];
   }
 > = {
   telegram: {
@@ -56,6 +58,12 @@ const CHANNEL_CONFIG: Record<
       "Сообщения приходят от вашего аккаунта",
       "Клиент видит ваше имя, а не бота",
       "Работает без подписки клиента",
+    ],
+    howToSteps: [
+      "Оплатите подписку",
+      "Введите номер аккаунта Telegram",
+      "Введите код из Telegram",
+      "Готово — сообщения уходят от вас",
     ],
   },
   max: {
@@ -70,15 +78,13 @@ const CHANNEL_CONFIG: Record<
       "Клиент видит ваше имя, а не бота",
       "Работает без подписки клиента",
     ],
+    howToSteps: [
+      "Оплатите подписку",
+      "Отсканируйте QR-код в приложении Макс",
+      "Готово — сообщения уходят от вас",
+    ],
   },
 };
-
-const HOW_TO_STEPS = [
-  "Оплатите подписку",
-  "Введите номер аккаунта канала",
-  "Введите код из приложения канала",
-  "Готово — сообщения уходят от вас",
-];
 
 const DirectNotifications = () => {
   const { channel } = useLocalSearchParams<{ channel: Channel }>();
@@ -104,10 +110,27 @@ const DirectNotifications = () => {
     useCheckoutDirectChannelMutation();
 
   const needsRedirect =
-    !!existingChannel && existingChannel.status !== "active";
+    !!existingChannel && !isDirectChannelActive(existingChannel);
+
+  const handleCheckout = async () => {
+    if (!auth) return;
+    try {
+      const result = await checkoutDirectChannel({
+        userId: auth.userId,
+        kind,
+      }).unwrap();
+      await Linking.openURL(result.confirmation_url);
+      router.replace({
+        pathname: Routers.app.account.clientNotifications.directCheckoutStatus,
+        params: { channel },
+      });
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Не удалось начать оплату"));
+    }
+  };
 
   useEffect(() => {
-    if (!existingChannel || existingChannel.status === "active") return;
+    if (!existingChannel || isDirectChannelActive(existingChannel)) return;
 
     if (existingChannel.provisioning_status === "awaiting_auth") {
       router.replace({
@@ -122,29 +145,12 @@ const DirectNotifications = () => {
     }
   }, [existingChannel, channel]);
 
-  const handleCheckout = async () => {
-    if (!auth) return;
-    try {
-      const result = await checkoutDirectChannel({
-        userId: auth.userId,
-        kind,
-      }).unwrap();
-      await Linking.openURL(result.confirmation_url);
-      router.push({
-        pathname: Routers.app.account.clientNotifications.directCheckoutStatus,
-        params: { channel },
-      });
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось начать оплату"));
-    }
-  };
-
   if (needsRedirect) {
     return (
       <ScreenWithToolbar title="Прямые уведомления">
-        {({ topInset }) => (
+        {({ topInset, bottomInset }) => (
           <View
-            style={{ paddingTop: topInset }}
+            style={{ paddingTop: topInset, paddingBottom: bottomInset }}
             className="flex-1 items-center justify-center"
           >
             <ActivityIndicator size="large" color={colors.primary.blue[500]} />
@@ -207,7 +213,7 @@ const DirectNotifications = () => {
             </Typography>
 
             <View className="rounded-base gap-4 mb-5">
-              {HOW_TO_STEPS.map((step, i) => (
+              {config.howToSteps.map((step, i) => (
                 <View key={step} className="flex-row gap-3 items-center">
                   <View className="w-[28px] h-[28px] rounded-full bg-primary-blue-500 items-center justify-center">
                     <Typography
@@ -225,12 +231,19 @@ const DirectNotifications = () => {
             </View>
           </ScrollView>
           <FloatingFooter offset={bottomInset + 8}>
-            {existingChannel?.status === "active" ? (
+            {existingChannel && isDirectChannelActive(existingChannel) ? (
               <Button
-                title="Канал уже подключён"
+                title="Канал подключён"
                 onPress={() => {}}
                 disabled
                 variant="accent"
+                leftIcon={
+                  <StSvg
+                    name="Check_round_fill"
+                    size={20}
+                    color={colors.neutral[0]}
+                  />
+                }
               />
             ) : (
               <Button

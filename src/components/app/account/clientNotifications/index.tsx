@@ -38,6 +38,7 @@ import type {
   SubscriptionDirectChannel,
 } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { isDirectChannelActive } from "@/src/utils/directChannel";
 import {
   Badge,
   Button,
@@ -132,10 +133,8 @@ const DIRECT_CHANNEL_UI_CONFIG: Record<
 const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
 
 function getDirectChannelStatusLabel(channel: SubscriptionDirectChannel) {
-  if (channel.status === "active") {
-    return channel.period_ends_at
-      ? `Активен до ${format(new Date(channel.period_ends_at), "dd.MM.yyyy")}`
-      : "Активен";
+  if (isDirectChannelActive(channel)) {
+    return "Управлять";
   }
   if (channel.provisioning_status === "awaiting_auth") {
     return "Ожидает привязки";
@@ -155,13 +154,19 @@ const ClientNotifications = () => {
   const { data: settingsData, refetch: refetchSettings } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
 
-  const { data: directPlansData, isLoading: isDirectPlansLoading } =
-    useGetSubscriptionDirectPlansQuery(undefined, { skip: !ispe });
+  const {
+    data: directPlansData,
+    isLoading: isDirectPlansLoading,
+    refetch: refetchDirectPlans,
+  } = useGetSubscriptionDirectPlansQuery(undefined, { skip: !ispe });
 
-  const { data: directChannelsData, isLoading: isDirectChannelsLoading } =
-    useGetSubscriptionDirectChannelsQuery(
-      auth && ispe ? { userId: auth.userId } : skipToken,
-    );
+  const {
+    data: directChannelsData,
+    isLoading: isDirectChannelsLoading,
+    refetch: refetchDirectChannels,
+  } = useGetSubscriptionDirectChannelsQuery(
+    auth && ispe ? { userId: auth.userId } : skipToken,
+  );
 
   const isDirectLoading = isDirectPlansLoading || isDirectChannelsLoading;
 
@@ -182,8 +187,18 @@ const ClientNotifications = () => {
 
   const { refreshing, onRefresh } = useRefresh(
     useCallback(async () => {
-      await Promise.all([refetchSettings(), refetchStats()]);
-    }, [refetchSettings, refetchStats]),
+      await Promise.all([
+        refetchSettings(),
+        refetchStats(),
+        refetchDirectPlans(),
+        refetchDirectChannels(),
+      ]);
+    }, [
+      refetchSettings,
+      refetchStats,
+      refetchDirectPlans,
+      refetchDirectChannels,
+    ]),
   );
 
   const notificationSettingsSummary = useMemo(() => {
@@ -463,16 +478,38 @@ const ClientNotifications = () => {
                             }
                             subtitle={
                               existing
-                                ? undefined
+                                ? existing.period_ends_at
+                                  ? `Оплачен до ${format(new Date(existing.period_ends_at), "dd.MM.yy")}`
+                                  : `${formatRublesFromCents(existing.price_cents)}/мес`
                                 : plan
                                   ? `${formatRublesFromCents(plan.price_cents)}/мес`
                                   : undefined
                             }
+                            subtitleProps={
+                              existing?.period_ends_at
+                                ? {
+                                    style: { color: colors.primary.green[400] },
+                                  }
+                                : undefined
+                            }
                             right={
                               existing ? (
-                                <Typography className="text-caption text-neutral-500">
-                                  {getDirectChannelStatusLabel(existing)}
-                                </Typography>
+                                isDirectChannelActive(existing) ? (
+                                  <View className="flex-row items-center justify-center gap-1">
+                                    <Typography className="text-caption">
+                                      Управлять
+                                    </Typography>
+                                    <StSvg
+                                      name="Setting_alt_fill"
+                                      size={16}
+                                      color={colors.neutral[900]}
+                                    />
+                                  </View>
+                                ) : (
+                                  <Typography className="text-caption text-neutral-500">
+                                    {getDirectChannelStatusLabel(existing)}
+                                  </Typography>
+                                )
                               ) : (
                                 <View className="flex-row items-center gap-1">
                                   <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">

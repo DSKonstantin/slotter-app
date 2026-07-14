@@ -45,6 +45,7 @@ import ChangeCategoryModal from "./changeCategoryModal";
 import ContactsModal from "./contactsModal";
 import ClientMenuModal from "./clientMenuModal";
 import ClientDetailSkeleton from "./ClientDetailSkeleton";
+import { isBirthdayToday } from "@/src/utils/date/isBirthdayToday";
 
 type NoteFormValues = { note: string };
 
@@ -230,7 +231,9 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                 paddingHorizontal: SCREEN_PADDING,
               }}
             >
-              {customer.birthday && <BirthdayBadge />}
+              {customer.birthday && isBirthdayToday(customer.birthday) && (
+                <BirthdayBadge />
+              )}
 
               <View className="gap-2 mt-2">
                 <ClientInfoCard

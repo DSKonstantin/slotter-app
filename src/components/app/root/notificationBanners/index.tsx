@@ -2,23 +2,27 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { differenceInDays, parseISO } from "date-fns";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { addMonths, differenceInDays, parseISO, startOfMonth } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import { useGetSubscriptionQuotaQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import type {
   Notification,
   AppointmentNotificationSubject,
 } from "@/src/store/redux/services/api-types";
-import { formatApiDate } from "@/src/utils/date/formatDate";
+import { formatApiDate, formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { pluralize } from "@/src/utils/text/pluralize";
 import usePersistentStorage from "@/src/hooks/usePersistentStorage";
+import { colors } from "@/src/styles/colors";
 
 import BannerCard from "./BannerCard";
 import type { BannerVariant } from "./BannerCard";
 
 const SUBSCRIPTION_EXPIRY_DAYS = 7;
+const QUOTA_WARNING_THRESHOLD = 3;
 
 const MAX_BANNERS = 3;
 
@@ -36,7 +40,7 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
     key: "pending",
     variant: "info",
     iconName: "Time_fill",
-    match: (n) => n.kind === "appointment_pending_approval",
+    match: (n) => n.kind === "appointment_requested",
     buildTitle: (count) =>
       `${count} ${pluralize(count, ["неподтверждённая запись", "неподтверждённые записи", "неподтверждённых записей"])}`,
     actionLabel: "Перейти",
@@ -73,6 +77,10 @@ const NotificationBanners = () => {
 
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
 
+  const { data: quota } = useGetSubscriptionQuotaQuery(
+    userId && membership?.plan !== "pro" ? { userId } : skipToken,
+  );
+
   const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
     "banner_subscription_ended",
     false,
@@ -91,11 +99,10 @@ const NotificationBanners = () => {
   }, [data]);
 
   const subscriptionEnded = useMemo(() => {
-    if (membership?.plan !== "pro" || membership.pro_access) return false;
-    if (!membership.period_ends_at) return true;
     return (
-      differenceInDays(new Date(), parseISO(membership.period_ends_at)) <=
-      SUBSCRIPTION_EXPIRY_DAYS
+      membership?.plan === "pro" &&
+      !membership.pro_access &&
+      membership.period_starts_at !== null
     );
   }, [membership]);
 
@@ -108,6 +115,17 @@ const NotificationBanners = () => {
     );
     return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
   }, [membership, subscriptionEnded]);
+
+  const quotaRemaining = useMemo(() => {
+    if (!quota || quota.plan !== "free") return null;
+    const remaining = quota.limit - quota.used;
+    return remaining <= QUOTA_WARNING_THRESHOLD ? remaining : null;
+  }, [quota]);
+
+  const quotaResetLabel = useMemo(
+    () => formatDayMonthLong(addMonths(startOfMonth(new Date()), 1)),
+    [],
+  );
 
   const handleOpenList = useCallback(
     () => router.push(Routers.app.history.root),
@@ -124,11 +142,33 @@ const NotificationBanners = () => {
     if (!subscriptionEnded && subBannerClosed) setSubBannerClosed(false);
   }, [subscriptionEnded, subBannerClosed, setSubBannerClosed]);
 
-  if (banners.length === 0 && expiryDaysLeft === null && !subscriptionEnded)
+  if (
+    banners.length === 0 &&
+    expiryDaysLeft === null &&
+    !subscriptionEnded &&
+    (!ispe || quotaRemaining === null)
+  )
     return null;
 
   return (
     <View className="gap-2 px-screen">
+      {ispe && quotaRemaining !== null && (
+        <BannerCard
+          variant={quotaRemaining <= 0 ? "error" : "alert"}
+          iconName={quotaRemaining <= 0 ? "Stop_fill" : "Cancel_fill"}
+          title={
+            quotaRemaining <= 0
+              ? "Лимит записей на этот месяц исчерпан"
+              : `Осталось ${quotaRemaining} ${pluralize(quotaRemaining, ["запись", "записи", "записей"])}`
+          }
+          subtitle={
+            quotaRemaining > 0 ? `Бесплатно до ${quotaResetLabel}` : undefined
+          }
+          subtitleProps={{ style: { color: colors.accent.orange[500] } }}
+          actionLabel={quotaRemaining <= 0 ? "Оформить PRO" : "Перейти на PRO"}
+          onPress={handleOpenSubscription}
+        />
+      )}
       {ispe && subscriptionEnded && !subBannerClosed && (
         <BannerCard
           variant="error"

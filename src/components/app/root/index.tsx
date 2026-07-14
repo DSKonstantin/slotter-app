@@ -16,6 +16,8 @@ import {
   useGetUpcomingAppointmentsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import { useGetSubscriptionQuotaQuery } from "@/src/store/redux/services/api/subscriptionApi";
+import { useAppSelector } from "@/src/store/redux/store";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
@@ -40,10 +42,17 @@ const Home = () => {
       : skipToken,
   );
 
-  const { refetch: refetchNotifications } = useGetNotificationsQuery({
-    per_count: 50,
-    is_read: false,
-  });
+  const { refetch: refetchNotifications } = useGetNotificationsQuery(
+    auth ? { per_count: 50, is_read: false } : skipToken,
+  );
+
+  const membership = useAppSelector(
+    (s) => s.auth.user?.subscription_membership,
+  );
+
+  const { refetch: refetchQuota } = useGetSubscriptionQuotaQuery(
+    auth && membership?.plan !== "pro" ? { userId: auth.userId } : skipToken,
+  );
 
   const { refetch: refetchSchedule } = useTodaySchedule();
 
@@ -61,12 +70,14 @@ const Home = () => {
         refetchAppointments(),
         refetchUpcoming(),
         refetchNotifications(),
+        refetchQuota(),
       ]),
     [
       refetchSchedule,
       refetchAppointments,
       refetchUpcoming,
       refetchNotifications,
+      refetchQuota,
     ],
   );
 
@@ -74,18 +85,33 @@ const Home = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (auth) {
-        refetchSchedule();
-        refetchAppointments();
-        refetchUpcoming();
-        refetchNotifications();
-      }
+      if (!auth) return;
+      // Query hooks may not have started their subscription yet on the
+      // very first focus event (e.g. right after mount) — refetch() throws
+      // in that case. The hooks already fetch on mount on their own, so
+      // it's safe to just skip a refetch that isn't ready yet.
+      const safeRefetch = (refetch: () => unknown) => {
+        try {
+          refetch();
+        } catch {
+          // ignore — see comment above
+        }
+      };
+      safeRefetch(refetchSchedule);
+      safeRefetch(refetchAppointments);
+      safeRefetch(refetchUpcoming);
+      safeRefetch(refetchNotifications);
+      // quota query is skipToken'd for pro plans — it never starts, so
+      // don't bother refetching it there
+      if (membership?.plan !== "pro") safeRefetch(refetchQuota);
     }, [
       auth,
+      membership?.plan,
       refetchSchedule,
       refetchAppointments,
       refetchUpcoming,
       refetchNotifications,
+      refetchQuota,
     ]),
   );
 

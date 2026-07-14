@@ -46,7 +46,12 @@ const isApiError = (e: unknown): e is ApiError =>
   "data" in e &&
   typeof (e as ApiError).data === "object";
 
-const isValidMessage = (msg: string) => !msg.startsWith("Translation missing");
+// Backend sometimes leaks raw technical/English text (e.g. third-party
+// provider errors like "Green API credentials not configured for this
+// channel") instead of a localized message — treat anything without a
+// single Cyrillic letter as not fit to show to the user.
+const isValidMessage = (msg: string) =>
+  !msg.startsWith("Translation missing") && /[Ѐ-ӿ]/.test(msg);
 
 export const isQuotaExceeded = (e: unknown): boolean => {
   if (!isApiError(e)) return false;

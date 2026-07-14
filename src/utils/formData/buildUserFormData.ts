@@ -3,6 +3,7 @@ type UserFormBase = {
   surname: string;
   profession: string;
   avatar?: { uri: string; name: string; type: string } | null;
+  removeAvatar?: boolean;
 };
 
 export function buildUserFormData(data: UserFormBase): FormData {
@@ -17,6 +18,8 @@ export function buildUserFormData(data: UserFormBase): FormData {
       name: data.avatar.name,
       type: data.avatar.type,
     } as unknown as Blob);
+  } else if (data.removeAvatar) {
+    formData.append("user[avatar]", "");
   }
 
   return formData;

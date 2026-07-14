@@ -32,7 +32,7 @@ import { useAppVersionBootstrap } from "@/src/hooks/useAppVersionBootstrap";
 import AppUpdateModal from "@/src/components/shared/modals/AppUpdateModal";
 import NoInternetScreen from "@/src/components/shared/NoInternetScreen";
 import * as Sentry from "@sentry/react-native";
-import "@/src/services/sentry";
+import { useSentryUserSync } from "@/src/services/sentry";
 import {
   useOneSignal,
   loginOneSignal,
@@ -46,6 +46,8 @@ function InitialLayout() {
   const router = useRouter();
   const authUser = useAppSelector((s) => s.auth.user);
   const authStatus = useAppSelector((s) => s.auth.status);
+
+  useSentryUserSync();
 
   useOneSignal((event) => {
     const { kind, subject_id } = (event.notification.additionalData ?? {}) as {
