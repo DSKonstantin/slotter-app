@@ -16,6 +16,7 @@ import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlo
 import { useAppSelector } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -191,7 +192,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   // 6. useEffect
   useFocusEffect(
     useCallback(() => {
-      refetchAppointments();
+      safeRefetch(refetchAppointments);
     }, [refetchAppointments]),
   );
 

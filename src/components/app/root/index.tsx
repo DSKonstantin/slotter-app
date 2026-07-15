@@ -9,16 +9,19 @@ import { useFocusEffect } from "expo-router";
 
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useRefetchOnForeground } from "@/src/hooks/useRefetchOnForeground";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
 import {
   useGetAppointmentsQuery,
   useGetUpcomingAppointmentsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
+import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
 import { useGetSubscriptionQuotaQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { formatApiDate } from "@/src/utils/date/formatDate";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview from "@/src/components/app/root/homeOverview";
@@ -51,7 +54,7 @@ const Home = () => {
   );
 
   const { refetch: refetchQuota } = useGetSubscriptionQuotaQuery(
-    auth && membership?.plan !== "pro" ? { userId: auth.userId } : skipToken,
+    auth && !membership?.pro_access ? { userId: auth.userId } : skipToken,
   );
 
   const { refetch: refetchSchedule } = useTodaySchedule();
@@ -63,50 +66,54 @@ const Home = () => {
   const { bottom } = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
 
-  const refetchAll = useCallback(
-    () =>
-      Promise.all([
-        refetchSchedule(),
-        refetchAppointments(),
-        refetchUpcoming(),
-        refetchNotifications(),
-        refetchQuota(),
-      ]),
-    [
-      refetchSchedule,
-      refetchAppointments,
-      refetchUpcoming,
-      refetchNotifications,
-      refetchQuota,
-    ],
-  );
+  const [getMe] = useLazyGetMeQuery();
+  useRefetchOnForeground(getMe);
+
+  const refetchAll = useCallback(() => {
+    // same guard as safeRefetch, but resolves to a promise Promise.all can await
+    const tryRefetch = (refetch: () => unknown) => {
+      try {
+        return Promise.resolve(refetch());
+      } catch {
+        return Promise.resolve();
+      }
+    };
+
+    return Promise.all([
+      tryRefetch(refetchSchedule),
+      tryRefetch(refetchAppointments),
+      tryRefetch(refetchUpcoming),
+      tryRefetch(refetchNotifications),
+      // quota query is skipToken'd when pro_access is true — it never starts, so
+      // don't bother refetching it there
+      membership?.pro_access ? Promise.resolve() : tryRefetch(refetchQuota),
+      getMe(),
+    ]);
+  }, [
+    refetchSchedule,
+    refetchAppointments,
+    refetchUpcoming,
+    refetchNotifications,
+    refetchQuota,
+    membership?.pro_access,
+    getMe,
+  ]);
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   useFocusEffect(
     useCallback(() => {
       if (!auth) return;
-      // Query hooks may not have started their subscription yet on the
-      // very first focus event (e.g. right after mount) — refetch() throws
-      // in that case. The hooks already fetch on mount on their own, so
-      // it's safe to just skip a refetch that isn't ready yet.
-      const safeRefetch = (refetch: () => unknown) => {
-        try {
-          refetch();
-        } catch {
-          // ignore — see comment above
-        }
-      };
       safeRefetch(refetchSchedule);
       safeRefetch(refetchAppointments);
       safeRefetch(refetchUpcoming);
       safeRefetch(refetchNotifications);
-      // quota query is skipToken'd for pro plans — it never starts, so
+      // quota query is skipToken'd when pro_access is true — it never starts, so
       // don't bother refetching it there
-      if (membership?.plan !== "pro") safeRefetch(refetchQuota);
+      if (!membership?.pro_access) safeRefetch(refetchQuota);
     }, [
       auth,
-      membership?.plan,
+      membership?.pro_access,
       refetchSchedule,
       refetchAppointments,
       refetchUpcoming,

@@ -17,6 +17,7 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import AdditionalList from "@/src/components/app/services/list/additionalList";
 import { AdditionalListItem } from "@/src/components/app/services/list/additionalList/additionalServiceItem";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -162,8 +163,12 @@ const AppServices = () => {
 
   useFocusEffect(
     useCallback(() => {
-      refetchServiceCategories({ refetchCachedPages: false });
-      refetchAdditionalServices({ refetchCachedPages: false });
+      safeRefetch(() =>
+        refetchServiceCategories({ refetchCachedPages: false }),
+      );
+      safeRefetch(() =>
+        refetchAdditionalServices({ refetchCachedPages: false }),
+      );
       return () => {
         dispatch(resetEditMode());
       };

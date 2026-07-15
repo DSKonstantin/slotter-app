@@ -16,6 +16,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
 import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import {
   INCOME_GROUP_OPTIONS,
   MONTH_NAMES_SHORT,
@@ -81,7 +82,7 @@ const FinancesIncomeScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      refetch();
+      safeRefetch(refetch);
     }, [refetch]),
   );
 

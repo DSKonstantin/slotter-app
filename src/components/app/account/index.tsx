@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Alert,
+  Linking,
   Platform,
   RefreshControl,
   ScrollView,
@@ -59,7 +60,7 @@ const AccountScreen = () => {
               icon: "Credit-card_fill",
               rightIcon: "External",
               route: () =>
-                WebBrowser.openBrowserAsync(
+                Linking.openURL(
                   `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
                 ),
             },
@@ -115,6 +116,15 @@ const AccountScreen = () => {
         title: "Уведомления",
         icon: "Bell_fill",
         route: () => router.push(Routers.app.account.notifications),
+      },
+      {
+        title: "База знаний",
+        icon: "Mortarboard_fill",
+        rightIcon: "External",
+        route: () =>
+          WebBrowser.openBrowserAsync(
+            `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/knowledge-base`,
+          ),
       },
       {
         title: "Поддержка",

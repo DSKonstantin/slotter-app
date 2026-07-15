@@ -18,6 +18,7 @@ import {
 } from "@/src/store/redux/services/api/financesApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import type { SummaryExpense } from "@/src/store/redux/services/api-types";
 import {
   Card,
@@ -89,7 +90,7 @@ const FinancesScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      refetchSummary();
+      safeRefetch(refetchSummary);
     }, [refetchSummary]),
   );
 

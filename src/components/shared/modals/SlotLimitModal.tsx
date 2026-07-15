@@ -1,6 +1,5 @@
 import React from "react";
-import { View } from "react-native";
-import * as WebBrowser from "expo-web-browser";
+import { Linking, View } from "react-native";
 import { Image } from "expo-image";
 import { StModal, Button, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -18,7 +17,7 @@ const SlotLimitModal = ({ visible, onClose }: Props) => {
   const ispe = useAppSelector((state) => state.appVersion.ispe);
 
   const handleUpgrade = async () => {
-    await WebBrowser.openBrowserAsync(
+    await Linking.openURL(
       `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
     );
     onClose();

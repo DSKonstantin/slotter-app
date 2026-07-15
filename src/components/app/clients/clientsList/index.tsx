@@ -29,6 +29,7 @@ import { colors } from "@/src/styles/colors";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
@@ -205,8 +206,8 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      refetchTags();
-      refetch({ refetchCachedPages: false });
+      safeRefetch(refetchTags);
+      safeRefetch(() => refetch({ refetchCachedPages: false }));
     }, [refetchTags, refetch]),
   );
 

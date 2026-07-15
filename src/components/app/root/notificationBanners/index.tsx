@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { addMonths, differenceInDays, parseISO, startOfMonth } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
@@ -78,7 +77,7 @@ const NotificationBanners = () => {
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
 
   const { data: quota } = useGetSubscriptionQuotaQuery(
-    userId && membership?.plan !== "pro" ? { userId } : skipToken,
+    userId && !membership?.pro_access ? { userId } : skipToken,
   );
 
   const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
@@ -98,33 +97,34 @@ const NotificationBanners = () => {
       .slice(0, MAX_BANNERS);
   }, [data]);
 
-  const subscriptionEnded = useMemo(() => {
-    return (
-      membership?.plan === "pro" &&
-      !membership.pro_access &&
-      membership.period_starts_at !== null
-    );
-  }, [membership]);
+  const subscriptionBanner = useMemo(():
+    | { status: "ended" }
+    | { status: "expiring"; days: number }
+    | null => {
+    if (membership?.plan !== "pro") return null;
 
-  const expiryDaysLeft = useMemo(() => {
-    if (subscriptionEnded) return null;
-    if (!membership?.period_ends_at || membership.plan !== "pro") return null;
+    if (!membership.pro_access && membership.period_starts_at !== null) {
+      return { status: "ended" };
+    }
+
+    if (!membership.period_ends_at) return null;
     const days = differenceInDays(
       parseISO(membership.period_ends_at),
       new Date(),
     );
-    return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
-  }, [membership, subscriptionEnded]);
+    if (days < 0 || days > SUBSCRIPTION_EXPIRY_DAYS) return null;
+    return { status: "expiring", days };
+  }, [membership]);
 
   const quotaRemaining = useMemo(() => {
-    if (!quota || quota.plan !== "free") return null;
+    if (!quota) return null;
     const remaining = quota.limit - quota.used;
     return remaining <= QUOTA_WARNING_THRESHOLD ? remaining : null;
   }, [quota]);
 
   const quotaResetLabel = useMemo(
-    () => formatDayMonthLong(addMonths(startOfMonth(new Date()), 1)),
-    [],
+    () => (quota ? formatDayMonthLong(parseISO(quota.resets_at)) : null),
+    [quota],
   );
 
   const handleOpenList = useCallback(
@@ -133,26 +133,30 @@ const NotificationBanners = () => {
   );
 
   const handleOpenSubscription = useCallback(async () => {
-    await WebBrowser.openBrowserAsync(
+    await Linking.openURL(
       `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${userId}?token=${token}`,
     );
   }, [userId, token]);
 
   useEffect(() => {
-    if (!subscriptionEnded && subBannerClosed) setSubBannerClosed(false);
-  }, [subscriptionEnded, subBannerClosed, setSubBannerClosed]);
+    if (subscriptionBanner?.status !== "ended" && subBannerClosed)
+      setSubBannerClosed(false);
+  }, [subscriptionBanner, subBannerClosed, setSubBannerClosed]);
 
-  if (
-    banners.length === 0 &&
-    expiryDaysLeft === null &&
-    !subscriptionEnded &&
-    (!ispe || quotaRemaining === null)
-  )
+  const showQuotaBanner =
+    ispe && !membership?.pro_access && quotaRemaining !== null;
+
+  const showSubscriptionBanner =
+    ispe &&
+    subscriptionBanner !== null &&
+    (subscriptionBanner.status !== "ended" || !subBannerClosed);
+
+  if (banners.length === 0 && !showSubscriptionBanner && !showQuotaBanner)
     return null;
 
   return (
     <View className="gap-2 px-screen">
-      {ispe && quotaRemaining !== null && (
+      {showQuotaBanner && (
         <BannerCard
           variant={quotaRemaining <= 0 ? "error" : "alert"}
           iconName={quotaRemaining <= 0 ? "Stop_fill" : "Cancel_fill"}
@@ -169,27 +173,28 @@ const NotificationBanners = () => {
           onPress={handleOpenSubscription}
         />
       )}
-      {ispe && subscriptionEnded && !subBannerClosed && (
+      {showSubscriptionBanner && (
         <BannerCard
-          variant="error"
-          iconName="Alarm_fill"
-          title="Подписка закончилась"
-          actionLabel="Продлить"
-          onPress={handleOpenSubscription}
-          onDismiss={() => setSubBannerClosed(true)}
-        />
-      )}
-      {ispe && expiryDaysLeft !== null && (
-        <BannerCard
-          variant="warning"
-          iconName="Hhourglass_move_light_fill"
+          variant={subscriptionBanner.status === "ended" ? "error" : "warning"}
+          iconName={
+            subscriptionBanner.status === "ended"
+              ? "Alarm_fill"
+              : "Hhourglass_move_light_fill"
+          }
           title={
-            expiryDaysLeft === 0
-              ? "Подписка истекает сегодня"
-              : `Подписка истекает через ${expiryDaysLeft} ${pluralize(expiryDaysLeft, ["день", "дня", "дней"])}`
+            subscriptionBanner.status === "ended"
+              ? "Подписка закончилась"
+              : subscriptionBanner.days === 0
+                ? "Подписка истекает сегодня"
+                : `Подписка истекает через ${subscriptionBanner.days} ${pluralize(subscriptionBanner.days, ["день", "дня", "дней"])}`
           }
           actionLabel="Продлить"
           onPress={handleOpenSubscription}
+          onDismiss={
+            subscriptionBanner.status === "ended"
+              ? () => setSubBannerClosed(true)
+              : undefined
+          }
         />
       )}
       {banners.map((b) => (

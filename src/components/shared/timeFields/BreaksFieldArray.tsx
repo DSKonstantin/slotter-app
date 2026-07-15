@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Pressable } from "react-native";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
 import { Button } from "@/src/components/ui/Button";
@@ -8,6 +8,11 @@ import { StSvg } from "@/src/components/ui/StSvg";
 import { Typography } from "@/src/components/ui/Typography";
 import { colors } from "@/src/styles/colors";
 import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
+import {
+  BREAKS_OVERLAP_MESSAGE,
+  overlapsOther,
+  type BreakItem,
+} from "@/src/validation/utils/timeRange";
 
 const MAX_BREAKS = 3;
 
@@ -24,8 +29,14 @@ export const BreaksFieldArray = ({
 }: Props) => {
   const { control } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
+  const breaksValues = (useWatch({ control, name }) ?? []) as BreakItem[];
 
   const canAddMore = fields.length < MAX_BREAKS;
+
+  const hasOverlap = breaksValues.some((item) =>
+    overlapsOther(item, breaksValues),
+  );
+  const overlapMessage = hasOverlap ? BREAKS_OVERLAP_MESSAGE : undefined;
 
   return (
     <View>
@@ -96,6 +107,18 @@ export const BreaksFieldArray = ({
             />
           }
         />
+      )}
+
+      {overlapMessage && (
+        <View className="flex-row items-center gap-1 mt-2">
+          <StSvg name="Alarm_fill" size={16} color={colors.accent.red[500]} />
+          <Typography
+            weight="medium"
+            className="text-caption text-accent-red-500"
+          >
+            {overlapMessage}
+          </Typography>
+        </View>
       )}
 
       {!canAddMore && (
