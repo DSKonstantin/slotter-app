@@ -1,8 +1,7 @@
-import React, { useEffect } from "react";
-import { ActivityIndicator, Linking, ScrollView, View } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import React from "react";
+import { Linking, ScrollView, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -15,17 +14,15 @@ import {
 import { colors } from "@/src/styles/colors";
 import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppSelector } from "@/src/store/redux/store";
 import {
   useGetSubscriptionDirectPlansQuery,
   useGetSubscriptionDirectChannelsQuery,
-  useCheckoutDirectChannelMutation,
 } from "@/src/store/redux/services/api/subscriptionDirectApi";
 import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
 import { asArray } from "@/src/utils/asArray";
 import { isDirectChannelActive } from "@/src/utils/directChannel";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import { getApiErrorMessage } from "@/src/utils/apiError";
-import { Routers } from "@/src/constants/routers";
 
 type Channel = "telegram" | "max";
 
@@ -92,6 +89,7 @@ const DirectNotifications = () => {
   const kind = KIND_MAP[channel ?? "telegram"];
 
   const auth = useRequiredAuth();
+  const token = useAppSelector((state) => state.auth.token);
 
   const { data: plans } = useGetSubscriptionDirectPlansQuery();
   const plan = asArray(plans).find((p) => p.kind === kind && p.is_active);
@@ -106,59 +104,13 @@ const DirectNotifications = () => {
     (c) => c.kind === kind && !INACTIVE_DIRECT_CHANNEL_STATUSES.has(c.status),
   );
 
-  const [checkoutDirectChannel, { isLoading: isCheckingOut }] =
-    useCheckoutDirectChannelMutation();
-
-  const needsRedirect =
-    !!existingChannel && !isDirectChannelActive(existingChannel);
+  const isActive = !!existingChannel && isDirectChannelActive(existingChannel);
 
   const handleCheckout = async () => {
-    if (!auth) return;
-    try {
-      const result = await checkoutDirectChannel({
-        userId: auth.userId,
-        kind,
-      }).unwrap();
-      await Linking.openURL(result.confirmation_url);
-      router.replace({
-        pathname: Routers.app.account.clientNotifications.directCheckoutStatus,
-        params: { channel },
-      });
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось начать оплату"));
-    }
-  };
-
-  useEffect(() => {
-    if (!existingChannel || isDirectChannelActive(existingChannel)) return;
-
-    if (existingChannel.provisioning_status === "awaiting_auth") {
-      router.replace({
-        pathname: Routers.app.account.clientNotifications.directAuth,
-        params: { channel },
-      });
-    } else {
-      router.replace({
-        pathname: Routers.app.account.clientNotifications.directCheckoutStatus,
-        params: { channel },
-      });
-    }
-  }, [existingChannel, channel]);
-
-  if (needsRedirect) {
-    return (
-      <ScreenWithToolbar title="Прямые уведомления">
-        {({ topInset, bottomInset }) => (
-          <View
-            style={{ paddingTop: topInset, paddingBottom: bottomInset }}
-            className="flex-1 items-center justify-center"
-          >
-            <ActivityIndicator size="large" color={colors.primary.blue[500]} />
-          </View>
-        )}
-      </ScreenWithToolbar>
+    await Linking.openURL(
+      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
     );
-  }
+  };
 
   return (
     <ScreenWithToolbar title="Прямые уведомления">
@@ -231,7 +183,7 @@ const DirectNotifications = () => {
             </View>
           </ScrollView>
           <FloatingFooter offset={bottomInset + 8}>
-            {existingChannel && isDirectChannelActive(existingChannel) ? (
+            {isActive ? (
               <Button
                 title="Канал подключён"
                 onPress={() => {}}
@@ -253,8 +205,7 @@ const DirectNotifications = () => {
                     : "Подключить"
                 }
                 onPress={handleCheckout}
-                loading={isCheckingOut}
-                disabled={isCheckingOut || !plan}
+                disabled={!plan}
                 variant="accent"
               />
             )}

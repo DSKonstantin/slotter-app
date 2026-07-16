@@ -8,9 +8,16 @@ import {
   KeyboardAwareScrollView,
   KeyboardStickyView,
 } from "react-native-keyboard-controller";
+import Animated from "react-native-reanimated";
+import {
+  CollapsibleHeader,
+  useCollapsibleHeaderScroll,
+} from "./collapsibleHeader";
 
 type AuthScreenLayoutProps = {
   header?: ReactNode;
+  /** Rendered below the header; hides on scroll down, shows on scroll up. */
+  collapsibleHeader?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
 
@@ -25,6 +32,7 @@ type AuthScreenLayoutProps = {
 
 export function AuthScreenLayout({
   header,
+  collapsibleHeader,
   children,
   footer,
   avoidKeyboard = false,
@@ -34,15 +42,38 @@ export function AuthScreenLayout({
   contentRef,
 }: AuthScreenLayoutProps) {
   const { bottom } = useSafeAreaInsets();
-  const ScrollWrapper = avoidKeyboard ? KeyboardAwareScrollView : ScrollView;
+  // Animated.ScrollView is required for useAnimatedScrollHandler to receive
+  // events on the UI thread; KeyboardAwareScrollView renders one internally.
+  const ScrollWrapper = avoidKeyboard
+    ? KeyboardAwareScrollView
+    : Animated.ScrollView;
+
+  const { scrollY, maxScrollY, onScroll } = useCollapsibleHeaderScroll();
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
-      <View className="px-screen py-2 bg-background">{header}</View>
+      <View className="bg-background">
+        {header && (
+          <View className={`px-screen ${collapsibleHeader ? "pt-2" : "py-2"}`}>
+            {header}
+          </View>
+        )}
+        {collapsibleHeader && (
+          <CollapsibleHeader
+            scrollY={scrollY}
+            maxScrollY={maxScrollY}
+            hasHeaderAbove={!!header}
+          >
+            {collapsibleHeader}
+          </CollapsibleHeader>
+        )}
+      </View>
       <ScrollWrapper
         ref={scrollRef as never}
         showsVerticalScrollIndicator={false}
         className={`flex-1${disableHorizontalPadding ? "" : " px-screen"}`}
+        onScroll={collapsibleHeader ? onScroll : undefined}
+        scrollEventThrottle={16}
         {...(avoidKeyboard
           ? { bottomOffset: 20 }
           : {

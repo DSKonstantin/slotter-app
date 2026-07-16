@@ -108,7 +108,6 @@ const SlotSelectService: React.FC<Props> = ({
   mode,
 }) => {
   const auth = useRequiredAuth();
-  const [bookingLinkVisible, setBookingLinkVisible] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [selectedServiceIdSet, setSelectedServiceIdSet] = useState<Set<number>>(
     () =>
@@ -128,7 +127,6 @@ const SlotSelectService: React.FC<Props> = ({
   );
 
   const dispatch = useAppDispatch();
-  const personalLink = useAppSelector((s) => s.auth.user?.nickname);
   const [updateAppointment, { isLoading: isUpdating }] =
     useUpdateAppointmentMutation();
 
@@ -521,20 +519,6 @@ const SlotSelectService: React.FC<Props> = ({
                 />
 
                 <View className="gap-2">
-                  {!mode && (
-                    <Button
-                      title="Отправить ссылку на бронирование"
-                      variant="clear"
-                      rightIcon={
-                        <StSvg
-                          name="link_alt"
-                          size={24}
-                          color={colors.neutral[900]}
-                        />
-                      }
-                      onPress={() => setBookingLinkVisible(true)}
-                    />
-                  )}
                   <Button
                     title={nextButtonTitle}
                     disabled={isPrimarySelectionEmpty}
@@ -547,12 +531,6 @@ const SlotSelectService: React.FC<Props> = ({
           </View>
         )}
       </ScreenWithToolbar>
-
-      <BookingLinkModal
-        visible={bookingLinkVisible}
-        bookingUrl={personalLink ?? ""}
-        onClose={() => setBookingLinkVisible(false)}
-      />
 
       <ComingSoonModal
         visible={groupModalVisible}

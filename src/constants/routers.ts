@@ -204,10 +204,6 @@ export const Routers = {
           "/(app)/(tabs)/account/client-notifications/reminder" as const,
         reschedule:
           "/(app)/(tabs)/account/client-notifications/reschedule" as const,
-        directAuth:
-          "/(app)/(tabs)/account/client-notifications/direct-auth" as const,
-        directCheckoutStatus:
-          "/(app)/(tabs)/account/client-notifications/direct-checkout-status" as const,
       },
       support: "/(app)/(tabs)/account/support" as const,
       subscription: "/(app)/(tabs)/account/subscription" as const,

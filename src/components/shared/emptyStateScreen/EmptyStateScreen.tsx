@@ -30,7 +30,12 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   const tabBarHeight = useTabBarHeight();
 
   return (
-    <View className="flex-1 ">
+    <View
+      className="flex-1"
+      style={{
+        marginBottom: (withTabBar ? tabBarHeight : 0) + bottom + 8,
+      }}
+    >
       <View className="flex-1 items-center justify-center gap-4 px-screen pb-8">
         <Image
           source={image}
@@ -49,12 +54,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
           </Typography>
         </View>
       </View>
-      <View
-        className="px-screen"
-        style={{
-          marginBottom: (withTabBar ? tabBarHeight : 0) + bottom + 8,
-        }}
-      >
+      <View className="px-screen">
         <Button
           title={buttonTitle}
           loading={isLoading}

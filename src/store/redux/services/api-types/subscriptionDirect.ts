@@ -38,29 +38,3 @@ export type SubscriptionDirectChannel = {
 export type GetSubscriptionDirectChannelsResponse = {
   subscription_direct_channels: SubscriptionDirectChannel[];
 };
-
-export type DirectChannelCheckoutResponse = {
-  confirmation_url: string;
-  payment_id: number;
-};
-
-export type DirectChannelAuthStartResponse = {
-  status?: "code_sent";
-  qr?: string;
-};
-
-export type DirectChannelAuthCodeResponse = {
-  ok: boolean;
-  needs_password: boolean;
-};
-
-export type DirectChannelAuthPasswordResponse = {
-  ok: boolean;
-};
-
-export type DirectChannelAuthStatus = "provisioning" | "connected";
-
-export type DirectChannelAuthStatusResponse = {
-  auth_status: DirectChannelAuthStatus;
-  subscription_direct_channel: SubscriptionDirectChannel;
-};

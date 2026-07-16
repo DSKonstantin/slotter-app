@@ -11,6 +11,7 @@ import {
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Platform,
   RefreshControl,
   ScrollView,
@@ -33,10 +34,7 @@ import {
   useGetSubscriptionDirectPlansQuery,
   useGetSubscriptionDirectChannelsQuery,
 } from "@/src/store/redux/services/api/subscriptionDirectApi";
-import type {
-  DirectChannelKind,
-  SubscriptionDirectChannel,
-} from "@/src/store/redux/services/api-types";
+import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { isDirectChannelActive } from "@/src/utils/directChannel";
 import {
@@ -132,21 +130,9 @@ const DIRECT_CHANNEL_UI_CONFIG: Record<
 
 const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
 
-function getDirectChannelStatusLabel(channel: SubscriptionDirectChannel) {
-  if (isDirectChannelActive(channel)) {
-    return "Управлять";
-  }
-  if (channel.provisioning_status === "awaiting_auth") {
-    return "Ожидает привязки";
-  }
-  if (channel.status === "grace") {
-    return "Требуется оплата";
-  }
-  return "Настраиваем канал…";
-}
-
 const ClientNotifications = () => {
   const ispe = useAppSelector((state) => state.appVersion.ispe);
+  const token = useAppSelector((state) => state.auth.token);
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
   const auth = useRequiredAuth();
@@ -248,6 +234,12 @@ const ClientNotifications = () => {
       },
     ];
   }, [statsData]);
+
+  const handleManageDirectChannel = async () => {
+    await Linking.openURL(
+      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
+    );
+  };
 
   const handleBotPress = (url: string) => {
     Alert.alert("Отправьте клиенту ссылку бот", url, [
@@ -493,23 +485,17 @@ const ClientNotifications = () => {
                                 : undefined
                             }
                             right={
-                              existing ? (
-                                isDirectChannelActive(existing) ? (
-                                  <View className="flex-row items-center justify-center gap-1">
-                                    <Typography className="text-caption">
-                                      Управлять
-                                    </Typography>
-                                    <StSvg
-                                      name="Setting_alt_fill"
-                                      size={16}
-                                      color={colors.neutral[900]}
-                                    />
-                                  </View>
-                                ) : (
-                                  <Typography className="text-caption text-neutral-500">
-                                    {getDirectChannelStatusLabel(existing)}
+                              existing && isDirectChannelActive(existing) ? (
+                                <View className="flex-row items-center justify-center gap-1">
+                                  <Typography className="text-caption">
+                                    Управлять
                                   </Typography>
-                                )
+                                  <StSvg
+                                    name="Setting_alt_fill"
+                                    size={16}
+                                    color={colors.neutral[900]}
+                                  />
+                                </View>
                               ) : (
                                 <View className="flex-row items-center gap-1">
                                   <Typography className="text-primary-blue-500 text-[13px] font-inter-semibold">
@@ -523,13 +509,16 @@ const ClientNotifications = () => {
                                 </View>
                               )
                             }
-                            onPress={() =>
-                              router.push({
-                                pathname:
-                                  Routers.app.account.clientNotifications
-                                    .direct,
-                                params: { channel },
-                              })
+                            onPress={
+                              existing && isDirectChannelActive(existing)
+                                ? handleManageDirectChannel
+                                : () =>
+                                    router.push({
+                                      pathname:
+                                        Routers.app.account.clientNotifications
+                                          .direct,
+                                      params: { channel },
+                                    })
                             }
                           />
                           {i < directChannelRows.length - 1 && (

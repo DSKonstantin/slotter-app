@@ -5,8 +5,6 @@ export default function ClientNotificationsLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="direct" />
-      <Stack.Screen name="direct-checkout-status" />
-      <Stack.Screen name="direct-auth" />
       <Stack.Screen name="statistics" />
       <Stack.Screen name="types" />
       <Stack.Screen name="reminder" />

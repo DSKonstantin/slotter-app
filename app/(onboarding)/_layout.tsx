@@ -6,7 +6,7 @@ export default function OnboardingLayout() {
   const { isOnboardingComplete } = useAuth();
 
   if (isOnboardingComplete) {
-    return <Redirect href={Routers.app.calendar.root()} />;
+    return <Redirect href={Routers.app.root} />;
   }
 
   return (

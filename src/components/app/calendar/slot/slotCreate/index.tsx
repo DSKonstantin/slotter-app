@@ -149,11 +149,11 @@ const SlotCreate: React.FC = () => {
       if (!values.customerId) {
         await new Promise<void>((resolve, reject) =>
           Alert.alert(
-            "Клиент не выбран",
-            "Вы не выбрали клиента. Создать запись без клиента?",
+            "Продолжить без выбранного клиента",
+            "Уведомление о записи не будет отправлено. Клиента можно добавить позже.",
             [
-              { text: "Отмена", style: "cancel", onPress: reject },
-              { text: "Сохранить", onPress: () => resolve() },
+              { text: "Вернуться назад", style: "cancel", onPress: reject },
+              { text: "Подтвердить", onPress: () => resolve() },
             ],
           ),
         );

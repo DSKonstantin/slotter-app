@@ -192,10 +192,4 @@ export type {
   SubscriptionDirectPlan,
   SubscriptionDirectChannel,
   GetSubscriptionDirectChannelsResponse,
-  DirectChannelCheckoutResponse,
-  DirectChannelAuthStartResponse,
-  DirectChannelAuthCodeResponse,
-  DirectChannelAuthPasswordResponse,
-  DirectChannelAuthStatus,
-  DirectChannelAuthStatusResponse,
 } from "./subscriptionDirect";

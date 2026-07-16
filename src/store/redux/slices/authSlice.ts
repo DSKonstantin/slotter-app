@@ -61,6 +61,19 @@ function setUserOnly(state: AuthState, payload: UserPayload) {
   const user = extractUser(payload);
   if (!user) return;
 
+  // Некоторые ответы (например, PATCH /users) могут не нести
+  // subscription_membership — не затираем уже известное значение.
+  if (
+    user.subscription_membership === undefined &&
+    state.user?.subscription_membership !== undefined
+  ) {
+    state.user = {
+      ...user,
+      subscription_membership: state.user.subscription_membership,
+    };
+    return;
+  }
+
   state.user = user;
 }
 
