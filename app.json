@@ -31,7 +31,7 @@
       "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.slotter.application",
+      "package": "com.slotter.masters",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_CONTACTS",
