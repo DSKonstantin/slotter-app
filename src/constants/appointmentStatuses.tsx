@@ -19,9 +19,24 @@ export type AppointmentStatusConfig = {
     | "error"
     | "arrived"
     | "destructive"
-    | "completed";
+    | "completed"
+    | "muted";
   icon?: React.ReactNode;
   statusLineClass?: string | null;
+};
+
+// Псевдостатус отображения для записей со скрытым квотой клиентом
+// (isHiddenCustomer). Намеренно НЕ в APPOINTMENT_STATUS_CONFIG: его
+// итерируют фильтры календаря (calendarFilterModal) и
+// DEFAULT_ACTIVE_STATUSES (calendarSlice), а это не статус записи —
+// у записи при этом остаётся свой настоящий status.
+export const QUOTA_HIDDEN_STATUS_CONFIG: Omit<
+  AppointmentStatusConfig,
+  "status" | "filterLabel" | "defaultActive"
+> = {
+  label: "Закончился лимит",
+  variant: "muted",
+  statusLineClass: "bg-neutral-500",
 };
 
 export const APPOINTMENT_STATUS_CONFIG: Record<

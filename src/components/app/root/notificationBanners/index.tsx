@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { Linking, View } from "react-native";
+import { View } from "react-native";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { router } from "expo-router";
-import { skipToken } from "@reduxjs/toolkit/query";
 import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
-import { useGetSubscriptionQuotaQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import type {
   Notification,
@@ -15,6 +14,7 @@ import type {
 import { formatApiDate, formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { pluralize } from "@/src/utils/text/pluralize";
 import usePersistentStorage from "@/src/hooks/usePersistentStorage";
+import { useSubscriptionQuota } from "@/src/hooks/useSubscriptionQuota";
 import { colors } from "@/src/styles/colors";
 
 import BannerCard from "./BannerCard";
@@ -68,17 +68,11 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
 
 const NotificationBanners = () => {
   const ispe = useAppSelector((s) => s.appVersion.ispe);
-  const membership = useAppSelector(
-    (s) => s.auth.user?.subscription_membership,
-  );
-  const userId = useAppSelector((s) => s.auth.user?.id);
-  const token = useAppSelector((s) => s.auth.token);
+  const openPersonalAccount = useOpenPersonalAccount();
 
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
 
-  const { data: quota } = useGetSubscriptionQuotaQuery(
-    userId && !membership?.pro_access ? { userId } : skipToken,
-  );
+  const { quota, membership, shouldFetchQuota } = useSubscriptionQuota();
 
   const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
     "banner_subscription_ended",
@@ -132,19 +126,17 @@ const NotificationBanners = () => {
     [],
   );
 
-  const handleOpenSubscription = useCallback(async () => {
-    await Linking.openURL(
-      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${userId}?token=${token}`,
-    );
-  }, [userId, token]);
+  const handleOpenSubscription = useCallback(
+    () => openPersonalAccount("/upgrade"),
+    [openPersonalAccount],
+  );
 
   useEffect(() => {
     if (subscriptionBanner?.status !== "ended" && subBannerClosed)
       setSubBannerClosed(false);
   }, [subscriptionBanner, subBannerClosed, setSubBannerClosed]);
 
-  const showQuotaBanner =
-    ispe && !membership?.pro_access && quotaRemaining !== null;
+  const showQuotaBanner = ispe && shouldFetchQuota && quotaRemaining !== null;
 
   const showSubscriptionBanner =
     ispe &&
@@ -162,7 +154,7 @@ const NotificationBanners = () => {
           iconName={quotaRemaining <= 0 ? "Stop_fill" : "Cancel_fill"}
           title={
             quotaRemaining <= 0
-              ? "Лимит записей на этот месяц исчерпан"
+              ? "Лимит слотов на \n" + "месяц исчерпан"
               : `Осталось ${quotaRemaining} ${pluralize(quotaRemaining, ["запись", "записи", "записей"])}`
           }
           subtitle={

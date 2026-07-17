@@ -3,8 +3,9 @@
 // right after mount, before the query's own effect has run).
 export const safeRefetch = (refetch: () => unknown) => {
   try {
-    refetch();
+    return refetch();
   } catch {
     // ignore — see comment above
+    return undefined;
   }
 };

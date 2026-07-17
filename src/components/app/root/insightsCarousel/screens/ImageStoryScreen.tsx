@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, type ImageSource } from "expo-image";
 
-const TrainingScreen = ({
+const ImageStoryScreen = ({
   source,
   paddingTop,
 }: {
@@ -28,4 +28,4 @@ const TrainingScreen = ({
   );
 };
 
-export default TrainingScreen;
+export default ImageStoryScreen;

@@ -38,6 +38,8 @@ import CancelModal from "@/src/components/app/calendar/slot/cancelModal";
 import RescheduleModal from "@/src/components/app/calendar/slot/rescheduleModal";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import CustomerPickerModal from "@/src/components/shared/modals/CustomerPickerModal";
+import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
+import { isHiddenCustomer } from "@/src/utils/customer";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
 import {
   formatDayMonth,
@@ -79,6 +81,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
+  const [slotLimitVisible, setSlotLimitVisible] = useState(false);
   const { scheduleAction, onModalHide } = useModalAction(() =>
     setActionsVisible(false),
   );
@@ -104,12 +107,15 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     useUpdateAppointmentMutation();
   const [createChatRoom, { isLoading: isChatCreating }] =
     useCreateChatRoomMutation();
+  const customerHidden = isHiddenCustomer(slot?.customer);
+
   const handleOpenChat = async () => {
-    if (!auth || !slot?.customer) return;
+    const customerId = slot?.customer?.id;
+    if (!auth || customerId == null) return;
     try {
       const room = await createChatRoom({
         userId: auth.userId,
-        customerId: slot.customer.id,
+        customerId,
       }).unwrap();
       router.push(Routers.app.chat.room(room.id));
     } catch {
@@ -168,7 +174,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     if (!slot) return null;
     return {
       // canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
-      canEdit: true,
+      // при квотной маскировке запись read-only: редактировать вслепую
+      // (не видя клиента) нельзя, единственное действие — отмена
+      canEdit: !isHiddenCustomer(slot.customer),
       statusConfig: STATUS_CONFIG[slot.status] ?? null,
       timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
       serviceNames: slot.services.map((s) => s.name).join(", "),
@@ -212,12 +220,16 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               onOpen={() => setActionsVisible(true)}
               onClose={() => setActionsVisible(false)}
               onCloseComplete={onModalHide}
-              onReschedule={() =>
-                scheduleAction(() => setRescheduleVisible(true))
+              onReschedule={
+                !customerHidden
+                  ? () => scheduleAction(() => setRescheduleVisible(true))
+                  : undefined
               }
               onCancel={() => scheduleAction(() => setCancelVisible(true))}
               onChangeCustomer={
-                slot.customer
+                // при квотной маскировке клиент есть, но невидим —
+                // не даём случайно перезаписать его другим
+                slot.customer && !customerHidden
                   ? () => scheduleAction(() => setCustomerPickerVisible(true))
                   : undefined
               }
@@ -285,19 +297,44 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 }
               >
                 <View className="px-screen gap-5">
-                  {slot.customer ? (
+                  {customerHidden ? (
+                    <Card
+                      title="Клиент скрыт"
+                      subtitle="Доступно на PRO"
+                      subtitleProps={{
+                        style: { color: colors.primary.blue[500] },
+                      }}
+                      onPress={() => setSlotLimitVisible(true)}
+                      left={
+                        <StSvg
+                          name="View_hide_fill"
+                          size={24}
+                          color={colors.neutral[500]}
+                        />
+                      }
+                      right={
+                        <StSvg
+                          name="Expand_right_light"
+                          size={24}
+                          color={colors.neutral[900]}
+                        />
+                      }
+                    />
+                  ) : slot.customer ? (
                     <Card
                       title={slot.customer.name}
                       titleProps={{ numberOfLines: 4 }}
                       subtitle={slot.customer.phone ?? undefined}
-                      onPress={() =>
+                      onPress={() => {
+                        const customerId = slot.customer?.id;
+                        if (customerId == null) return;
                         router.push(
                           Routers.app.calendar.clientDetail(
-                            slot.customer!.id,
+                            customerId,
                             "customer",
                           ),
-                        )
-                      }
+                        );
+                      }}
                       left={
                         <Avatar
                           name={slot.customer.name}
@@ -333,39 +370,41 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     </Pressable>
                   )}
 
-                  <Card
-                    title="Написать"
-                    titleProps={{
-                      style: {
-                        color: colors.primary.blue[500],
-                      },
-                    }}
-                    subtitle="Перейти в чат"
-                    onPress={handleOpenChat}
-                    left={
-                      <View className="mb-[18px]">
-                        <StSvg
-                          name="Chat_plus_fill"
-                          size={24}
-                          color={colors.primary.blue[500]}
-                        />
-                      </View>
-                    }
-                    right={
-                      isChatCreating ? (
-                        <ActivityIndicator
-                          size="small"
-                          color={colors.neutral[500]}
-                        />
-                      ) : (
-                        <StSvg
-                          name="Expand_right_light"
-                          size={24}
-                          color={colors.neutral[500]}
-                        />
-                      )
-                    }
-                  />
+                  {!customerHidden && (
+                    <Card
+                      title="Написать"
+                      titleProps={{
+                        style: {
+                          color: colors.primary.blue[500],
+                        },
+                      }}
+                      subtitle="Перейти в чат"
+                      onPress={handleOpenChat}
+                      left={
+                        <View className="mb-[18px]">
+                          <StSvg
+                            name="Chat_plus_fill"
+                            size={24}
+                            color={colors.primary.blue[500]}
+                          />
+                        </View>
+                      }
+                      right={
+                        isChatCreating ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={colors.neutral[500]}
+                          />
+                        ) : (
+                          <StSvg
+                            name="Expand_right_light"
+                            size={24}
+                            color={colors.neutral[500]}
+                          />
+                        )
+                      }
+                    />
+                  )}
                 </View>
 
                 <View className="mx-screen gap-2 mt-5 bg-background-surface rounded-base p-5">
@@ -374,7 +413,12 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       label="Статус"
                       right={
                         <Pressable
-                          onPress={() => setStatusModalVisible(true)}
+                          onPress={
+                            derived!.canEdit
+                              ? () => setStatusModalVisible(true)
+                              : undefined
+                          }
+                          disabled={!derived!.canEdit}
                           hitSlop={8}
                           className="flex-row items-center gap-1 active:opacity-70"
                         >
@@ -384,11 +428,13 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                             variant={derived!.statusConfig.variant}
                             icon={derived!.statusConfig.icon}
                           />
-                          <StSvg
-                            name="Edit_light"
-                            size={20}
-                            color={colors.neutral[500]}
-                          />
+                          {derived!.canEdit && (
+                            <StSvg
+                              name="Edit_light"
+                              size={20}
+                              color={colors.neutral[500]}
+                            />
+                          )}
                         </Pressable>
                       }
                     />
@@ -579,6 +625,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
                 <EditableCommentRow
                   fieldName="comment"
+                  editable={derived!.canEdit}
                   isUpdating={isUpdating && editingField === "comment"}
                   onFocus={() => {}}
                   onBlur={() => {
@@ -588,12 +635,16 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   }}
                 />
 
-                <SlotActions
-                  appointmentId={id}
-                  status={slot.status}
-                  onReschedule={() => setRescheduleVisible(true)}
-                  onCancel={() => setCancelVisible(true)}
-                />
+                {/* смена статусов скрытой записи запрещена;
+                    отмена остаётся доступной через меню в тулбаре */}
+                {!customerHidden && (
+                  <SlotActions
+                    appointmentId={id}
+                    status={slot.status}
+                    onReschedule={() => setRescheduleVisible(true)}
+                    onCancel={() => setCancelVisible(true)}
+                  />
+                )}
               </KeyboardAwareScrollView>
 
               <CancelModal
@@ -631,6 +682,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <ComingSoonModal
                 visible={comingSoonVisible}
                 onClose={() => setComingSoonVisible(false)}
+              />
+              <SlotLimitModal
+                visible={slotLimitVisible}
+                onClose={() => setSlotLimitVisible(false)}
               />
               <CustomerPickerModal
                 visible={customerPickerVisible}

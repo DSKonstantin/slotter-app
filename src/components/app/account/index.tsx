@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Alert,
-  Linking,
   Platform,
   RefreshControl,
   ScrollView,
@@ -15,6 +14,8 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -35,7 +36,8 @@ const AccountScreen = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const auth = useRequiredAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
-  const token = useAppSelector((state) => state.auth.token);
+  const openPersonalAccount = useOpenPersonalAccount();
+  const runOnNextForeground = useRunOnNextForeground();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
   const { logout } = useAuth();
 
@@ -59,10 +61,12 @@ const AccountScreen = () => {
               title: "Ваша подписка",
               icon: "Credit-card_fill",
               rightIcon: "External",
-              route: () =>
-                Linking.openURL(
-                  `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth.userId}?token=${token}`,
-                ),
+              route: () => {
+                // в кабинете можно продлить/отменить подписку —
+                // на возврате освежить pro_access/membership
+                runOnNextForeground(triggerGetMe);
+                openPersonalAccount();
+              },
             },
           ],
         ]

@@ -13,6 +13,8 @@ type EmptyStateScreenProps = {
   buttonIcon?: string;
   isLoading?: boolean;
   withTabBar?: boolean;
+  /** Отступ под тулбар — экраны в ScreenWithToolbar передают topInset */
+  topInset?: number;
   onPress: () => void;
 };
 
@@ -24,6 +26,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   buttonIcon,
   isLoading = false,
   withTabBar = true,
+  topInset = 0,
   onPress,
 }) => {
   const { bottom } = useSafeAreaInsets();
@@ -33,6 +36,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
     <View
       className="flex-1"
       style={{
+        paddingTop: topInset,
         marginBottom: (withTabBar ? tabBarHeight : 0) + bottom + 8,
       }}
     >

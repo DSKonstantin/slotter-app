@@ -12,7 +12,11 @@ import { colors } from "@/src/styles/colors";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { formatTimeString } from "@/src/utils/date/formatTime";
-import { APPOINTMENT_STATUS_CONFIG } from "@/src/constants/appointmentStatuses";
+import {
+  APPOINTMENT_STATUS_CONFIG,
+  QUOTA_HIDDEN_STATUS_CONFIG,
+} from "@/src/constants/appointmentStatuses";
+import { isHiddenCustomer } from "@/src/utils/customer";
 
 interface SlotCardProps {
   slot: Appointment;
@@ -24,16 +28,21 @@ interface SlotCardProps {
 }
 
 const getSlotCardInfo = (slot: Appointment) => {
+  // Квотная маскировка: данные записи прячутся под звёздочки, видимыми
+  // остаются только время и серый бейдж «Закончился лимит»
+  const isQuotaHidden = isHiddenCustomer(slot.customer);
   const serviceNames = slot.services.map((service) => service.name).join(", ");
   const additionalServicesCount = slot.additional_services?.length ?? 0;
 
   return {
-    servicesTitle: serviceNames,
-    additionalServicesTitle: additionalServicesCount
-      ? `+ ${additionalServicesCount} доп.`
-      : "",
-    clientName: slot.customer?.name ?? "",
-    hasComment: Boolean(slot.comment?.trim()),
+    isQuotaHidden,
+    servicesTitle: isQuotaHidden ? "******" : serviceNames,
+    additionalServicesTitle:
+      !isQuotaHidden && additionalServicesCount
+        ? `+ ${additionalServicesCount} доп.`
+        : "",
+    clientName: isQuotaHidden ? "" : (slot.customer?.name ?? ""),
+    hasComment: !isQuotaHidden && Boolean(slot.comment?.trim()),
     timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
     price: formatRublesFromCents(slot.price_cents ?? 0),
   };
@@ -48,7 +57,9 @@ const SlotCard = ({
   onToggleExpand,
 }: SlotCardProps) => {
   const slotInfo = getSlotCardInfo(slot);
-  const statusConfig = APPOINTMENT_STATUS_CONFIG[slot.status] ?? null;
+  const statusConfig = slotInfo.isQuotaHidden
+    ? QUOTA_HIDDEN_STATUS_CONFIG
+    : (APPOINTMENT_STATUS_CONFIG[slot.status] ?? null);
 
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = controlledExpanded ?? internalExpanded;
@@ -169,10 +180,16 @@ const SlotCard = ({
             numberOfLines={1}
             className="text-caption text-neutral-500 flex-shrink-0"
           >
-            {slotInfo.clientName && `${slotInfo.clientName}  · `}
-            {slotInfo.additionalServicesTitle &&
-              `${slotInfo.additionalServicesTitle}  · `}
-            {slotInfo.price}
+            {slotInfo.isQuotaHidden ? (
+              "*** . ** . ***"
+            ) : (
+              <>
+                {slotInfo.clientName && `${slotInfo.clientName}  · `}
+                {slotInfo.additionalServicesTitle &&
+                  `${slotInfo.additionalServicesTitle}  · `}
+                {slotInfo.price}
+              </>
+            )}
           </Typography>
         </View>
         <Typography className="text-caption text-neutral-400">

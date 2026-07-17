@@ -11,6 +11,7 @@ import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRefetchOnForeground } from "@/src/hooks/useRefetchOnForeground";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useSubscriptionQuota } from "@/src/hooks/useSubscriptionQuota";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
 import {
   useGetAppointmentsQuery,
@@ -18,8 +19,6 @@ import {
 } from "@/src/store/redux/services/api/appointmentsApi";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
-import { useGetSubscriptionQuotaQuery } from "@/src/store/redux/services/api/subscriptionApi";
-import { useAppSelector } from "@/src/store/redux/store";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { safeRefetch } from "@/src/utils/safeRefetch";
 
@@ -49,13 +48,7 @@ const Home = () => {
     auth ? { per_count: 50, is_read: false } : skipToken,
   );
 
-  const membership = useAppSelector(
-    (s) => s.auth.user?.subscription_membership,
-  );
-
-  const { refetch: refetchQuota } = useGetSubscriptionQuotaQuery(
-    auth && !membership?.pro_access ? { userId: auth.userId } : skipToken,
-  );
+  const { shouldFetchQuota, refetch: refetchQuota } = useSubscriptionQuota();
 
   const { refetch: refetchSchedule } = useTodaySchedule();
 
@@ -84,9 +77,9 @@ const Home = () => {
       tryRefetch(refetchAppointments),
       tryRefetch(refetchUpcoming),
       tryRefetch(refetchNotifications),
-      // quota query is skipToken'd when pro_access is true — it never starts, so
-      // don't bother refetching it there
-      membership?.pro_access ? Promise.resolve() : tryRefetch(refetchQuota),
+      // quota query is skipToken'd when pro_access is true or membership is
+      // still unknown — it never starts, so don't bother refetching it there
+      shouldFetchQuota ? tryRefetch(refetchQuota) : Promise.resolve(),
       getMe(),
     ]);
   }, [
@@ -95,7 +88,7 @@ const Home = () => {
     refetchUpcoming,
     refetchNotifications,
     refetchQuota,
-    membership?.pro_access,
+    shouldFetchQuota,
     getMe,
   ]);
 
@@ -108,12 +101,12 @@ const Home = () => {
       safeRefetch(refetchAppointments);
       safeRefetch(refetchUpcoming);
       safeRefetch(refetchNotifications);
-      // quota query is skipToken'd when pro_access is true — it never starts, so
-      // don't bother refetching it there
-      if (!membership?.pro_access) safeRefetch(refetchQuota);
+      // quota query is skipToken'd when pro_access is true or membership is
+      // still unknown — it never starts, so don't bother refetching it there
+      if (shouldFetchQuota) safeRefetch(refetchQuota);
     }, [
       auth,
-      membership?.pro_access,
+      shouldFetchQuota,
       refetchSchedule,
       refetchAppointments,
       refetchUpcoming,

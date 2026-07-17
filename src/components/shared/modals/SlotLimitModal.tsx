@@ -1,8 +1,10 @@
 import React from "react";
-import { Linking, View } from "react-native";
+import { View } from "react-native";
 import { Image } from "expo-image";
 import { StModal, Button, Typography } from "@/src/components/ui";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
+import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import limitFreeImage from "@/assets/images/app/limit-free.png";
 
@@ -12,14 +14,15 @@ type Props = {
 };
 
 const SlotLimitModal = ({ visible, onClose }: Props) => {
-  const auth = useRequiredAuth();
-  const token = useAppSelector((state) => state.auth.token);
+  const openPersonalAccount = useOpenPersonalAccount();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
+  const [getMe] = useLazyGetMeQuery();
+  const runOnNextForeground = useRunOnNextForeground();
 
   const handleUpgrade = async () => {
-    await Linking.openURL(
-      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
-    );
+    // вернулся из веб-оплаты — подтянуть pro_access/membership
+    runOnNextForeground(getMe);
+    await openPersonalAccount("/upgrade");
     onClose();
   };
 

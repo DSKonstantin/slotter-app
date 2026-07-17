@@ -9,4 +9,11 @@ module.exports = defineConfig([
   {
     ignores: ["dist/*"],
   },
+  {
+    rules: {
+      // правила хуков — жёстко: порядок/условность вызова и полнота deps
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+    },
+  },
 ]);

@@ -44,6 +44,7 @@
       "favicon": "./assets/images/app-icon/favicon.png"
     },
     "plugins": [
+      "./plugins/withOptOutEdgeToEdge",
       "expo-router",
       [
         "expo-splash-screen",

@@ -7,6 +7,7 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 interface Props {
   fieldName: string;
   isUpdating: boolean;
+  editable?: boolean;
   onFocus: () => void;
   onBlur: () => void;
 }
@@ -14,6 +15,7 @@ interface Props {
 const EditableCommentRow: React.FC<Props> = ({
   fieldName,
   isUpdating,
+  editable = true,
   onFocus,
   onBlur,
 }) => (
@@ -32,7 +34,8 @@ const EditableCommentRow: React.FC<Props> = ({
       multiline
       numberOfLines={4}
       hideErrorText
-      editable={!isUpdating}
+      // disabled, а не editable: нужна ещё и disabled-стилизация поля
+      disabled={!editable || isUpdating}
       onFocus={onFocus}
       onBlur={onBlur}
     />

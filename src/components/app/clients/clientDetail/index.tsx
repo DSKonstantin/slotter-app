@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Alert, View, RefreshControl, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -38,6 +39,7 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useModalAction } from "@/src/hooks/useModalAction";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import EditNameModal from "./EditNameModal";
@@ -59,16 +61,30 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const [editNameVisible, setEditNameVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
+
+  // Роуты передают Number(id): при битом/отсутствующем параметре (например,
+  // "null" от скрытого квотой клиента) приходит NaN — он проходил проверку
+  // `!== undefined`, и запрос с customer_id=NaN бесконечно падал 404-ми.
+  const safeUserCustomerId = Number.isFinite(userCustomerId)
+    ? userCustomerId
+    : undefined;
+  const safeCustomerId = Number.isFinite(customerId) ? customerId : undefined;
+  const hasValidId =
+    safeUserCustomerId !== undefined || safeCustomerId !== undefined;
+
   const {
     data: customerData,
     isLoading: customerLoading,
     isError: customerError,
     refetch: refetchCustomer,
   } = useGetUserCustomerQuery(
-    auth ? { userId: auth.userId, userCustomerId, customerId } : { userId: 0 },
-    {
-      skip: !auth || (userCustomerId === undefined && customerId === undefined),
-    },
+    auth && hasValidId
+      ? {
+          userId: auth.userId,
+          userCustomerId: safeUserCustomerId,
+          customerId: safeCustomerId,
+        }
+      : skipToken,
   );
 
   const [updateUserCustomer, { isLoading: isSaving }] =
@@ -202,7 +218,9 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
             return (
               <ErrorScreen
                 title="Не удалось загрузить клиента"
-                onRetry={refetchCustomer}
+                // при skipToken (битый id) refetch кидает синхронно —
+                // safeRefetch гасит, кнопка просто не сделает ничего
+                onRetry={() => safeRefetch(refetchCustomer)}
               />
             );
           }

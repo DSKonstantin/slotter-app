@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Linking, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useDispatch } from "react-redux";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -8,6 +8,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
+import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { colors } from "@/src/styles/colors";
 import { api } from "@/src/store/redux/services/api";
@@ -25,7 +29,9 @@ const PaymentStatusScreen = () => {
   const [displayState, setDisplayState] = useState<DisplayState>("loading");
   const [isPolling, setIsPolling] = useState(true);
 
-  const token = useAppSelector((state) => state.auth.token);
+  const openPersonalAccount = useOpenPersonalAccount();
+  const runOnNextForeground = useRunOnNextForeground();
+  const [getMe] = useLazyGetMeQuery();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
   const dispatch = useDispatch();
 
@@ -41,6 +47,7 @@ const PaymentStatusScreen = () => {
     data: payment,
     isError,
     error,
+    refetch: refetchPayment,
   } = useGetSubscriptionPaymentQuery(
     auth && paymentId ? { userId: auth.userId, paymentId } : skipToken,
     { pollingInterval: isPolling ? POLL_INTERVAL_MS : 0 },
@@ -161,11 +168,16 @@ const PaymentStatusScreen = () => {
         >
           <Button
             title={buttonTitle}
-            onPress={() =>
-              Linking.openURL(
-                `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
-              )
-            }
+            onPress={() => {
+              // поллинг к возврату уже мог остановиться (таймаут) —
+              // разово перепроверить платёж и membership; если платёж
+              // дошёл, эффект по isSucceeded сам переключит экран
+              runOnNextForeground(() => {
+                getMe();
+                safeRefetch(refetchPayment);
+              });
+              openPersonalAccount("/upgrade");
+            }}
             rightIcon={<StSvg name={buttonIcon} size={20} color="white" />}
           />
         </View>

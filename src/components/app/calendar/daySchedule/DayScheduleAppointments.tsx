@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
@@ -6,9 +6,11 @@ import { router } from "expo-router";
 import { Typography } from "@/src/components/ui";
 import AppointmentCard from "@/src/components/shared/cards/scheduling/appointmentCard";
 import RetryInline from "@/src/components/shared/retryInline";
+import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { formatTimeString } from "@/src/utils/date/formatTime";
+import { isHiddenCustomer } from "@/src/utils/customer";
 import { Routers } from "@/src/constants/routers";
 
 type Props = {
@@ -17,6 +19,7 @@ type Props = {
 };
 
 const DayScheduleAppointments = ({ userId, date }: Props) => {
+  const [slotLimitVisible, setSlotLimitVisible] = useState(false);
   const { data, isLoading, isError, refetch } = useGetAppointmentsQuery(
     userId ? { userId, params: { date } } : skipToken,
   );
@@ -52,15 +55,37 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
       <Typography className="text-caption text-neutral-500">
         Записи на этот день
       </Typography>
-      {appointments.map((appointment) => (
-        <AppointmentCard
-          key={appointment.id}
-          time={`${formatTimeString(appointment.start_time)} - ${formatTimeString(appointment.end_time)}`}
-          name={appointment.customer?.name ?? "Без клиента"}
-          service={appointment.services.map((s) => s.name).join(", ")}
-          onPress={() => router.push(Routers.app.calendar.slot(appointment.id))}
-        />
-      ))}
+      {appointments.map((appointment) => {
+        // квотная маскировка: данные под звёздочками, тап — модалка оплаты
+        // PRO вместо перехода в детали (как в календаре дня)
+        const isQuotaHidden = isHiddenCustomer(appointment.customer);
+        return (
+          <AppointmentCard
+            key={appointment.id}
+            time={`${formatTimeString(appointment.start_time)} - ${formatTimeString(appointment.end_time)}`}
+            name={
+              isQuotaHidden
+                ? "******"
+                : (appointment.customer?.name ?? "Без клиента")
+            }
+            service={
+              isQuotaHidden
+                ? "*** . ** . ***"
+                : appointment.services.map((s) => s.name).join(", ")
+            }
+            onPress={() =>
+              isQuotaHidden
+                ? setSlotLimitVisible(true)
+                : router.push(Routers.app.calendar.slot(appointment.id))
+            }
+          />
+        );
+      })}
+
+      <SlotLimitModal
+        visible={slotLimitVisible}
+        onClose={() => setSlotLimitVisible(false)}
+      />
     </View>
   );
 };

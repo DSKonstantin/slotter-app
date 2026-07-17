@@ -6,6 +6,7 @@ type ErrorScreenProps = {
   subtitle?: string;
   isLoading?: boolean;
   withTabBar?: boolean;
+  topInset?: number;
   onRetry: () => void;
 };
 
@@ -14,6 +15,7 @@ const ErrorScreen: React.FC<ErrorScreenProps> = ({
   subtitle = "Проверьте подключение к интернету и попробуйте снова",
   isLoading,
   withTabBar = true,
+  topInset,
   onRetry,
 }) => (
   <EmptyStateScreen
@@ -24,6 +26,7 @@ const ErrorScreen: React.FC<ErrorScreenProps> = ({
     buttonIcon="Refresh_2"
     isLoading={isLoading}
     withTabBar={withTabBar}
+    topInset={topInset}
     onPress={onRetry}
   />
 );

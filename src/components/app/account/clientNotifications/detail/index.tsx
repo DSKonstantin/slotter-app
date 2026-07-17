@@ -1,9 +1,11 @@
 import React, { useCallback } from "react";
-import { ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import RetryInline from "@/src/components/shared/retryInline";
+import { colors } from "@/src/styles/colors";
 import { Divider, Item, Switch, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
@@ -46,9 +48,8 @@ const NotificationDetailScreen = ({ kind }: Props) => {
 
   const auth = useRequiredAuth();
 
-  const { data } = useGetNotificationSettingsQuery(
-    auth ? auth.userId : skipToken,
-  );
+  const { data, isLoading, isFetching, isError, refetch } =
+    useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
@@ -82,10 +83,25 @@ const NotificationDetailScreen = ({ kind }: Props) => {
           className="px-screen"
         >
           <View className="bg-background-surface rounded-base overflow-hidden mb-5">
-            <Item
-              title={config.toggleLabel}
-              right={<Switch value={enabled} onChange={handleToggle} />}
-            />
+            {isLoading ? (
+              <View className="items-center py-4">
+                <ActivityIndicator color={colors.neutral[400]} />
+              </View>
+            ) : isError ? (
+              // при ошибке не рисуем тумблер с дефолтным «выключено» —
+              // юзер примет его за реальную настройку
+              <RetryInline
+                text="Не удалось загрузить настройки"
+                onRetry={refetch}
+                isLoading={isFetching}
+                className="p-4"
+              />
+            ) : (
+              <Item
+                title={config.toggleLabel}
+                right={<Switch value={enabled} onChange={handleToggle} />}
+              />
+            )}
           </View>
 
           <Typography className="text-caption text-neutral-500 mb-2">

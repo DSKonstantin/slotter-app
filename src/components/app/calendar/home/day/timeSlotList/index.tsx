@@ -18,6 +18,9 @@ import BreakBlock from "./BreakBlock";
 import FilteredSlotBlock from "./FilteredSlotBlock";
 import FreeSlotPressable from "./FreeSlotPressable";
 import FreeSlotStartModal, { type FreeSlotRange } from "./FreeSlotStartModal";
+import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
+import InactiveDayModal from "@/src/components/shared/modals/InactiveDayModal";
+import { isHiddenCustomer } from "@/src/utils/customer";
 import TimeLabels from "./TimeLabels";
 import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
 import { parseTime, formatTime } from "./utils";
@@ -127,16 +130,22 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   appointments,
   breaks = [],
   workingDayId,
+  userId,
   startAt,
   endAt,
   date,
+  isActive,
   onHighlightScroll,
 }) => {
   const isToday = isCurrentDay(date);
   const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
+  const [slotLimitVisible, setSlotLimitVisible] = useState(false);
   const [freeSlotRange, setFreeSlotRange] = useState<FreeSlotRange | null>(
     null,
   );
+  // диапазон, по которому тапнули в неактивный день — ждёт включения дня
+  const [inactiveDayRange, setInactiveDayRange] =
+    useState<FreeSlotRange | null>(null);
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -176,17 +185,48 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   const isNowInRange = currentMinutes >= effectiveStart;
 
-  const handleSlotPress = useCallback((id: number) => {
-    router.push(Routers.app.calendar.slot(id));
+  const handleSlotPress = useCallback((slot: Appointment) => {
+    // запись скрыта квотой — вместо деталей сразу модалка оплаты PRO
+    if (isHiddenCustomer(slot.customer)) {
+      setSlotLimitVisible(true);
+      return;
+    }
+    router.push(Routers.app.calendar.slot(slot.id));
   }, []);
 
   const handleToggleExpand = useCallback((id: number) => {
     setExpandedSlotId((prev) => (prev === id ? null : id));
   }, []);
 
-  const handleFreeSlotPress = useCallback((start: number, end: number) => {
-    setFreeSlotRange({ start, end });
+  const handleFreeSlotPress = useCallback(
+    (start: number, end: number) => {
+      // выходной день (isActive === false; undefined считаем рабочим, как
+      // в старом FreeSlotBlock) — сначала предложить включить день
+      if (isActive === false) {
+        setInactiveDayRange({ start, end });
+        return;
+      }
+      setFreeSlotRange({ start, end });
+    },
+    [isActive],
+  );
+
+  const handleInactiveDayClose = useCallback(() => {
+    setInactiveDayRange(null);
   }, []);
+
+  const handleInactiveDaySuccess = useCallback(() => {
+    // день включён — сразу в создание слота с начала выбранного интервала
+    if (inactiveDayRange) {
+      router.push(
+        Routers.app.createSlotFlow.selectService({
+          date: date ?? undefined,
+          time: formatTime(inactiveDayRange.start),
+        }),
+      );
+      setInactiveDayRange(null);
+    }
+  }, [inactiveDayRange, date]);
 
   const handleCloseFreeSlotModal = useCallback(() => {
     setFreeSlotRange(null);
@@ -312,7 +352,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                       <SlotCard
                         key={slot.id}
                         slot={slot}
-                        onPress={() => handleSlotPress(slot.id)}
+                        onPress={() => handleSlotPress(slot)}
                         highlighted={slot.id === highlightSlotId}
                         isExpanded={slot.id === expandedSlotId}
                         onToggleExpand={() => handleToggleExpand(slot.id)}
@@ -344,6 +384,20 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
         range={freeSlotRange}
         onClose={handleCloseFreeSlotModal}
         onNext={handleFreeSlotNext}
+      />
+
+      <SlotLimitModal
+        visible={slotLimitVisible}
+        onClose={() => setSlotLimitVisible(false)}
+      />
+
+      <InactiveDayModal
+        visible={inactiveDayRange !== null}
+        onClose={handleInactiveDayClose}
+        onSuccess={handleInactiveDaySuccess}
+        workingDayId={workingDayId}
+        userId={userId}
+        date={date}
       />
     </>
   );

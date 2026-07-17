@@ -11,7 +11,8 @@ interface Props {
   onOpen: () => void;
   onClose: () => void;
   onCloseComplete: () => void;
-  onReschedule: () => void;
+  /** нет — перенос запрещён (например, клиент скрыт квотой) */
+  onReschedule?: () => void;
   onCancel: () => void;
   onChangeCustomer?: () => void;
 }
@@ -45,7 +46,7 @@ const SlotActionsMenu: React.FC<Props> = ({
     }
   >
     <View className="p-2 gap-1 min-w-[180px]">
-      {(status === "pending" || status === "confirmed") && (
+      {(status === "pending" || status === "confirmed") && onReschedule && (
         <>
           <Button
             title="Перенести"
