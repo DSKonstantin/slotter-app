@@ -149,9 +149,9 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     if (isEmpty)
       return (
         <EmptyStateScreen
-          image={require("@/assets/images/app/not-working.png")}
+          image={require("@/assets/images/app/not-working.webp")}
           title="Этот день свободен"
-          subtitle="Настройте график, чтобы принимать записи  в этот день"
+          subtitle="Настройте график, чтобы принимать записи в этот день"
           buttonTitle="Настроить день"
           buttonIcon="Edit_fill"
           onPress={handleEmptyPress}

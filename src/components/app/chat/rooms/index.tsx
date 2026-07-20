@@ -135,7 +135,7 @@ export default function ChatRoomsScreen() {
                 >
                   <Image
                     style={{ width: 159, height: 142 }}
-                    source={require("@/assets/images/app/chat-empty.png")}
+                    source={require("@/assets/images/app/chat-empty.webp")}
                   />
                   <View className="gap-2">
                     <Typography

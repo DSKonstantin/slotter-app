@@ -7,7 +7,7 @@ type StImageProps = Omit<ImageProps, "source" | "placeholder"> & {
   fallback?: ImageSource;
 };
 
-const DEFAULT_FALLBACK = require("@/assets/images/placeholders/placeholder-slotter.png");
+const DEFAULT_FALLBACK = require("@/assets/images/placeholders/placeholder-slotter.webp");
 
 export function StImage({
   uri,

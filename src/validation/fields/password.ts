@@ -1,7 +1,7 @@
 import * as Yup from "yup";
 
 const PASSWORD_REQUIREMENTS_MESSAGE =
-  "Пароль не соответствует требованиям. Минимум 8 символов, строчные и заглавные буквы, цифры";
+  "Пароль не соответствует требованиям.Минимум 8 символов, строчные и заглавные буквы, цифры";
 
 export const passwordField = Yup.string()
   .min(8, PASSWORD_REQUIREMENTS_MESSAGE)

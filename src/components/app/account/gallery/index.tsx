@@ -427,7 +427,7 @@ const Gallery = () => {
                     >
                       <Image
                         style={{ width: 160, height: 142 }}
-                        source={require("@/assets/images/app/gallery-photo.png")}
+                        source={require("@/assets/images/app/gallery-photo.webp")}
                       />
                       <View className="gap-2">
                         <Typography

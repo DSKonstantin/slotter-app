@@ -130,7 +130,7 @@ const FinancesScreen = () => {
         //     >
         //       <Image
         //         style={{ width: 159, height: 142 }}
-        //         source={require("@/assets/images/app/finances.png")}
+        //         source={require("@/assets/images/app/finances.webp")}
         //       />
         //       <View className="gap-2">
         //         <Typography

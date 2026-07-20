@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { StModal, Typography, Button } from "@/src/components/ui";
-import notWorkingImage from "@/assets/images/app/not-working.png";
+import notWorkingImage from "@/assets/images/app/not-working.webp";
 import { useUpdateWorkingDayMutation } from "@/src/store/redux/services/api/workingDaysApi";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { toast } from "@backpackapp-io/react-native-toast";

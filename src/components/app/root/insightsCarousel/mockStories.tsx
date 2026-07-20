@@ -11,7 +11,7 @@ const TRAINING_STORIES: Story[] = [
     id: "1",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/training/one.png")}
+        source={require("@/assets/images/history/training/one.webp")}
         paddingTop={60}
       />
     ),
@@ -20,7 +20,7 @@ const TRAINING_STORIES: Story[] = [
     id: "2",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/training/two.png")}
+        source={require("@/assets/images/history/training/two.webp")}
         paddingTop={60}
       />
     ),
@@ -29,7 +29,7 @@ const TRAINING_STORIES: Story[] = [
     id: "3",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/training/three.png")}
+        source={require("@/assets/images/history/training/three.webp")}
         paddingTop={60}
       />
     ),
@@ -38,7 +38,7 @@ const TRAINING_STORIES: Story[] = [
     id: "4",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/training/four.png")}
+        source={require("@/assets/images/history/training/four.webp")}
         paddingTop={60}
       />
     ),
@@ -47,7 +47,7 @@ const TRAINING_STORIES: Story[] = [
     id: "5",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/training/five.png")}
+        source={require("@/assets/images/history/training/five.webp")}
         paddingTop={60}
       />
     ),
@@ -56,7 +56,7 @@ const TRAINING_STORIES: Story[] = [
     id: "6",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/training/six.png")}
+        source={require("@/assets/images/history/training/six.webp")}
         paddingTop={60}
       />
     ),
@@ -68,7 +68,7 @@ const FILL_PROFILE_STORIES: Story[] = [
     id: "1",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/fill_profile/one.png")}
+        source={require("@/assets/images/history/fill_profile/one.webp")}
       />
     ),
   },
@@ -76,7 +76,7 @@ const FILL_PROFILE_STORIES: Story[] = [
     id: "2",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/fill_profile/two.png")}
+        source={require("@/assets/images/history/fill_profile/two.webp")}
         paddingTop={60}
       />
     ),
@@ -85,7 +85,7 @@ const FILL_PROFILE_STORIES: Story[] = [
     id: "3",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/fill_profile/three.png")}
+        source={require("@/assets/images/history/fill_profile/three.webp")}
         paddingTop={60}
       />
     ),
@@ -94,7 +94,7 @@ const FILL_PROFILE_STORIES: Story[] = [
     id: "4",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/fill_profile/four.png")}
+        source={require("@/assets/images/history/fill_profile/four.webp")}
         paddingTop={60}
       />
     ),
@@ -106,7 +106,7 @@ const FINANCES_STORIES: Story[] = [
     id: "1",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/finances/one.png")}
+        source={require("@/assets/images/history/finances/one.webp")}
       />
     ),
   },
@@ -114,7 +114,7 @@ const FINANCES_STORIES: Story[] = [
     id: "2",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/finances/two.png")}
+        source={require("@/assets/images/history/finances/two.webp")}
         paddingTop={60}
       />
     ),
@@ -123,7 +123,7 @@ const FINANCES_STORIES: Story[] = [
     id: "3",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/finances/three.png")}
+        source={require("@/assets/images/history/finances/three.webp")}
         paddingTop={60}
       />
     ),
@@ -132,7 +132,7 @@ const FINANCES_STORIES: Story[] = [
     id: "4",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/finances/four.png")}
+        source={require("@/assets/images/history/finances/four.webp")}
         paddingTop={60}
       />
     ),
@@ -141,7 +141,7 @@ const FINANCES_STORIES: Story[] = [
     id: "5",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/finances/five.png")}
+        source={require("@/assets/images/history/finances/five.webp")}
         paddingTop={60}
       />
     ),
@@ -153,7 +153,7 @@ const NOTIFICATION_STORIES: Story[] = [
     id: "1",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/notification/one.png")}
+        source={require("@/assets/images/history/notification/one.webp")}
       />
     ),
   },
@@ -161,7 +161,7 @@ const NOTIFICATION_STORIES: Story[] = [
     id: "2",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/notification/two.png")}
+        source={require("@/assets/images/history/notification/two.webp")}
         paddingTop={60}
       />
     ),
@@ -170,7 +170,7 @@ const NOTIFICATION_STORIES: Story[] = [
     id: "3",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/notification/three.png")}
+        source={require("@/assets/images/history/notification/three.webp")}
         paddingTop={60}
       />
     ),
@@ -179,7 +179,7 @@ const NOTIFICATION_STORIES: Story[] = [
     id: "4",
     customScreen: (
       <ImageStoryScreen
-        source={require("@/assets/images/history/notification/four.png")}
+        source={require("@/assets/images/history/notification/four.webp")}
         paddingTop={60}
       />
     ),

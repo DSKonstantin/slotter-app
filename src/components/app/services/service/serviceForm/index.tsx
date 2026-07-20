@@ -147,7 +147,7 @@ const ServiceFormBody = ({
             <View className="flex-row items-center gap-3">
               <Switch width={50} value={true} onChange={() => {}} />
               <Typography className="text-body flex-1">
-                клиент бронирует услугу сам,  в свободное время
+                клиент бронирует услугу сам, в свободное время
               </Typography>
             </View>
             <View className="flex-row items-center gap-3">

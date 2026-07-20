@@ -309,7 +309,7 @@ const HistoryScreen = () => {
               >
                 <Image
                   style={{ width: 159, height: 142 }}
-                  source={require("@/assets/images/app/root-box.png")}
+                  source={require("@/assets/images/app/root-box.webp")}
                 />
                 <View className="gap-2">
                   <Typography
@@ -319,7 +319,7 @@ const HistoryScreen = () => {
                     Пока тихо
                   </Typography>
                   <Typography className="text-body text-neutral-500 text-center">
-                    События появятся когда придут  первые записи
+                    События появятся когда придут первые записи
                   </Typography>
                 </View>
 

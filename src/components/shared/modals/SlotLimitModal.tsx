@@ -6,7 +6,7 @@ import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useAppSelector } from "@/src/store/redux/store";
-import limitFreeImage from "@/assets/images/app/limit-free.png";
+import limitFreeImage from "@/assets/images/app/limit-free.webp";
 
 type Props = {
   visible: boolean;
