@@ -31,6 +31,7 @@ import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 import { useAppVersionBootstrap } from "@/src/hooks/useAppVersionBootstrap";
 import AppUpdateModal from "@/src/components/shared/modals/AppUpdateModal";
 import NoInternetScreen from "@/src/components/shared/NoInternetScreen";
+import CrashFallback from "@/src/components/shared/CrashFallback";
 import * as Sentry from "@sentry/react-native";
 import { useSentryUserSync } from "@/src/services/sentry";
 import {
@@ -129,45 +130,47 @@ function InitialLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
-        >
-          <KeyboardProvider>
-            <AutocompleteDropdownContextProvider>
-              <BottomSheetModalProvider>
-                <Stack>
-                  <Stack.Protected
-                    guard={isAuthenticated && isOnboardingComplete}
-                  >
+        <Sentry.GlobalErrorBoundary fallback={CrashFallback}>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
+          >
+            <KeyboardProvider>
+              <AutocompleteDropdownContextProvider>
+                <BottomSheetModalProvider>
+                  <Stack>
+                    <Stack.Protected
+                      guard={isAuthenticated && isOnboardingComplete}
+                    >
+                      <Stack.Screen
+                        name="(app)"
+                        options={{ headerShown: false }}
+                      />
+                    </Stack.Protected>
+                    <Stack.Protected guard={isAuthenticated}>
+                      <Stack.Screen
+                        name="(onboarding)"
+                        options={{ headerShown: false }}
+                      />
+                    </Stack.Protected>
+                    <Stack.Protected guard={!isAuthenticated}>
+                      <Stack.Screen
+                        name="(auth)"
+                        options={{ headerShown: false }}
+                      />
+                    </Stack.Protected>
                     <Stack.Screen
-                      name="(app)"
+                      name="(password-reset)"
                       options={{ headerShown: false }}
                     />
-                  </Stack.Protected>
-                  <Stack.Protected guard={isAuthenticated}>
-                    <Stack.Screen
-                      name="(onboarding)"
-                      options={{ headerShown: false }}
-                    />
-                  </Stack.Protected>
-                  <Stack.Protected guard={!isAuthenticated}>
-                    <Stack.Screen
-                      name="(auth)"
-                      options={{ headerShown: false }}
-                    />
-                  </Stack.Protected>
-                  <Stack.Screen
-                    name="(password-reset)"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-                <Toasts overrideDarkMode={true} />
-                <StatusBar style="auto" />
-                {appVersionReady && <AppUpdateModal />}
-              </BottomSheetModalProvider>
-            </AutocompleteDropdownContextProvider>
-          </KeyboardProvider>
-        </ThemeProvider>
+                  </Stack>
+                  <Toasts overrideDarkMode={true} />
+                  <StatusBar style="auto" />
+                  {appVersionReady && <AppUpdateModal />}
+                </BottomSheetModalProvider>
+              </AutocompleteDropdownContextProvider>
+            </KeyboardProvider>
+          </ThemeProvider>
+        </Sentry.GlobalErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -77,6 +77,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [actionsVisible, setActionsVisible] = useState(false);
+  const [actionsMenuMounted, setActionsMenuMounted] = useState(false);
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
@@ -211,15 +212,22 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         title="Детали слота"
         rightButton={
           slot &&
-          (slot.status === "pending" ||
+          (actionsMenuMounted ||
+            slot.status === "pending" ||
             slot.status === "confirmed" ||
             slot.status === "requested") ? (
             <SlotActionsMenu
               status={slot.status}
               visible={actionsVisible}
-              onOpen={() => setActionsVisible(true)}
+              onOpen={() => {
+                setActionsMenuMounted(true);
+                setActionsVisible(true);
+              }}
               onClose={() => setActionsVisible(false)}
-              onCloseComplete={onModalHide}
+              onCloseComplete={() => {
+                setActionsMenuMounted(false);
+                onModalHide();
+              }}
               onReschedule={
                 !customerHidden
                   ? () => scheduleAction(() => setRescheduleVisible(true))
