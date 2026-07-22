@@ -57,7 +57,8 @@ export function Input({
         <TextInput
           {...props}
           value={props.value ?? ""}
-          editable={!disabled}
+          // disabled (со стилизацией) и editable из пропсов — оба блокируют
+          editable={!disabled && (props.editable ?? true)}
           onFocus={(e) => {
             setFocused(true);
             props.onFocus?.(e);

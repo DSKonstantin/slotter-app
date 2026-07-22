@@ -23,12 +23,23 @@ import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import RetryInline from "@/src/components/shared/retryInline";
+import DirectChannelsSkeleton from "./DirectChannelsSkeleton";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useRefetchOnForeground } from "@/src/hooks/useRefetchOnForeground";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import {
   useGetNotificationSettingsQuery,
   useGetNotificationStatsQuery,
 } from "@/src/store/redux/services/api/notificationsApi";
+import {
+  useGetSubscriptionDirectPlansQuery,
+  useGetSubscriptionDirectChannelsQuery,
+} from "@/src/store/redux/services/api/subscriptionDirectApi";
+import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { getDirectChannelRowStatus } from "./directChannelRowStatus";
 import {
   Badge,
   Button,
@@ -43,6 +54,7 @@ import DirectDiffModal from "./DirectDiffModal";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { asArray } from "@/src/utils/asArray";
+import { useAppSelector } from "@/src/store/redux/store";
 
 const FILTER_PERIODS = ["Сегодня", "Неделя", "Месяц"] as const;
 
@@ -94,31 +106,69 @@ const TELEGRAM_BOTS = [
   },
 ];
 
-const DIRECT_CHANNELS = [
+const DIRECT_CHANNEL_UI_CONFIG: Record<
+  "telegram" | "max",
   {
-    channel: "telegram" as const,
-    icon: "SocialTelegram" as const,
+    kind: DirectChannelKind;
+    icon: "SocialTelegram" | null;
+    iconNode?: React.ReactNode;
+    iconColor: string;
+    name: string;
+  }
+> = {
+  telegram: {
+    kind: "telegram_direct",
+    icon: "SocialTelegram",
     iconColor: "#37B5DB",
     name: "Telegram",
-    price: "от 1 000 ₽/мес",
   },
-  {
-    channel: "max" as const,
+  max: {
+    kind: "max_direct",
     icon: null,
     iconNode: <MaxLogo size={28} />,
     iconColor: "#7B61FF",
     name: "Макс",
-    price: "от 1 000 ₽/мес",
   },
-];
+};
+
+const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
 
 const ClientNotifications = () => {
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
   const auth = useRequiredAuth();
+  const openPersonalAccount = useOpenPersonalAccount();
 
   const { data: settingsData, refetch: refetchSettings } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+
+  const {
+    data: directPlansData,
+    isLoading: isDirectPlansLoading,
+    isFetching: isDirectPlansFetching,
+    isError: isDirectPlansError,
+    refetch: refetchDirectPlans,
+  } = useGetSubscriptionDirectPlansQuery(undefined, { skip: !ispe });
+
+  const {
+    data: directChannelsData,
+    isLoading: isDirectChannelsLoading,
+    isFetching: isDirectChannelsFetching,
+    isError: isDirectChannelsError,
+    refetch: refetchDirectChannels,
+  } = useGetSubscriptionDirectChannelsQuery(
+    auth && ispe ? { userId: auth.userId } : skipToken,
+  );
+
+  const isDirectLoading = isDirectPlansLoading || isDirectChannelsLoading;
+  const isDirectError = isDirectPlansError || isDirectChannelsError;
+  const isDirectFetching = isDirectPlansFetching || isDirectChannelsFetching;
+
+  const handleRetryDirect = useCallback(() => {
+    refetchDirectPlans();
+    refetchDirectChannels();
+  }, [refetchDirectPlans, refetchDirectChannels]);
 
   const periodRange = useMemo(
     () => getPeriodRange(activePeriod),
@@ -135,11 +185,24 @@ const ClientNotifications = () => {
     { refetchOnMountOrArgChange: true },
   );
 
-  const { refreshing, onRefresh } = useRefresh(
-    useCallback(async () => {
-      await Promise.all([refetchSettings(), refetchStats()]);
-    }, [refetchSettings, refetchStats]),
-  );
+  // safeRefetch: refetch() у skipped-запроса (skipToken / !ispe) кидает синхронно
+  const refetchAll = useCallback(async () => {
+    await Promise.all([
+      safeRefetch(refetchSettings),
+      safeRefetch(refetchStats),
+      safeRefetch(refetchDirectPlans),
+      safeRefetch(refetchDirectChannels),
+    ]);
+  }, [
+    refetchSettings,
+    refetchStats,
+    refetchDirectPlans,
+    refetchDirectChannels,
+  ]);
+
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
+
+  useRefetchOnForeground(refetchDirectChannels);
 
   const notificationSettingsSummary = useMemo(() => {
     const all = asArray(settingsData?.customer).flatMap((group) =>
@@ -148,6 +211,28 @@ const ClientNotifications = () => {
     const enabled = all.filter((s) => s.enabled).length;
     return { enabled, total: all.length };
   }, [settingsData]);
+
+  const directChannelRows = useMemo(() => {
+    const activePlans = asArray(directPlansData).filter((p) => p.is_active);
+    const existingChannels = asArray(
+      directChannelsData?.subscription_direct_channels,
+    );
+
+    return (["telegram", "max"] as const).map((channel) => {
+      const config = DIRECT_CHANNEL_UI_CONFIG[channel];
+      const plan = activePlans.find((p) => p.kind === config.kind);
+      const existing = existingChannels.find(
+        (c) =>
+          c.kind === config.kind &&
+          !INACTIVE_DIRECT_CHANNEL_STATUSES.has(c.status),
+      );
+      // был ли канал раньше (cancelled/expired) — для «Подключить заново»
+      const hadChannel =
+        !existing && existingChannels.some((c) => c.kind === config.kind);
+
+      return { channel, config, plan, existing, hadChannel };
+    });
+  }, [directPlansData, directChannelsData]);
 
   const stats = useMemo(() => {
     const t = statsData?.notification_stats.totals;
@@ -346,6 +431,121 @@ const ClientNotifications = () => {
               Клиент получит уведомление, если подписался на бота или установил
               приложение
             </Typography>
+
+            {ispe && (
+              <>
+                <Typography className="text-caption text-neutral-500 mt-5 mb-2">
+                  Прямые уведомления
+                </Typography>
+
+                <Card
+                  title="Чем отличается от бесплатных?"
+                  left={
+                    <StSvg
+                      name="Info_alt_fill"
+                      size={28}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                  right={
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  onPress={() => setDiffModalVisible(true)}
+                />
+
+                <View className="bg-background-surface p-4 rounded-base mt-2">
+                  {isDirectLoading ? (
+                    <DirectChannelsSkeleton />
+                  ) : isDirectError ? (
+                    <RetryInline
+                      text="Не удалось загрузить каналы"
+                      onRetry={handleRetryDirect}
+                      isLoading={isDirectFetching}
+                      layout="column"
+                      className="py-2"
+                    />
+                  ) : (
+                    directChannelRows.map(
+                      ({ channel, config, plan, existing, hadChannel }, i) => {
+                        const status = getDirectChannelRowStatus(
+                          existing,
+                          hadChannel,
+                          config.kind,
+                        );
+                        return (
+                          <React.Fragment key={channel}>
+                            <Card
+                              className="p-0"
+                              titleNode={
+                                <View className="flex-row items-center gap-1.5">
+                                  {config.iconNode ?? (
+                                    <StSvg
+                                      name={config.icon!}
+                                      size={28}
+                                      color={config.iconColor}
+                                    />
+                                  )}
+                                  <Typography className="text-body">
+                                    {config.name}
+                                  </Typography>
+                                </View>
+                              }
+                              subtitle={
+                                existing
+                                  ? existing.period_ends_at
+                                    ? `Оплачен до ${format(new Date(existing.period_ends_at), "dd.MM.yy")}`
+                                    : `${formatRublesFromCents(existing.price_cents)}/мес`
+                                  : plan
+                                    ? `${formatRublesFromCents(plan.price_cents)}/мес`
+                                    : undefined
+                              }
+                              subtitleProps={
+                                existing?.period_ends_at
+                                  ? {
+                                      style: {
+                                        color: colors.primary.green[400],
+                                      },
+                                    }
+                                  : undefined
+                              }
+                              right={
+                                <View className="flex-row items-center gap-1">
+                                  <Typography
+                                    className={
+                                      status.emphasized
+                                        ? "text-[13px] font-inter-semibold"
+                                        : "text-caption"
+                                    }
+                                    style={{ color: status.color }}
+                                  >
+                                    {status.label}
+                                  </Typography>
+                                  <StSvg
+                                    name={status.iconName}
+                                    size={16}
+                                    color={status.color}
+                                  />
+                                </View>
+                              }
+                              onPress={() =>
+                                openPersonalAccount(status.webPath)
+                              }
+                            />
+                            {i < directChannelRows.length - 1 && (
+                              <Divider className="my-4" />
+                            )}
+                          </React.Fragment>
+                        );
+                      },
+                    )
+                  )}
+                </View>
+              </>
+            )}
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
               Настройки

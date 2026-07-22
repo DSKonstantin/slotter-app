@@ -130,6 +130,9 @@ const DayScheduleEdit = ({
         ],
       );
     }
+    // диалог должен показываться только на переключение isActive —
+    // остальные значения читаются актуальными в момент срабатывания
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   const onSubmit = async (data: DayScheduleFormValues) => {

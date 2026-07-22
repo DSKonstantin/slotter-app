@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CameraType } from "expo-image-picker";
@@ -42,6 +42,7 @@ type FormValues = {
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
 
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
@@ -58,7 +59,7 @@ const PersonalInformation = () => {
     },
   });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(methods.formState.isDirty || avatarRemoved);
 
   const avatar = methods.watch("avatar");
 
@@ -66,24 +67,45 @@ const PersonalInformation = () => {
     (assets: PickedAssets) => {
       const asset = assets[0];
       if (!asset) return;
-      methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
+      setAvatarRemoved(false);
+      methods.setValue("avatar", assetToFile(asset, "avatar.jpg"), {
+        shouldDirty: true,
+      });
     },
     [methods],
   );
+
+  const handleRemoveAvatar = useCallback(() => {
+    Alert.alert("Удалить фото профиля?", "Фото будет удалено", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Удалить",
+        style: "destructive",
+        onPress: () => {
+          setAvatarRemoved(true);
+          methods.setValue("avatar", null, { shouldDirty: true });
+        },
+      },
+    ]);
+  }, [methods]);
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
       if (!auth) return;
       try {
-        const formData = buildUserFormData(data);
+        const formData = buildUserFormData({
+          ...data,
+          removeAvatar: avatarRemoved,
+        });
         await updateUser({ id: auth.userId, data: formData }).unwrap();
         methods.reset(data);
+        setAvatarRemoved(false);
         router.back();
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Не удалось сохранить данные"));
       }
     },
-    [auth, updateUser, methods],
+    [auth, updateUser, methods, avatarRemoved],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -114,26 +136,49 @@ const PersonalInformation = () => {
             >
               <View className="px-screen gap-4">
                 <View className="items-center">
-                  <ImagePickerTrigger
-                    title="Фото профиля"
-                    options={{ aspect: [1, 1], cameraType: CameraType.front }}
-                    includeFiles
-                    onPick={handlePickAvatar}
-                  >
-                    <Avatar
-                      size="xl"
-                      uri={avatar?.uri ?? user?.avatar_url ?? undefined}
-                      blurhash={avatar ? undefined : user?.avatar_blurhash}
-                      showPhotoIcon={true}
-                      fallbackIcon={
+                  <View className="relative">
+                    <ImagePickerTrigger
+                      title="Фото профиля"
+                      options={{ aspect: [1, 1], cameraType: CameraType.front }}
+                      includeFiles
+                      onPick={handlePickAvatar}
+                    >
+                      <Avatar
+                        size="xl"
+                        uri={
+                          avatarRemoved
+                            ? undefined
+                            : (avatar?.uri ?? user?.avatar_url ?? undefined)
+                        }
+                        blurhash={
+                          avatar || avatarRemoved
+                            ? undefined
+                            : user?.avatar_blurhash
+                        }
+                        showPhotoIcon={true}
+                        fallbackIcon={
+                          <StSvg
+                            name="Camera"
+                            size={40}
+                            color={colors.neutral[500]}
+                          />
+                        }
+                      />
+                    </ImagePickerTrigger>
+                    {!avatarRemoved && (avatar?.uri ?? user?.avatar_url) && (
+                      <Pressable
+                        onPress={handleRemoveAvatar}
+                        hitSlop={8}
+                        className="absolute -top-1 -right-1 bg-background-surface rounded-full p-1 active:opacity-70"
+                      >
                         <StSvg
-                          name="Camera"
-                          size={40}
-                          color={colors.neutral[500]}
+                          name="Close_round_fill"
+                          size={22}
+                          color={colors.accent.red[500]}
                         />
-                      }
-                    />
-                  </ImagePickerTrigger>
+                      </Pressable>
+                    )}
+                  </View>
                 </View>
 
                 <View className="gap-1">

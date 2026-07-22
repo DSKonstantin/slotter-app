@@ -11,7 +11,12 @@ export type AppointmentStatus =
 export type PaymentMethod = "cash" | "sbp" | "online_bank";
 
 export interface AppointmentCustomer {
-  id: number;
+  /**
+   * null — квотная маскировка: у мастера без PRO записи сверх бесплатного
+   * лимита приходят с заглушкой {id: null, name: "—", phone: "—"};
+   * клиент существует, но скрыт до апгрейда (см. isHiddenCustomer)
+   */
+  id: number | null;
   name: string;
   phone: string;
   email: string | null;

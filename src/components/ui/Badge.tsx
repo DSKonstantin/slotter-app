@@ -21,6 +21,7 @@ type BadgeVariant =
   | "completed"
   | "warning"
   | "neutral"
+  | "muted"
   | "error"
   | "destructive"
   | "ghost";
@@ -124,6 +125,7 @@ const variants: Record<BadgeVariant, { container: string; text: string }> = {
   primary: { container: "bg-neutral-900", text: "text-neutral-0" },
   secondary: { container: "bg-neutral-100", text: "text-neutral-700" },
   neutral: { container: "bg-neutral-400", text: "text-neutral-0" },
+  muted: { container: "bg-neutral-500", text: "text-neutral-0" },
   tertiary: {
     container: "bg-background-surface border border-neutral-200",
     text: "text-neutral-800",

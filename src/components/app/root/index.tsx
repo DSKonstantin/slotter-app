@@ -7,16 +7,21 @@ import {
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useFocusEffect } from "expo-router";
 
+import { useAppSelector } from "@/src/store/redux/store";
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useRefetchOnForeground } from "@/src/hooks/useRefetchOnForeground";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useSubscriptionQuota } from "@/src/hooks/useSubscriptionQuota";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
 import {
   useGetAppointmentsQuery,
   useGetUpcomingAppointmentsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
+import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
 import { formatApiDate } from "@/src/utils/date/formatDate";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview from "@/src/components/app/root/homeOverview";
@@ -25,6 +30,7 @@ import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const Home = () => {
   const auth = useRequiredAuth();
+  const ispe = useAppSelector((s) => s.appVersion.ispe);
   const today = formatApiDate(new Date());
 
   const { refetch: refetchAppointments } = useGetAppointmentsQuery(
@@ -40,10 +46,11 @@ const Home = () => {
       : skipToken,
   );
 
-  const { refetch: refetchNotifications } = useGetNotificationsQuery({
-    per_count: 50,
-    is_read: false,
-  });
+  const { refetch: refetchNotifications } = useGetNotificationsQuery(
+    auth ? { per_count: 50, is_read: false } : skipToken,
+  );
+
+  const { shouldFetchQuota, refetch: refetchQuota } = useSubscriptionQuota();
 
   const { refetch: refetchSchedule } = useTodaySchedule();
 
@@ -54,38 +61,65 @@ const Home = () => {
   const { bottom } = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
 
-  const refetchAll = useCallback(
-    () =>
-      Promise.all([
-        refetchSchedule(),
-        refetchAppointments(),
-        refetchUpcoming(),
-        refetchNotifications(),
-      ]),
-    [
-      refetchSchedule,
-      refetchAppointments,
-      refetchUpcoming,
-      refetchNotifications,
-    ],
-  );
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
+  const refetchMembership = useCallback(() => {
+    // subscription_membership 404-ит, когда оплата выключена (App Store
+    // review-сборка) — в отличие от getMe, который просто опускал поле
+    if (!auth || !ispe) return Promise.resolve();
+    return getSubscriptionMembership({ userId: auth.userId });
+  }, [auth, ispe, getSubscriptionMembership]);
+  useRefetchOnForeground(refetchMembership);
+
+  const refetchAll = useCallback(() => {
+    // same guard as safeRefetch, but resolves to a promise Promise.all can await
+    const tryRefetch = (refetch: () => unknown) => {
+      try {
+        return Promise.resolve(refetch());
+      } catch {
+        return Promise.resolve();
+      }
+    };
+
+    return Promise.all([
+      tryRefetch(refetchSchedule),
+      tryRefetch(refetchAppointments),
+      tryRefetch(refetchUpcoming),
+      tryRefetch(refetchNotifications),
+      // quota query is skipToken'd when pro_access is true or membership is
+      // still unknown — it never starts, so don't bother refetching it there
+      shouldFetchQuota ? tryRefetch(refetchQuota) : Promise.resolve(),
+      refetchMembership(),
+    ]);
+  }, [
+    refetchSchedule,
+    refetchAppointments,
+    refetchUpcoming,
+    refetchNotifications,
+    refetchQuota,
+    shouldFetchQuota,
+    refetchMembership,
+  ]);
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   useFocusEffect(
     useCallback(() => {
-      if (auth) {
-        refetchSchedule();
-        refetchAppointments();
-        refetchUpcoming();
-        refetchNotifications();
-      }
+      if (!auth) return;
+      safeRefetch(refetchSchedule);
+      safeRefetch(refetchAppointments);
+      safeRefetch(refetchUpcoming);
+      safeRefetch(refetchNotifications);
+      // quota query is skipToken'd when pro_access is true or membership is
+      // still unknown — it never starts, so don't bother refetching it there
+      if (shouldFetchQuota) safeRefetch(refetchQuota);
     }, [
       auth,
+      shouldFetchQuota,
       refetchSchedule,
       refetchAppointments,
       refetchUpcoming,
       refetchNotifications,
+      refetchQuota,
     ]),
   );
 

@@ -17,6 +17,7 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import AdditionalList from "@/src/components/app/services/list/additionalList";
 import { AdditionalListItem } from "@/src/components/app/services/list/additionalList/additionalServiceItem";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -162,8 +163,12 @@ const AppServices = () => {
 
   useFocusEffect(
     useCallback(() => {
-      refetchServiceCategories({ refetchCachedPages: false });
-      refetchAdditionalServices({ refetchCachedPages: false });
+      safeRefetch(() =>
+        refetchServiceCategories({ refetchCachedPages: false }),
+      );
+      safeRefetch(() =>
+        refetchAdditionalServices({ refetchCachedPages: false }),
+      );
       return () => {
         dispatch(resetEditMode());
       };
@@ -220,7 +225,7 @@ const AppServices = () => {
             >
               <Image
                 style={{ width: 159, height: 142 }}
-                source={require("@/assets/images/app/root-box.png")}
+                source={require("@/assets/images/app/root-box.webp")}
               />
               <View className="gap-2">
                 <Typography
@@ -230,7 +235,7 @@ const AppServices = () => {
                   Нет услуг
                 </Typography>
                 <Typography className="text-body text-neutral-500 text-center">
-                  Добавь первую услугу — клиенты  смогут записаться
+                  Добавь первую услугу — клиенты смогут записаться
                 </Typography>
               </View>
 
@@ -268,15 +273,11 @@ const AppServices = () => {
                   }
                   buttonClassName="flex-1"
                 />
-                <Button
-                  title="Категории"
-                  variant="secondary"
-                  textVariant="accent"
+                <IconButton
                   onPress={createCategories}
-                  buttonClassName="flex-1"
-                  rightIcon={
+                  icon={
                     <StSvg
-                      name="File_dock_search_fill"
+                      name="Folder_line"
                       size={24}
                       color={colors.primary.blue[500]}
                     />

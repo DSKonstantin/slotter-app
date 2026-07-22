@@ -196,6 +196,7 @@ const Links = () => {
           if (error) {
             return (
               <ErrorScreen
+                topInset={topInset}
                 title="Не удалось загрузить ссылки"
                 onRetry={refetch}
               />

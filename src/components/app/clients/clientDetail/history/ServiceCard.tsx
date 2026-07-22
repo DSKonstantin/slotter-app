@@ -22,7 +22,7 @@ const ServiceCard = ({ service, date, onPress }: Props) => {
           source={
             service.main_photo_url
               ? { uri: service.main_photo_url }
-              : require("@/assets/images/placeholders/placeholder-slotter.png")
+              : require("@/assets/images/placeholders/placeholder-slotter.webp")
           }
           placeholder={
             service.main_photo_blurhash

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { View } from "react-native";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { differenceInDays, parseISO } from "date-fns";
 
 import { Routers } from "@/src/constants/routers";
@@ -11,14 +11,17 @@ import type {
   Notification,
   AppointmentNotificationSubject,
 } from "@/src/store/redux/services/api-types";
-import { formatApiDate } from "@/src/utils/date/formatDate";
+import { formatApiDate, formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { pluralize } from "@/src/utils/text/pluralize";
 import usePersistentStorage from "@/src/hooks/usePersistentStorage";
+import { useSubscriptionQuota } from "@/src/hooks/useSubscriptionQuota";
+import { colors } from "@/src/styles/colors";
 
 import BannerCard from "./BannerCard";
 import type { BannerVariant } from "./BannerCard";
 
 const SUBSCRIPTION_EXPIRY_DAYS = 7;
+const QUOTA_WARNING_THRESHOLD = 3;
 
 const MAX_BANNERS = 3;
 
@@ -36,7 +39,7 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
     key: "pending",
     variant: "info",
     iconName: "Time_fill",
-    match: (n) => n.kind === "appointment_pending_approval",
+    match: (n) => n.kind === "appointment_requested",
     buildTitle: (count) =>
       `${count} ${pluralize(count, ["неподтверждённая запись", "неподтверждённые записи", "неподтверждённых записей"])}`,
     actionLabel: "Перейти",
@@ -65,13 +68,11 @@ const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
 
 const NotificationBanners = () => {
   const ispe = useAppSelector((s) => s.appVersion.ispe);
-  const membership = useAppSelector(
-    (s) => s.auth.user?.subscription_membership,
-  );
-  const userId = useAppSelector((s) => s.auth.user?.id);
-  const token = useAppSelector((s) => s.auth.token);
+  const openPersonalAccount = useOpenPersonalAccount();
 
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
+
+  const { quota, membership, shouldFetchQuota } = useSubscriptionQuota();
 
   const [subBannerClosed, setSubBannerClosed] = usePersistentStorage(
     "banner_subscription_ended",
@@ -90,66 +91,102 @@ const NotificationBanners = () => {
       .slice(0, MAX_BANNERS);
   }, [data]);
 
-  const subscriptionEnded = useMemo(() => {
-    if (membership?.plan !== "pro" || membership.pro_access) return false;
-    if (!membership.period_ends_at) return true;
-    return (
-      differenceInDays(new Date(), parseISO(membership.period_ends_at)) <=
-      SUBSCRIPTION_EXPIRY_DAYS
-    );
-  }, [membership]);
+  const subscriptionBanner = useMemo(():
+    | { status: "ended" }
+    | { status: "expiring"; days: number }
+    | null => {
+    if (membership?.plan !== "pro") return null;
 
-  const expiryDaysLeft = useMemo(() => {
-    if (subscriptionEnded) return null;
-    if (!membership?.period_ends_at || membership.plan !== "pro") return null;
+    if (!membership.pro_access && membership.period_starts_at !== null) {
+      return { status: "ended" };
+    }
+
+    if (!membership.period_ends_at) return null;
     const days = differenceInDays(
       parseISO(membership.period_ends_at),
       new Date(),
     );
-    return days >= 0 && days <= SUBSCRIPTION_EXPIRY_DAYS ? days : null;
-  }, [membership, subscriptionEnded]);
+    if (days < 0 || days > SUBSCRIPTION_EXPIRY_DAYS) return null;
+    return { status: "expiring", days };
+  }, [membership]);
+
+  const quotaRemaining = useMemo(() => {
+    if (!quota) return null;
+    const remaining = quota.limit - quota.used;
+    return remaining <= QUOTA_WARNING_THRESHOLD ? remaining : null;
+  }, [quota]);
+
+  const quotaResetLabel = useMemo(
+    () => (quota ? formatDayMonthLong(parseISO(quota.resets_at)) : null),
+    [quota],
+  );
 
   const handleOpenList = useCallback(
     () => router.push(Routers.app.history.root),
     [],
   );
 
-  const handleOpenSubscription = useCallback(async () => {
-    await WebBrowser.openBrowserAsync(
-      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${userId}?token=${token}`,
-    );
-  }, [userId, token]);
+  const handleOpenSubscription = useCallback(
+    () => openPersonalAccount("/upgrade"),
+    [openPersonalAccount],
+  );
 
   useEffect(() => {
-    if (!subscriptionEnded && subBannerClosed) setSubBannerClosed(false);
-  }, [subscriptionEnded, subBannerClosed, setSubBannerClosed]);
+    if (subscriptionBanner?.status !== "ended" && subBannerClosed)
+      setSubBannerClosed(false);
+  }, [subscriptionBanner, subBannerClosed, setSubBannerClosed]);
 
-  if (banners.length === 0 && expiryDaysLeft === null && !subscriptionEnded)
+  const showQuotaBanner = ispe && shouldFetchQuota && quotaRemaining !== null;
+
+  const showSubscriptionBanner =
+    ispe &&
+    subscriptionBanner !== null &&
+    (subscriptionBanner.status !== "ended" || !subBannerClosed);
+
+  if (banners.length === 0 && !showSubscriptionBanner && !showQuotaBanner)
     return null;
 
   return (
     <View className="gap-2 px-screen">
-      {ispe && subscriptionEnded && !subBannerClosed && (
+      {showQuotaBanner && (
         <BannerCard
-          variant="error"
-          iconName="Alarm_fill"
-          title="Подписка закончилась"
-          actionLabel="Продлить"
+          variant={quotaRemaining <= 0 ? "error" : "alert"}
+          iconName={quotaRemaining <= 0 ? "Stop_fill" : "Cancel_fill"}
+          title={
+            quotaRemaining <= 0
+              ? "Лимит слотов на \n" + "месяц исчерпан"
+              : `Осталось ${quotaRemaining} ${pluralize(quotaRemaining, ["запись", "записи", "записей"])}`
+          }
+          subtitle={
+            quotaRemaining > 0 ? `Бесплатно до ${quotaResetLabel}` : undefined
+          }
+          subtitleProps={{ style: { color: colors.accent.orange[500] } }}
+          actionLabel={quotaRemaining <= 0 ? "Оформить PRO" : "Перейти на PRO"}
           onPress={handleOpenSubscription}
-          onDismiss={() => setSubBannerClosed(true)}
         />
       )}
-      {ispe && expiryDaysLeft !== null && (
+      {showSubscriptionBanner && (
         <BannerCard
-          variant="warning"
-          iconName="Hhourglass_move_light_fill"
+          variant={subscriptionBanner.status === "ended" ? "error" : "warning"}
+          iconName={
+            subscriptionBanner.status === "ended"
+              ? "Alarm_fill"
+              : "Hhourglass_move_light_fill"
+          }
           title={
-            expiryDaysLeft === 0
-              ? "Подписка истекает сегодня"
-              : `Подписка истекает через ${expiryDaysLeft} ${pluralize(expiryDaysLeft, ["день", "дня", "дней"])}`
+            subscriptionBanner.status === "ended"
+              ? "Подписка закончилась"
+              : subscriptionBanner.days === 0
+                ? "Подписка истекает сегодня"
+                : `Подписка истекает через ${subscriptionBanner.days} ${pluralize(subscriptionBanner.days, ["день", "дня", "дней"])}`
           }
           actionLabel="Продлить"
           onPress={handleOpenSubscription}
+          onDismiss={
+            subscriptionBanner.status === "ended"
+              ? () => setSubBannerClosed(true)
+              : undefined
+          }
         />
       )}
       {banners.map((b) => (

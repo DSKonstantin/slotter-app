@@ -1,70 +1,62 @@
 import React from "react";
-import type { StoryCategory, Story } from "./NotificationStoriesModal";
+import type { Story } from "./NotificationStoriesModal";
 
-import TrainingScreen from "./screens/training/TrainingScreen";
+import ImageStoryScreen from "./screens/ImageStoryScreen";
 
 export { INSIGHT_CATEGORY_CONFIG } from "./config";
 export type { InsightCategoryConfig } from "./config";
 
-type StoriesData = Partial<Record<StoryCategory, Story[]>>;
-
 const TRAINING_STORIES: Story[] = [
   {
     id: "1",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/training/one.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/training/one.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "2",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/training/two.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/training/two.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "3",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/training/three.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/training/three.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "4",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/training/four.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/training/four.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "5",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/training/five.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/training/five.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "6",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/training/six.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/training/six.webp")}
         paddingTop={60}
       />
     ),
@@ -74,39 +66,35 @@ const TRAINING_STORIES: Story[] = [
 const FILL_PROFILE_STORIES: Story[] = [
   {
     id: "1",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/fill_profile/one.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/fill_profile/one.webp")}
       />
     ),
   },
   {
     id: "2",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/fill_profile/two.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/fill_profile/two.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "3",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/fill_profile/three.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/fill_profile/three.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "4",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/fill_profile/four.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/fill_profile/four.webp")}
         paddingTop={60}
       />
     ),
@@ -116,49 +104,44 @@ const FILL_PROFILE_STORIES: Story[] = [
 const FINANCES_STORIES: Story[] = [
   {
     id: "1",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/finances/one.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/finances/one.webp")}
       />
     ),
   },
   {
     id: "2",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/finances/two.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/finances/two.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "3",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/finances/three.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/finances/three.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "4",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/finances/four.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/finances/four.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "5",
-    category: "training",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/finances/five.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/finances/five.webp")}
         paddingTop={60}
       />
     ),
@@ -168,57 +151,44 @@ const FINANCES_STORIES: Story[] = [
 const NOTIFICATION_STORIES: Story[] = [
   {
     id: "1",
-    category: "notification",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/notification/one.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/notification/one.webp")}
       />
     ),
   },
   {
     id: "2",
-    category: "notification",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/notification/two.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/notification/two.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "3",
-    category: "notification",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/notification/three.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/notification/three.webp")}
         paddingTop={60}
       />
     ),
   },
   {
     id: "4",
-    category: "notification",
     customScreen: (
-      <TrainingScreen
-        source={require("@/assets/images/history/notification/four.png")}
+      <ImageStoryScreen
+        source={require("@/assets/images/history/notification/four.webp")}
         paddingTop={60}
       />
     ),
   },
 ];
 
-export const MOCK_NOTIFICATION_STORIES: Record<string, StoriesData> = {
-  "education-payments": {
-    training: TRAINING_STORIES,
-  },
-  fill_profile: {
-    training: FILL_PROFILE_STORIES,
-  },
-
-  finances: {
-    training: FINANCES_STORIES,
-  },
-  notification: {
-    training: NOTIFICATION_STORIES,
-  },
+export const MOCK_NOTIFICATION_STORIES: Record<string, Story[]> = {
+  "education-payments": TRAINING_STORIES,
+  fill_profile: FILL_PROFILE_STORIES,
+  finances: FINANCES_STORIES,
+  notification: NOTIFICATION_STORIES,
 };

@@ -103,16 +103,18 @@ const PersonalInformation = () => {
           avoidKeyboard
           scrollRef={setScrollRef}
           contentRef={contentRef}
-          header={
-            <>
-              <AuthHeader showLogout />
-              <View className="mt-4">
-                <StepProgress
-                  steps={TOTAL_STEPS}
-                  currentStep={STEP_PROGRESS.personal_information!}
-                />
-              </View>
-            </>
+          header={<AuthHeader showLogout />}
+          collapsibleHeader={
+            <View className="mt-2">
+              <StepProgress
+                steps={TOTAL_STEPS}
+                currentStep={STEP_PROGRESS.personal_information!}
+              />
+
+              <Typography weight="semibold" className="text-display mt-8">
+                Твоя визитка
+              </Typography>
+            </View>
           }
           footer={
             <AuthFooter
@@ -125,10 +127,7 @@ const PersonalInformation = () => {
             />
           }
         >
-          <View className="mt-8 gap-2">
-            <Typography weight="semibold" className="text-display mb-2">
-              Твоя визитка
-            </Typography>
+          <View className="gap-2">
             <Typography className="text-body text-neutral-500">
               Чтобы клиенты знали, к кому идут
             </Typography>

@@ -1,7 +1,6 @@
 import * as Yup from "yup";
 import {
   isEndAfterStart,
-  areBreaksValid,
   breakSchema,
   breaksField,
   withEndAfterStart,
@@ -84,15 +83,6 @@ export const CalendarScheduleSchema = Yup.object()
       value?.mode !== "perDay" ||
       getSelectedEditableDays(value?.calendarDays).every((day) =>
         isEndAfterStart(day.startAt, day.endAt),
-      ),
-  )
-  .test(
-    "per-day-breaks",
-    "Проверьте перерывы",
-    (value) =>
-      value?.mode !== "perDay" ||
-      getSelectedEditableDays(value?.calendarDays).every((day) =>
-        areBreaksValid(day.breaks, day.startAt, day.endAt),
       ),
   )
   .test(

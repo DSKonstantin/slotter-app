@@ -136,6 +136,18 @@ const Schedule = () => {
       <AuthScreenLayout
         disableHorizontalPadding
         header={<AuthHeader showLogout />}
+        collapsibleHeader={
+          <View className="mt-2">
+            <StepProgress
+              steps={TOTAL_STEPS}
+              currentStep={STEP_PROGRESS.schedule!}
+            />
+
+            <Typography weight="semibold" className="text-display mt-8">
+              Дни работы
+            </Typography>
+          </View>
+        }
         avoidKeyboard
         footer={
           <AuthFooter
@@ -156,63 +168,52 @@ const Schedule = () => {
           />
         }
       >
-        <View className="mt-4 px-screen">
-          <StepProgress
-            steps={TOTAL_STEPS}
-            currentStep={STEP_PROGRESS.schedule!}
-          />
+        <View className="px-screen gap-1">
+          <Typography className="text-body text-neutral-500 mb-5">
+            Нажми на дни, когда ты принимаешь
+          </Typography>
         </View>
-        <View className="mt-8">
-          <View className="px-screen gap-1">
-            <Typography weight="semibold" className="text-display">
-              Дни работы
-            </Typography>
-            <Typography className="text-body text-neutral-500 mb-5">
-              Нажми на дни, когда ты принимаешь
-            </Typography>
-          </View>
 
-          <SchedulePresets
-            selectedId={selectedPresetId}
-            onSelect={handlePresetSelect}
-          />
+        <SchedulePresets
+          selectedId={selectedPresetId}
+          onSelect={handlePresetSelect}
+        />
 
-          <View className="flex-row mt-5 gap-2 px-screen">
-            {days.map((day) => (
-              <Button
-                key={day.id}
-                title={day.label}
-                variant={activeDays.includes(day.id) ? "primary" : "secondary"}
-                onPress={() => toggleDay(day.id)}
-                buttonClassName="flex-1 h-auto aspect-square rounded-[99px] p-0"
-              />
-            ))}
-          </View>
-          <View className="min-h-[20px] px-screen">
-            {methods.formState.errors.workingDays && (
-              <Typography className="text-accent-red-500 text-caption mt-[2px]">
-                {methods.formState.errors.workingDays.message as string}
-              </Typography>
-            )}
-          </View>
-
-          <View className="px-screen mt-2">
-            <WorkingHoursFields
-              label="Время работы"
-              startName="startAt"
-              endName="endAt"
-              startDefault={DEFAULT_START_AT}
-              endDefault={DEFAULT_END_AT}
-              breakStartDefault={DEFAULT_BREAK_START}
-              breakEndDefault={DEFAULT_BREAK_END}
-              middleSlot={
-                <Typography className="text-caption text-neutral-900">
-                  Свободный или сменный график (2/2) можно будет настроить в
-                  календаре позже
-                </Typography>
-              }
+        <View className="flex-row mt-5 gap-2 px-screen">
+          {days.map((day) => (
+            <Button
+              key={day.id}
+              title={day.label}
+              variant={activeDays.includes(day.id) ? "primary" : "secondary"}
+              onPress={() => toggleDay(day.id)}
+              buttonClassName="flex-1 h-auto aspect-square rounded-[99px] p-0"
             />
-          </View>
+          ))}
+        </View>
+        <View className="min-h-[20px] px-screen">
+          {methods.formState.errors.workingDays && (
+            <Typography className="text-accent-red-500 text-caption mt-[2px]">
+              {methods.formState.errors.workingDays.message as string}
+            </Typography>
+          )}
+        </View>
+
+        <View className="px-screen">
+          <WorkingHoursFields
+            label="Время работы"
+            startName="startAt"
+            endName="endAt"
+            startDefault={DEFAULT_START_AT}
+            endDefault={DEFAULT_END_AT}
+            breakStartDefault={DEFAULT_BREAK_START}
+            breakEndDefault={DEFAULT_BREAK_END}
+            middleSlot={
+              <Typography className="text-caption text-neutral-900">
+                Свободный или сменный график (2/2) можно будет настроить в
+                календаре позже
+              </Typography>
+            }
+          />
         </View>
       </AuthScreenLayout>
     </FormProvider>

@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Alert, View, RefreshControl, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -38,6 +39,7 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useModalAction } from "@/src/hooks/useModalAction";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import EditNameModal from "./EditNameModal";
@@ -45,6 +47,7 @@ import ChangeCategoryModal from "./changeCategoryModal";
 import ContactsModal from "./contactsModal";
 import ClientMenuModal from "./clientMenuModal";
 import ClientDetailSkeleton from "./ClientDetailSkeleton";
+import { isBirthdayToday } from "@/src/utils/date/isBirthdayToday";
 
 type NoteFormValues = { note: string };
 
@@ -58,16 +61,30 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const [editNameVisible, setEditNameVisible] = useState(false);
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
+
+  // Роуты передают Number(id): при битом/отсутствующем параметре (например,
+  // "null" от скрытого квотой клиента) приходит NaN — он проходил проверку
+  // `!== undefined`, и запрос с customer_id=NaN бесконечно падал 404-ми.
+  const safeUserCustomerId = Number.isFinite(userCustomerId)
+    ? userCustomerId
+    : undefined;
+  const safeCustomerId = Number.isFinite(customerId) ? customerId : undefined;
+  const hasValidId =
+    safeUserCustomerId !== undefined || safeCustomerId !== undefined;
+
   const {
     data: customerData,
     isLoading: customerLoading,
     isError: customerError,
     refetch: refetchCustomer,
   } = useGetUserCustomerQuery(
-    auth ? { userId: auth.userId, userCustomerId, customerId } : { userId: 0 },
-    {
-      skip: !auth || (userCustomerId === undefined && customerId === undefined),
-    },
+    auth && hasValidId
+      ? {
+          userId: auth.userId,
+          userCustomerId: safeUserCustomerId,
+          customerId: safeCustomerId,
+        }
+      : skipToken,
   );
 
   const [updateUserCustomer, { isLoading: isSaving }] =
@@ -189,7 +206,10 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         }
       >
         {({ topInset, bottomInset }) => {
-          if (customerLoading) {
+          // auth ещё не готов — это не ошибка загрузки, а ожидание;
+          // без этой проверки skip-запрос (auth == null) на миг
+          // показывал бы ErrorScreen вместо скелетона
+          if (!auth || customerLoading) {
             return (
               <ClientDetailSkeleton
                 topInset={topInset}
@@ -197,11 +217,23 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               />
             );
           }
+          // оба id невалидны — запрос никогда не уйдёт (skipToken),
+          // «Повторить» тут нечего повторять, ведём назад
+          if (!hasValidId) {
+            return (
+              <ErrorScreen
+                title="Клиент не найден"
+                topInset={topInset}
+                onRetry={() => router.back()}
+              />
+            );
+          }
           if (customerError || !customer) {
             return (
               <ErrorScreen
                 title="Не удалось загрузить клиента"
-                onRetry={refetchCustomer}
+                topInset={topInset}
+                onRetry={() => safeRefetch(refetchCustomer)}
               />
             );
           }
@@ -230,7 +262,9 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                 paddingHorizontal: SCREEN_PADDING,
               }}
             >
-              {customer.birthday && <BirthdayBadge />}
+              {customer.birthday && isBirthdayToday(customer.birthday) && (
+                <BirthdayBadge />
+              )}
 
               <View className="gap-2 mt-2">
                 <ClientInfoCard

@@ -1,35 +1,9 @@
 import React, { useCallback } from "react";
-import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { StSvg, Typography } from "@/src/components/ui";
+import { TouchableOpacity, View } from "react-native";
+import { HatchPattern, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useAppDispatch } from "@/src/store/redux/store";
 import { setFilterModalOpen } from "@/src/store/redux/slices/calendarSlice";
-import Svg, { Defs, Pattern, Line, Rect } from "react-native-svg";
-
-const HatchPattern: React.FC = () => (
-  <View style={StyleSheet.absoluteFill} pointerEvents="none">
-    <Svg width="100%" height="100%">
-      <Defs>
-        <Pattern
-          id="hatch"
-          patternUnits="userSpaceOnUse"
-          width={12}
-          height={12}
-        >
-          <Line
-            x1={12}
-            y1={0}
-            x2={0}
-            y2={12}
-            stroke={colors.neutral[200]}
-            strokeWidth={1}
-          />
-        </Pattern>
-      </Defs>
-      <Rect width="100%" height="100%" fill="url(#hatch)" />
-    </Svg>
-  </View>
-);
 
 const FilteredSlotBlock: React.FC = () => {
   const dispatch = useAppDispatch();

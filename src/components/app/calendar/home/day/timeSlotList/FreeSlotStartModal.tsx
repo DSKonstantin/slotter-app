@@ -3,7 +3,6 @@ import { View } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 
 import { Button, StModal, Typography } from "@/src/components/ui";
-import { formatTime } from "./utils";
 
 export type FreeSlotRange = {
   start: number;
@@ -62,7 +61,7 @@ const FreeSlotStartModal = ({
 
     return hours.map((hour) => ({
       value: hour,
-      label: formatTime(hour * 60),
+      label: String(hour).padStart(2, "0"),
     }));
   }, [timeOptions]);
 

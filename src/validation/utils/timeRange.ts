@@ -23,7 +23,7 @@ export const withEndAfterStart = <T extends Yup.AnySchema>(
       isEndAfterStart(ctx.parent[startFieldName], endAt as string),
   ) as T;
 
-type BreakItem = { start?: string; end?: string };
+export type BreakItem = { start?: string; end?: string };
 
 const isWithinDay = (
   start: string | undefined,
@@ -40,7 +40,10 @@ const isWithinDay = (
   return s >= ds && e <= de;
 };
 
-const overlapsOther = (current: BreakItem, others: BreakItem[]): boolean => {
+export const overlapsOther = (
+  current: BreakItem,
+  others: BreakItem[],
+): boolean => {
   const cs = parseTimeToMinutes(current.start ?? "");
   const ce = parseTimeToMinutes(current.end ?? "");
   if (cs === null || ce === null) return false;
@@ -59,12 +62,22 @@ type BreakSchemaOptions = {
   endFieldName?: string;
 };
 
+export const BREAKS_OVERLAP_MESSAGE = "Перерывы не должны пересекаться";
+
 const buildBreakSchema = ({
   startFieldName = "startAt",
   endFieldName = "endAt",
 }: BreakSchemaOptions = {}) =>
   Yup.object().shape({
-    start: Yup.string().required("Укажите время начала перерыва"),
+    start: Yup.string()
+      .required("Укажите время начала перерыва")
+      .test("no-overlap", BREAKS_OVERLAP_MESSAGE, (_start, ctx) => {
+        const day = ctx.from?.[1]?.value as
+          | { breaks?: BreakItem[] }
+          | undefined;
+        if (!day?.breaks) return true;
+        return !overlapsOther(ctx.parent as BreakItem, day.breaks);
+      }),
     end: withEndAfterStart(
       Yup.string().required("Укажите время окончания перерыва"),
       "start",
@@ -79,7 +92,7 @@ const buildBreakSchema = ({
           day[endFieldName] as string | undefined,
         );
       })
-      .test("no-overlap", "Перерывы пересекаются", (_end, ctx) => {
+      .test("no-overlap", BREAKS_OVERLAP_MESSAGE, (_end, ctx) => {
         const day = ctx.from?.[1]?.value as
           | { breaks?: BreakItem[] }
           | undefined;
@@ -114,36 +127,4 @@ export const breaksField = ({
   const schema =
     itemSchema ?? buildBreakSchema({ startFieldName, endFieldName });
   return Yup.array().of(schema).required().default([]);
-};
-
-export const areBreaksValid = (
-  breaks: { start: string; end: string }[] = [],
-  startAt?: string,
-  endAt?: string,
-): boolean => {
-  if (breaks.length === 0) return true;
-  if (!startAt || !endAt) return true;
-
-  const dayStart = parseTimeToMinutes(startAt);
-  const dayEnd = parseTimeToMinutes(endAt);
-
-  if (dayStart === null || dayEnd === null || dayEnd <= dayStart) return false;
-
-  const sorted = breaks
-    .map((item) => ({
-      start: parseTimeToMinutes(item.start),
-      end: parseTimeToMinutes(item.end),
-    }))
-    .sort((a, b) => (a.start ?? 0) - (b.start ?? 0));
-
-  return sorted.every((item, index) => {
-    if (item.start === null || item.end === null) return false;
-    if (item.end <= item.start) return false;
-    if (item.start < dayStart || item.end > dayEnd) return false;
-
-    const prev = sorted[index - 1];
-    if (!prev || prev.end === null) return true;
-
-    return item.start >= prev.end;
-  });
 };

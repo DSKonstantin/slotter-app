@@ -16,6 +16,7 @@ import TimeSlotListSkeleton from "@/src/components/app/calendar/home/day/timeSlo
 import { useAppSelector } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -148,9 +149,9 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     if (isEmpty)
       return (
         <EmptyStateScreen
-          image={require("@/assets/images/app/not-working.png")}
+          image={require("@/assets/images/app/not-working.webp")}
           title="Этот день свободен"
-          subtitle="Настройте график, чтобы принимать записи  в этот день"
+          subtitle="Настройте график, чтобы принимать записи в этот день"
           buttonTitle="Настроить день"
           buttonIcon="Edit_fill"
           onPress={handleEmptyPress}
@@ -191,7 +192,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   // 6. useEffect
   useFocusEffect(
     useCallback(() => {
-      refetchAppointments();
+      safeRefetch(refetchAppointments);
     }, [refetchAppointments]),
   );
 

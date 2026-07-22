@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { Image } from "expo-image";
-import authHomeImage from "@/assets/images/auth/auth-home.png";
+import authHomeImage from "@/assets/images/auth/auth-home.webp";
 import { Routers } from "@/src/constants/routers";
 import { router } from "expo-router";
 import {

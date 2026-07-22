@@ -33,7 +33,7 @@ import RetryInline from "@/src/components/shared/retryInline";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 
-type CustomerOption = {
+export type CustomerOption = {
   id: number;
   name: string;
   phone?: string | null;
@@ -100,7 +100,7 @@ const Separator = () => <View className="mx-2 h-px bg-neutral-100" />;
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSelect: (customerId: number) => void;
+  onSelect: (customer: CustomerOption) => void;
 }
 
 const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
@@ -158,7 +158,7 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
 
   const handleSelect = useCallback(
     (item: CustomerOption) => {
-      onSelect(item.id);
+      onSelect(item);
       handleClose();
     },
     [onSelect, handleClose],

@@ -46,7 +46,10 @@ const ResetPasswordVerify = () => {
 
         if (result.status === "authorized") {
           dispatch(setToken(result.token));
-          router.push({ pathname: Routers.resetPassword.newPassword });
+          router.push({
+            pathname: Routers.resetPassword.newPassword,
+            params: { phone },
+          });
         }
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Неверный код"));

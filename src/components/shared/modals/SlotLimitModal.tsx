@@ -1,11 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import * as WebBrowser from "expo-web-browser";
 import { Image } from "expo-image";
 import { StModal, Button, Typography } from "@/src/components/ui";
-import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
+import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
-import limitFreeImage from "@/assets/images/app/limit-free.png";
+import limitFreeImage from "@/assets/images/app/limit-free.webp";
 
 type Props = {
   visible: boolean;
@@ -13,15 +14,19 @@ type Props = {
 };
 
 const SlotLimitModal = ({ visible, onClose }: Props) => {
-  const auth = useRequiredAuth();
-  const token = useAppSelector((state) => state.auth.token);
+  const openPersonalAccount = useOpenPersonalAccount();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
+  const userId = useAppSelector((state) => state.auth.user?.id);
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
+  const runOnNextForeground = useRunOnNextForeground();
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
+    // вернулся из веб-оплаты — подтянуть pro_access/membership
+    if (userId != null) {
+      runOnNextForeground(() => getSubscriptionMembership({ userId }));
+    }
+    await openPersonalAccount("/upgrade");
     onClose();
-    void WebBrowser.openBrowserAsync(
-      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${auth?.userId}?token=${token}`,
-    );
   };
 
   return (

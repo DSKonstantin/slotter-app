@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { authApi } from "../services/api/authApi";
 import { usersApi } from "../services/api/usersApi";
+import { subscriptionApi } from "../services/api/subscriptionApi";
 import { User } from "@/src/store/redux/services/api-types";
 import { isAuthError } from "@/src/utils/apiError";
 
@@ -60,6 +61,19 @@ function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
 function setUserOnly(state: AuthState, payload: UserPayload) {
   const user = extractUser(payload);
   if (!user) return;
+
+  // Некоторые ответы (например, PATCH /users) могут не нести
+  // subscription_membership — не затираем уже известное значение.
+  if (
+    user.subscription_membership === undefined &&
+    state.user?.subscription_membership !== undefined
+  ) {
+    state.user = {
+      ...user,
+      subscription_membership: state.user.subscription_membership,
+    };
+    return;
+  }
 
   state.user = user;
 }
@@ -137,6 +151,13 @@ const authSlice = createSlice({
         usersApi.endpoints.updateUser.matchFulfilled,
         (state, { payload }) => {
           setUserOnly(state, payload);
+        },
+      )
+      .addMatcher(
+        subscriptionApi.endpoints.getSubscriptionMembership.matchFulfilled,
+        (state, { payload }) => {
+          if (!state.user) return;
+          state.user = { ...state.user, subscription_membership: payload };
         },
       );
   },

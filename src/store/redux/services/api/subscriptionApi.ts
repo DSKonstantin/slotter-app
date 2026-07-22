@@ -8,7 +8,7 @@ import type {
   RenewWithCardResponse,
 } from "@/src/store/redux/services/api-types";
 
-const subscriptionApi = api.injectEndpoints({
+export const subscriptionApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
     getSubscriptionPlans: builder.query<SubscriptionPlan[], void>({
@@ -104,6 +104,7 @@ const subscriptionApi = api.injectEndpoints({
 export const {
   useGetSubscriptionPlansQuery,
   useGetSubscriptionMembershipQuery,
+  useLazyGetSubscriptionMembershipQuery,
   useCheckoutMutation,
   useCancelSubscriptionMutation,
   useGetSubscriptionQuotaQuery,

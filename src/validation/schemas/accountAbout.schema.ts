@@ -7,7 +7,7 @@ export const AccountAboutSchema = Yup.object({
   aboutMe: descriptionField,
   appointmentConditions: descriptionField,
   tags: Yup.array().of(Yup.string().required()).default([]),
-  address: Yup.string().max(100, "Максимум 100 символов").default(""),
+  address: Yup.string().max(300, "Максимум 300 символов").default(""),
   hideAddress: Yup.boolean().required(),
   atHome: Yup.boolean().required(),
   online: Yup.boolean().required(),

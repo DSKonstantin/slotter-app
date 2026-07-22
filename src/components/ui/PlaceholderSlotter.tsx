@@ -12,7 +12,7 @@ export function PlaceholderSlotter({
 }: PlaceholderSlotterProps) {
   return (
     <Image
-      source={require("@/assets/images/placeholders/placeholder-slotter.png")}
+      source={require("@/assets/images/placeholders/placeholder-slotter.webp")}
       style={[{ width: size, height: size }, style]}
       resizeMode="contain"
     />

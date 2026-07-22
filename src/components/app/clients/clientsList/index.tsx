@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import debounce from "lodash/debounce";
-import { View, FlatList, ActivityIndicator } from "react-native";
+import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -29,6 +29,7 @@ import { colors } from "@/src/styles/colors";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
@@ -205,14 +206,21 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      refetchTags();
-      refetch({ refetchCachedPages: false });
+      safeRefetch(refetchTags);
+      safeRefetch(() => refetch({ refetchCachedPages: false }));
     }, [refetchTags, refetch]),
   );
 
+  const isTrueEmptyState =
+    !debouncedSearch &&
+    !tagId &&
+    !isLoading &&
+    !isError &&
+    customers.length === 0;
+
   return (
     <View className="flex-1 gap-4" style={{ paddingTop: topInset }}>
-      {!searchMode && (
+      {!searchMode && !isTrueEmptyState && (
         <>
           {isTagsError ? (
             <View className="px-screen h-[36px] justify-center">
@@ -274,31 +282,47 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           ListHeaderComponent={
             !searchMode ? (
               <View className="flex-row gap-2.5 pb-2">
-                <Button
-                  title="Статистика"
-                  buttonClassName="flex-1"
-                  rightIcon={
+                <Pressable
+                  className="min-h-[98px] flex-1 bg-background-surface p-4 rounded-base justify-between active:opacity-70"
+                  onPress={() => router.push(Routers.app.clients.statistics)}
+                >
+                  <View className="flex-row justify-between">
                     <StSvg
                       name="Pipe_fill"
                       size={24}
-                      color={colors.neutral[0]}
+                      color={colors.neutral[900]}
                     />
-                  }
-                  onPress={() => router.push(Routers.app.clients.statistics)}
-                />
-                <Button
-                  title="Рассылка"
-                  variant="clear"
-                  buttonClassName="flex-1 opacity-40"
-                  rightIcon={
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[500]}
+                    />
+                  </View>
+                  <Typography weight="semibold" className="text-body">
+                    Статистика
+                  </Typography>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setComingSoonVisible(true)}
+                  className="opacity-40 min-h-[98px] flex-1 bg-background-surface p-4 rounded-base justify-between active:opacity-70"
+                >
+                  <View className="flex-row justify-between">
                     <StSvg
                       name="Message_alt_fill"
                       size={24}
                       color={colors.neutral[900]}
                     />
-                  }
-                  onPress={() => setComingSoonVisible(true)}
-                />
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[500]}
+                    />
+                  </View>
+                  <Typography weight="semibold" className="text-body">
+                    Рассылка
+                  </Typography>
+                </Pressable>
               </View>
             ) : null
           }
@@ -315,12 +339,50 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
             ) : null
           }
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center gap-4">
-              <StSvg name="Chat_search" size={60} color={colors.neutral[400]} />
-              <Typography className="text-body text-neutral-500 text-center">
-                И близко ничего не нашли
-              </Typography>
-            </View>
+            isTrueEmptyState ? (
+              <View className="flex-1 items-center justify-center gap-4">
+                <StSvg name="User_add" size={60} color={colors.neutral[900]} />
+                <View className="items-center gap-1">
+                  <Typography
+                    weight="semibold"
+                    className="text-display text-neutral-900 text-center"
+                  >
+                    Создайте первого клиента
+                  </Typography>
+                  <Typography
+                    weight="regular"
+                    className="text-body text-neutral-500 text-center"
+                  >
+                    Станет можно создавать записи, отправлять авто-напоминания и
+                    видеть историю визитов
+                  </Typography>
+                </View>
+                <Button
+                  title="Создать"
+                  buttonClassName="w-full mt-2"
+                  variant="accent"
+                  rightIcon={
+                    <StSvg
+                      name="Add_round_fill"
+                      size={24}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                  onPress={() => router.push(Routers.app.clients.create)}
+                />
+              </View>
+            ) : (
+              <View className="flex-1 items-center justify-center gap-4">
+                <StSvg
+                  name="Chat_search"
+                  size={60}
+                  color={colors.neutral[400]}
+                />
+                <Typography className="text-body text-neutral-500 text-center">
+                  И близко ничего не нашли
+                </Typography>
+              </View>
+            )
           }
         />
       )}

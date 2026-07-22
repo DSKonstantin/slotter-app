@@ -125,6 +125,18 @@ const Service = () => {
       <AuthScreenLayout
         header={<AuthHeader showLogout />}
         avoidKeyboard
+        collapsibleHeader={
+          <View className="mt-2">
+            <StepProgress
+              steps={TOTAL_STEPS}
+              currentStep={STEP_PROGRESS.service!}
+            />
+
+            <Typography weight="semibold" className="text-display mt-8">
+              Первая услуга
+            </Typography>
+          </View>
+        }
         footer={
           <AuthFooter
             primary={{
@@ -143,16 +155,7 @@ const Service = () => {
           />
         }
       >
-        <View className="mt-4">
-          <StepProgress
-            steps={TOTAL_STEPS}
-            currentStep={STEP_PROGRESS.service!}
-          />
-        </View>
-        <View className="mt-8 gap-2">
-          <Typography weight="semibold" className="text-display mb-2">
-            Первая услуга
-          </Typography>
+        <View className="gap-2">
           <Typography className="text-body text-neutral-500">
             Добавь самую популярную
           </Typography>

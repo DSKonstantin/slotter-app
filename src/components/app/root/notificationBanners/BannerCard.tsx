@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, TouchableOpacity, View } from "react-native";
+import { Pressable, TextProps, TouchableOpacity, View } from "react-native";
 
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -46,6 +46,8 @@ type Props = {
   variant: BannerVariant;
   iconName: string;
   title: string;
+  subtitle?: string;
+  subtitleProps?: TextProps;
   actionLabel: string;
   onPress: () => void;
   onDismiss?: () => void;
@@ -55,6 +57,8 @@ const BannerCard = ({
   variant,
   iconName,
   title,
+  subtitle,
+  subtitleProps,
   actionLabel,
   onPress,
   onDismiss,
@@ -77,6 +81,15 @@ const BannerCard = ({
           >
             {title}
           </Typography>
+          {subtitle && (
+            <Typography
+              {...subtitleProps}
+              className={`text-caption text-neutral-500`}
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Typography>
+          )}
         </View>
         <Button
           size="sm"

@@ -11,8 +11,10 @@ interface Props {
   onOpen: () => void;
   onClose: () => void;
   onCloseComplete: () => void;
-  onReschedule: () => void;
-  onCancel: () => void;
+  /** нет — перенос запрещён (например, клиент скрыт квотой) */
+  onReschedule?: () => void;
+  /** нет — отмена запрещена (например, клиент скрыт квотой) */
+  onCancel?: () => void;
   onChangeCustomer?: () => void;
 }
 
@@ -45,7 +47,7 @@ const SlotActionsMenu: React.FC<Props> = ({
     }
   >
     <View className="p-2 gap-1 min-w-[180px]">
-      {(status === "pending" || status === "confirmed") && (
+      {(status === "pending" || status === "confirmed") && onReschedule && (
         <>
           <Button
             title="Перенести"
@@ -78,24 +80,29 @@ const SlotActionsMenu: React.FC<Props> = ({
               />
             </>
           )}
-          <Divider />
+          {onCancel && <Divider />}
         </>
       )}
 
       {(status === "pending" ||
         status === "confirmed" ||
-        status === "requested") && (
-        <Button
-          title="Отменить запись"
-          variant="clear"
-          buttonClassName="justify-start"
-          textClassName="text-accent-red-500"
-          onPress={onCancel}
-          rightIcon={
-            <StSvg name="Dell_fill" size={24} color={colors.accent.red[500]} />
-          }
-        />
-      )}
+        status === "requested") &&
+        onCancel && (
+          <Button
+            title="Отменить запись"
+            variant="clear"
+            buttonClassName="justify-start"
+            textClassName="text-accent-red-500"
+            onPress={onCancel}
+            rightIcon={
+              <StSvg
+                name="Dell_fill"
+                size={24}
+                color={colors.accent.red[500]}
+              />
+            }
+          />
+        )}
     </View>
   </Popover>
 );

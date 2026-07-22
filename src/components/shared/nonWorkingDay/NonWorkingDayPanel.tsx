@@ -25,7 +25,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import type { WorkingDayStatus } from "@/src/hooks/useWorkingDaysCalendar";
 import { Image } from "expo-image";
-import notWorkingImage from "@/assets/images/app/not-working.png";
+import notWorkingImage from "@/assets/images/app/not-working.webp";
 
 type Props = {
   date: string;

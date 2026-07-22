@@ -19,7 +19,7 @@ const NoInternetScreen: React.FC<Props> = ({ onRetry, isRetrying }) => {
     >
       <View className="flex-1 items-center justify-center gap-4 px-screen">
         <Image
-          source={require("@/assets/images/placeholders/no-internet.png")}
+          source={require("@/assets/images/placeholders/no-internet.webp")}
           style={{ width: 160, height: 160 }}
           resizeMode="contain"
         />

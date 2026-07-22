@@ -4,6 +4,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import RetryInline from "@/src/components/shared/retryInline";
 import { Item, Switch } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
@@ -33,9 +34,8 @@ const AccountNotifications = () => {
     refresh,
   } = useNotificationPermission();
 
-  const { data, isLoading } = useGetNotificationSettingsQuery(
-    auth ? auth.userId : skipToken,
-  );
+  const { data, isLoading, isFetching, isError, refetch } =
+    useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
@@ -94,6 +94,15 @@ const AccountNotifications = () => {
 
             {isLoading ? (
               <ActivityIndicator />
+            ) : isError ? (
+              // при ошибке не рисуем тумблеры с дефолтным «выключено» —
+              // юзер примет их за реальные настройки
+              <RetryInline
+                text="Не удалось загрузить настройки"
+                onRetry={refetch}
+                isLoading={isFetching}
+                className="py-2"
+              />
             ) : (
               asArray(data?.self).map((item) => (
                 <Item

@@ -12,6 +12,7 @@ import {
 } from "date-fns";
 import { ru } from "date-fns/locale";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import {
   Avatar,
   Card,
@@ -77,7 +78,13 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const [filterActive, setFilterActive] = useState(false);
   const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[0]);
 
-  const { data: customerData } = useGetUserCustomerQuery(
+  const {
+    data: customerData,
+    isLoading: customerLoading,
+    isFetching: customerFetching,
+    isError: customerError,
+    refetch: refetchCustomer,
+  } = useGetUserCustomerQuery(
     auth
       ? customerId !== undefined
         ? { userId: auth.userId, customerId }
@@ -90,6 +97,8 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const {
     data: financesData,
     isLoading: financesLoading,
+    isFetching: financesFetching,
+    isError: financesError,
     refetch: refetchFinances,
   } = useGetUserCustomerFinancesQuery(
     auth && ucId && !filterActive
@@ -105,6 +114,8 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const {
     data: appointmentsData,
     isLoading: appointmentsLoading,
+    isFetching: appointmentsFetching,
+    isError: appointmentsError,
     refetch: refetchAppointments,
   } = useGetUserCustomerAppointmentsQuery(
     auth && ucId && filterActive
@@ -135,13 +146,33 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
     ? format(parseISO(lastVisitAt), "d MMM yyyy", { locale: ru })
     : "—";
 
-  const isLoading = filterActive ? appointmentsLoading : financesLoading;
+  const isLoading =
+    customerLoading || (filterActive ? appointmentsLoading : financesLoading);
+  const isError =
+    customerError || (filterActive ? appointmentsError : financesError);
+  const isFetching =
+    customerFetching ||
+    (filterActive ? appointmentsFetching : financesFetching);
 
   const handleRefresh = useCallback(
     () => (filterActive ? refetchAppointments() : refetchFinances()),
     [filterActive, refetchAppointments, refetchFinances],
   );
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
+
+  const handleRetry = useCallback(() => {
+    // упавший customer-запрос блокирует зависимые (skipToken без ucId), а
+    // refetch не начатого зависимого запроса кидает — дёргаем только упавшие
+    if (customerError) refetchCustomer();
+    if (filterActive ? appointmentsError : financesError) handleRefresh();
+  }, [
+    customerError,
+    refetchCustomer,
+    filterActive,
+    appointmentsError,
+    financesError,
+    handleRefresh,
+  ]);
 
   return (
     <ScreenWithToolbar
@@ -161,160 +192,176 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
         />
       }
     >
-      {({ topInset, bottomInset }) => (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
-          contentOffset={
-            Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
-          }
-          contentContainerStyle={{
-            paddingTop: Platform.OS === "ios" ? 0 : topInset,
-            paddingBottom: bottomInset + 8,
-            paddingHorizontal: SCREEN_PADDING,
-          }}
-          refreshControl={
-            <RefreshControl
-              progressViewOffset={Platform.select({
-                android: topInset,
-              })}
-              refreshing={refreshing}
-              onRefresh={onRefresh}
+      {({ topInset, bottomInset }) => {
+        if (!isLoading && isError) {
+          return (
+            <ErrorScreen
+              title="Не удалось загрузить историю"
+              onRetry={handleRetry}
+              isLoading={isFetching}
+              topInset={topInset}
             />
-          }
-        >
-          <View className="items-center mb-5 px-screen">
-            <View className="flex-row gap-2 bg-background-surface rounded-base py-1 pl-1 pr-2.5 items-center">
-              <Avatar
-                size="xs"
-                name={customer?.name}
-                uri={customer?.avatar_url ?? undefined}
-                blurhash={customer?.avatar_blurhash}
+          );
+        }
+        return (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
+            contentContainerStyle={{
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
+              paddingBottom: bottomInset + 8,
+              paddingHorizontal: SCREEN_PADDING,
+            }}
+            refreshControl={
+              <RefreshControl
+                progressViewOffset={Platform.select({
+                  android: topInset,
+                })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
               />
-              <Typography className="text-body" numberOfLines={4}>
-                {customer?.name ?? ""}
-              </Typography>
+            }
+          >
+            <View className="items-center mb-5 px-screen">
+              <View className="flex-row gap-2 bg-background-surface rounded-base py-1 pl-1 pr-2.5 items-center">
+                <Avatar
+                  size="xs"
+                  name={customer?.name}
+                  uri={customer?.avatar_url ?? undefined}
+                  blurhash={customer?.avatar_blurhash}
+                />
+                <Typography className="text-body" numberOfLines={4}>
+                  {customer?.name ?? ""}
+                </Typography>
+              </View>
             </View>
-          </View>
 
-          {isLoading ? (
-            <HistorySkeleton filterActive={filterActive} />
-          ) : filterActive ? (
-            <View className="gap-6">
-              {appointmentSections.map((section) => (
-                <View key={section.title} className="gap-4">
-                  <Typography className="text-body">{section.title}</Typography>
-                  <FlashList
-                    data={section.items}
-                    keyExtractor={(item) => String(item.id)}
-                    numColumns={2}
-                    scrollEnabled={false}
-                    ItemSeparatorComponent={() => <View className="h-3" />}
-                    renderItem={({ item, index }) => {
-                      const name =
-                        item.services.map((s) => s.name).join(" + ") ||
-                        "Запись";
-                      const firstService = item.services[0];
-                      return (
-                        <View
-                          style={{
-                            flex: 1,
-                            marginRight: index % 2 === 0 ? 6 : 0,
-                          }}
-                        >
-                          <ServiceCard
-                            service={{
-                              name,
-                              main_photo_url: firstService?.main_photo_url,
-                              main_photo_blurhash:
-                                firstService?.main_photo_blurhash,
+            {isLoading ? (
+              <HistorySkeleton filterActive={filterActive} />
+            ) : filterActive ? (
+              <View className="gap-6">
+                {appointmentSections.map((section) => (
+                  <View key={section.title} className="gap-4">
+                    <Typography className="text-body">
+                      {section.title}
+                    </Typography>
+                    <FlashList
+                      data={section.items}
+                      keyExtractor={(item) => String(item.id)}
+                      numColumns={2}
+                      scrollEnabled={false}
+                      ItemSeparatorComponent={() => <View className="h-3" />}
+                      renderItem={({ item, index }) => {
+                        const name =
+                          item.services.map((s) => s.name).join(" + ") ||
+                          "Запись";
+                        const firstService = item.services[0];
+                        return (
+                          <View
+                            style={{
+                              flex: 1,
+                              marginRight: index % 2 === 0 ? 6 : 0,
                             }}
-                            date={formatDayMonth(item.date)}
-                            onPress={() =>
-                              router.push(
-                                userCustomerId !== undefined
-                                  ? Routers.app.clients.slot(
-                                      userCustomerId,
-                                      item.id,
-                                    )
-                                  : Routers.app.calendar.slot(item.id),
-                              )
-                            }
-                          />
-                        </View>
-                      );
-                    }}
-                  />
-                </View>
-              ))}
-              {appointmentSections.length === 0 && (
-                <View className="items-center py-10">
-                  <Typography className="text-body text-neutral-400">
-                    Нет посещений
-                  </Typography>
-                </View>
-              )}
-            </View>
-          ) : (
-            <View className="gap-5">
-              <IncomeCard
-                totalIncome={formatRublesFromCents(
-                  financesData?.total_income_cents ?? 0,
-                )}
-                items={[
-                  {
-                    label: "Визитов",
-                    value: String(financesData?.visits_count ?? 0),
-                  },
-                  { label: "Последний визит", value: lastVisitLabel },
-                ]}
-              />
-
-              <TrendChartCard
-                title="Динамика"
-                data={chartData}
-                periods={FINANCE_PERIODS}
-                onPeriodChange={(p) =>
-                  setFinancePeriod(p as (typeof FINANCE_PERIODS)[number])
-                }
-              />
-
-              <View className="gap-2">
-                <Typography className="text-caption">История оплат</Typography>
-                {(financesData?.payments ?? []).map((payment) => (
-                  <Card
-                    key={payment.appointment_id}
-                    title={payment.title}
-                    subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
-                    onPress={() =>
-                      router.push(
-                        userCustomerId !== undefined
-                          ? Routers.app.clients.slot(
-                              userCustomerId,
-                              payment.appointment_id,
-                            )
-                          : Routers.app.calendar.slot(payment.appointment_id),
-                      )
-                    }
-                    right={
-                      <Typography className="text-body">
-                        {formatRublesFromCents(payment.amount_cents)}
-                      </Typography>
-                    }
-                  />
+                          >
+                            <ServiceCard
+                              service={{
+                                name,
+                                main_photo_url: firstService?.main_photo_url,
+                                main_photo_blurhash:
+                                  firstService?.main_photo_blurhash,
+                              }}
+                              date={formatDayMonth(item.date)}
+                              onPress={() =>
+                                router.push(
+                                  userCustomerId !== undefined
+                                    ? Routers.app.clients.slot(
+                                        userCustomerId,
+                                        item.id,
+                                      )
+                                    : Routers.app.calendar.slot(item.id),
+                                )
+                              }
+                            />
+                          </View>
+                        );
+                      }}
+                    />
+                  </View>
                 ))}
-                {(financesData?.payments ?? []).length === 0 && (
-                  <View className="items-center py-6">
+                {appointmentSections.length === 0 && (
+                  <View className="items-center py-10">
                     <Typography className="text-body text-neutral-400">
-                      Нет оплат за период
+                      Нет посещений
                     </Typography>
                   </View>
                 )}
               </View>
-            </View>
-          )}
-        </ScrollView>
-      )}
+            ) : (
+              <View className="gap-5">
+                <IncomeCard
+                  totalIncome={formatRublesFromCents(
+                    financesData?.total_income_cents ?? 0,
+                  )}
+                  items={[
+                    {
+                      label: "Визитов",
+                      value: String(financesData?.visits_count ?? 0),
+                    },
+                    { label: "Последний визит", value: lastVisitLabel },
+                  ]}
+                />
+
+                <TrendChartCard
+                  title="Динамика"
+                  data={chartData}
+                  periods={FINANCE_PERIODS}
+                  onPeriodChange={(p) =>
+                    setFinancePeriod(p as (typeof FINANCE_PERIODS)[number])
+                  }
+                />
+
+                <View className="gap-2">
+                  <Typography className="text-caption">
+                    История оплат
+                  </Typography>
+                  {(financesData?.payments ?? []).map((payment) => (
+                    <Card
+                      key={payment.appointment_id}
+                      title={payment.title}
+                      subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
+                      onPress={() =>
+                        router.push(
+                          userCustomerId !== undefined
+                            ? Routers.app.clients.slot(
+                                userCustomerId,
+                                payment.appointment_id,
+                              )
+                            : Routers.app.calendar.slot(payment.appointment_id),
+                        )
+                      }
+                      right={
+                        <Typography className="text-body">
+                          {formatRublesFromCents(payment.amount_cents)}
+                        </Typography>
+                      }
+                    />
+                  ))}
+                  {(financesData?.payments ?? []).length === 0 && (
+                    <View className="items-center py-6">
+                      <Typography className="text-body text-neutral-400">
+                        Нет оплат за период
+                      </Typography>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        );
+      }}
     </ScreenWithToolbar>
   );
 };

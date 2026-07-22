@@ -5,7 +5,7 @@ import { Typography } from "@/src/components/ui";
 const NoStatsEmptyState = () => (
   <View className="flex-row gap-4 px-screen pt-5">
     <Image
-      source={require("@/assets/images/app/notifications-clients.png")}
+      source={require("@/assets/images/app/notifications-clients.webp")}
       style={{ width: 80, height: 80 }}
       resizeMode="contain"
     />

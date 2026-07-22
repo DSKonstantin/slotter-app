@@ -11,11 +11,10 @@ import InsightCard, {
   type BodyPart,
 } from "./InsightCard";
 import NotificationStoriesModal, {
-  type StoriesData,
+  type Story,
 } from "./NotificationStoriesModal";
 import { MOCK_NOTIFICATION_STORIES } from "./mockStories";
 
-const EMPTY_STORIES: Partial<StoriesData> = {};
 const AUTO_PLAY_INTERVAL = 6000;
 
 type Insight = {
@@ -24,7 +23,7 @@ type Insight = {
   iconName: string;
   title: string;
   body: BodyPart[] | string;
-  stories?: Partial<StoriesData>;
+  stories?: Story[];
   onPress: () => void;
 };
 
@@ -76,9 +75,14 @@ const InsightsCarousel = () => {
 
   const insights = useMemo(() => getMockInsights(setSelectedStoryId), []);
 
-  const selectedInsight = useMemo(
-    () => insights.find((i) => i.id === selectedStoryId) ?? null,
-    [insights, selectedStoryId],
+  // Порядок групп в сторис-вьюере повторяет порядок карточек в карусели:
+  // досмотрел одну группу — переходишь к следующей.
+  const storyGroups = useMemo(
+    () =>
+      insights
+        .filter((i) => i.stories?.length)
+        .map((i) => ({ id: String(i.id), stories: i.stories! })),
+    [insights],
   );
 
   const handleCloseStories = useCallback(() => {
@@ -146,13 +150,12 @@ const InsightsCarousel = () => {
         )}
       </View>
 
-      {selectedInsight && (
-        <NotificationStoriesModal
-          isVisible={selectedStoryId !== null}
-          onClose={handleCloseStories}
-          stories={selectedInsight.stories ?? EMPTY_STORIES}
-        />
-      )}
+      <NotificationStoriesModal
+        isVisible={selectedStoryId !== null}
+        onClose={handleCloseStories}
+        groups={storyGroups}
+        initialGroupId={selectedStoryId ?? undefined}
+      />
     </>
   );
 };

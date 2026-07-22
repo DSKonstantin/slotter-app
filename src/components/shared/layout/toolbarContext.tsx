@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -59,22 +60,35 @@ export function ToolbarProvider({ children }: { children: React.ReactNode }) {
     setSearchValue("");
   }, []);
 
+  const searchPlaceholder = configRef.current?.placeholder ?? "Поиск...";
+
+  const value = useMemo<ToolbarContextValue>(
+    () => ({
+      searchMode,
+      searchValue,
+      searchPlaceholder,
+      hasSearch,
+      openSearch,
+      handleSearchChange,
+      handleSearchClose,
+      registerSearch,
+      unregisterSearch,
+    }),
+    [
+      searchMode,
+      searchValue,
+      searchPlaceholder,
+      hasSearch,
+      openSearch,
+      handleSearchChange,
+      handleSearchClose,
+      registerSearch,
+      unregisterSearch,
+    ],
+  );
+
   return (
-    <ToolbarContext.Provider
-      value={{
-        searchMode,
-        searchValue,
-        searchPlaceholder: configRef.current?.placeholder ?? "Поиск...",
-        hasSearch,
-        openSearch,
-        handleSearchChange,
-        handleSearchClose,
-        registerSearch,
-        unregisterSearch,
-      }}
-    >
-      {children}
-    </ToolbarContext.Provider>
+    <ToolbarContext.Provider value={value}>{children}</ToolbarContext.Provider>
   );
 }
 
