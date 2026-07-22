@@ -206,7 +206,10 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         }
       >
         {({ topInset, bottomInset }) => {
-          if (customerLoading) {
+          // auth ещё не готов — это не ошибка загрузки, а ожидание;
+          // без этой проверки skip-запрос (auth == null) на миг
+          // показывал бы ErrorScreen вместо скелетона
+          if (!auth || customerLoading) {
             return (
               <ClientDetailSkeleton
                 topInset={topInset}
@@ -214,12 +217,22 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               />
             );
           }
+          // оба id невалидны — запрос никогда не уйдёт (skipToken),
+          // «Повторить» тут нечего повторять, ведём назад
+          if (!hasValidId) {
+            return (
+              <ErrorScreen
+                title="Клиент не найден"
+                topInset={topInset}
+                onRetry={() => router.back()}
+              />
+            );
+          }
           if (customerError || !customer) {
             return (
               <ErrorScreen
                 title="Не удалось загрузить клиента"
-                // при skipToken (битый id) refetch кидает синхронно —
-                // safeRefetch гасит, кнопка просто не сделает ничего
+                topInset={topInset}
                 onRetry={() => safeRefetch(refetchCustomer)}
               />
             );
