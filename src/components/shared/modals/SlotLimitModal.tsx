@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { StModal, Button, Typography } from "@/src/components/ui";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
-import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import limitFreeImage from "@/assets/images/app/limit-free.webp";
 
@@ -16,12 +16,15 @@ type Props = {
 const SlotLimitModal = ({ visible, onClose }: Props) => {
   const openPersonalAccount = useOpenPersonalAccount();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
-  const [getMe] = useLazyGetMeQuery();
+  const userId = useAppSelector((state) => state.auth.user?.id);
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
   const runOnNextForeground = useRunOnNextForeground();
 
   const handleUpgrade = async () => {
     // вернулся из веб-оплаты — подтянуть pro_access/membership
-    runOnNextForeground(getMe);
+    if (userId != null) {
+      runOnNextForeground(() => getSubscriptionMembership({ userId }));
+    }
     await openPersonalAccount("/upgrade");
     onClose();
   };

@@ -10,12 +10,14 @@ import { Button, StSvg, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
-import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { safeRefetch } from "@/src/utils/safeRefetch";
 import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
 import { colors } from "@/src/styles/colors";
 import { api } from "@/src/store/redux/services/api";
-import { useGetSubscriptionPaymentQuery } from "@/src/store/redux/services/api/subscriptionApi";
+import {
+  useGetSubscriptionPaymentQuery,
+  useLazyGetSubscriptionMembershipQuery,
+} from "@/src/store/redux/services/api/subscriptionApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
 
@@ -31,7 +33,7 @@ const PaymentStatusScreen = () => {
 
   const openPersonalAccount = useOpenPersonalAccount();
   const runOnNextForeground = useRunOnNextForeground();
-  const [getMe] = useLazyGetMeQuery();
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
   const dispatch = useDispatch();
 
@@ -173,7 +175,7 @@ const PaymentStatusScreen = () => {
               // разово перепроверить платёж и membership; если платёж
               // дошёл, эффект по isSucceeded сам переключит экран
               runOnNextForeground(() => {
-                getMe();
+                if (auth) getSubscriptionMembership({ userId: auth.userId });
                 safeRefetch(refetchPayment);
               });
               openPersonalAccount("/upgrade");

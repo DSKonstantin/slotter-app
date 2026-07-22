@@ -273,15 +273,11 @@ const AppServices = () => {
                   }
                   buttonClassName="flex-1"
                 />
-                <Button
-                  title="Категории"
-                  variant="secondary"
-                  textVariant="accent"
+                <IconButton
                   onPress={createCategories}
-                  buttonClassName="flex-1"
-                  rightIcon={
+                  icon={
                     <StSvg
-                      name="File_dock_search_fill"
+                      name="Folder_line"
                       size={24}
                       color={colors.primary.blue[500]}
                     />

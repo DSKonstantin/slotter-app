@@ -17,6 +17,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
 import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
+import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -36,6 +37,7 @@ const AccountScreen = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const auth = useRequiredAuth();
   const [triggerGetMe] = useLazyGetMeQuery();
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
   const openPersonalAccount = useOpenPersonalAccount();
   const runOnNextForeground = useRunOnNextForeground();
   const ispe = useAppSelector((state) => state.appVersion.ispe);
@@ -64,7 +66,9 @@ const AccountScreen = () => {
               route: () => {
                 // в кабинете можно продлить/отменить подписку —
                 // на возврате освежить pro_access/membership
-                runOnNextForeground(triggerGetMe);
+                runOnNextForeground(() =>
+                  getSubscriptionMembership({ userId: auth.userId }),
+                );
                 openPersonalAccount();
               },
             },

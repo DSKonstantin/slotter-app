@@ -55,7 +55,7 @@ import EditableCommentRow from "./EditableCommentRow";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
-import { STATUS_CONFIG } from "./constants";
+import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
 import EditableRow from "./EditableRow";
 import EditableDurationRow from "./EditableDurationRow";
@@ -178,6 +178,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       // при квотной маскировке запись read-only: редактировать вслепую
       // (не видя клиента) нельзя, единственное действие — отмена
       canEdit: !isHiddenCustomer(slot.customer),
+      canReschedule:
+        !isHiddenCustomer(slot.customer) &&
+        (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
       statusConfig: STATUS_CONFIG[slot.status] ?? null,
       timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
       serviceNames: slot.services.map((s) => s.name).join(", "),
@@ -212,6 +215,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         title="Детали слота"
         rightButton={
           slot &&
+          !customerHidden &&
           (actionsMenuMounted ||
             slot.status === "pending" ||
             slot.status === "confirmed" ||
@@ -228,16 +232,12 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 setActionsMenuMounted(false);
                 onModalHide();
               }}
-              onReschedule={
-                !customerHidden
-                  ? () => scheduleAction(() => setRescheduleVisible(true))
-                  : undefined
+              onReschedule={() =>
+                scheduleAction(() => setRescheduleVisible(true))
               }
               onCancel={() => scheduleAction(() => setCancelVisible(true))}
               onChangeCustomer={
-                // при квотной маскировке клиент есть, но невидим —
-                // не даём случайно перезаписать его другим
-                slot.customer && !customerHidden
+                slot.customer
                   ? () => scheduleAction(() => setCustomerPickerVisible(true))
                   : undefined
               }
@@ -470,7 +470,9 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           weight="regular"
                           className="text-body text-neutral-900 flex-shrink text-right"
                         >
-                          {derived!.serviceNames || "—"}
+                          {customerHidden
+                            ? "***"
+                            : derived!.serviceNames || "—"}
                         </Typography>
                         {derived!.canEdit && (
                           <StSvg
@@ -525,12 +527,30 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   <InfoRow
                     label="Дата и время"
                     right={
-                      <Typography
-                        weight="regular"
-                        className="text-body text-neutral-900 flex-shrink text-right"
+                      <Pressable
+                        onPress={
+                          derived!.canReschedule
+                            ? () => setRescheduleVisible(true)
+                            : undefined
+                        }
+                        disabled={!derived!.canReschedule}
+                        hitSlop={8}
+                        className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
                       >
-                        {derived!.timeString}
-                      </Typography>
+                        <Typography
+                          weight="regular"
+                          className="text-body text-neutral-900 flex-shrink text-right"
+                        >
+                          {derived!.timeString}
+                        </Typography>
+                        {derived!.canReschedule && (
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
+                          />
+                        )}
+                      </Pressable>
                     }
                   />
 
@@ -551,7 +571,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
                   <EditableRow
                     label="Стоимость"
-                    displayValue={formatRublesFromCents(slot.price_cents ?? 0)}
+                    displayValue={
+                      customerHidden
+                        ? "***"
+                        : formatRublesFromCents(slot.price_cents ?? 0)
+                    }
                     fieldName="price"
                     editing={editingField === "price"}
                     canEdit={derived!.canEdit}
@@ -599,10 +623,12 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                           weight="regular"
                           className="text-body text-neutral-900 flex-shrink text-right"
                         >
-                          {slot.payment_method != null
-                            ? (PAYMENT_METHOD_LABELS[slot.payment_method] ??
-                              slot.payment_method)
-                            : "—"}
+                          {customerHidden
+                            ? "***"
+                            : slot.payment_method != null
+                              ? (PAYMENT_METHOD_LABELS[slot.payment_method] ??
+                                slot.payment_method)
+                              : "—"}
                         </Typography>
                         {derived!.canEdit && (
                           <StSvg
@@ -643,8 +669,8 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   }}
                 />
 
-                {/* смена статусов скрытой записи запрещена;
-                    отмена остаётся доступной через меню в тулбаре */}
+                {/* запись со скрытым квотой клиентом read-only:
+                    ни статус, ни перенос, ни отмена недоступны до апгрейда */}
                 {!customerHidden && (
                   <SlotActions
                     appointmentId={id}
@@ -698,8 +724,8 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
               <CustomerPickerModal
                 visible={customerPickerVisible}
                 onClose={() => setCustomerPickerVisible(false)}
-                onSelect={(customerId) =>
-                  void handleUpdate({ customer_id: customerId } as never, {
+                onSelect={(customer) =>
+                  void handleUpdate({ customer_id: customer.id } as never, {
                     onSuccess: () => setCustomerPickerVisible(false),
                   })
                 }

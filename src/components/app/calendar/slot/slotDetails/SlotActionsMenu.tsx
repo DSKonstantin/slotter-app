@@ -13,7 +13,8 @@ interface Props {
   onCloseComplete: () => void;
   /** нет — перенос запрещён (например, клиент скрыт квотой) */
   onReschedule?: () => void;
-  onCancel: () => void;
+  /** нет — отмена запрещена (например, клиент скрыт квотой) */
+  onCancel?: () => void;
   onChangeCustomer?: () => void;
 }
 
@@ -79,24 +80,29 @@ const SlotActionsMenu: React.FC<Props> = ({
               />
             </>
           )}
-          <Divider />
+          {onCancel && <Divider />}
         </>
       )}
 
       {(status === "pending" ||
         status === "confirmed" ||
-        status === "requested") && (
-        <Button
-          title="Отменить запись"
-          variant="clear"
-          buttonClassName="justify-start"
-          textClassName="text-accent-red-500"
-          onPress={onCancel}
-          rightIcon={
-            <StSvg name="Dell_fill" size={24} color={colors.accent.red[500]} />
-          }
-        />
-      )}
+        status === "requested") &&
+        onCancel && (
+          <Button
+            title="Отменить запись"
+            variant="clear"
+            buttonClassName="justify-start"
+            textClassName="text-accent-red-500"
+            onPress={onCancel}
+            rightIcon={
+              <StSvg
+                name="Dell_fill"
+                size={24}
+                color={colors.accent.red[500]}
+              />
+            }
+          />
+        )}
     </View>
   </Popover>
 );

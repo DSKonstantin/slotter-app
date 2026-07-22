@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   Divider,
+  HatchPattern,
   IconButton,
   StSvg,
   Tag,
@@ -287,16 +288,19 @@ const ServiceList = ({
 
       const { service, categoryId } = item;
 
+      const isHidden = !service.is_active;
+
       if (isEditMode) {
-        return (
+        const card = (
           <Card
             title={service.name}
             titleProps={{ numberOfLines: 1, ellipsizeMode: "tail" }}
             subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
             titleAccessory={
-              !service.is_active ? <Tag title="скрыто" size="sm" /> : undefined
+              isHidden ? <Tag title="Скрыто" size="sm" /> : undefined
             }
             active={isActive}
+            className={isHidden ? "bg-transparent" : undefined}
             left={
               <Pressable
                 onLongPress={drag}
@@ -327,16 +331,26 @@ const ServiceList = ({
             onLongPress={drag}
           />
         );
+
+        return isHidden ? (
+          <View className="relative rounded-base overflow-hidden bg-background-surface">
+            <HatchPattern />
+            {card}
+          </View>
+        ) : (
+          card
+        );
       }
 
-      return (
+      const card = (
         <Card
           title={service.name}
           titleProps={{ numberOfLines: 1, ellipsizeMode: "tail" }}
           subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
           titleAccessory={
-            !service.is_active ? <Tag title="скрыто" size="sm" /> : undefined
+            isHidden ? <Tag title="Скрыто" size="sm" /> : undefined
           }
+          className={isHidden ? "bg-transparent" : undefined}
           right={
             <StSvg
               name="Expand_right_light"
@@ -347,6 +361,15 @@ const ServiceList = ({
           pressArea="card"
           onPress={() => handleServicePress(service.id, categoryId)}
         />
+      );
+
+      return isHidden ? (
+        <View className="relative rounded-base overflow-hidden bg-background-surface">
+          <HatchPattern />
+          {card}
+        </View>
+      ) : (
+        card
       );
     },
     [

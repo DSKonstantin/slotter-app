@@ -5,7 +5,7 @@ import React, { useMemo, useState, useRef, useCallback } from "react";
 import { Pressable, View } from "react-native";
 import { nanoid } from "nanoid/non-secure";
 
-import { Typography, Divider } from "@/src/components/ui";
+import { Typography } from "@/src/components/ui";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
 import { useModalAction } from "@/src/hooks/useModalAction";
 import ImagePickerMenu from "@/src/components/shared/imagePicker/imagePickerMenu";
@@ -398,19 +398,24 @@ export function ServiceImagesPicker({ value, onChange }: Props) {
           </View>
         </View>
 
-        <Typography className="text-caption text-neutral-500 mt-6 mb-3">
+        <Typography
+          weight="medium"
+          className="text-caption text-neutral-500 mt-6 mb-1"
+        >
           Требования
         </Typography>
 
-        <View className="bg-background-surface rounded-3xl p-5 gap-1">
-          {REQUIREMENTS.map((text, index) => (
-            <View key={text} className="gap-4">
-              <Typography weight="regular" className="text-body">
+        <View className="gap-1">
+          {REQUIREMENTS.map((text) => (
+            <View key={text} className="flex-row gap-2 items-center">
+              <View className="bg-neutral-500 w-[6px] h-[6px] rounded-[2px]" />
+
+              <Typography
+                weight="regular"
+                className="flex-1 text-body text-neutral-500"
+              >
                 {text}
               </Typography>
-              {index < REQUIREMENTS.length - 1 ? (
-                <Divider className="mb-4" />
-              ) : null}
             </View>
           ))}
         </View>

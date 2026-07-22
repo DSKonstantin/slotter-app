@@ -19,7 +19,13 @@ import {
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Badge, Button, StSvg, Typography } from "@/src/components/ui";
+import {
+  Badge,
+  Button,
+  IconButton,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useContactsPermission } from "@/src/hooks/useContactsPermission";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -85,6 +91,14 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     () => tagsData?.customer_tags ?? [],
     [tagsData?.customer_tags],
   );
+
+  const didSetDefaultTagRef = useRef(false);
+  useEffect(() => {
+    if (didSetDefaultTagRef.current || tags.length === 0) return;
+    didSetDefaultTagRef.current = true;
+    const defaultTag = tags.find((tag) => tag.name === "Новые");
+    if (defaultTag) setValue("customer_tag", defaultTag);
+  }, [tags, setValue]);
 
   const onSubmit = useCallback(
     async (values: ClientCreateFormValues) => {
@@ -180,6 +194,22 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                 >
                   <View ref={contentRef} collapsable={false}>
                     <View className="px-screen">
+                      <Button
+                        title="Выбрать из контактов"
+                        variant="secondary"
+                        textVariant="accent"
+                        onPress={handleContactsPress}
+                        rightIcon={
+                          <StSvg
+                            name="User_box_fill"
+                            size={24}
+                            color={colors.primary.blue[500]}
+                          />
+                        }
+                      />
+                    </View>
+
+                    <View className="px-screen mt-4">
                       <RhfTextField
                         label="Имя"
                         name="name"
@@ -194,21 +224,6 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                           placeholder="+7 (___) ___-__-__"
                           keyboardType="phone-pad"
                           maskFn={maskPhone}
-                        />
-                      </View>
-
-                      <View className="mt-4">
-                        <Button
-                          title="Выбрать из контактов"
-                          variant="secondary"
-                          onPress={handleContactsPress}
-                          leftIcon={
-                            <StSvg
-                              name="User_fill"
-                              size={20}
-                              color={colors.neutral[900]}
-                            />
-                          }
                         />
                       </View>
                     </View>
@@ -261,17 +276,18 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                             className="mr-2"
                           />
                         )}
-                      />
-                      <Button
-                        title="Создать новую категорию"
-                        buttonClassName="mx-screen"
-                        variant="clear"
-                        onPress={() => setCreateTagVisible(true)}
-                        rightIcon={
-                          <StSvg
-                            name="Add_ring_fill_light"
-                            size={18}
-                            color={colors.neutral[900]}
+                        ListFooterComponent={
+                          <IconButton
+                            size="sm"
+                            buttonClassName="w-[52px]"
+                            onPress={() => setCreateTagVisible(true)}
+                            icon={
+                              <StSvg
+                                name="Add_round"
+                                size={24}
+                                color={colors.neutral[900]}
+                              />
+                            }
                           />
                         }
                       />
@@ -293,7 +309,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                   style={{ paddingTop: 8, paddingBottom: bottomInset + 8 }}
                 >
                   <Button
-                    title="Создать клиента"
+                    title="Сохранить клиента"
                     rightIcon={
                       <StSvg
                         name="Save_fill"
