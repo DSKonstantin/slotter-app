@@ -29,7 +29,7 @@ const FillProfileThree = () => {
       </View>
 
       <StoryIllustration
-        source={require("@/assets/images/history/fill_profile/three.png")}
+        source={require("@/assets/images/history/fill_profile/three.webp")}
       />
     </StoryScreenLayout>
   );

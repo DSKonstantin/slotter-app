@@ -28,7 +28,7 @@ const FinancesFour = () => {
       </View>
 
       <StoryIllustration
-        source={require("@/assets/images/history/finances/four.png")}
+        source={require("@/assets/images/history/finances/four.webp")}
       />
     </StoryScreenLayout>
   );

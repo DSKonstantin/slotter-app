@@ -29,7 +29,7 @@ const FinancesThree = () => {
       </View>
 
       <StoryIllustration
-        source={require("@/assets/images/history/finances/three.png")}
+        source={require("@/assets/images/history/finances/three.webp")}
       />
     </StoryScreenLayout>
   );

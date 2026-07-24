@@ -22,7 +22,7 @@ const NotificationOne = () => {
   return (
     <View className="flex-1">
       <Image
-        source={require("@/assets/images/history/notification/one.png")}
+        source={require("@/assets/images/history/notification/one.webp")}
         style={StyleSheet.absoluteFillObject}
         contentFit="cover"
       />

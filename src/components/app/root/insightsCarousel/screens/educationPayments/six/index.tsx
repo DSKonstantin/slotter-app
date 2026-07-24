@@ -30,7 +30,7 @@ const EducationPaymentsSix = () => {
       </View>
 
       <StoryIllustration
-        source={require("@/assets/images/history/training/six.png")}
+        source={require("@/assets/images/history/training/six.webp")}
       />
     </StoryScreenLayout>
   );

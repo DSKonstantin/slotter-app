@@ -21,7 +21,7 @@ const FinancesOne = () => {
   return (
     <View className="flex-1">
       <Image
-        source={require("@/assets/images/history/finances/one.png")}
+        source={require("@/assets/images/history/finances/one.webp")}
         style={StyleSheet.absoluteFillObject}
         contentFit="cover"
       />

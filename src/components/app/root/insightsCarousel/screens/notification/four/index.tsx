@@ -42,7 +42,7 @@ const NotificationFour = () => {
       </View>
 
       <StoryIllustration
-        source={require("@/assets/images/history/notification/four.png")}
+        source={require("@/assets/images/history/notification/four.webp")}
       />
     </StoryScreenLayout>
   );

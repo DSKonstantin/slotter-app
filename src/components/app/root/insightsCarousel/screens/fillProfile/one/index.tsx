@@ -22,7 +22,7 @@ const FillProfileOne = () => {
   return (
     <View className="flex-1">
       <Image
-        source={require("@/assets/images/history/fill_profile/one.png")}
+        source={require("@/assets/images/history/fill_profile/one.webp")}
         style={StyleSheet.absoluteFillObject}
         contentFit="cover"
       />
