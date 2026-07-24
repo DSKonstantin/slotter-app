@@ -18,7 +18,7 @@ const ContactsModal = ({ visible, onClose, phone }: Props) => {
   const digitsOnly = cleanPhone.replace(/\+/g, "");
   const hasPhone = digitsOnly.length > 0;
   const whatsappUrl = `https://wa.me/${digitsOnly}`;
-  const telegramUrl = `tg://resolve?phone=${cleanPhone}`;
+  const telegramUrl = `https://t.me/+${digitsOnly}`;
 
   const open = async (url: string, fallback: string) => {
     try {

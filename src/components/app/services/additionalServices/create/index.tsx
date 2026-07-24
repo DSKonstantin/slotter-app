@@ -62,6 +62,7 @@ const AdditionalServiceCreate = () => {
           <AdditionalServicesForm
             insets={insets}
             loading={isLoading}
+            loadingDelete={false}
             onSubmit={onSubmit}
           />
         )}

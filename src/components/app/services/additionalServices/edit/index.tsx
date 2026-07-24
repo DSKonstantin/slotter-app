@@ -51,7 +51,8 @@ const AdditionalServiceEdit = () => {
   const [updateAdditionalService, { isLoading }] =
     useUpdateAdditionalServiceMutation();
 
-  const [deleteAdditionalService] = useDeleteAdditionalServiceMutation();
+  const [deleteAdditionalService, { isLoading: isDeleting }] =
+    useDeleteAdditionalServiceMutation();
 
   useFormNavigationGuard(methods.formState.isDirty);
 
@@ -143,6 +144,7 @@ const AdditionalServiceEdit = () => {
             <AdditionalServicesForm
               insets={insets}
               loading={isLoading}
+              loadingDelete={isDeleting}
               onSubmit={onSubmit}
               isEdit
               onDelete={handleDelete}
