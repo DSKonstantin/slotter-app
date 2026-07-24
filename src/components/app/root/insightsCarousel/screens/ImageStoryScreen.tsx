@@ -1,7 +1,7 @@
 import React from "react";
-import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, type ImageSource } from "expo-image";
+
+import { StoryScreenLayout } from "@/src/components/app/root/insightsCarousel/components";
 
 const ImageStoryScreen = ({
   source,
@@ -10,21 +10,15 @@ const ImageStoryScreen = ({
   source: ImageSource;
   paddingTop?: number;
 }) => {
-  const { top } = useSafeAreaInsets();
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingTop: paddingTop !== undefined ? paddingTop + top : undefined,
-      }}
-    >
+    <StoryScreenLayout paddingTop={paddingTop}>
       <Image
         source={source}
         style={{ flex: 1, width: "100%" }}
         contentFit="cover"
         contentPosition="top"
       />
-    </View>
+    </StoryScreenLayout>
   );
 };
 

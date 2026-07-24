@@ -8,6 +8,7 @@ export { Tabs } from "./Tabs";
 export { Checkbox } from "./Checkbox";
 export { Radio } from "./Radio";
 export { Typography } from "./Typography";
+export type { TextWeight } from "./Typography";
 export { Tag } from "./Tag";
 export { Badge } from "./Badge";
 export { IconButton } from "./IconButton";

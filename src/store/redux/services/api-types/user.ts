@@ -39,7 +39,9 @@ export interface User {
   is_notify_customer_cancel: boolean;
   is_notify_reminders: boolean;
   gallery_photos: GalleryPhoto[];
-  subscription_membership: SubscriptionMembership;
+  // только у view :auth_show ("me"-эндпоинт) — login/reset-password/otp/telegram-auth
+  // отдают User без этого поля.
+  subscription_membership?: SubscriptionMembership;
 }
 
 export interface AuthResponse {

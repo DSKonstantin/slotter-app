@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { renderHook, waitFor, act } from "@testing-library/react-native";
 
 import { api } from "@/src/store/redux/services/api";
+import authReducer from "@/src/store/redux/slices/authSlice";
 import useMonthCalendarData from "@/src/hooks/useMonthCalendarData";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { upsertApiQueryData } from "@/tests/testUtils/upsertApiQueryData";
@@ -25,9 +26,16 @@ const DAY_11 = formatApiDate(new Date(2026, 6, 11));
 
 const buildStore = () =>
   configureStore({
-    reducer: { [api.reducerPath]: api.reducer },
+    reducer: { auth: authReducer, [api.reducerPath]: api.reducer },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(api.middleware),
+    // configureStore's default autoBatch enhancer queues dispatches via
+    // requestAnimationFrame, which RN's jest polyfill implements as
+    // setTimeout(cb, 0) — with RTK Query's continuous internal dispatches
+    // that keeps re-scheduling itself for as long as the store is alive,
+    // leaking timers past this file's teardown. Not needed in tests.
+    enhancers: (getDefaultEnhancers) =>
+      getDefaultEnhancers({ autoBatch: false }),
   });
 
 const renderWithStore = (

@@ -49,7 +49,9 @@ export interface Appointment {
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
-  public_token: string;
+  // только view :created (ответ POST /appointments) и :my_slot — обычные
+  // show/update/index-эндпоинты рендерят :default, где этого поля нет.
+  public_token?: string;
   date: string;
   customer: AppointmentCustomer;
   services: AppointmentService[];
@@ -86,7 +88,7 @@ export interface UpcomingAppointment {
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
-  public_token: string;
+  public_token?: string;
   date: string;
   customer: UpcomingAppointmentCustomer;
   services: AppointmentService[];

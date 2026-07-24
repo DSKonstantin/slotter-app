@@ -81,7 +81,7 @@ describe("useRefetchOnForeground", () => {
       { initialProps: { refetch: firstRefetch } },
     );
 
-    rerender({ refetch: secondRefetch });
+    await rerender({ refetch: secondRefetch });
     await goBackgroundThenActive();
 
     expect(firstRefetch).not.toHaveBeenCalled();
