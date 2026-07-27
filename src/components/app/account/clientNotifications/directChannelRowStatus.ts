@@ -25,7 +25,7 @@ export function getDirectChannelRowStatus(
   hadChannel: boolean,
   kind: DirectChannelKind,
 ): DirectChannelRowStatus {
-  const checkoutPath = `/notifications/channel-setup/${kind}`;
+  const checkoutPath = `/notifications/${kind}`;
 
   if (!channel) {
     return {
@@ -41,7 +41,7 @@ export function getDirectChannelRowStatus(
       label: "Управлять",
       iconName: "Setting_alt_fill",
       color: colors.neutral[900],
-      webPath: `${checkoutPath}/success`,
+      webPath: `${checkoutPath}`,
     };
   }
   if (channel.status === "pending") {
@@ -67,7 +67,7 @@ export function getDirectChannelRowStatus(
       label: "Ожидает привязки",
       iconName: "Time_fill",
       color: colors.accent.orange[500],
-      webPath: `${checkoutPath}/verify-phone`,
+      webPath: `${checkoutPath}`,
     };
   }
   // paid и т.п., канал поднимается на стороне бэка (none → … → connecting)
@@ -75,6 +75,6 @@ export function getDirectChannelRowStatus(
     label: "Настраиваем канал…",
     iconName: "Setting_alt_fill",
     color: colors.accent.orange[500],
-    webPath: `${checkoutPath}/provisioning`,
+    webPath: `${checkoutPath}`,
   };
 }

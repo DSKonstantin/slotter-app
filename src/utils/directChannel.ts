@@ -3,5 +3,7 @@ import type { SubscriptionDirectChannel } from "@/src/store/redux/services/api-t
 export function isDirectChannelActive(
   channel: Pick<SubscriptionDirectChannel, "status" | "provisioning_status">,
 ) {
-  return channel.status === "active" && channel.provisioning_status === "active";
+  return (
+    channel.status === "active" && channel.provisioning_status === "active"
+  );
 }
