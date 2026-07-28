@@ -208,7 +208,11 @@ const DayScheduleEdit = ({
   );
 };
 
-const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
+type CalendarDayScheduleProps = {
+  workingDayId: number;
+};
+
+const CalendarDaySchedule = ({ workingDayId }: CalendarDayScheduleProps) => {
   const auth = useRequiredAuth();
 
   const {

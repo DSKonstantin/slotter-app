@@ -37,7 +37,7 @@ function CurrentAndNextComponent({ current, appointments }: Props) {
           title="запись"
           variant="secondary"
           buttonClassName="gap-0 rounded-lg bg-background"
-          onPress={() => router.push(Routers.app.calendar.slot(current.id))}
+          onPress={() => router.push(Routers.app.slot(current.id))}
           rightIcon={
             <StSvg name="Expand_right" size={16} color={colors.neutral[700]} />
           }

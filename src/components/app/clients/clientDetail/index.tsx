@@ -347,7 +347,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   }
                   onPress={() =>
                     userCustomer &&
-                    router.push(Routers.app.clients.history(userCustomer.id))
+                    router.push(Routers.app.client.history(userCustomer.id))
                   }
                 />
                 <HomeCard

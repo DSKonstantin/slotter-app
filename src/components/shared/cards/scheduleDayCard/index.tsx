@@ -62,7 +62,6 @@ const ScheduleDayCard = ({
           <StSvg name="Done_round" size={24} color={colors.neutral["900"]} />
         </View>
       ) : (
-        isWorking &&
         start && (
           <View>
             <Typography

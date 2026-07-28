@@ -5,7 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";
 import {
@@ -54,6 +55,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import type { Service } from "@/src/store/redux/services/api-types";
+import { Routers } from "@/src/constants/routers";
 
 type Props = { roomId: string };
 
@@ -124,10 +126,20 @@ export default function ChatRoom({ roomId }: Props) {
     [currentUser],
   );
 
+  const handleOpenInterlocutor = useCallback(() => {
+    if (!interlocutor || interlocutor.type !== "Customer") return;
+    router.push(Routers.app.client.detail(interlocutor.id, "customer"));
+  }, [interlocutor]);
+
   const titleNode = useMemo(
     () =>
       interlocutor ? (
-        <View className="flex-row items-center gap-2 max-w-full">
+        <Pressable
+          className="flex-row items-center gap-2 max-w-full active:opacity-70"
+          onPress={handleOpenInterlocutor}
+          disabled={interlocutor.type !== "Customer"}
+          hitSlop={8}
+        >
           <Avatar
             name={interlocutor.name}
             uri={interlocutor.avatar_url ?? undefined}
@@ -141,9 +153,9 @@ export default function ChatRoom({ roomId }: Props) {
           >
             {interlocutor.name}
           </Typography>
-        </View>
+        </Pressable>
       ) : undefined,
-    [interlocutor],
+    [interlocutor, handleOpenInterlocutor],
   );
 
   const makeUser = useCallback(

@@ -32,6 +32,7 @@ const calendarDaySchema = Yup.object()
     date: Yup.string().required(),
     workingDayId: Yup.number().optional(),
     isExisting: Yup.boolean().required().default(false),
+    isActive: Yup.boolean().required().default(true),
     isSelected: Yup.boolean().required().default(false),
     startAt: Yup.string().when(["isSelected", "isExisting"], {
       is: (isSelected: boolean, isExisting: boolean) =>
@@ -51,6 +52,7 @@ const calendarDaySchema = Yup.object()
     date: "",
     workingDayId: undefined,
     isExisting: false,
+    isActive: true,
     isSelected: false,
     ...EMPTY_WORKING_HOURS,
   });

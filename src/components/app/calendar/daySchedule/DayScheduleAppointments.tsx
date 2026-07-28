@@ -76,7 +76,7 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
             onPress={() =>
               isQuotaHidden
                 ? setSlotLimitVisible(true)
-                : router.push(Routers.app.calendar.slot(appointment.id))
+                : router.push(Routers.app.slot(appointment.id))
             }
           />
         );

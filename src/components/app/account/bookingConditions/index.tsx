@@ -3,17 +3,15 @@ import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  AccountAboutSchema,
-  type AccountAboutFormValues,
-} from "@/src/validation/schemas/accountAbout.schema";
+  AccountBookingConditionsSchema,
+  type AccountBookingConditionsFormValues,
+} from "@/src/validation/schemas/accountBookingConditions.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, Item, StSvg, Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import RHFSwitch from "@/src/components/hookForm/rhf-switch";
-import { AddressField } from "@/src/components/shared/addressField";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -21,45 +19,34 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
-import { NicknameField } from "@/src/components/onboarding/personalInformation/NicknameField";
 
-const AboutSpecialist = () => {
+const TIPS = [
+  "Опиши конкретные правила: сроки отмены, что происходит при опоздании или болезни",
+  "Клиент читает это один раз перед первой записью — коротко и по делу, без лишних слов",
+  "Это не про тебя, а про порядок, советуем избегать общих фраз и писать как памятку",
+];
+
+const BookingConditions = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
 
-  const methods = useForm<AccountAboutFormValues>({
-    resolver: yupResolver(AccountAboutSchema),
+  const methods = useForm<AccountBookingConditionsFormValues>({
+    resolver: yupResolver(AccountBookingConditionsSchema),
     defaultValues: {
-      nickname: user?.nickname ?? "",
-      aboutMe: user?.about_me ?? "",
       appointmentConditions: user?.appointment_conditions ?? "",
-      tags: [],
-      address: user?.address ?? "",
-      hideAddress: false,
-      atHome: user?.is_home_work ?? false,
-      online: user?.is_online_work ?? false,
-      onRoad: user?.is_out_call ?? false,
     },
   });
 
   useFormNavigationGuard(methods.formState.isDirty);
 
   const onSubmit = useCallback(
-    async (data: AccountAboutFormValues) => {
+    async (data: AccountBookingConditionsFormValues) => {
       if (!auth) return;
       try {
         await updateUser({
           id: auth.userId,
-          data: {
-            nickname: data.nickname,
-            about_me: data.aboutMe,
-            appointment_conditions: data.appointmentConditions,
-            address: data.address,
-            is_home_work: data.atHome,
-            is_online_work: data.online,
-            is_out_call: data.onRoad,
-          },
+          data: { appointment_conditions: data.appointmentConditions },
         }).unwrap();
         methods.reset(data);
         router.back();
@@ -74,7 +61,7 @@ const AboutSpecialist = () => {
 
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar title="О специалисте">
+      <ScreenWithToolbar title="Условия записи">
         {({ topInset, bottomInset }) => (
           <>
             <KeyboardAwareScrollView
@@ -87,41 +74,32 @@ const AboutSpecialist = () => {
             >
               <View className="px-screen gap-4">
                 <RhfTextField
-                  name="aboutMe"
-                  label="О себе"
-                  placeholder="Расскажите о себе и своём опыте"
-                  multiline
-                  hideErrorText
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-                <RhfTextField
                   name="appointmentConditions"
-                  label="Условия записи"
                   placeholder="Опишите условия записи"
                   multiline
                   hideErrorText
                   numberOfLines={4}
                   textAlignVertical="top"
                 />
-                <View>
-                  <Typography className="text-neutral-500 text-caption mb-2">
-                    Виды работы
-                  </Typography>
-                  <View className="gap-2">
-                    <Item
-                      title="Дома / в студии"
-                      right={<RHFSwitch name="atHome" />}
-                    />
-                    <Item title="Онлайн" right={<RHFSwitch name="online" />} />
-                    <Item
-                      title="На выезд"
-                      right={<RHFSwitch name="onRoad" />}
-                    />
-                  </View>
+
+                <View className="gap-2">
+                  {TIPS.map((tip) => (
+                    <View key={tip} className="flex-row gap-2">
+                      <Typography
+                        weight="regular"
+                        className="text-caption text-neutral-500"
+                      >
+                        •
+                      </Typography>
+                      <Typography
+                        weight="regular"
+                        className="flex-1 text-caption text-neutral-500"
+                      >
+                        {tip}
+                      </Typography>
+                    </View>
+                  ))}
                 </View>
-                <NicknameField />
-                <AddressField />
               </View>
             </KeyboardAwareScrollView>
 
@@ -146,4 +124,4 @@ const AboutSpecialist = () => {
   );
 };
 
-export default AboutSpecialist;
+export default BookingConditions;

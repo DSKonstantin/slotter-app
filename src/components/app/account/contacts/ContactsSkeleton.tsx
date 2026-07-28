@@ -19,7 +19,7 @@ type Props = {
   topInset?: number;
 };
 
-const LinksSkeleton = ({ topInset = 0 }: Props) => {
+const ContactsSkeleton = ({ topInset = 0 }: Props) => {
   const { width } = useWindowDimensions();
 
   const w = width - SCREEN_PADDING * 2;
@@ -124,4 +124,4 @@ const LinksSkeleton = ({ topInset = 0 }: Props) => {
   );
 };
 
-export default LinksSkeleton;
+export default ContactsSkeleton;

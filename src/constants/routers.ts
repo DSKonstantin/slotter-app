@@ -14,9 +14,6 @@ export const Routers = {
   onboarding: {
     root: "/(onboarding)",
     register: "/(onboarding)/register",
-    experience: "/(onboarding)/experience",
-    database: "/(onboarding)/database",
-    databaseSuccess: "/(onboarding)/database-success",
     personalInformation: "/(onboarding)/personal-information",
     service: "/(onboarding)/service",
     schedule: "/(onboarding)/schedule",
@@ -45,31 +42,51 @@ export const Routers = {
             ...(extra?.duplicateFrom && { duplicateFrom: extra.duplicateFrom }),
           },
         }) as const,
-      daySchedule: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/day-schedule/[id]",
-          params: { id: String(id) },
-        }) as const,
-      dayScheduleCreate: (date: string) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/day-schedule/create",
-          params: { date },
-        }) as const,
-      slot: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/calendar/slot/[id]",
-          params: { id: String(id) },
-        }) as const,
-      clientDetail: (
+    },
+    // Экраны ниже когда-то жили внутри отдельных табов и дублировались на
+    // каждый таб, из которого до них можно дойти (карточка клиента, история,
+    // запись, день расписания) — из-за этого кнопка "назад" ломалась при
+    // переходе из "чужого" таба (см. docs/navigation-back-button-audit.md).
+    // Теперь это единые роуты вне табов, как chat/[id].
+    client: {
+      detail: (
         id: string | number,
         kind: "customer" | "userCustomer" = "userCustomer",
       ) =>
         ({
-          pathname: "/(app)/(tabs)/calendar/client/[id]",
+          pathname: "/(app)/client/[id]",
           params: {
             id: String(id),
             ...(kind === "customer" && { kind: "customer" as const }),
           },
+        }) as const,
+      history: (
+        id: string | number,
+        kind: "customer" | "userCustomer" = "userCustomer",
+      ) =>
+        ({
+          pathname: "/(app)/client/[id]/history",
+          params: {
+            id: String(id),
+            ...(kind === "customer" && { kind: "customer" as const }),
+          },
+        }) as const,
+    },
+    slot: (id: string | number) =>
+      ({
+        pathname: "/(app)/slot/[id]",
+        params: { id: String(id) },
+      }) as const,
+    daySchedule: {
+      edit: (id: string | number) =>
+        ({
+          pathname: "/(app)/day-schedule/[id]",
+          params: { id: String(id) },
+        }) as const,
+      create: (date: string) =>
+        ({
+          pathname: "/(app)/day-schedule/create",
+          params: { date },
         }) as const,
     },
     createSlotFlow: {
@@ -98,47 +115,18 @@ export const Routers = {
           pathname: "/(app)/chat/[id]",
           params: { id: String(id) },
         }) as const,
-      clientHistory: (customerId: string | number) =>
-        ({
-          pathname: "/(app)/chat/client-history/[id]",
-          params: { id: String(customerId) },
-        }) as const,
     },
     clients: {
       root: "/(app)/(tabs)/clients",
       create: "/(app)/(tabs)/clients/create" as const,
       statistics: "/(app)/(tabs)/clients/statistics" as const,
-      detail: (
-        id: string | number,
-        kind: "customer" | "userCustomer" = "userCustomer",
-      ) =>
-        ({
-          pathname: "/(app)/(tabs)/clients/[id]",
-          params: {
-            id: String(id),
-            ...(kind === "customer" && { kind: "customer" as const }),
-          },
-        }) as const,
-      history: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/clients/[id]/history",
-          params: { id: String(id) },
-        }) as const,
-      slot: (clientId: string | number, slotId: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/clients/[id]/slot/[slotId]",
-          params: { id: String(clientId), slotId: String(slotId) },
-        }) as const,
     },
 
-    schedule: "/(app)/(tabs)/schedule",
+    schedule: {
+      root: "/(app)/(tabs)/schedule" as const,
+    },
     history: {
       root: "/(app)/(tabs)/history" as const,
-      slot: (id: string | number) =>
-        ({
-          pathname: "/(app)/(tabs)/history/slot/[id]",
-          params: { id },
-        }) as const,
     },
     finances: {
       root: "/(app)/(tabs)/finances",
@@ -182,9 +170,12 @@ export const Routers = {
       root: "/(app)/(tabs)/account" as const,
       personalInformation:
         "/(app)/(tabs)/account/personal-information" as const,
-      about: "/(app)/(tabs)/account/about" as const,
-      links: "/(app)/(tabs)/account/links" as const,
+      profileSettings: "/(app)/(tabs)/account/profile-settings" as const,
+      aboutMe: "/(app)/(tabs)/account/profile-settings/about-me" as const,
+      contacts: "/(app)/(tabs)/account/contacts" as const,
       booking: "/(app)/(tabs)/account/booking" as const,
+      bookingConditions:
+        "/(app)/(tabs)/account/booking/booking-conditions" as const,
       notifications: "/(app)/(tabs)/account/notifications" as const,
       security: {
         root: "/(app)/(tabs)/account/security" as const,
@@ -205,7 +196,6 @@ export const Routers = {
           "/(app)/(tabs)/account/client-notifications/reschedule" as const,
       },
       support: "/(app)/(tabs)/account/support" as const,
-      subscription: "/(app)/(tabs)/account/subscription" as const,
     },
   },
 } as const;

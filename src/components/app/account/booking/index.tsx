@@ -6,9 +6,11 @@ import {
   AccountBookingSchema,
   type AccountBookingFormValues,
 } from "@/src/validation/schemas/accountBooking.schema";
+import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Item, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { Routers } from "@/src/constants/routers";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import type { AppointmentStep } from "@/src/store/redux/services/api-types";
@@ -100,11 +102,22 @@ const Booking = () => {
 
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar title="Бронирование">
+      <ScreenWithToolbar title="Онлайн запись">
         {({ topInset }) => (
-          <View style={{ paddingTop: topInset }} className="px-screen">
+          <View style={{ paddingTop: topInset }} className="px-screen gap-2">
             <BookingStepField
               onSelect={() => methods.handleSubmit(onSubmit)()}
+            />
+            <Item
+              title="Условия записи"
+              right={
+                <StSvg
+                  name="Expand_right"
+                  size={20}
+                  color={colors.neutral[400]}
+                />
+              }
+              onPress={() => router.push(Routers.app.account.bookingConditions)}
             />
           </View>
         )}

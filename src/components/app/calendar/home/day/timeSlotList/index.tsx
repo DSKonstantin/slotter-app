@@ -191,7 +191,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       setSlotLimitVisible(true);
       return;
     }
-    router.push(Routers.app.calendar.slot(slot.id));
+    router.push(Routers.app.slot(slot.id));
   }, []);
 
   const handleToggleExpand = useCallback((id: number) => {

@@ -16,10 +16,9 @@ export default function AppLayout() {
           name="chat/[id]"
           options={{ presentation: "card", animation: "slide_from_right" }}
         />
-        <Stack.Screen
-          name="chat/client-history/[id]"
-          options={{ presentation: "card", animation: "slide_from_right" }}
-        />
+        <Stack.Screen name="client/[id]" />
+        <Stack.Screen name="slot/[id]" />
+        <Stack.Screen name="day-schedule" />
         <Stack.Screen name="create-slot-flow" />
         <Stack.Screen name="create-client" />
       </Stack>

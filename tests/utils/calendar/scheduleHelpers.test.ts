@@ -29,6 +29,7 @@ describe("createEmptyCalendarDay", () => {
       date: "2026-07-05",
       workingDayId: undefined,
       isExisting: false,
+      isActive: true,
       isSelected: false,
       startAt: "",
       endAt: "",
@@ -54,6 +55,7 @@ describe("createExistingCalendarDay", () => {
       date: "2026-07-05",
       workingDayId: 1,
       isExisting: true,
+      isActive: true,
       isSelected: false,
       startAt: "09:00",
       endAt: "18:00",
@@ -65,6 +67,13 @@ describe("createExistingCalendarDay", () => {
     const workingDay = buildWorkingDay({ working_day_breaks: undefined });
     expect(createExistingCalendarDay("2026-07-05", workingDay).breaks).toEqual(
       [],
+    );
+  });
+
+  it("carries is_active: false through to isActive", () => {
+    const workingDay = buildWorkingDay({ is_active: false });
+    expect(createExistingCalendarDay("2026-07-05", workingDay).isActive).toBe(
+      false,
     );
   });
 });
@@ -95,6 +104,20 @@ describe("buildFormValues", () => {
     expect(existingDay?.isExisting).toBe(true);
     expect(existingDay?.workingDayId).toBe(1);
     expect(emptyDay?.isExisting).toBe(false);
+  });
+
+  it("keeps isExisting true but isActive false for a manually disabled day", () => {
+    const workingDay = buildWorkingDay({
+      day: "2026-07-05",
+      is_active: false,
+    });
+    const result = buildFormValues(new Date(2026, 6, 1), {
+      "2026-07-05": workingDay,
+    });
+
+    const day = result.calendarDays.find((d) => d.date === "2026-07-05");
+    expect(day?.isExisting).toBe(true);
+    expect(day?.isActive).toBe(false);
   });
 
   it("treats a null entry in workingDaysData as no working day", () => {

@@ -6,7 +6,6 @@ export default function ClientDetailLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="history" />
-      <Stack.Screen name="slot/[slotId]" />
     </Stack>
   );
 }

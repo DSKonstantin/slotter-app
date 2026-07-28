@@ -10,6 +10,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, Divider, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { AddressField } from "@/src/components/shared/addressField";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
@@ -19,18 +20,23 @@ import {
   useGetUserLinksQuery,
   useUpdateUserLinkMutation,
 } from "@/src/store/redux/services/api/userLinksApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
+import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import map from "lodash/map";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useRefresh } from "@/src/hooks/useRefresh";
-import LinksSkeleton from "@/src/components/app/account/links/LinksSkeleton";
+import ContactsSkeleton from "@/src/components/app/account/contacts/ContactsSkeleton";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { router } from "expo-router";
 
-const Links = () => {
+const Contacts = () => {
   const auth = useRequiredAuth();
+  const user = useAppSelector((s) => s.auth.user);
+
+  const [updateUser] = useUpdateUserMutation();
 
   const {
     data: userLinks = [],
@@ -50,13 +56,9 @@ const Links = () => {
   const methods = useForm<AccountLinksFormValues>({
     resolver: yupResolver(AccountLinksSchema),
     defaultValues: {
-      links: [
-        {
-          id: undefined,
-          title: "",
-          url: "",
-        },
-      ],
+      address: user?.address ?? "",
+      hideAddress: false,
+      links: [],
     },
   });
 
@@ -107,15 +109,6 @@ const Links = () => {
                 }).unwrap();
               }
 
-              if (fields.length === 1) {
-                methods.setValue(`links.${index}`, {
-                  id: undefined,
-                  title: "",
-                  url: "",
-                });
-
-                return;
-              }
               remove(index);
               methods.reset(methods.getValues());
             } catch (error) {
@@ -134,8 +127,12 @@ const Links = () => {
     if (!auth) return;
 
     try {
-      await Promise.all(
-        map(data.links, async (link, index) => {
+      await Promise.all([
+        updateUser({
+          id: auth.userId,
+          data: { address: data.address },
+        }).unwrap(),
+        ...map(data.links, async (link, index) => {
           const isDirty = dirtyLinks[index];
 
           if (link.id && !isDirty) {
@@ -164,7 +161,7 @@ const Links = () => {
             },
           });
         }),
-      );
+      ]);
       methods.reset(data);
       router.back();
     } catch (error) {
@@ -176,6 +173,7 @@ const Links = () => {
     if (!userLinks.length) return;
 
     methods.reset({
+      ...methods.getValues(),
       links: userLinks.map((link) => ({
         id: link.id,
         title: link.name,
@@ -188,10 +186,10 @@ const Links = () => {
 
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar title="Ссылки">
+      <ScreenWithToolbar title="Контакты">
         {({ topInset, bottomInset }) => {
           if (isLoading) {
-            return <LinksSkeleton topInset={topInset} />;
+            return <ContactsSkeleton topInset={topInset} />;
           }
           if (error) {
             return (
@@ -226,6 +224,8 @@ const Links = () => {
                 }}
               >
                 <View className="px-screen gap-2">
+                  <AddressField />
+
                   {fields.map((field, index) => (
                     <View key={field.id} className="gap-1">
                       <RhfTextField
@@ -271,7 +271,11 @@ const Links = () => {
 
                   <Button
                     variant="clear"
-                    title="Добавить"
+                    title={
+                      fields.length === 0
+                        ? "Добавить ссылку на соцсети или сайт"
+                        : "Добавить новую ссылку"
+                    }
                     onPress={() =>
                       append({
                         title: "",
@@ -280,8 +284,8 @@ const Links = () => {
                     }
                     rightIcon={
                       <StSvg
-                        name="Add_ring_fill"
-                        size={22}
+                        name="Add_round_fill"
+                        size={24}
                         color={colors.neutral[900]}
                       />
                     }
@@ -315,4 +319,4 @@ const Links = () => {
   );
 };
 
-export default Links;
+export default Contacts;

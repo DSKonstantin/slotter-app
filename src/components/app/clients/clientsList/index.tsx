@@ -94,7 +94,7 @@ const ClientRow = React.memo(function ClientRow({
           color={colors.neutral[500]}
         />
       }
-      onPress={() => router.push(Routers.app.clients.detail(item.id))}
+      onPress={() => router.push(Routers.app.client.detail(item.id))}
     />
   );
 });

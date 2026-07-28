@@ -61,7 +61,7 @@ function InitialLayout() {
       kind?.startsWith("rebook_") ||
       kind === "review_request"
     ) {
-      if (subject_id) router.push(Routers.app.calendar.slot(subject_id));
+      if (subject_id) router.push(Routers.app.slot(subject_id));
     } else if (kind === "chat_new_activity") {
       if (subject_id) router.push(Routers.app.chat.room(subject_id));
     } else {

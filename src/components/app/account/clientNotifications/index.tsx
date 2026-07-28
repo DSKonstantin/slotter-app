@@ -236,11 +236,8 @@ const ClientNotifications = () => {
           c.kind === config.kind &&
           !INACTIVE_DIRECT_CHANNEL_STATUSES.has(c.status),
       );
-      // был ли канал раньше (cancelled/expired) — для «Подключить заново»
-      const hadChannel =
-        !existing && existingChannels.some((c) => c.kind === config.kind);
 
-      return { channel, config, plan, existing, hadChannel };
+      return { channel, config, plan, existing };
     });
   }, [directPlansData, directChannelsData]);
 
@@ -480,10 +477,9 @@ const ClientNotifications = () => {
                     />
                   ) : (
                     directChannelRows.map(
-                      ({ channel, config, plan, existing, hadChannel }, i) => {
+                      ({ channel, config, plan, existing }, i) => {
                         const status = getDirectChannelRowStatus(
                           existing,
-                          hadChannel,
                           config.kind,
                         );
                         return (

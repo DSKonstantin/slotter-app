@@ -186,7 +186,7 @@ const HistoryScreen = () => {
       }
       if (!notification.subject) return;
       if (isAppointmentSubject(notification.subject)) {
-        router.push(Routers.app.history.slot(notification.subject.id));
+        router.push(Routers.app.slot(notification.subject.id));
       } else {
         router.push(Routers.app.chat.room(notification.subject.id));
       }
@@ -207,6 +207,7 @@ const HistoryScreen = () => {
 
   return (
     <ScreenWithToolbar
+      showBack={false}
       title={
         <View className="items-center">
           <Typography

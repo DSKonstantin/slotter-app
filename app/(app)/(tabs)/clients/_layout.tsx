@@ -7,7 +7,6 @@ export default function ClientsLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="create" />
       <Stack.Screen name="statistics" />
-      <Stack.Screen name="[id]" />
     </Stack>
   );
 }

@@ -25,7 +25,7 @@ const BreakBlock: React.FC<Props> = ({ breakItem, workingDayId }) => {
       className={`flex-1 rounded-base bg-background-surface overflow-hidden px-4 flex-row items-center justify-between`}
       onPress={() =>
         workingDayId &&
-        router.push(Routers.app.calendar.daySchedule(workingDayId))
+        router.push(Routers.app.daySchedule.edit(workingDayId))
       }
     >
       <Typography className={`text-body text-neutral-900`} numberOfLines={1}>

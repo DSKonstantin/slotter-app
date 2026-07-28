@@ -42,12 +42,15 @@ export const useCalendarActions = ({
     const currentCalendarDays = getValues("calendarDays") ?? [];
     const nextCalendarDays = currentCalendarDays.map(clearSelectedDay);
 
-    if (!areSameCalendarDays(currentCalendarDays, nextCalendarDays)) {
-      setValue("calendarDays", nextCalendarDays);
-    }
-    setValue("mode", "bulk");
-    setValue("commonDraft", { startAt: "", endAt: "", breaks: [] });
-  }, [getValues, setValue]);
+    // reset(), а не setValue: setValue({shouldDirty: false}) не снимает уже
+    // выставленный ранее (toggleDay) dirty-флаг, только не добавляет новый —
+    // после закрытия модалки isDirty оставался true без реальных изменений
+    reset({
+      mode: "bulk",
+      commonDraft: { startAt: "", endAt: "", breaks: [] },
+      calendarDays: nextCalendarDays,
+    });
+  }, [getValues, reset]);
 
   const toggleDay = useCallback(
     (dateKey: string) => {

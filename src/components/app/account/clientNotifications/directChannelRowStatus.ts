@@ -18,18 +18,15 @@ export type DirectChannelRowStatus = {
 // Правый лейбл строки канала и переход на веб по паре
 // status/provisioning_status — та же таблица статусов, что в personal-account
 // (PAID_NOTIFICATIONS §9.3).
-// cancelled/expired отфильтрованы из existing, но помечаются hadChannel —
-// для них лейбл «Подключить заново».
 export function getDirectChannelRowStatus(
   channel: SubscriptionDirectChannel | undefined,
-  hadChannel: boolean,
   kind: DirectChannelKind,
 ): DirectChannelRowStatus {
   const checkoutPath = `/notifications/${kind}`;
 
   if (!channel) {
     return {
-      label: hadChannel ? "Подключить заново" : "Подключить",
+      label: "Подключить",
       iconName: "Add_round",
       color: colors.primary.blue[500],
       webPath: checkoutPath,

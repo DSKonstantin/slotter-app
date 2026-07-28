@@ -337,10 +337,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                         const customerId = slot.customer?.id;
                         if (customerId == null) return;
                         router.push(
-                          Routers.app.calendar.clientDetail(
-                            customerId,
-                            "customer",
-                          ),
+                          Routers.app.client.detail(customerId, "customer"),
                         );
                       }}
                       left={
