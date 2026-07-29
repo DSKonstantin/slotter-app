@@ -6,18 +6,10 @@ type Props = {
   label: string;
   icon?: string;
   active?: boolean;
-  // Красная точка-индикатор поверх иконки (см. "График" на
-  // assets/images/history/training/three.webp).
   hasDot?: boolean;
-  // Оверрайд цвета текста (className), по умолчанию — от active.
   textClassName?: string;
 };
 
-// Пилюля-иконка+текст: активная (акцентный зелёный фон, чёрный semibold
-// текст) или неактивная (блёклый серый фон и текст). Общий строительный
-// блок для StoryAppTabsBar (ряд вкладок) и одиночных бейджей поверх фото —
-// self-start встроен сюда, чтобы пилюля не растягивалась на всю ширину
-// родителя-колонки (в flex-row вкладок он ни на что не влияет).
 export const StoryPill = ({
   label,
   icon,

@@ -2,7 +2,7 @@ import { isBirthdayToday } from "@/src/utils/date/isBirthdayToday";
 
 describe("isBirthdayToday", () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date(2026, 6, 22)); // 2026-07-22
+    jest.useFakeTimers().setSystemTime(new Date(2026, 6, 22));
   });
 
   afterEach(() => {
@@ -20,7 +20,7 @@ describe("isBirthdayToday", () => {
   });
 
   it("handles the year-boundary case (Dec 31 vs Jan 1) correctly", () => {
-    jest.setSystemTime(new Date(2026, 0, 1)); // Jan 1
+    jest.setSystemTime(new Date(2026, 0, 1));
     expect(isBirthdayToday("1990-01-01")).toBe(true);
     expect(isBirthdayToday("1990-12-31")).toBe(false);
   });

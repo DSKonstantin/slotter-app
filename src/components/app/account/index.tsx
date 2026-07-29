@@ -61,8 +61,6 @@ const AccountScreen = () => {
   if (!auth) return null;
 
   const handleUpgrade = () => {
-    // в кабинете можно продлить/отменить подписку —
-    // на возврате освежить pro_access/membership
     runOnNextForeground(() =>
       getSubscriptionMembership({ userId: auth.userId }),
     );

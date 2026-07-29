@@ -56,8 +56,6 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
         Записи на этот день
       </Typography>
       {appointments.map((appointment) => {
-        // квотная маскировка: данные под звёздочками, тап — модалка оплаты
-        // PRO вместо перехода в детали (как в календаре дня)
         const isQuotaHidden = isHiddenCustomer(appointment.customer);
         return (
           <AppointmentCard

@@ -147,7 +147,6 @@ const ServiceList = ({
 
       const { service, categoryId: sourceCategoryId } = movedItem;
 
-      // Nearest category header at or above the drop position
       const catIndex = data
         .slice(0, to + 1)
         .findLastIndex((item) => item.type === "category");
@@ -157,7 +156,6 @@ const ServiceList = ({
       }
       const targetCategoryId = (data[catIndex] as FlatCategoryItem).category.id;
 
-      // Services between this category header and the next one (or end of list)
       const nextCatOffset = data
         .slice(catIndex + 1)
         .findIndex((item) => item.type === "category");
@@ -182,7 +180,6 @@ const ServiceList = ({
         return;
       }
 
-      // Cross-category move
       try {
         await updateService({
           categoryId: sourceCategoryId,

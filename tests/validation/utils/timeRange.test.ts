@@ -26,8 +26,8 @@ describe("isEndAfterStart", () => {
 
 describe("overlapsOther", () => {
   const a = { start: "09:00", end: "10:00" };
-  const b = { start: "09:30", end: "10:30" }; // overlaps a
-  const c = { start: "10:00", end: "11:00" }; // back-to-back with a, no overlap
+  const b = { start: "09:30", end: "10:30" };
+  const c = { start: "10:00", end: "11:00" };
 
   it("detects an overlapping range in the list", () => {
     expect(overlapsOther(a, [a, b])).toBe(true);
@@ -38,7 +38,6 @@ describe("overlapsOther", () => {
   });
 
   it("excludes the current item from the comparison by reference", () => {
-    // only `a` in the list, and it *is* current — nothing to compare against
     expect(overlapsOther(a, [a])).toBe(false);
   });
 

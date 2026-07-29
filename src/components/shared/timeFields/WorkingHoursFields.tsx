@@ -21,7 +21,6 @@ type Props = {
   endDefault?: Date;
   breakStartDefault?: Date;
   breakEndDefault?: Date;
-  /** Custom node rendered between TimeFields and BreaksFieldArray (e.g. helper text). */
   middleSlot?: ReactNode;
   spacing?: Spacing;
 };

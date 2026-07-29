@@ -5,7 +5,6 @@ type UseResolutionResult = {
   isLoading: boolean;
 };
 
-// Metro resolves .ios.ts / .android.ts at runtime; this file is used by TypeScript only.
 export function useResolution(uri: string): UseResolutionResult {
   const { size, isLoading } = useImageSize(uri);
   return {

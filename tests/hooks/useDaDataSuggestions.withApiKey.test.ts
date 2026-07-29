@@ -1,10 +1,5 @@
 import { renderHook, waitFor, act } from "@testing-library/react-native";
 
-// ES `import`s are hoisted above plain statements by the transpiler, so
-// setting process.env before a static `import` of the hook would still run
-// too late — the hook reads EXPO_PUBLIC_DADATA_API_KEY once, at its own
-// import time. A plain `require()` call is not hoisted, so setting the env
-// var immediately before it here actually runs first.
 process.env.EXPO_PUBLIC_DADATA_API_KEY = "test-key";
 const { useDaDataSuggestions } =
   require("@/src/hooks/useDaDataSuggestions") as typeof import("@/src/hooks/useDaDataSuggestions");

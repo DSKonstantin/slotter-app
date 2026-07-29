@@ -58,7 +58,6 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        {/* ClientInfoCard */}
         <Rect
           x={0}
           y={infoY}
@@ -97,7 +96,6 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
           height={12}
         />
 
-        {/* "Написать" card */}
         <Rect
           x={0}
           y={chatY}
@@ -131,7 +129,6 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
           height={12}
         />
 
-        {/* Home cards row 1 */}
         <Rect
           x={0}
           y={homeRow1Y}
@@ -149,7 +146,6 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
           height={HOMECARD_HEIGHT}
         />
 
-        {/* Home cards row 2 */}
         <Rect
           x={0}
           y={homeRow2Y}
@@ -167,7 +163,6 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
           height={HOMECARD_HEIGHT}
         />
 
-        {/* Notes label */}
         <Rect
           x={0}
           y={notesLabelY}
@@ -177,7 +172,6 @@ const ClientDetailSkeleton = ({ topInset = 0, bottomInset = 0 }: Props) => {
           height={NOTES_LABEL_HEIGHT}
         />
 
-        {/* Notes input */}
         <Rect
           x={0}
           y={notesInputY}

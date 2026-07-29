@@ -2,8 +2,6 @@ import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import type { api } from "../../api";
 import type { ServiceCategoryPositionPayload } from "@/src/store/redux/services/api-types";
 
-// ── Type guards ──────────────────────────────────────────────────────
-
 type UserIdArg = {
   userId: number;
   params?: Record<string, string | number | boolean>;
@@ -17,8 +15,6 @@ export const isUserIdArg = (value: unknown): value is UserIdArg => {
   );
 };
 
-// ── Response helpers ─────────────────────────────────────────────────
-
 export const unwrapResponse =
   <T>(key: string) =>
   (response: unknown): T => {
@@ -27,8 +23,6 @@ export const unwrapResponse =
     }
     return response as T;
   };
-
-// ── Position / reorder helpers ───────────────────────────────────────
 
 export const buildPositionMap = (positions: ServiceCategoryPositionPayload[]) =>
   new Map(positions.map(({ id, position }) => [id, position]));
@@ -67,8 +61,6 @@ export const reorderPaginatedPages = <
   });
 };
 
-// ── Optimistic update helpers ────────────────────────────────────────
-
 export const applyWithRollback = async (
   patches: { undo: () => void }[],
   queryFulfilled: Promise<unknown>,
@@ -85,11 +77,6 @@ type ApiState = Parameters<ApiInstance["util"]["selectInvalidatedBy"]>[0];
 type ApiTag = Parameters<ApiInstance["util"]["selectInvalidatedBy"]>[1][number];
 type Dispatch = ThunkDispatch<unknown, unknown, UnknownAction>;
 
-/**
- * Find all cached queries matching a tag + endpoint filter,
- * then apply an optimistic update to each.
- * Returns patches array for use with applyWithRollback.
- */
 export const patchMatchingCaches = <EndpointName extends string, Draft>(
   apiInstance: ApiInstance,
   getState: () => unknown,

@@ -42,9 +42,6 @@ export const useCalendarActions = ({
     const currentCalendarDays = getValues("calendarDays") ?? [];
     const nextCalendarDays = currentCalendarDays.map(clearSelectedDay);
 
-    // reset(), а не setValue: setValue({shouldDirty: false}) не снимает уже
-    // выставленный ранее (toggleDay) dirty-флаг, только не добавляет новый —
-    // после закрытия модалки isDirty оставался true без реальных изменений
     reset({
       mode: "bulk",
       commonDraft: { startAt: "", endAt: "", breaks: [] },
@@ -147,7 +144,6 @@ export const useCalendarActions = ({
     [getValues, setValue],
   );
 
-  // Sync commonDraft → calendarDays in bulk mode
   useEffect(() => {
     if (watchedMode !== "bulk") return;
 

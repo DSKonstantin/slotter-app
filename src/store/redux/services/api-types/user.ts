@@ -1,4 +1,3 @@
-// src/store/redux/services/api-types/user.ts
 import type { GalleryPhoto } from "./galleryPhoto";
 import type { SubscriptionMembership } from "./subscription";
 
@@ -39,8 +38,6 @@ export interface User {
   is_notify_customer_cancel: boolean;
   is_notify_reminders: boolean;
   gallery_photos: GalleryPhoto[];
-  // только у view :auth_show ("me"-эндпоинт) — login/reset-password/otp/telegram-auth
-  // отдают User без этого поля.
   subscription_membership?: SubscriptionMembership;
 }
 
@@ -63,7 +60,6 @@ export interface SendCodeResponse {
   poll_interval: number;
 }
 
-// reset_password always returns 200 — discriminate by status
 export interface ResetPasswordAuthorizedResponse {
   status: "authorized";
   token: string;
@@ -85,7 +81,6 @@ export type ResetPasswordResponse =
   | ResetPasswordWrongCodeResponse
   | ResetPasswordOtherResponse;
 
-// confirm_code always returns 200 — discriminate by status
 export interface ConfirmCodeAuthorizedResponse {
   status: "authorized";
   token: string;
@@ -110,7 +105,6 @@ export type ConfirmCodeResponse =
   | ConfirmCodeWrongCodeResponse
   | ConfirmCodeOtherResponse;
 
-// telegram_intents
 export interface TelegramIntentResponse {
   url: string;
   code: string;
@@ -118,7 +112,6 @@ export interface TelegramIntentResponse {
   poll_interval: number;
 }
 
-// telegram_sessions — always 200, discriminate by status
 export interface TelegramSessionAuthorizedResponse {
   status: "authorized";
   token: string;

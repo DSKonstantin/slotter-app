@@ -16,7 +16,6 @@ import {
 
 type AuthScreenLayoutProps = {
   header?: ReactNode;
-  /** Rendered below the header; hides on scroll down, shows on scroll up. */
   collapsibleHeader?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -42,8 +41,6 @@ export function AuthScreenLayout({
   contentRef,
 }: AuthScreenLayoutProps) {
   const { bottom } = useSafeAreaInsets();
-  // Animated.ScrollView is required for useAnimatedScrollHandler to receive
-  // events on the UI thread; KeyboardAwareScrollView renders one internally.
   const ScrollWrapper = avoidKeyboard
     ? KeyboardAwareScrollView
     : Animated.ScrollView;

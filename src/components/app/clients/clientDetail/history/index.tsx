@@ -161,8 +161,6 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
   const handleRetry = useCallback(() => {
-    // упавший customer-запрос блокирует зависимые (skipToken без ucId), а
-    // refetch не начатого зависимого запроса кидает — дёргаем только упавшие
     if (customerError) refetchCustomer();
     if (filterActive ? appointmentsError : financesError) handleRefresh();
   }, [

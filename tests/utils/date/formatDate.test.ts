@@ -10,7 +10,7 @@ import {
   subMonths,
 } from "@/src/utils/date/formatDate";
 
-const WEDNESDAY = new Date(2026, 6, 22); // 2026-07-22
+const WEDNESDAY = new Date(2026, 6, 22);
 
 describe("formatApiDate / formatSlotDate", () => {
   it("format with the expected separators and order", () => {
@@ -42,8 +42,8 @@ describe("ru-localized formatters", () => {
 describe("subMonths", () => {
   it("subtracts whole months without mutating the input date", () => {
     const result = subMonths(WEDNESDAY, 2);
-    expect(result.getMonth()).toBe(4); // May (0-indexed)
-    expect(WEDNESDAY.getMonth()).toBe(6); // original untouched
+    expect(result.getMonth()).toBe(4);
+    expect(WEDNESDAY.getMonth()).toBe(6);
   });
 });
 

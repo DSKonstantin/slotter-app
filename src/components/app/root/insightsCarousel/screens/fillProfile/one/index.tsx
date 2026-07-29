@@ -9,13 +9,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Первый слайд группы "fill_profile" — см.
-// assets/images/history/fill_profile/one.webp. В отличие от остальных
-// экранов сторис тут фото на весь экран, а не боксом — бейдж и заголовок
-// раньше были запечены прямо в картинку, теперь это StoryPill и
-// StoryPhotoScrimHeading поверх обрезанного фото (см.
-// assets/images/history/fill_profile/one-illustration.webp — вырезаны
-// верхняя и нижняя полосы, где раньше был текст).
 const FillProfileOne = () => {
   const { top } = useSafeAreaInsets();
 

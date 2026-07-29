@@ -1,7 +1,3 @@
-/**
- * Returns an array of month strings ("YYYY-MM") for every month
- * between dateFrom and dateTo (inclusive), plus extraFutureMonths ahead.
- */
 export const generateMonthRange = (
   dateFrom: string,
   dateTo: string,

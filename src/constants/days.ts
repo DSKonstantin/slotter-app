@@ -8,7 +8,6 @@ export const days = [
   { id: "sun", label: "Вс", fullLabel: "Воскресенье" },
 ] as const;
 
-// Maps JS Date.getDay() index (0=Sun) to day id
 export const DAY_ID_BY_INDEX = [
   "sun",
   "mon",

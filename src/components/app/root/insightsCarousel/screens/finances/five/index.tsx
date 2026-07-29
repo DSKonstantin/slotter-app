@@ -8,10 +8,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Пятый (последний) слайд группы "finances" — см.
-// assets/images/history/finances/five.webp. Заголовок собран из шаренного
-// компонента сторис; иллюстрация ниже — обрезанный оригинал, см.
-// assets/images/history/finances/five-illustration.webp.
 const FinancesFive = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

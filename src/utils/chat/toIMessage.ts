@@ -16,7 +16,6 @@ const replyToIMessage = (reply: ChatMessageReply): ChatIMessage => ({
 });
 
 export const toIMessage = (msg: ChatMessage): ChatIMessage => {
-  // Normalize to lowercase to match auth.resourceType ("user" | "customer")
   const giftedOwnerId = `${msg.owner.type.toLowerCase()}_${msg.owner.id}`;
   const firstImage = msg.images?.[0];
 

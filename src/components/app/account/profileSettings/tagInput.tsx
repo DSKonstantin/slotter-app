@@ -73,7 +73,6 @@ const RHFTagInput = ({
           placeholder={placeholder}
           placeholderTextColor={colors.neutral[400]}
           returnKeyType="done"
-          blurOnSubmit={false}
           className="flex-1 h-[48px] px-4 rounded-2xl bg-white border border-background font-inter-regular text-body text-neutral-900"
         />
         <Pressable

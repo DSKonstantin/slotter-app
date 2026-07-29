@@ -42,15 +42,9 @@ const CLOSE_THRESHOLD = 100;
 const CLOSE_VELOCITY = 800;
 const SLIDE_TRANSITION_MS = 250;
 
-// Индексы трека сквозные по всем группам (глобальные): граница групп — такой
-// же соседний индекс, поэтому переход между группами анимируется той же
-// механикой, что и внутри группы.
 const groupBaseIndex = (groups: StoryGroup[], groupIdx: number) =>
   groups.slice(0, groupIdx).reduce((acc, g) => acc + g.stories.length, 0);
 
-// Слайд позиционируется горизонтальным треком: смещение от разницы между
-// своим глобальным индексом и анимируемым progress — активный стоит в нуле,
-// следующий ждёт справа за экраном, предыдущий — слева.
 const StorySlide = ({
   index,
   progress,
@@ -96,7 +90,6 @@ const NotificationStoriesModal = ({
 
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(0);
-  // анимируемая позиция слайда внутри активной группы (едет к storyIndex)
   const progress = useSharedValue(0);
   const groupIndexRef = useRef(groupIndex);
   const storyIndexRef = useRef(storyIndex);
@@ -122,8 +115,6 @@ const NotificationStoriesModal = ({
     });
   }, [opacity, onClose]);
 
-  // "left" — вперёд, "right" — назад. На границе группы переходим к
-  // соседней группе; вперёд с последнего слайда последней группы — закрытие.
   const handleSwipe = useCallback(
     (direction: "left" | "right") => {
       const allGroups = groupsRef.current;
@@ -154,8 +145,6 @@ const NotificationStoriesModal = ({
           setStoryIndex(storyIdx - 1);
           slideTo(base + storyIdx - 1);
         } else if (groupIdx > 0) {
-          // назад через границу группы — на последний слайд предыдущей,
-          // как перелистывание назад
           const lastIdx = (allGroups[groupIdx - 1]?.stories.length ?? 1) - 1;
           setGroupIndex(groupIdx - 1);
           setStoryIndex(lastIdx);
@@ -169,12 +158,6 @@ const NotificationStoriesModal = ({
   const verticalPan = useMemo(
     () =>
       Gesture.Pan()
-        // активируемся только на движение вниз; увод вверх или вбок — фейл,
-        // чтобы не перехватывать горизонтальные свайпы и тапы (Exclusive
-        // держит их, пока этот жест не зафейлится).
-        // Колбэки — ворклеты: жест и анимация живут в UI-потоке, без прыжков
-        // через мост (иначе при занятом JS-потоке кадры теряются и модалка
-        // дёргается)
         .activeOffsetY(15)
         .failOffsetY(-15)
         .failOffsetX([-10, 10])
@@ -188,9 +171,6 @@ const NotificationStoriesModal = ({
             event.translationY > CLOSE_THRESHOLD ||
             event.velocityY > CLOSE_VELOCITY
           ) {
-            // translateY не сбрасываем здесь: Modal скрывается асинхронно в
-            // JS-потоке, и сброс вернул бы модалку на экран на кадр-другой
-            // (блик). Значения обнуляет handleAnimateIn при следующем открытии.
             opacity.value = withTiming(0, { duration: 250 });
             translateY.value = withTiming(height, { duration: 250 }, () => {
               runOnJS(onClose)();
@@ -210,11 +190,9 @@ const NotificationStoriesModal = ({
     () =>
       Gesture.Pan()
         .activeOffsetX([-10, 10])
-        // допускаем вертикальный дрейф пальца при горизонтальном свайпе
         .failOffsetY([-30, 30])
         .runOnJS(true)
         .onEnd((event) => {
-          // длинный медленный свайп — по дистанции, короткий флик — по скорости
           const back =
             event.translationX > SWIPE_THRESHOLD ||
             (event.translationX > SWIPE_MIN_DISTANCE &&
@@ -260,13 +238,6 @@ const NotificationStoriesModal = ({
 
   if (!activeGroup?.stories.length) return null;
 
-  // Кроме слайдов активной группы держим смонтированными слайды, на которые
-  // ведут переходы между группами: последний слайд предыдущей группы и
-  // первый — следующей. Они стоят на своих глобальных позициях трека (за
-  // экраном) и при переходе через границу въезжают той же анимацией, что и
-  // слайды внутри группы. Ключи стабильны между рендерами, поэтому при смене
-  // группы уже смонтированный (и задекодированный expo-image) слайд
-  // переиспользуется — без белого моргания.
   const baseIndex = groupBaseIndex(groups, groupIndex);
   const slides: {
     key: string;

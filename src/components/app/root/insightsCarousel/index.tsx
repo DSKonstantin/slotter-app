@@ -75,8 +75,6 @@ const InsightsCarousel = () => {
 
   const insights = useMemo(() => getMockInsights(setSelectedStoryId), []);
 
-  // Порядок групп в сторис-вьюере повторяет порядок карточек в карусели:
-  // досмотрел одну группу — переходишь к следующей.
   const storyGroups = useMemo(
     () =>
       insights

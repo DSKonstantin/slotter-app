@@ -1,37 +1,40 @@
-import React from "react";
-import { RhfDatePicker } from "./rhf-date-picker";
+import React, { ReactNode } from "react";
+import { RhfTimeWheelField } from "./rhf-time-wheel-field";
 import { formatDuration } from "@/src/utils/date/formatTime";
+import { FULL_DAY_MINUTE_OPTIONS } from "@/src/utils/date/timeOptions";
 
 type Props = {
   name: string;
   label?: string;
   placeholder?: string;
+  startAdornment?: ReactNode;
+  endAdornment?: ReactNode;
 };
 
-const ZERO_DURATION = new Date(2020, 0, 0);
-
-const parseDuration = (val: unknown): Date | null => {
+const parseDuration = (val: unknown): number | null => {
   const mins = Number(val);
   if (!mins && mins !== 0) return null;
-  const d = new Date();
-  d.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
-  return d;
+  return mins;
 };
 
-const dateToMinutes = (d: Date): number => d.getHours() * 60 + d.getMinutes();
-
-const displayDuration = (d: Date): string => formatDuration(dateToMinutes(d));
-
-export function RhfDurationPicker({ name, label, placeholder }: Props) {
+export function RhfDurationPicker({
+  name,
+  label,
+  placeholder,
+  startAdornment,
+  endAdornment = null,
+}: Props) {
   return (
-    <RhfDatePicker
+    <RhfTimeWheelField
       name={name}
       label={label}
       placeholder={placeholder}
-      defaultDisplayValue={ZERO_DURATION}
+      startAdornment={startAdornment}
+      endAdornment={endAdornment}
+      options={FULL_DAY_MINUTE_OPTIONS}
+      loop
       parseValue={parseDuration}
-      formatValue={dateToMinutes}
-      formatDisplay={displayDuration}
+      formatDisplay={formatDuration}
     />
   );
 }

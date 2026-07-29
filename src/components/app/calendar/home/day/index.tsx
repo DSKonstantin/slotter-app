@@ -201,7 +201,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     handleHighlightScroll,
   ]);
 
-  // 6. useEffect
   useFocusEffect(
     useCallback(() => {
       safeRefetch(refetchAppointments);

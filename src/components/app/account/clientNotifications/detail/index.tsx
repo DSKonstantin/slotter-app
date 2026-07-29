@@ -88,8 +88,6 @@ const NotificationDetailScreen = ({ kind }: Props) => {
                 <ActivityIndicator color={colors.neutral[400]} />
               </View>
             ) : isError ? (
-              // при ошибке не рисуем тумблер с дефолтным «выключено» —
-              // юзер примет его за реальную настройку
               <RetryInline
                 text="Не удалось загрузить настройки"
                 onRetry={refetch}

@@ -18,8 +18,6 @@ describe("calendarSlice initial state", () => {
   });
 
   it("defaults selectedDay to today (yyyy-MM-dd) and mode to 'day'", () => {
-    // module-level `initialState` is computed once at import time, so it
-    // must be re-imported after the clock is faked
     jest.resetModules();
     const freshReducer =
       require("@/src/store/redux/slices/calendarSlice").default;

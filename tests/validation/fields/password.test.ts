@@ -7,18 +7,18 @@ describe("passwordField", () => {
   });
 
   it("rejects passwords shorter than 8 characters", () => {
-    expect(passwordField.isValidSync("Aa1aaaa")).toBe(false); // 7 chars
+    expect(passwordField.isValidSync("Aa1aaaa")).toBe(false);
   });
 
   it("requires at least one lowercase, one uppercase and one digit", () => {
-    expect(passwordField.isValidSync("aaaaaaaa1")).toBe(false); // no uppercase
-    expect(passwordField.isValidSync("AAAAAAAA1")).toBe(false); // no lowercase
-    expect(passwordField.isValidSync("Aaaaaaaaaa")).toBe(false); // no digit
+    expect(passwordField.isValidSync("aaaaaaaa1")).toBe(false);
+    expect(passwordField.isValidSync("AAAAAAAA1")).toBe(false);
+    expect(passwordField.isValidSync("Aaaaaaaaaa")).toBe(false);
   });
 
   it("rejects disallowed characters (e.g. spaces, most Unicode)", () => {
-    expect(passwordField.isValidSync("Aa1 aaaa")).toBe(false); // space
-    expect(passwordField.isValidSync("Aa1ааааа")).toBe(false); // Cyrillic
+    expect(passwordField.isValidSync("Aa1 aaaa")).toBe(false);
+    expect(passwordField.isValidSync("Aa1ааааа")).toBe(false);
   });
 
   it("accepts a password meeting every requirement", () => {

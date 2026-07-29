@@ -10,9 +10,6 @@ import { api } from "@/src/store/redux/services/api";
 import { useSubscriptionQuota } from "@/src/hooks/useSubscriptionQuota";
 import type { User } from "@/src/store/redux/services/api-types";
 
-// The "non-PRO user" case below makes useGetSubscriptionQuotaQuery actually
-// fire (shouldFetchQuota: true) — without this, axiosBaseQuery would make a
-// real HTTP call to production in the background during the test.
 jest.mock("@/src/store/redux/services/axios", () => ({
   __esModule: true,
   default: jest.fn(() =>
@@ -28,8 +25,6 @@ const buildUser = (
     subscription_membership: subscriptionMembership,
   }) as User;
 
-// renderHook (@testing-library/react-native) is async — it awaits the
-// initial render internally, so callers must await it too.
 const renderWithUser = (user: User | null) => {
   const authState: AuthState = {
     token: null,
@@ -42,11 +37,6 @@ const renderWithUser = (user: User | null) => {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(api.middleware),
     preloadedState: { auth: authState },
-    // configureStore's default autoBatch enhancer queues dispatches via
-    // requestAnimationFrame, which RN's jest polyfill implements as
-    // setTimeout(cb, 0) — with RTK Query's continuous internal dispatches
-    // that keeps re-scheduling itself for as long as the store is alive,
-    // leaking timers past this file's teardown. Not needed in tests.
     enhancers: (getDefaultEnhancers) =>
       getDefaultEnhancers({ autoBatch: false }),
   });

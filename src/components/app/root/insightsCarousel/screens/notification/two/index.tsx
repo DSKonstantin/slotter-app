@@ -9,11 +9,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Второй слайд группы "notification" — см.
-// assets/images/history/notification/two.webp. Заголовок собран из шаренного
-// компонента сторис (часть подзаголовка жирная в референсе — оборачиваем эти
-// куски в свою Typography); иллюстрация ниже — обрезанный оригинал, см.
-// assets/images/history/notification/two-illustration.webp.
 const NotificationTwo = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

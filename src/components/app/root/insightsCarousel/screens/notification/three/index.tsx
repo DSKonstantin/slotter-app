@@ -9,11 +9,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Третий слайд группы "notification" — см.
-// assets/images/history/notification/three.webp. ⚡ в заголовке заменена на
-// gift_alt_fill (иконки-молнии в иконсете нет — gift ближе всего по смыслу
-// к "бесплатно"). Иллюстрация ниже — обрезанный оригинал, см.
-// assets/images/history/notification/three-illustration.webp.
 const NotificationThree = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

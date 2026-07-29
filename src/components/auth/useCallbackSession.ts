@@ -59,9 +59,7 @@ export const useCallbackSession = ({
               : "Сессия истекла. Попробуйте снова",
           );
         }
-      } catch {
-        // network error — keep trying
-      }
+      } catch {}
     }, callSession.poll_interval * 1000);
 
     return () => {

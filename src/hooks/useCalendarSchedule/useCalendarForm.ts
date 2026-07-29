@@ -48,7 +48,6 @@ export const useCalendarForm = (
     [calendarDays],
   );
 
-  // Reset form on month change
   useEffect(() => {
     const monthKey = format(current, "yyyy-MM");
     const monthChanged = previousMonthKeyRef.current !== monthKey;

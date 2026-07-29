@@ -11,11 +11,6 @@ export type AppointmentStatus =
 export type PaymentMethod = "cash" | "sbp" | "online_bank";
 
 export interface AppointmentCustomer {
-  /**
-   * null — квотная маскировка: у мастера без PRO записи сверх бесплатного
-   * лимита приходят с заглушкой {id: null, name: "—", phone: "—"};
-   * клиент существует, но скрыт до апгрейда (см. isHiddenCustomer)
-   */
   id: number | null;
   name: string;
   phone: string;
@@ -49,8 +44,6 @@ export interface Appointment {
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
-  // только view :created (ответ POST /appointments) и :my_slot — обычные
-  // show/update/index-эндпоинты рендерят :default, где этого поля нет.
   public_token?: string;
   date: string;
   customer: AppointmentCustomer;

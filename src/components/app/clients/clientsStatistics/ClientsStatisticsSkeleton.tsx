@@ -53,7 +53,6 @@ const ClientsStatisticsSkeleton = () => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        {/* Stat cards row 1 */}
         <Rect
           x={0}
           y={0}
@@ -71,7 +70,6 @@ const ClientsStatisticsSkeleton = () => {
           height={STAT_CARD_HEIGHT}
         />
 
-        {/* Stat cards row 2 */}
         <Rect
           x={0}
           y={row2Y}
@@ -89,7 +87,6 @@ const ClientsStatisticsSkeleton = () => {
           height={STAT_CARD_HEIGHT}
         />
 
-        {/* Services card outline */}
         <Rect
           x={0}
           y={servicesY}
@@ -99,7 +96,6 @@ const ClientsStatisticsSkeleton = () => {
           height={servicesCardH}
         />
 
-        {/* Services title */}
         <Rect
           x={SERVICES_CARD_PAD}
           y={servicesY + SERVICES_CARD_PAD}
@@ -109,7 +105,6 @@ const ClientsStatisticsSkeleton = () => {
           height={SERVICES_TITLE_HEIGHT}
         />
 
-        {/* Services rows */}
         {Array.from({ length: SERVICES_ROWS }).map((_, i) => {
           const rowY =
             servicesY +

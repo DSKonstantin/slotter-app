@@ -87,9 +87,6 @@ const chatMessagesApi = api.injectEndpoints({
 
               const readAt = new Date(data.last_read_at).getTime();
               updateCachedData((draft) => {
-                // Messages are sorted newest-first. Iterate forward; once we
-                // find a message of ours older than readAt that's already
-                // marked received, everything older is too — bail out.
                 for (const m of draft.messages) {
                   if (m.user._id !== currentId) continue;
                   const ts =
@@ -103,9 +100,7 @@ const chatMessagesApi = api.injectEndpoints({
               });
             }
           });
-        } catch {
-          // no-op: cacheEntryRemoved resolved before cacheDataLoaded
-        }
+        } catch {}
 
         await cacheEntryRemoved;
         subscription.disconnect();
@@ -169,9 +164,6 @@ const chatMessagesApi = api.injectEndpoints({
             ),
           );
 
-          // Promote the room in the rooms list with the new last_message —
-          // don't wait for Pusher echo (avoids stale preview if user navigates
-          // back immediately).
           dispatch(
             chatRoomsApi.util.updateQueryData("getChatRooms", {}, (draft) => {
               const room = removeRoomFromPages(draft, chatRoomId);

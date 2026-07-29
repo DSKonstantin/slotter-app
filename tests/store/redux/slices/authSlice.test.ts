@@ -151,7 +151,6 @@ describe("setUserOnly", () => {
     const existing = buildUser({ subscription_membership: membership });
     const state: AuthState = { ...initialState, user: existing };
 
-    // e.g. PATCH /users response that doesn't include subscription_membership
     const incoming = buildUser({
       first_name: "Пётр",
       subscription_membership: undefined as never,

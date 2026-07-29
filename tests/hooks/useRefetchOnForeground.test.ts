@@ -9,9 +9,6 @@ jest.mock("expo-router", () => ({
 
 const mockUseNavigation = useNavigation as jest.Mock;
 
-// Same caveat as useRunOnNextForeground: the hook's internal appState ref
-// only advances via the listener itself, so simulate background -> active
-// as two separate listener invocations.
 describe("useRefetchOnForeground", () => {
   let changeListener: (state: AppStateStatus) => void;
   let addEventListenerSpy: jest.SpyInstance;

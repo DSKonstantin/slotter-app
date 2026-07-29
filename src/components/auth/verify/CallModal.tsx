@@ -33,15 +33,12 @@ export const CallModal = ({
   onSwitchToFlashcall,
   isSwitchingToFlashcall,
 }: CallModalProps) => {
-  // 1. useState
   const [showHint, setShowHint] = useState(false);
 
-  // 2. useRef
   const dot1 = useRef(new Animated.Value(0.3)).current;
   const dot2 = useRef(new Animated.Value(0.3)).current;
   const dot3 = useRef(new Animated.Value(0.3)).current;
 
-  // 3. Custom hooks
   const { seconds: sessionTimeLeft } = useCountDown({
     seconds: expiresIn,
     autoStart: true,
@@ -51,7 +48,6 @@ export const CallModal = ({
     autoStart: true,
   });
 
-  // 6. useEffect
   useEffect(() => {
     const hintTimer = setTimeout(() => setShowHint(true), HINT_DELAY_MS);
     return () => clearTimeout(hintTimer);

@@ -9,11 +9,6 @@ import {
   StoryIllustration,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Третий слайд группы "education_payments" — см.
-// assets/images/history/training/three.webp. Верхний блок (вкладки + заголовок)
-// собран из шаренных компонентов сторис; иллюстрация ниже — обрезанный
-// оригинал (без панели вкладок и заголовка, они теперь настоящие компоненты) —
-// см. assets/images/history/training/three-illustration.webp.
 const EducationPaymentsThree = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

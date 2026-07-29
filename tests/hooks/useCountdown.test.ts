@@ -49,7 +49,6 @@ describe("useCountDown", () => {
     await act(async () => {
       jest.advanceTimersByTime(2000);
     });
-    // paused — no further countdown
     expect(result.current.seconds).toBe(3);
   });
 

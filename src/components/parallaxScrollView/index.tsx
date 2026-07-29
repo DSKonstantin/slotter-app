@@ -8,9 +8,6 @@ import Animated, {
   useScrollOffset,
 } from "react-native-reanimated";
 
-// import { ThemedView } from "./themed-view";
-// import { useColorScheme } from "@/src/hooks/use-color-scheme";
-// import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { colors } from "@/src/styles/colors";
 
 type Props = PropsWithChildren<{
@@ -36,8 +33,6 @@ export default function ParallaxScrollView({
   refreshControl,
   contentInset = {},
 }: Props) {
-  // const backgroundColor = useThemeColor({}, "background");
-  // const colorScheme = useColorScheme() ?? "light";
   const colorScheme = "light";
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollOffset(scrollRef);
@@ -66,9 +61,7 @@ export default function ParallaxScrollView({
     <Animated.ScrollView
       ref={scrollRef}
       style={{
-        // backgroundColor,
         flex: 1,
-        // backgroundColor: colors.background.black,
         marginTop: contentInset.top ?? 0,
       }}
       contentContainerStyle={{
@@ -117,14 +110,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    // overflow: "hidden",
     paddingBottom: 36,
     marginBottom: -36,
   },
   content: {
     borderTopRightRadius: 36,
     borderTopLeftRadius: 36,
-    // overflow: "hidden",
     backgroundColor: colors.background.DEFAULT,
   },
 });

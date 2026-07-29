@@ -8,10 +8,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Третий слайд группы "fill_profile" — см.
-// assets/images/history/fill_profile/three.webp. Заголовок собран из
-// шаренного компонента сторис; иллюстрация ниже — обрезанный оригинал, см.
-// assets/images/history/fill_profile/three-illustration.webp.
 const FillProfileThree = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

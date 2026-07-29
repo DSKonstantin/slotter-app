@@ -1,35 +1,45 @@
 import React, { ReactNode } from "react";
 import { useController, useFormContext } from "react-hook-form";
-import { DatePicker } from "@/src/components/ui/fields/DatePicker";
+import { TimeWheelField } from "@/src/components/ui/fields/TimeWheelField";
 import { useComposedFieldRef } from "@/src/hooks/useScrollToError";
 
-type DatePickerFieldsProps = {
+type RhfTimeWheelFieldProps = {
   name: string;
+  options: number[];
+  defaultValue?: number;
+
   label?: string;
   placeholder?: string;
   hideErrorText?: boolean;
-  defaultDisplayValue?: Date;
+  disabled?: boolean;
+  isLoading?: boolean;
+  loop?: boolean;
+  onOpen?: () => void;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
 
-  formatValue?: (date: Date) => string | number;
-  parseValue?: (value: unknown) => Date | null;
-  formatDisplay?: (date: Date) => string;
+  formatValue?: (minutes: number) => unknown;
+  parseValue?: (value: unknown) => number | null;
+  formatDisplay?: (minutes: number) => string;
 };
 
-export function RhfDatePicker({
+export function RhfTimeWheelField({
   name,
+  options,
+  defaultValue,
   label,
   placeholder,
+  hideErrorText,
+  disabled,
+  isLoading,
+  loop,
+  onOpen,
   startAdornment,
   endAdornment,
-  hideErrorText,
-  defaultDisplayValue,
   formatValue,
   parseValue,
   formatDisplay,
-  ...other
-}: DatePickerFieldsProps) {
+}: RhfTimeWheelFieldProps) {
   const { control } = useFormContext();
   const {
     field: { onChange, value, ref },
@@ -38,21 +48,25 @@ export function RhfDatePicker({
   const setRef = useComposedFieldRef(name, ref);
 
   return (
-    <DatePicker
+    <TimeWheelField
       ref={setRef}
-      value={parseValue ? parseValue(value) : value}
+      value={parseValue ? parseValue(value) : (value ?? null)}
+      options={options}
+      defaultValue={defaultValue}
       label={label}
       placeholder={placeholder}
       error={error}
       hideErrorText={hideErrorText}
-      defaultDisplayValue={defaultDisplayValue}
+      disabled={disabled}
+      isLoading={isLoading}
+      loop={loop}
+      onOpen={onOpen}
       startAdornment={startAdornment}
       endAdornment={endAdornment}
       formatDisplay={formatDisplay}
-      onChange={(d: Date) => {
-        onChange(formatValue ? formatValue(d) : d);
+      onChange={(minutes: number) => {
+        onChange(formatValue ? formatValue(minutes) : minutes);
       }}
-      {...other}
     />
   );
 }

@@ -70,7 +70,6 @@ const NotificationBanners = () => {
   const ispe = useAppSelector((s) => s.appVersion.ispe);
   const openPersonalAccount = useOpenPersonalAccount();
 
-
   const { data } = useGetNotificationsQuery({ per_count: 50, is_read: false });
 
   const { quota, membership, shouldFetchQuota } = useSubscriptionQuota();

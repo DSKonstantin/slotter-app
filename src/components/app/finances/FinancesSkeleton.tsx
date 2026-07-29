@@ -15,16 +15,15 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
   const { width } = useWindowDimensions();
   const w = width - SCREEN_PADDING * 2;
 
-  // Block positions
   const incomeCardH = 128;
   const periodCardH = 70;
   const expensesH = 220;
   const statCardsH = 88;
 
-  const y0 = 0; // IncomeCard
-  const y1 = y0 + incomeCardH + GAP; // Period card
-  const y2 = y1 + periodCardH + GAP; // Expenses block
-  const y3 = y2 + expensesH + GAP; // Stat cards
+  const y0 = 0;
+  const y1 = y0 + incomeCardH + GAP;
+  const y2 = y1 + periodCardH + GAP;
+  const y3 = y2 + expensesH + GAP;
   const totalH = y3 + statCardsH;
 
   const halfW = (w - 10) / 2;
@@ -45,7 +44,6 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        {/* IncomeCard */}
         <Rect
           x={0}
           y={y0}
@@ -55,7 +53,6 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
           height={incomeCardH}
         />
 
-        {/* Period card */}
         <Rect
           x={0}
           y={y1}
@@ -65,7 +62,6 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
           height={periodCardH}
         />
 
-        {/* Expenses block */}
         <Rect
           x={0}
           y={y2}
@@ -75,7 +71,6 @@ const FinancesSkeleton = ({ topInset = 0 }: Props) => {
           height={expensesH}
         />
 
-        {/* Stat cards row */}
         <Rect
           x={0}
           y={y3}

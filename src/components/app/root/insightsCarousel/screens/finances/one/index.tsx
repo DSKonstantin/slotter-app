@@ -9,12 +9,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Первый слайд группы "finances" — см.
-// assets/images/history/finances/one.webp. Фото на весь экран, как в
-// fillProfile/one — бейдж и заголовок раньше были запечены прямо в картинку,
-// теперь это StoryPill и StoryPhotoScrimHeading поверх обрезанного фото (см.
-// assets/images/history/finances/one-illustration.webp — вырезаны верхняя и
-// нижняя полосы, где раньше был текст и стрелка-подсказка).
 const FinancesOne = () => {
   const { top } = useSafeAreaInsets();
 

@@ -33,18 +33,15 @@ type CodeState = { status: "idle" | "valid" | "invalid"; error: string };
 const INITIAL_CODE_STATE: CodeState = { status: "idle", error: "" };
 
 const Verify = () => {
-  // 1. useState
   const [codeState, setCodeState] = useState<CodeState>(INITIAL_CODE_STATE);
   const [isSwitchingToFlashcall, setIsSwitchingToFlashcall] = useState(false);
   const [accountDeactivatedVisible, setAccountDeactivatedVisible] =
     useState(false);
 
-  // 2. useRef
   const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(
     null,
   );
 
-  // 3. Custom hooks + RTK Query
   const ispe = useAppSelector((s) => s.appVersion.ispe);
   const [sendCode, { isLoading }] = useSendCodeMutation();
   const [validateReferralCode, { isFetching: isValidating }] =
@@ -69,7 +66,6 @@ const Verify = () => {
     referralCode: sessionReferralCode,
   });
 
-  // 5. useCallback
   const handleValidateCode = useCallback(async () => {
     const code = promoCode.trim();
     if (!code) return;
@@ -174,7 +170,6 @@ const Verify = () => {
     }
   }, [methods, sendCode, setCallSession]);
 
-  // 6. useEffect
   useEffect(() => {
     setCodeState(INITIAL_CODE_STATE);
   }, [promoCode]);

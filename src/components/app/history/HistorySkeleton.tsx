@@ -37,13 +37,11 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
   const avatarCx = CARD_PADDING + AVATAR / 2;
   const textX = CARD_PADDING + AVATAR + 12;
 
-  // Section 1: header + 3 rows
   const h1 = HEADER_H;
   const r1y = h1 + HEADER_GAP;
   const r2y = r1y + ROW_H + ROW_GAP;
   const r3y = r2y + ROW_H + ROW_GAP;
 
-  // Section 2: header + 2 rows
   const h2 = r3y + ROW_H + SECTION_GAP;
   const r4y = h2 + HEADER_H + HEADER_GAP;
   const r5y = r4y + ROW_H + ROW_GAP;
@@ -68,7 +66,6 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        {/* Section 1 header */}
         <Rect
           x={0}
           y={0}
@@ -78,7 +75,6 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
           height={HEADER_H}
         />
 
-        {/* Section 2 header */}
         <Rect
           x={0}
           y={h2}
@@ -94,7 +90,6 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
 
           return (
             <React.Fragment key={i}>
-              {/* Card background */}
               <Rect
                 x={0}
                 y={y}
@@ -103,9 +98,7 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
                 width={w}
                 height={ROW_H}
               />
-              {/* Avatar */}
               <Circle cx={avatarCx} cy={cy} r={AVATAR / 2} />
-              {/* Title */}
               <Rect
                 x={textX}
                 y={cy - 18}
@@ -114,7 +107,6 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
                 width={titleW}
                 height={14}
               />
-              {/* Time (top right) */}
               <Rect
                 x={w - 30}
                 y={cy - 18}
@@ -123,7 +115,6 @@ const HistorySkeleton = ({ topInset = 0 }: Props) => {
                 width={28}
                 height={10}
               />
-              {/* Body */}
               <Rect
                 x={textX}
                 y={cy + 4}

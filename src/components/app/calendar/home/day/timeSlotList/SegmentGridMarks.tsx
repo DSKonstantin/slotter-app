@@ -34,10 +34,6 @@ const SegmentGridMarks = memo(function SegmentGridMarks({
 
   const markTop = (t: number) =>
     ((t - segStart) / (segEnd - segStart)) * gridHeight;
-  // cancelledOffset shifts marks into the free-slot pressable area, which has
-  // exactly gridHeight reserved for it. When an occupying slot is present
-  // (showFreeSlotBlock=false) segHeight=gridHeight so adding cancelledOffset
-  // would push marks past the segment boundary.
   const hasFreeSlotBlock =
     content.kind === "slots" && content.showFreeSlotBlock;
   const markTopFreeSlot = (t: number) =>

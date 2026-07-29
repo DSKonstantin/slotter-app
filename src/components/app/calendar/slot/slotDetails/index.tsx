@@ -174,9 +174,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const derived = useMemo(() => {
     if (!slot) return null;
     return {
-      // canEdit: (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
-      // при квотной маскировке запись read-only: редактировать вслепую
-      // (не видя клиента) нельзя, единственное действие — отмена
       canEdit: !isHiddenCustomer(slot.customer),
       canReschedule:
         !isHiddenCustomer(slot.customer) &&
@@ -666,8 +663,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                   }}
                 />
 
-                {/* запись со скрытым квотой клиентом read-only:
-                    ни статус, ни перенос, ни отмена недоступны до апгрейда */}
                 {!customerHidden && (
                   <SlotActions
                     appointmentId={id}

@@ -22,7 +22,6 @@ const EditableRowInput = ({
     <TextInput
       {...props}
       value={props.value ?? ""}
-      // disabled и editable из пропсов — оба блокируют
       editable={!disabled && (props.editable ?? true)}
       className="flex-1 font-inter-regular text-primary px-2"
       placeholderTextColor={colors.neutral[300]}

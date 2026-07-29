@@ -26,9 +26,6 @@ const METHOD_HEADER_KEYS = new Set([
   "patch",
 ]);
 
-// React Native's FormData polyfill stores parts in _parts array.
-// instanceof FormData is unreliable on Android because Axios may bundle its own
-// FormData reference that differs from RN's polyfill class.
 const isFormData = (data: unknown): data is FormData =>
   data instanceof FormData || Array.isArray((data as any)?._parts);
 
@@ -95,9 +92,6 @@ const normalizeRequestHeaders = (
   return headers;
 };
 
-// For FormData requests, Axios on Android is unreliable — it may JSON.stringify
-// the body or set the wrong Content-Type. React Native's native fetch() handles
-// FormData correctly on both iOS and Android, so we bypass Axios entirely.
 const fetchMultipart = async (
   requestConfig: AxiosRequestConfig,
   preparedHeaders: AxiosHeaders,
@@ -107,8 +101,6 @@ const fetchMultipart = async (
     ? requestConfig.url
     : `${baseURL.replace(/\/+$/, "")}/${(requestConfig.url ?? "").replace(/^\/+/, "")}`;
 
-  // Copy prepared headers, excluding Content-Type so the native layer can set
-  // it with the correct multipart boundary.
   const fetchHeaders: Record<string, string> = {};
   for (const [key, value] of Object.entries(preparedHeaders.toJSON())) {
     if (key.toLowerCase() !== "content-type" && typeof value === "string") {

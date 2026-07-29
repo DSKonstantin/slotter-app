@@ -160,8 +160,6 @@ const CalendarSchedule = ({ showBack = true }: CalendarScheduleProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      // экран остаётся смонтированным под day-schedule/[id] — без явного
-      // refetch тут возврат после правки дня показывал старые данные
       safeRefetch(refetch);
       return () => clearSelection();
     }, [refetch, clearSelection]),

@@ -8,10 +8,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Четвёртый слайд группы "finances" — см.
-// assets/images/history/finances/four.webp. Заголовок собран из шаренного
-// компонента сторис; иллюстрация ниже — обрезанный оригинал, см.
-// assets/images/history/finances/four-illustration.webp.
 const FinancesFour = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

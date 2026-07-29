@@ -95,7 +95,6 @@ const APP_FEATURES = [
 
 const CLIENT_APP_STORE_URL =
   "https://apps.apple.com/ru/app/slotter-%D1%82%D1%80%D0%B5%D0%BA%D0%B5%D1%80-%D0%B7%D0%B0%D0%BF%D0%B8%D1%81%D0%B5%D0%B9/id6784702976";
-// TODO: заполнить, когда клиентское приложение появится в Google Play
 const CLIENT_PLAY_STORE_URL: string | null = null;
 
 const CLIENT_APP_SHARE_URL = Platform.select({
@@ -195,7 +194,6 @@ const ClientNotifications = () => {
     { refetchOnMountOrArgChange: true },
   );
 
-  // safeRefetch: refetch() у skipped-запроса (skipToken / !ispe) кидает синхронно
   const refetchAll = useCallback(async () => {
     await Promise.all([
       safeRefetch(refetchSettings),

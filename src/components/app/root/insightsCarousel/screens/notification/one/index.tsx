@@ -8,14 +8,6 @@ import {
   StoryPhotoScrimHeading,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Первый слайд группы "notification" — см.
-// assets/images/history/notification/one.webp. Фото на весь экран, как в
-// fillProfile/one — бейдж и заголовок раньше были запечены прямо в картинку,
-// теперь это StoryPill и StoryPhotoScrimHeading поверх обрезанного фото (см.
-// assets/images/history/notification/one-illustration.webp — вырезаны
-// верхняя и нижняя полосы, где раньше был текст и стрелка-подсказка).
-// Заголовок тут длиннее (5 строк), поэтому у градиента больше высота, чтобы
-// весь текст оставался на тёмной подложке.
 const NotificationOne = () => {
   const { top } = useSafeAreaInsets();
 

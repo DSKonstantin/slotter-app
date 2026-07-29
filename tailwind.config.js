@@ -1,9 +1,7 @@
 const colors = require("./src/styles/colorsTailwind");
 const { SCREEN_PADDING } = require("./src/constants/layout");
 
-/** @type {import('tailwindcss').Config} */
 module.exports = {
-  // NOTE: Update this to include the paths to all files that contain Nativewind classes.
   darkMode: "class",
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",

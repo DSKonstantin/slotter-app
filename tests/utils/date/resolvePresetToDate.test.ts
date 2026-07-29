@@ -3,7 +3,7 @@ import { resolvePresetToDate } from "@/src/utils/date/resolvePresetToDate";
 
 describe("resolvePresetToDate", () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date(2026, 6, 23, 15, 30)); // 2026-07-23 15:30
+    jest.useFakeTimers().setSystemTime(new Date(2026, 6, 23, 15, 30));
   });
 
   afterEach(() => {

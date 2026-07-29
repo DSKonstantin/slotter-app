@@ -12,7 +12,6 @@ describe("suggestNicknames", () => {
   });
 
   it("de-duplicates candidates", () => {
-    // name === surname collapses the two name/surname combos into one
     expect(suggestNicknames("Иван", "Иван", null)).toEqual([
       "ivan_ivan",
       "ivan",
@@ -24,8 +23,6 @@ describe("suggestNicknames", () => {
   });
 
   it("produces nothing when name is missing, even if surname is present", () => {
-    // every candidate is gated on `n` (name) — a name-less surname never
-    // surfaces on its own, which is easy to miss reading the source
     expect(suggestNicknames("  ", "Петров", null)).toEqual([]);
   });
 

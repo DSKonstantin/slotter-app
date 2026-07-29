@@ -1,8 +1,3 @@
-/**
- * Returns the correct Russian word form based on count.
- * @param count - the number
- * @param forms - [one, few, many] e.g. ["день", "дня", "дней"]
- */
 export const pluralize = (
   count: number,
   forms: [string, string, string],

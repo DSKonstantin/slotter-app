@@ -25,11 +25,6 @@ export type AppointmentStatusConfig = {
   statusLineClass?: string | null;
 };
 
-// Псевдостатус отображения для записей со скрытым квотой клиентом
-// (isHiddenCustomer). Намеренно НЕ в APPOINTMENT_STATUS_CONFIG: его
-// итерируют фильтры календаря (calendarFilterModal) и
-// DEFAULT_ACTIVE_STATUSES (calendarSlice), а это не статус записи —
-// у записи при этом остаётся свой настоящий status.
 export const QUOTA_HIDDEN_STATUS_CONFIG: Omit<
   AppointmentStatusConfig,
   "status" | "filterLabel" | "defaultActive"

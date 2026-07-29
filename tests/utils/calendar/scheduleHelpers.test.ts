@@ -80,7 +80,7 @@ describe("createExistingCalendarDay", () => {
 
 describe("buildFormValues", () => {
   it("creates one calendar day per day of the month, in bulk mode", () => {
-    const result = buildFormValues(new Date(2026, 1, 10)); // Feb 2026 — 28 days
+    const result = buildFormValues(new Date(2026, 1, 10));
     expect(result.mode).toBe("bulk");
     expect(result.commonDraft).toEqual({ startAt: "", endAt: "", breaks: [] });
     expect(result.calendarDays).toHaveLength(28);

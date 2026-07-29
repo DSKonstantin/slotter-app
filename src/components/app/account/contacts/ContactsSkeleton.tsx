@@ -60,7 +60,6 @@ const ContactsSkeleton = ({ topInset = 0 }: Props) => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        {/* Block 1 */}
         <Rect x={0} y={y0} rx={8} ry={8} width={120} height={LABEL_HEIGHT} />
 
         <Rect
@@ -90,7 +89,6 @@ const ContactsSkeleton = ({ topInset = 0 }: Props) => {
           height={DIVIDER_HEIGHT}
         />
 
-        {/* Block 2 */}
         <Rect x={0} y={y1} rx={8} ry={8} width={120} height={LABEL_HEIGHT} />
 
         <Rect

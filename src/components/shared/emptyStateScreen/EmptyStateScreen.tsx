@@ -13,7 +13,6 @@ type EmptyStateScreenProps = {
   buttonIcon?: string;
   isLoading?: boolean;
   withTabBar?: boolean;
-  /** Отступ под тулбар — экраны в ScreenWithToolbar передают topInset */
   topInset?: number;
   onPress: () => void;
 };

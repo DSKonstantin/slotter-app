@@ -34,7 +34,6 @@ const EditableCommentRow: React.FC<Props> = ({
       multiline
       numberOfLines={4}
       hideErrorText
-      // disabled, а не editable: нужна ещё и disabled-стилизация поля
       disabled={!editable || isUpdating}
       onFocus={onFocus}
       onBlur={onBlur}

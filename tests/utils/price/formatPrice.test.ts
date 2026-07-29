@@ -5,8 +5,6 @@ import {
   rublesToCents,
 } from "@/src/utils/price/formatPrice";
 
-// toLocaleString("ru-RU") groups thousands with U+00A0 (non-breaking space),
-// not a regular space — must match that exact character.
 const NBSP = " ";
 
 describe("centsToRubles", () => {

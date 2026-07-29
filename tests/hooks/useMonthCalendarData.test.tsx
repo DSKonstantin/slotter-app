@@ -29,11 +29,6 @@ const buildStore = () =>
     reducer: { auth: authReducer, [api.reducerPath]: api.reducer },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(api.middleware),
-    // configureStore's default autoBatch enhancer queues dispatches via
-    // requestAnimationFrame, which RN's jest polyfill implements as
-    // setTimeout(cb, 0) — with RTK Query's continuous internal dispatches
-    // that keeps re-scheduling itself for as long as the store is alive,
-    // leaking timers past this file's teardown. Not needed in tests.
     enhancers: (getDefaultEnhancers) =>
       getDefaultEnhancers({ autoBatch: false }),
   });
@@ -72,8 +67,8 @@ describe("useMonthCalendarData", () => {
         {
           [DAY_10]: {
             start_at: "09:00",
-            end_at: "18:00", // 540 minutes total
-            working_day_breaks: [{ start_at: "12:00", end_at: "13:00" }], // -60
+            end_at: "18:00",
+            working_day_breaks: [{ start_at: "12:00", end_at: "13:00" }],
           } as WorkingDay,
         },
       ),
@@ -106,7 +101,6 @@ describe("useMonthCalendarData", () => {
     const { result } = await renderWithStore(store, { userId: 1 });
 
     await waitFor(() => expect(result.current.hasData).toBe(true));
-    // available = 540 - 60 = 480 min; booked = 60 min => 60/480 = 0.125
     expect(result.current.calendarData.progressMap[DAY_10]).toBeCloseTo(0.125);
     expect(result.current.calendarData.totalAppointments).toBe(1);
   });

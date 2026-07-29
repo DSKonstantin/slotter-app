@@ -9,11 +9,6 @@ import {
   StoryIllustration,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Шестой (последний) слайд группы "education_payments" — см.
-// assets/images/history/training/six.webp. Верхний блок (вкладки + заголовок)
-// собран из шаренных компонентов сторис; иллюстрация ниже — обрезанный
-// оригинал (без панели вкладок и заголовка, они теперь настоящие компоненты) —
-// см. assets/images/history/training/six-illustration.webp.
 const EducationPaymentsSix = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

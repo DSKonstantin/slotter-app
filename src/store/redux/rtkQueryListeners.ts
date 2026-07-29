@@ -2,10 +2,6 @@ import NetInfo from "@react-native-community/netinfo";
 import type { setupListeners } from "@reduxjs/toolkit/query";
 import { AppState, AppStateStatus } from "react-native";
 
-// RTK Query по умолчанию слушает браузерные window.focus/online — в React
-// Native их нет, поэтому refetchOnFocus/refetchOnReconnect без этого
-// обработчика молча ничего не делают. Подключается в store.ts через
-// setupListeners(store.dispatch, rtkQueryListenerHandler).
 export const rtkQueryListenerHandler: NonNullable<
   Parameters<typeof setupListeners>[1]
 > = (dispatch, { onFocus, onFocusLost, onOnline, onOffline }) => {
@@ -27,8 +23,6 @@ export const rtkQueryListenerHandler: NonNullable<
   );
 
   const netInfoUnsubscribe = NetInfo.addEventListener((state) => {
-    // isConnected может быть null, пока статус ещё не определён —
-    // в этом случае ничего не диспатчим, а не считаем это offline
     if (state.isConnected === false) {
       dispatch(onOffline());
     } else if (state.isConnected === true) {

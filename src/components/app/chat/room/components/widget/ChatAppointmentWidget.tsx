@@ -56,8 +56,6 @@ const ChatAppointmentWidget = ({
   const duration = payload.duration ?? appointment.duration;
   const priceCents = payload.price_cents ?? appointment.price_cents;
 
-  // parseISO("2026-05-27") → local midnight, isToday/isTomorrow работают корректно.
-  // new Date("2026-05-27") парсирует как UTC midnight → неверно в западных таймзонах.
   const dateObj = appointment.date ? parseISO(appointment.date) : null;
   let dateLabel = "";
   if (dateObj) {
@@ -66,8 +64,6 @@ const ChatAppointmentWidget = ({
     else dateLabel = format(dateObj, "d MMMM", { locale: ru });
   }
 
-  // start_time из blueprint — ISO-строка с dummy-датой ("2000-01-01T14:00:00.000Z").
-  // formatTimeFromISO вытаскивает HH:MM из T-части без конвертации timezone.
   const timeLabel = startTime ? formatTimeFromISO(startTime) : "";
 
   const isAwaitingCustomer = appointment.status === "pending";

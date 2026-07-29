@@ -49,7 +49,6 @@ describe("servicesSlice", () => {
     const next = reducer(state, resetEditMode());
     expect(next.isEditMode).toBe(false);
     expect(next.editModeType).toBe("categories");
-    // resetEditMode intentionally doesn't touch isSearchMode
     expect(next.isSearchMode).toBe(true);
   });
 });

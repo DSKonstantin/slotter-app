@@ -2,10 +2,6 @@ import React from "react";
 import { View, Pressable } from "react-native";
 import { Controller, useFormContext } from "react-hook-form";
 
-// ========================
-// TYPES
-// ========================
-
 type ColorOption = {
   label: string;
   value: string;
@@ -15,10 +11,6 @@ type Props = {
   name: string;
   colors: ColorOption[];
 };
-
-// ========================
-// COMPONENT
-// ========================
 
 const RhfColorPicker = ({ name, colors }: Props) => {
   const { control } = useFormContext();
@@ -35,7 +27,7 @@ const RhfColorPicker = ({ name, colors }: Props) => {
 
             const handlePress = () => {
               if (isSelected) {
-                onChange(null); // сброс
+                onChange(null);
               } else {
                 onChange(colorValue);
               }

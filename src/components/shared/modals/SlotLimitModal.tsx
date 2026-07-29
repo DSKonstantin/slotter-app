@@ -21,7 +21,6 @@ const SlotLimitModal = ({ visible, onClose }: Props) => {
   const runOnNextForeground = useRunOnNextForeground();
 
   const handleUpgrade = async () => {
-    // вернулся из веб-оплаты — подтянуть pro_access/membership
     if (userId != null) {
       runOnNextForeground(() => getSubscriptionMembership({ userId }));
     }

@@ -95,8 +95,6 @@ const AccountNotifications = () => {
             {isLoading ? (
               <ActivityIndicator />
             ) : isError ? (
-              // при ошибке не рисуем тумблеры с дефолтным «выключено» —
-              // юзер примет их за реальные настройки
               <RetryInline
                 text="Не удалось загрузить настройки"
                 onRetry={refetch}

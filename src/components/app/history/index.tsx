@@ -41,8 +41,6 @@ import {
 } from "@/src/constants/notificationKinds";
 import HistorySkeleton from "./HistorySkeleton";
 
-// ── Notification row ──────────────────────────────────────────────────────────
-
 type NotificationRowProps = {
   item: Notification;
   onPress: (item: Notification) => void;

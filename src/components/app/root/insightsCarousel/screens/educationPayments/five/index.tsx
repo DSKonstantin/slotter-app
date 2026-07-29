@@ -9,11 +9,6 @@ import {
   StoryIllustration,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Пятый слайд группы "education_payments" — см.
-// assets/images/history/training/five.webp. Верхний блок (вкладки + заголовок)
-// собран из шаренных компонентов сторис; иллюстрация ниже — обрезанный
-// оригинал (без панели вкладок и заголовка, они теперь настоящие компоненты) —
-// см. assets/images/history/training/five-illustration.webp.
 const EducationPaymentsFive = () => {
   return (
     <StoryScreenLayout paddingTop={68}>

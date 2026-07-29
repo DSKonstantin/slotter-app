@@ -1,6 +1,3 @@
-// name/surname/profession/title/description share the same shape
-// (trim + min/max + required, description being the one optional/ensured
-// exception) — table-driven instead of one near-duplicate file per field.
 import { nameField } from "@/src/validation/fields/name";
 import { surnameField } from "@/src/validation/fields/surname";
 import { professionField } from "@/src/validation/fields/profession";

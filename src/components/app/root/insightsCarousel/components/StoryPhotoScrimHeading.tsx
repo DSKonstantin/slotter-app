@@ -7,23 +7,11 @@ import { Typography } from "@/src/components/ui";
 import { StorySwipeArrow } from "./StorySwipeArrow";
 
 type Props = {
-  // Обычно строка с "\n" для переносов; там, где в референсе был эмодзи —
-  // передавайте вместо него инлайновую иконку (см. fillProfile/one,
-  // finances/one): <StoryInlineIcon name="..." size="large" /> рядом с
-  // текстом внутри фрагмента.
   title: ReactNode;
-  // Высота затемняющего градиента под текстом — чем длиннее заголовок
-  // (больше строк), тем больше нужно, иначе нижние строки съезжают на
-  // светлый низ фото и текст становится нечитаемым.
   gradientHeight?: number;
-  // Стрелка-подсказка "листай дальше" под заголовком (см. img.png).
   showSwipeArrow?: boolean;
 };
 
-// Затемняющий градиент + белый заголовок поверх фото внизу экрана (см.
-// fillProfile/finances/notification "one" — там, где раньше текст был
-// запечён прямо в картинку). Общий для всех трёх, чтобы не копировать
-// разметку градиента и safe-area паддинга в каждом экране.
 export const StoryPhotoScrimHeading = ({
   title,
   gradientHeight = 280,

@@ -1,4 +1,3 @@
-// src/store/redux/services/api-types/common.ts
 export type BaseResponse = {
   httpStatus: 200;
   created_at: string;

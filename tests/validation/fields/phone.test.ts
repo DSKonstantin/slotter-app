@@ -12,7 +12,7 @@ describe("phoneField", () => {
   });
 
   it("rejects numbers that aren't 11 digits starting with 7", () => {
-    expect(phoneField.isValidSync("+8 999 123 45 67")).toBe(false); // wrong country code
-    expect(phoneField.isValidSync("+7 999 123 45")).toBe(false); // too short
+    expect(phoneField.isValidSync("+8 999 123 45 67")).toBe(false);
+    expect(phoneField.isValidSync("+7 999 123 45")).toBe(false);
   });
 });

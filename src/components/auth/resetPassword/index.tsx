@@ -92,7 +92,6 @@ const ResetPasswordPhone = () => {
     }
   }, [methods, sendCode, setCallSession]);
 
-  // 5. useCallback
   const onSubmit = useCallback(
     async ({ phone }: ResetPasswordPhoneValues) => {
       const normalizedPhone = `+${unMask(phone)}`;

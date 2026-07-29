@@ -1,12 +1,23 @@
 import React from "react";
 import { View } from "react-native";
 
-import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { RhfTimeWheelField } from "@/src/components/hookForm/rhf-time-wheel-field";
 import { Divider } from "@/src/components/ui/Divider";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { Typography } from "@/src/components/ui/Typography";
 import { colors } from "@/src/styles/colors";
-import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
+import {
+  formatMinutes,
+  getTimeParts,
+  parseTimeMinutes,
+} from "@/src/utils/date/formatTime";
+import { FULL_DAY_MINUTE_OPTIONS } from "@/src/utils/date/timeOptions";
+
+const toMinutes = (date?: Date) => {
+  if (!date) return undefined;
+  const { hours, minutes } = getTimeParts(date);
+  return hours * 60 + minutes;
+};
 
 type Props = {
   startName: string;
@@ -31,13 +42,15 @@ export const TimeFields = ({
     )}
     <View className="flex-row gap-2">
       <View className="flex-1">
-        <RhfDatePicker
+        <RhfTimeWheelField
           name={startName}
           placeholder="9:00"
-          defaultDisplayValue={startDefault}
+          options={FULL_DAY_MINUTE_OPTIONS}
+          loop
+          defaultValue={toMinutes(startDefault)}
           hideErrorText
-          parseValue={parseTimeString}
-          formatValue={formatTime}
+          parseValue={parseTimeMinutes}
+          formatValue={formatMinutes}
           endAdornment={
             <StSvg name="Time" size={24} color={colors.neutral[500]} />
           }
@@ -47,13 +60,15 @@ export const TimeFields = ({
         <Divider />
       </View>
       <View className="flex-1">
-        <RhfDatePicker
+        <RhfTimeWheelField
           name={endName}
           placeholder="18:00"
-          defaultDisplayValue={endDefault}
+          options={FULL_DAY_MINUTE_OPTIONS}
+          loop
+          defaultValue={toMinutes(endDefault)}
           hideErrorText
-          parseValue={parseTimeString}
-          formatValue={formatTime}
+          parseValue={parseTimeMinutes}
+          formatValue={formatMinutes}
           endAdornment={
             <StSvg name="Time" size={24} color={colors.neutral[500]} />
           }

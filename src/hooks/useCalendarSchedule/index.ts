@@ -52,7 +52,6 @@ export const useCalendarSchedule = (current: Date) => {
     editableSelectedDays,
   });
 
-  // Handle template intent from external navigation
   useEffect(() => {
     if (intent?.type !== "openTemplate") return;
     if (!isTemplateLoaded) return;

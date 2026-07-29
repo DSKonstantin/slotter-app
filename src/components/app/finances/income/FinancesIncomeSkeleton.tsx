@@ -44,10 +44,8 @@ const FinancesIncomeSkeleton = ({ topInset = 0 }: Props) => {
         backgroundColor={BG}
         foregroundColor={FG}
       >
-        {/* Chart card */}
         <Rect x={0} y={y0} rx={RADIUS} ry={RADIUS} width={w} height={chartH} />
 
-        {/* Итого card */}
         <Rect
           x={0}
           y={y1}
@@ -57,7 +55,6 @@ const FinancesIncomeSkeleton = ({ topInset = 0 }: Props) => {
           height={totalCardH}
         />
 
-        {/* SegmentedControl */}
         <Rect
           x={0}
           y={y2}
@@ -67,7 +64,6 @@ const FinancesIncomeSkeleton = ({ topInset = 0 }: Props) => {
           height={segmentH}
         />
 
-        {/* Breakdown items */}
         {Array.from({ length: itemCount }).map((_, i) => (
           <Rect
             key={i}

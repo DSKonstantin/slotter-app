@@ -12,8 +12,6 @@ import { formatApiDate } from "@/src/utils/date/formatDate";
 import { upsertApiQueryData } from "@/tests/testUtils/upsertApiQueryData";
 import type { User, WorkingDay } from "@/src/store/redux/services/api-types";
 
-// getWorkingDays would otherwise fire a real request on mount before we get
-// a chance to seed the cache below.
 jest.mock("@/src/store/redux/services/axios", () => ({
   __esModule: true,
   default: jest.fn(() =>
@@ -21,9 +19,6 @@ jest.mock("@/src/store/redux/services/axios", () => ({
   ),
 }));
 
-// useTodaySchedule -> useRequiredAuth calls router.replace() when logged
-// out; expo-router's real global routing state isn't mounted in this bare
-// renderHook setup, so it throws unless mocked.
 jest.mock("expo-router", () => ({
   router: { replace: jest.fn() },
 }));
@@ -42,11 +37,6 @@ const buildStore = (loggedIn: boolean) => {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(api.middleware),
     preloadedState: { auth: authState },
-    // configureStore's default autoBatch enhancer queues dispatches via
-    // requestAnimationFrame, which RN's jest polyfill implements as
-    // setTimeout(cb, 0) — with RTK Query's continuous internal dispatches
-    // that keeps re-scheduling itself for as long as the store is alive,
-    // leaking timers past this file's teardown. Not needed in tests.
     enhancers: (getDefaultEnhancers) =>
       getDefaultEnhancers({ autoBatch: false }),
   });

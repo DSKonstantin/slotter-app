@@ -171,9 +171,6 @@ const PaymentStatusScreen = () => {
           <Button
             title={buttonTitle}
             onPress={() => {
-              // поллинг к возврату уже мог остановиться (таймаут) —
-              // разово перепроверить платёж и membership; если платёж
-              // дошёл, эффект по isSucceeded сам переключит экран
               runOnNextForeground(() => {
                 if (auth) getSubscriptionMembership({ userId: auth.userId });
                 safeRefetch(refetchPayment);

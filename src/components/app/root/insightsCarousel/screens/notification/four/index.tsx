@@ -9,12 +9,6 @@ import {
   StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
-// Четвёртый (последний) слайд группы "notification" — см.
-// assets/images/history/notification/four.webp. Нижний текст с иконками
-// ("Аккаунт > Уведомления") в референсе — часть мокапа, оставлен внутри
-// обрезанной иллюстрации, а не вынесен в компонент (как и календарные сетки
-// в education_payments). Иллюстрация ниже — обрезанный оригинал, см.
-// assets/images/history/notification/four-illustration.webp.
 const NotificationFour = () => {
   return (
     <StoryScreenLayout paddingTop={60}>

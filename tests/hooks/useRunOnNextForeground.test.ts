@@ -2,12 +2,6 @@ import { AppState, type AppStateStatus } from "react-native";
 import { renderHook, act } from "@testing-library/react-native";
 import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
 
-// appState.current inside the hook is only ever updated by the "change"
-// listener itself (set at the end of each invocation) — mutating the static
-// AppState.currentState afterwards has no effect on it. To simulate a real
-// background -> active transition we have to invoke the captured listener
-// twice: once with "background" (so the hook's internal ref catches up),
-// then with "active".
 describe("useRunOnNextForeground", () => {
   let changeListener: (state: AppStateStatus) => void;
   let addEventListenerSpy: jest.SpyInstance;
