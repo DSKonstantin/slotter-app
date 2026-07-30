@@ -14,11 +14,18 @@ const FADE_HEIGHT = ITEM_HEIGHT * 2;
 const FADE_COLOR = colors.background.DEFAULT;
 
 // Odd multiplier: duplicates each option list this many times so scrolling
-// in either direction feels endless — 41 full loops is far more than anyone
-// scrolls in one gesture. LoopWheelPicker is virtualized (only visible rows
-// are actually rendered), so this is a memory/useMemo-cost knob, not a
-// rendering-cost one — kept modest for lower-end devices regardless.
-const LOOP_REPEAT_COUNT = 41;
+// in either direction feels endless. Split per column because the underlying
+// wheel-picker library scales several things off the *size* of this looped
+// array (its snapToOffsets list, the initial-scroll-index jump distance, and
+// a linear findIndex it runs to resolve the current index) — so it's not
+// just a memory/useMemo knob. What actually needs covering is a physical
+// row-buffer (how many rows a hard fling can cross), which is independent of
+// how many distinct values a column has — so the *shorter* list (hours, up
+// to 24 values) needs proportionally more loops than the *longer* one
+// (minutes, up to 60) to cover the same buffer, while still ending up with a
+// smaller total array (the actual cost driver) than one shared count would.
+const HOUR_LOOP_REPEAT_COUNT = 15;
+const MINUTE_LOOP_REPEAT_COUNT = 7;
 
 const LoopWheelPicker = withVirtualized(WheelPicker);
 
@@ -26,9 +33,12 @@ type WheelOption = { value: number; label: string };
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
-const buildLoopedData = (items: WheelOption[]): WheelOption[] => {
+const buildLoopedData = (
+  items: WheelOption[],
+  repeatCount: number,
+): WheelOption[] => {
   if (items.length === 0) return [];
-  return Array.from({ length: items.length * LOOP_REPEAT_COUNT }, (_, i) => ({
+  return Array.from({ length: items.length * repeatCount }, (_, i) => ({
     value: i,
     label: items[i % items.length].label,
   }));
@@ -128,11 +138,14 @@ export const TimeWheel = memo(function TimeWheel({
   }, [loop, hourOptions, minuteOptionsByHour]);
 
   const loopedHourData = useMemo(
-    () => (loop ? buildLoopedData(hourOptions) : []),
+    () => (loop ? buildLoopedData(hourOptions, HOUR_LOOP_REPEAT_COUNT) : []),
     [loop, hourOptions],
   );
   const loopedMinuteData = useMemo(
-    () => (loop ? buildLoopedData(canonicalMinuteOptions) : []),
+    () =>
+      loop
+        ? buildLoopedData(canonicalMinuteOptions, MINUTE_LOOP_REPEAT_COUNT)
+        : [],
     [loop, canonicalMinuteOptions],
   );
 
@@ -141,14 +154,19 @@ export const TimeWheel = memo(function TimeWheel({
       0,
       hourOptions.findIndex((h) => h.value === selectedHour),
     );
-    return Math.floor(LOOP_REPEAT_COUNT / 2) * hourOptions.length + realIndex;
+    return (
+      Math.floor(HOUR_LOOP_REPEAT_COUNT / 2) * hourOptions.length + realIndex
+    );
   });
   const [minuteLoopIndex, setMinuteLoopIndex] = useState(() => {
     const realIndex = Math.max(
       0,
       minuteOptions.findIndex((m) => m.value === selectedMinute),
     );
-    return Math.floor(LOOP_REPEAT_COUNT / 2) * minuteOptions.length + realIndex;
+    return (
+      Math.floor(MINUTE_LOOP_REPEAT_COUNT / 2) * minuteOptions.length +
+      realIndex
+    );
   });
 
   const handleHourChange = useCallback(

@@ -18,7 +18,12 @@ export type NotificationKind =
   | "review_request"
   | "birthday_greeting"
   | "referral_signup"
-  | "chat_new_activity";
+  | "chat_new_activity"
+  | "subscription_grace"
+  | "subscription_expired"
+  | "direct_channel_grace"
+  | "direct_channel_expired"
+  | "direct_channel_disconnected";
 
 export type NotificationCancelVariant =
   | "with_reason"

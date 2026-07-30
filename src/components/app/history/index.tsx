@@ -32,6 +32,8 @@ import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { Avatar, Button, StSvg, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { handleKindNavigation } from "@/src/utils/notificationNavigation";
 import { pluralize } from "@/src/utils/text/pluralize";
 import { colors } from "@/src/styles/colors";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -136,6 +138,7 @@ const HistoryScreen = () => {
   const [markRead] = useMarkNotificationReadMutation();
 
   const user = useAppSelector((s) => s.auth.user);
+  const openPersonalAccount = useOpenPersonalAccount();
 
   const { refreshing, onRefresh } = useRefresh(
     useCallback(() => refetch({ refetchCachedPages: false }), [refetch]),
@@ -182,14 +185,23 @@ const HistoryScreen = () => {
       if (!notification.read_at) {
         markRead(notification.id);
       }
-      if (!notification.subject) return;
-      if (isAppointmentSubject(notification.subject)) {
-        router.push(Routers.app.slot(notification.subject.id));
-      } else {
-        router.push(Routers.app.chat.room(notification.subject.id));
+      // Subject-based navigation (appointment/chat) takes priority — it's
+      // the more specific target and pre-dates the kind-based routing below.
+      // Kinds like appointment_rescheduled/appointment_reminder have both a
+      // `detailRoute` (used by the separate client-notifications settings
+      // list) and a real subject; tapping them here must still go to the
+      // actual appointment, not the generic settings screen.
+      if (notification.subject) {
+        if (isAppointmentSubject(notification.subject)) {
+          router.push(Routers.app.slot(notification.subject.id));
+        } else {
+          router.push(Routers.app.chat.room(notification.subject.id));
+        }
+        return;
       }
+      handleKindNavigation(notification.kind, openPersonalAccount);
     },
-    [markRead],
+    [markRead, openPersonalAccount],
   );
 
   const handleEndReached = useCallback(() => {

@@ -1,9 +1,10 @@
 import { api } from "../api";
 import type {
   SubscriptionMembership,
-  SubscriptionPlan,
+  SubscriptionPlanWithPrices,
   SubscriptionQuota,
   SubscriptionPayment,
+  SubscriptionPaymentMethodType,
   CheckoutResponse,
   RenewWithCardResponse,
 } from "@/src/store/redux/services/api-types";
@@ -11,7 +12,7 @@ import type {
 export const subscriptionApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
-    getSubscriptionPlans: builder.query<SubscriptionPlan[], void>({
+    getSubscriptionPlans: builder.query<SubscriptionPlanWithPrices[], void>({
       query: () => ({
         url: "/subscription_plans",
         method: "GET",
@@ -32,12 +33,26 @@ export const subscriptionApi = api.injectEndpoints({
 
     checkout: builder.mutation<
       CheckoutResponse,
-      { userId: number; subscriptionPlanId: number }
+      {
+        userId: number;
+        subscriptionPlanPriceId: number;
+        paymentMethodType?: SubscriptionPaymentMethodType;
+        applyBalance?: boolean;
+      }
     >({
-      query: ({ userId, subscriptionPlanId }) => ({
+      query: ({
+        userId,
+        subscriptionPlanPriceId,
+        paymentMethodType,
+        applyBalance,
+      }) => ({
         url: `/users/${userId}/subscription_membership/checkout`,
         method: "POST",
-        data: { subscription_plan_id: subscriptionPlanId },
+        data: {
+          subscription_plan_price_id: subscriptionPlanPriceId,
+          payment_method_type: paymentMethodType,
+          apply_balance: applyBalance,
+        },
       }),
     }),
 
@@ -81,21 +96,23 @@ export const subscriptionApi = api.injectEndpoints({
       invalidatesTags: ["SubscriptionMembership"],
     }),
 
-    changeCard: builder.mutation<CheckoutResponse, { userId: number }>({
-      query: ({ userId }) => ({
+    changeCard: builder.mutation<
+      CheckoutResponse,
+      { userId: number; paymentMethodType?: SubscriptionPaymentMethodType }
+    >({
+      query: ({ userId, paymentMethodType }) => ({
         url: `/users/${userId}/subscription_membership/change_card`,
         method: "POST",
+        data: paymentMethodType
+          ? { payment_method_type: paymentMethodType }
+          : undefined,
       }),
     }),
 
-    renewWithCard: builder.mutation<
-      RenewWithCardResponse,
-      { userId: number; paymentMethodId: number }
-    >({
-      query: ({ userId, paymentMethodId }) => ({
+    renewWithCard: builder.mutation<RenewWithCardResponse, { userId: number }>({
+      query: ({ userId }) => ({
         url: `/users/${userId}/subscription_membership/renew_with_card`,
         method: "POST",
-        data: { payment_method_id: paymentMethodId },
       }),
     }),
   }),

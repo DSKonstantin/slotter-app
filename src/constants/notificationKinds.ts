@@ -12,6 +12,10 @@ export type NotificationBadgeConfig = {
 type KindConfig = {
   badge: NotificationBadgeConfig;
   detailRoute?: string;
+  /** Open the external subscription/upgrade web page on tap instead of the
+   * usual subject-based navigation — for the "money" kinds where the user
+   * needs to fix a payment. */
+  openUpgrade?: boolean;
 };
 
 export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
@@ -75,6 +79,24 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
   },
   chat_new_activity: {
     badge: { icon: "Chat_fill", color: colors.accent.purple[500] },
+  },
+  subscription_grace: {
+    badge: { icon: "Credit-card_fill", color: colors.accent.orange[500] },
+    openUpgrade: true,
+  },
+  subscription_expired: {
+    badge: { icon: "Alarm_fill", color: colors.accent.red[500] },
+  },
+  direct_channel_grace: {
+    badge: { icon: "Credit-card_fill", color: colors.accent.orange[500] },
+    openUpgrade: true,
+  },
+  direct_channel_expired: {
+    badge: { icon: "Alarm_fill", color: colors.accent.red[500] },
+  },
+  direct_channel_disconnected: {
+    badge: { icon: "link_alt", color: colors.accent.orange[500] },
+    detailRoute: Routers.app.account.clientNotifications.root,
   },
 };
 

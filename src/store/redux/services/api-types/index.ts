@@ -175,7 +175,10 @@ export type {
 } from "./userLink";
 export type {
   SubscriptionPlan,
+  SubscriptionPlanPrice,
+  SubscriptionPlanWithPrices,
   SubscriptionPaymentMethod,
+  SubscriptionPaymentMethodType,
   SubscriptionStatus,
   SubscriptionMembership,
   CheckoutResponse,
@@ -183,6 +186,7 @@ export type {
   SubscriptionQuota,
   SubscriptionPayment,
   SubscriptionPaymentStatus,
+  SubscriptionPaymentKind,
 } from "./subscription";
 export type {
   DirectChannelKind,

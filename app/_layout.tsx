@@ -40,6 +40,8 @@ import {
   logoutOneSignal,
 } from "@/src/services/oneSignal";
 import { Routers } from "@/src/constants/routers";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { handleKindNavigation } from "@/src/utils/notificationNavigation";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,12 +51,15 @@ function InitialLayout() {
   const authStatus = useAppSelector((s) => s.auth.status);
 
   useSentryUserSync();
+  const openPersonalAccount = useOpenPersonalAccount();
 
   useOneSignal((event) => {
     const { kind, subject_id } = (event.notification.additionalData ?? {}) as {
       kind?: string;
       subject_id?: number;
     };
+
+    if (handleKindNavigation(kind, openPersonalAccount)) return;
 
     if (
       kind?.startsWith("appointment_") ||
