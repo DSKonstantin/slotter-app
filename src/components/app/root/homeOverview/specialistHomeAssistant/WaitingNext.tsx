@@ -48,7 +48,7 @@ function NextAppointmentVariantComponent({ appointments, label }: Props) {
         title="запись"
         variant="secondary"
         buttonClassName="gap-0 rounded-lg bg-background"
-        onPress={() => router.push(Routers.app.calendar.slot(next.id))}
+        onPress={() => router.push(Routers.app.slot(next.id))}
         rightIcon={
           <StSvg name="Expand_right" size={16} color={colors.neutral[700]} />
         }

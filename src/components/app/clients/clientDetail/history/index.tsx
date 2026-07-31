@@ -161,8 +161,6 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
   const handleRetry = useCallback(() => {
-    // упавший customer-запрос блокирует зависимые (skipToken без ucId), а
-    // refetch не начатого зависимого запроса кидает — дёргаем только упавшие
     if (customerError) refetchCustomer();
     if (filterActive ? appointmentsError : financesError) handleRefresh();
   }, [
@@ -275,14 +273,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                               }}
                               date={formatDayMonth(item.date)}
                               onPress={() =>
-                                router.push(
-                                  userCustomerId !== undefined
-                                    ? Routers.app.clients.slot(
-                                        userCustomerId,
-                                        item.id,
-                                      )
-                                    : Routers.app.calendar.slot(item.id),
-                                )
+                                router.push(Routers.app.slot(item.id))
                               }
                             />
                           </View>
@@ -333,14 +324,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                       title={payment.title}
                       subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
                       onPress={() =>
-                        router.push(
-                          userCustomerId !== undefined
-                            ? Routers.app.clients.slot(
-                                userCustomerId,
-                                payment.appointment_id,
-                              )
-                            : Routers.app.calendar.slot(payment.appointment_id),
-                        )
+                        router.push(Routers.app.slot(payment.appointment_id))
                       }
                       right={
                         <Typography className="text-body">

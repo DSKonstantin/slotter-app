@@ -50,8 +50,6 @@ export interface GetChatRoomsResponse {
   pagination: PaginationMeta;
 }
 
-// --- Messages ---
-
 export interface ChatMessageImage {
   id: number;
   url: string;
@@ -161,8 +159,6 @@ export interface GetChatMessagesResponse {
   items: ChatMessage[];
   next_cursor: string | null;
 }
-
-// ── Cable events ──────────────────────────────────────────────────────────────
 
 export type ResourceChannelEvent =
   | { type: "chat_room.created"; payload: ChatRoom }

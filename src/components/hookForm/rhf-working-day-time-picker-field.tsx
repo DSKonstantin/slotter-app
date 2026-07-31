@@ -4,8 +4,9 @@ import { endOfMonth, parseISO, startOfMonth } from "date-fns";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
-import { parseTime } from "@/src/utils/date/formatTime";
-import { WorkingDayTimePickerField } from "@/src/components/ui/fields/WorkingDayTimePickerField";
+import { formatMinutes, parseTime } from "@/src/utils/date/formatTime";
+import { buildMinuteOptions } from "@/src/utils/date/timeOptions";
+import { TimeWheelField } from "@/src/components/ui/fields/TimeWheelField";
 
 type Props = {
   name: string;
@@ -22,10 +23,8 @@ export function RhfWorkingDayTimePickerField({
   userId,
   label,
 }: Props) {
-  // 2. useRef
   const prevDate = useRef<string | undefined>(undefined);
 
-  // 3. Custom hooks + RTK Query hooks
   const { control, setValue } = useFormContext();
   const {
     field: { value, onChange },
@@ -38,7 +37,6 @@ export function RhfWorkingDayTimePickerField({
     control,
   });
 
-  // Plain derived values needed by RTK Query below (not hooks)
   const parsedDate = date ? parseISO(date) : null;
   const dateFrom = parsedDate
     ? formatApiDate(startOfMonth(parsedDate))
@@ -60,7 +58,6 @@ export function RhfWorkingDayTimePickerField({
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery({ userId, params: { date } }, { skip: !date });
 
-  // Plain derived values
   const workingDay = date && workingDays ? workingDays[date] : null;
   const startMinutes = workingDay?.is_active
     ? parseTime(workingDay.start_at)
@@ -69,7 +66,6 @@ export function RhfWorkingDayTimePickerField({
     ? parseTime(workingDay.end_at)
     : undefined;
 
-  // 4. useMemo — deps on workingDays+date instead of derived workingDay reference
   const breaks = useMemo(() => {
     const wd = date && workingDays ? workingDays[date] : null;
     const workingDayBreaks = (wd?.working_day_breaks ?? []).map((b) => ({
@@ -103,9 +99,20 @@ export function RhfWorkingDayTimePickerField({
   const adjustedEndMinutes =
     endMinutes !== undefined && duration ? endMinutes - duration : endMinutes;
 
-  // 6. useEffect
+  const isDayConfigured =
+    startMinutes !== undefined && adjustedEndMinutes !== undefined;
+
+  const options = useMemo(() => {
+    if (!isDayConfigured) return [];
+    return buildMinuteOptions({
+      start: startMinutes!,
+      end: adjustedEndMinutes!,
+      step: 5,
+      exclude: breaks,
+    });
+  }, [isDayConfigured, startMinutes, adjustedEndMinutes, breaks]);
+
   useEffect(() => {
-    // Skip on initial mount to avoid clearing a pre-populated edit-mode value.
     if (prevDate.current === undefined) {
       prevDate.current = date;
       return;
@@ -116,14 +123,13 @@ export function RhfWorkingDayTimePickerField({
   }, [date, name, setValue]);
 
   return (
-    <WorkingDayTimePickerField
-      value={value || null}
-      onChange={onChange}
+    <TimeWheelField
+      value={value ? parseTime(value) : null}
+      onChange={(minutes) => onChange(formatMinutes(minutes))}
+      options={options}
+      emptyMessage={isDayConfigured ? "Все занято" : undefined}
       label={label}
       error={error}
-      startMinutes={startMinutes}
-      endMinutes={adjustedEndMinutes}
-      breaks={breaks}
       isLoading={isFetching || isFetchingAppointments}
       onOpen={() => {
         refetchWorkingDays();

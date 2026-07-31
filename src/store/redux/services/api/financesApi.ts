@@ -11,7 +11,6 @@ import type {
 const financesApi = api.injectEndpoints({
   overrideExisting: __DEV__,
   endpoints: (builder) => ({
-    // Expenses
     getExpenses: builder.query<
       { expenses: Expense[] },
       { userId: number } & GetExpensesParams
@@ -56,7 +55,6 @@ const financesApi = api.injectEndpoints({
       invalidatesTags: ["FinancesSummary"],
     }),
 
-    // Analytics
     getFinancesSummary: builder.query<
       FinancesSummary,
       { userId: number; month: number; year: number }

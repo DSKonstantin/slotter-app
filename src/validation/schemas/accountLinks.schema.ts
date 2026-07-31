@@ -1,6 +1,8 @@
 import * as yup from "yup";
 
 export const AccountLinksSchema = yup.object({
+  address: yup.string().max(300, "Максимум 300 символов").default(""),
+  hideAddress: yup.boolean().required(),
   links: yup.array().of(
     yup.object({
       id: yup.number().optional(),

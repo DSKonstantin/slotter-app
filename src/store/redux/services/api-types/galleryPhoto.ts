@@ -1,4 +1,3 @@
-/** All values are relative (0–1), not pixels */
 export interface GalleryPhotoCropData {
   x: number;
   y: number;

@@ -11,9 +11,7 @@ interface Props {
   onOpen: () => void;
   onClose: () => void;
   onCloseComplete: () => void;
-  /** нет — перенос запрещён (например, клиент скрыт квотой) */
   onReschedule?: () => void;
-  /** нет — отмена запрещена (например, клиент скрыт квотой) */
   onCancel?: () => void;
   onChangeCustomer?: () => void;
 }

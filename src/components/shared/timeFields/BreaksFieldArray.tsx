@@ -2,12 +2,17 @@ import React from "react";
 import { View, Pressable } from "react-native";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
-import { RhfDatePicker } from "@/src/components/hookForm/rhf-date-picker";
+import { RhfTimeWheelField } from "@/src/components/hookForm/rhf-time-wheel-field";
 import { Button } from "@/src/components/ui/Button";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { Typography } from "@/src/components/ui/Typography";
 import { colors } from "@/src/styles/colors";
-import { formatTime, parseTimeString } from "@/src/utils/date/formatTime";
+import {
+  formatMinutes,
+  getTimeParts,
+  parseTimeMinutes,
+} from "@/src/utils/date/formatTime";
+import { FULL_DAY_MINUTE_OPTIONS } from "@/src/utils/date/timeOptions";
 import {
   BREAKS_OVERLAP_MESSAGE,
   overlapsOther,
@@ -15,6 +20,12 @@ import {
 } from "@/src/validation/utils/timeRange";
 
 const MAX_BREAKS = 3;
+
+const toMinutes = (date?: Date) => {
+  if (!date) return undefined;
+  const { hours, minutes } = getTimeParts(date);
+  return hours * 60 + minutes;
+};
 
 type Props = {
   name?: string;
@@ -50,13 +61,15 @@ export const BreaksFieldArray = ({
         {fields.map((field, index) => (
           <View key={field.id} className="flex-row items-center gap-2">
             <View className="flex-1">
-              <RhfDatePicker
+              <RhfTimeWheelField
                 name={`${name}.${index}.start`}
                 placeholder="12:00"
-                defaultDisplayValue={startDefault}
+                options={FULL_DAY_MINUTE_OPTIONS}
+                loop
+                defaultValue={toMinutes(startDefault)}
                 hideErrorText
-                parseValue={parseTimeString}
-                formatValue={formatTime}
+                parseValue={parseTimeMinutes}
+                formatValue={formatMinutes}
                 endAdornment={
                   <StSvg name="Time" size={24} color={colors.neutral[500]} />
                 }
@@ -64,13 +77,15 @@ export const BreaksFieldArray = ({
             </View>
 
             <View className="flex-1">
-              <RhfDatePicker
+              <RhfTimeWheelField
                 name={`${name}.${index}.end`}
                 placeholder="13:00"
-                defaultDisplayValue={endDefault}
+                options={FULL_DAY_MINUTE_OPTIONS}
+                loop
+                defaultValue={toMinutes(endDefault)}
                 hideErrorText
-                parseValue={parseTimeString}
-                formatValue={formatTime}
+                parseValue={parseTimeMinutes}
+                formatValue={formatMinutes}
                 endAdornment={
                   <StSvg name="Time" size={24} color={colors.neutral[500]} />
                 }

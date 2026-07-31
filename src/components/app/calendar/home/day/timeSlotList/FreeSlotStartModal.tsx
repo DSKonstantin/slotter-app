@@ -1,8 +1,6 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
-import WheelPicker from "@quidone/react-native-wheel-picker";
-
-import { Button, StModal, Typography } from "@/src/components/ui";
+import React, { memo, useCallback, useMemo } from "react";
+import { buildMinuteOptions } from "@/src/utils/date/timeOptions";
+import { TimeWheelPickerModal } from "@/src/components/ui/pickers/TimeWheelPickerModal";
 
 export type FreeSlotRange = {
   start: number;
@@ -17,26 +15,11 @@ type FreeSlotStartModalProps = {
 };
 
 const STEP_MINUTES = 15;
-
-const roundUpToStep = (value: number) =>
-  Math.ceil(value / STEP_MINUTES) * STEP_MINUTES;
-
-const createTimeOptions = (range: FreeSlotRange | null) => {
-  if (!range) return [];
-
-  const end = Math.max(range.start, range.end);
-  const firstAligned = roundUpToStep(range.start);
-
-  const options: number[] = [range.start];
-
-  for (let time = firstAligned; time <= end; time += STEP_MINUTES) {
-    if (time !== range.start) {
-      options.push(time);
-    }
-  }
-
-  return options;
-};
+// The free gap itself can extend for hours (all the way to the next
+// appointment or end of day), but scrolling through that whole window just
+// to pick a start time near where the user tapped is impractical — cap the
+// picker to a 1-hour window from the tapped point.
+const MAX_RANGE_MINUTES = 60;
 
 const FreeSlotStartModal = ({
   visible,
@@ -44,110 +27,38 @@ const FreeSlotStartModal = ({
   onClose,
   onNext,
 }: FreeSlotStartModalProps) => {
-  const timeOptions = useMemo(() => createTimeOptions(range), [range]);
-
-  const defaultTime = timeOptions[0] ?? 0;
-
-  const [selectedHour, setSelectedHour] = useState(
-    Math.floor(defaultTime / 60),
-  );
-
-  const [selectedMinute, setSelectedMinute] = useState(defaultTime % 60);
-
-  const hourOptions = useMemo(() => {
-    const hours = Array.from(
-      new Set(timeOptions.map((time) => Math.floor(time / 60))),
+  const options = useMemo(() => {
+    if (!range) return [];
+    const end = Math.min(
+      Math.max(range.start, range.end),
+      range.start + MAX_RANGE_MINUTES,
     );
+    return buildMinuteOptions({
+      start: range.start,
+      end,
+      step: STEP_MINUTES,
+    });
+  }, [range]);
 
-    return hours.map((hour) => ({
-      value: hour,
-      label: String(hour).padStart(2, "0"),
-    }));
-  }, [timeOptions]);
-
-  const minuteOptions = useMemo(
-    () =>
-      timeOptions
-        .filter((time) => Math.floor(time / 60) === selectedHour)
-        .map((time) => ({
-          value: time % 60,
-          label: String(time % 60).padStart(2, "0"),
-        })),
-    [selectedHour, timeOptions],
+  const handleConfirm = useCallback(
+    (minutes: number) => {
+      onNext?.(minutes);
+      onClose();
+    },
+    [onClose, onNext],
   );
-
-  useEffect(() => {
-    if (!visible) return;
-
-    setSelectedHour(Math.floor(defaultTime / 60));
-    setSelectedMinute(defaultTime % 60);
-  }, [defaultTime, visible]);
-
-  useEffect(() => {
-    if (!minuteOptions.length) return;
-
-    const exists = minuteOptions.some((item) => item.value === selectedMinute);
-
-    if (!exists) {
-      setSelectedMinute(minuteOptions[0].value);
-    }
-  }, [minuteOptions, selectedMinute]);
-
-  const handleNext = useCallback(() => {
-    onNext?.(selectedHour * 60 + selectedMinute);
-    onClose();
-  }, [onClose, onNext, selectedHour, selectedMinute]);
 
   return (
-    <StModal
+    <TimeWheelPickerModal
       visible={visible}
+      options={options}
+      value={options[0]}
+      title="Выбрать начало слота"
+      confirmLabel="Далее"
+      cancelLabel={null}
+      onConfirm={handleConfirm}
       onClose={onClose}
-      swipeDirection={undefined}
-      header={
-        <Typography weight="semibold" className="text-display text-center mb-6">
-          Выбрать начало слота
-        </Typography>
-      }
-      footer={<Button title="Далее" onPress={handleNext} />}
-    >
-      <View className="mb-6">
-        <View className="h-[120px] flex-row items-center justify-center rounded-large bg-neutral-0 overflow-hidden">
-          {hourOptions.length > 0 && (
-            <WheelPicker
-              style={{
-                flex: 1,
-              }}
-              renderOverlay={null}
-              data={hourOptions}
-              value={selectedHour}
-              onValueChanged={({ item }) => {
-                setSelectedHour(item.value);
-              }}
-            />
-          )}
-
-          <Typography
-            weight="regular"
-            className="mx-4 text-[32px] text-neutral-900"
-          >
-            :
-          </Typography>
-          {minuteOptions.length > 0 && (
-            <WheelPicker
-              style={{
-                flex: 1,
-              }}
-              renderOverlay={null}
-              data={minuteOptions}
-              value={selectedMinute}
-              onValueChanged={({ item }) => {
-                setSelectedMinute(item.value);
-              }}
-            />
-          )}
-        </View>
-      </View>
-    </StModal>
+    />
   );
 };
 

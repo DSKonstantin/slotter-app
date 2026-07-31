@@ -259,7 +259,6 @@ export const ScheduleSettingsModal = ({
                 </View>
               )}
 
-              {/* Content */}
               <BottomSheetScrollView
                 ref={setScrollRef as never}
                 contentContainerStyle={[

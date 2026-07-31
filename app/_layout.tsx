@@ -40,6 +40,8 @@ import {
   logoutOneSignal,
 } from "@/src/services/oneSignal";
 import { Routers } from "@/src/constants/routers";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { handleKindNavigation } from "@/src/utils/notificationNavigation";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,6 +51,7 @@ function InitialLayout() {
   const authStatus = useAppSelector((s) => s.auth.status);
 
   useSentryUserSync();
+  const openPersonalAccount = useOpenPersonalAccount();
 
   useOneSignal((event) => {
     const { kind, subject_id } = (event.notification.additionalData ?? {}) as {
@@ -56,12 +59,14 @@ function InitialLayout() {
       subject_id?: number;
     };
 
+    if (handleKindNavigation(kind, openPersonalAccount)) return;
+
     if (
       kind?.startsWith("appointment_") ||
       kind?.startsWith("rebook_") ||
       kind === "review_request"
     ) {
-      if (subject_id) router.push(Routers.app.calendar.slot(subject_id));
+      if (subject_id) router.push(Routers.app.slot(subject_id));
     } else if (kind === "chat_new_activity") {
       if (subject_id) router.push(Routers.app.chat.room(subject_id));
     } else {

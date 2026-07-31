@@ -17,7 +17,6 @@ import { useAppDispatch } from "@/src/store/redux/store";
 import { Routers } from "@/src/constants/routers";
 
 const ResetPasswordVerify = () => {
-  // 3. Custom hooks + RTK Query
   const params = useLocalSearchParams<{
     phone: string;
     code_length?: string;
@@ -34,7 +33,6 @@ const ResetPasswordVerify = () => {
   const [confirmCode, { isLoading: isConfirming }] = useConfirmCodeMutation();
   const [sendCode, { isLoading: isSending }] = useSendCodeMutation();
 
-  // 5. useCallback
   const handleComplete = useCallback(
     async (code: string) => {
       try {

@@ -20,7 +20,7 @@ function SetupScheduleVariantComponent() {
       <LinkView
         link="Открыть график"
         iconName="Arrow_alt_lright"
-        onPress={() => router.push(Routers.app.schedule)}
+        onPress={() => router.push(Routers.app.schedule.root)}
       />
     </View>
   );

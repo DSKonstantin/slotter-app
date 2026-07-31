@@ -7,7 +7,7 @@ import { isAuthError } from "@/src/utils/apiError";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 
-interface AuthState {
+export interface AuthState {
   token: string | null;
   user: User | null;
   resourceType: "user" | null;
@@ -30,7 +30,7 @@ type UserPayload =
   | null
   | undefined;
 
-function extractUser(payload: UserPayload): User | null {
+export function extractUser(payload: UserPayload): User | null {
   if (!payload || typeof payload !== "object") return null;
 
   if ("resource" in payload && payload.resource) return payload.resource;
@@ -40,7 +40,7 @@ function extractUser(payload: UserPayload): User | null {
   return null;
 }
 
-function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
+export function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
   if (
     payload &&
     typeof payload === "object" &&
@@ -58,12 +58,10 @@ function setAuthenticatedUser(state: AuthState, payload: UserPayload) {
   state.status = "authenticated";
 }
 
-function setUserOnly(state: AuthState, payload: UserPayload) {
+export function setUserOnly(state: AuthState, payload: UserPayload) {
   const user = extractUser(payload);
   if (!user) return;
 
-  // Некоторые ответы (например, PATCH /users) могут не нести
-  // subscription_membership — не затираем уже известное значение.
   if (
     user.subscription_membership === undefined &&
     state.user?.subscription_membership !== undefined

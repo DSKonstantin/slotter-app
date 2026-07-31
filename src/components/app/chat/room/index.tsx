@@ -5,7 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";
 import {
@@ -54,6 +55,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import type { Service } from "@/src/store/redux/services/api-types";
+import { Routers } from "@/src/constants/routers";
 
 type Props = { roomId: string };
 
@@ -64,7 +66,6 @@ const EMPTY_MESSAGES: ChatIMessage[] = [];
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
 
-  // ── Local UI State ─────────────────────────────────────────────────────
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [menuMessage, setMenuMessage] = useState<ChatIMessage | null>(null);
   const [roomMenuVisible, setRoomMenuVisible] = useState(false);
@@ -77,7 +78,6 @@ export default function ChatRoom({ roomId }: Props) {
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
   const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
-  // ── Auth ──────────────────────────────────────────────────────────────
   const { currentUser, resourceType } = useAppSelector(
     (s) => ({ currentUser: s.auth.user, resourceType: s.auth.resourceType }),
     shallowEqual,
@@ -85,7 +85,6 @@ export default function ChatRoom({ roomId }: Props) {
   const currentGiftedId =
     resourceType && currentUser ? `${resourceType}_${currentUser.id}` : null;
 
-  // ── Queries ───────────────────────────────────────────────────────────
   const { data: roomData } = useGetChatRoomQuery(
     { chatRoomId: id },
     { skip: !id },
@@ -108,7 +107,6 @@ export default function ChatRoom({ roomId }: Props) {
   const messages = chatData?.messages ?? EMPTY_MESSAGES;
   const hasMore = chatData?.hasMore ?? false;
 
-  // ── Mutations ─────────────────────────────────────────────────────────
   const [createMessage] = useCreateChatMessageMutation();
   const [createAppointment] = useCreateAppointmentMutation();
   const [cancelAppointment] = useCancelAppointmentMutation();
@@ -124,10 +122,20 @@ export default function ChatRoom({ roomId }: Props) {
     [currentUser],
   );
 
+  const handleOpenInterlocutor = useCallback(() => {
+    if (!interlocutor || interlocutor.type !== "Customer") return;
+    router.push(Routers.app.client.detail(interlocutor.id, "customer"));
+  }, [interlocutor]);
+
   const titleNode = useMemo(
     () =>
       interlocutor ? (
-        <View className="flex-row items-center gap-2 max-w-full">
+        <Pressable
+          className="flex-row items-center gap-2 max-w-full active:opacity-70"
+          onPress={handleOpenInterlocutor}
+          disabled={interlocutor.type !== "Customer"}
+          hitSlop={8}
+        >
           <Avatar
             name={interlocutor.name}
             uri={interlocutor.avatar_url ?? undefined}
@@ -141,9 +149,9 @@ export default function ChatRoom({ roomId }: Props) {
           >
             {interlocutor.name}
           </Typography>
-        </View>
+        </Pressable>
       ) : undefined,
-    [interlocutor],
+    [interlocutor, handleOpenInterlocutor],
   );
 
   const makeUser = useCallback(
@@ -155,7 +163,6 @@ export default function ChatRoom({ roomId }: Props) {
     [currentGiftedId, currentUser, userName],
   );
 
-  // ── Pagination ────────────────────────────────────────────────────────
   const handleLoadEarlier = useCallback(() => {
     if (!hasMore || isFetching || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
@@ -164,7 +171,6 @@ export default function ChatRoom({ roomId }: Props) {
 
   if (!isFetching) loadingMoreRef.current = false;
 
-  // ── Send handlers ─────────────────────────────────────────────────────
   const onSend = useCallback(
     (newMessages: ChatIMessage[] = []) => {
       const msg = newMessages[0];
@@ -414,7 +420,6 @@ export default function ChatRoom({ roomId }: Props) {
     ],
   );
 
-  // ── Message actions ───────────────────────────────────────────────────
   const handleAcceptAppointment = useCallback(
     async (appointmentId: number) => {
       try {
@@ -439,7 +444,6 @@ export default function ChatRoom({ roomId }: Props) {
     [],
   );
 
-  // ── Render callbacks ──────────────────────────────────────────────────
   const handleCancelReply = useCallback(() => {
     setReplyingTo(null);
     setInputBarHeight(0);
@@ -543,14 +547,12 @@ export default function ChatRoom({ roomId }: Props) {
     [isLoading],
   );
 
-  // ── Mark room read on open ────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
     lastMarkedIncomingIdRef.current = null;
     markRoomRead({ chatRoomId: id });
   }, [id, markRoomRead]);
 
-  // ── Mark incoming messages read ───────────────────────────────────────
   useEffect(() => {
     if (!id || !currentGiftedId || messages.length === 0) return;
 
@@ -558,8 +560,6 @@ export default function ChatRoom({ roomId }: Props) {
     if (!latestIncoming) return;
     if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
 
-    // First time we see incoming messages — initial mark is already handled by
-    // the on-open effect above. Just remember the latest id and bail.
     const wasUninitialized = lastMarkedIncomingIdRef.current === null;
     lastMarkedIncomingIdRef.current = latestIncoming._id;
     if (wasUninitialized) return;

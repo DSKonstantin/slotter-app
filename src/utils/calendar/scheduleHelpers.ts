@@ -18,6 +18,7 @@ export const createEmptyCalendarDay = (
   date,
   workingDayId: undefined,
   isExisting: false,
+  isActive: true,
   isSelected: false,
   startAt: "",
   endAt: "",
@@ -31,6 +32,7 @@ export const createExistingCalendarDay = (
   date,
   workingDayId: workingDay.id,
   isExisting: true,
+  isActive: workingDay.is_active,
   isSelected: false,
   startAt: formatTimeFromISO(workingDay.start_at),
   endAt: formatTimeFromISO(workingDay.end_at),
@@ -94,6 +96,7 @@ export const areSameCalendarDays = (
       item.date === right[index]?.date &&
       item.workingDayId === right[index]?.workingDayId &&
       item.isExisting === right[index]?.isExisting &&
+      item.isActive === right[index]?.isActive &&
       item.isSelected === right[index]?.isSelected &&
       item.startAt === right[index]?.startAt &&
       item.endAt === right[index]?.endAt &&

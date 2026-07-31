@@ -146,8 +146,6 @@ export function Autocomplete({
             setFocused(false);
             const text = currentTextRef.current;
             setTimeout(() => {
-              // setInputText won't work if searchText already equals text (no state change → effect skips).
-              // setItem always creates a new object reference, so the effect always fires → inputValue updates.
               suppressNextSelect.current = true;
               dropdownController.current?.setItem?.({ id: text, title: text });
             }, 0);

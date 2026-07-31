@@ -7,7 +7,12 @@ import React, {
 } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { RefreshControl, View } from "react-native";
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
 import CalendarActionButton from "@/src/components/app/calendar/home/сalendarActionButton";
@@ -29,9 +34,13 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 
 const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const [isRetrying, setIsRetrying] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const scrollViewRef =
+    useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
   const pendingScrollY = useRef<number | null>(null);
-  const dateSelectorHeightRef = useRef(0);
+  const scrollY = useSharedValue(0);
+  const headerTranslateY = useSharedValue(0);
+  const headerHeightShared = useSharedValue(0);
   const auth = useRequiredAuth();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const router = useRouter();
@@ -90,9 +99,9 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const handlePress = useCallback(() => {
     if (isDayLoading) return;
     if (selectedWorkingDay) {
-      router.push(Routers.app.calendar.daySchedule(selectedWorkingDay.id));
+      router.push(Routers.app.daySchedule.edit(selectedWorkingDay.id));
     } else {
-      router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
+      router.push(Routers.app.daySchedule.create(selectedDay));
     }
   }, [router, isDayLoading, selectedWorkingDay, selectedDay]);
 
@@ -127,14 +136,17 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   }, [refetchAll]);
 
   const handleEmptyPress = useCallback(() => {
-    router.push(Routers.app.calendar.dayScheduleCreate(selectedDay));
+    router.push(Routers.app.daySchedule.create(selectedDay));
   }, [router, selectedDay]);
 
-  const handleHighlightScroll = useCallback((y: number) => {
-    const total = y + dateSelectorHeightRef.current;
-    pendingScrollY.current = total;
-    scrollViewRef.current?.scrollTo({ y: total, animated: true });
-  }, []);
+  const handleHighlightScroll = useCallback(
+    (y: number) => {
+      const total = y + headerHeight;
+      pendingScrollY.current = total;
+      scrollViewRef.current?.scrollTo({ y: total, animated: true });
+    },
+    [headerHeight],
+  );
 
   const content = useMemo(() => {
     if (hasError)
@@ -189,7 +201,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     handleHighlightScroll,
   ]);
 
-  // 6. useEffect
   useFocusEffect(
     useCallback(() => {
       safeRefetch(refetchAppointments);
@@ -200,34 +211,43 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     pendingScrollY.current = null;
   }, [selectedDay]);
 
+  useEffect(() => {
+    headerHeightShared.value = headerHeight;
+  }, [headerHeight, headerHeightShared]);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const maxScrollY = Math.max(
+        event.contentSize.height - event.layoutMeasurement.height,
+        0,
+      );
+      const y = Math.min(Math.max(event.contentOffset.y, 0), maxScrollY);
+      const diff = y - scrollY.value;
+
+      const next = headerTranslateY.value - diff;
+      headerTranslateY.value = Math.min(
+        0,
+        Math.max(-headerHeightShared.value, next),
+      );
+
+      scrollY.value = y;
+    },
+  });
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: headerTranslateY.value }],
+  }));
+
   if (!auth) return null;
 
   return (
     <>
-      <ScrollView
-        ref={scrollViewRef}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
-        }}
-        onContentSizeChange={() => {
-          if (pendingScrollY.current !== null) {
-            scrollViewRef.current?.scrollTo({
-              y: pendingScrollY.current,
-              animated: true,
-            });
-            pendingScrollY.current = null;
-          }
-        }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View
-          className="pb-4"
+      <View className="flex-1 overflow-hidden">
+        <Animated.View
+          className="absolute top-0 left-0 right-0 z-10 pb-4 bg-background"
+          style={headerAnimatedStyle}
           onLayout={(e) => {
-            dateSelectorHeightRef.current = e.nativeEvent.layout.height;
+            setHeaderHeight(e.nativeEvent.layout.height);
           }}
         >
           <DateSelector
@@ -236,9 +256,34 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
             workingDaysData={workingDaysData ?? undefined}
             isLoading={isDayLoading}
           />
-        </View>
-        {content}
-      </ScrollView>
+        </Animated.View>
+
+        <Animated.ScrollView
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingTop: headerHeight,
+            paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
+          }}
+          onContentSizeChange={() => {
+            if (pendingScrollY.current !== null) {
+              scrollViewRef.current?.scrollTo({
+                y: pendingScrollY.current,
+                animated: true,
+              });
+              pendingScrollY.current = null;
+            }
+          }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {content}
+        </Animated.ScrollView>
+      </View>
       {!hasError && !isLoading && !isEmpty && (
         <CalendarActionButton
           onPress={handlePress}

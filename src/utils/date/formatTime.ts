@@ -27,17 +27,6 @@ export const formatDayMonth = (date: string) => {
   return format(parseISO(date), "dd.MM");
 };
 
-export const parseTimeString = (value: unknown): Date | null => {
-  if (!value || typeof value !== "string") return null;
-  const parts = value.split(":");
-  const h = Number(parts[0]);
-  const m = Number(parts[1]);
-  if (isNaN(h) || isNaN(m)) return null;
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return isNaN(d.getTime()) ? null : d;
-};
-
 export const parseTime = (time?: string | number | null) => {
   if (!time) return 0;
   if (typeof time !== "string") time = String(time);
@@ -48,6 +37,9 @@ export const parseTime = (time?: string | number | null) => {
   const iso = time.match(/T(\d{2}):(\d{2})/);
   return iso ? +iso[1] * 60 + +iso[2] : 0;
 };
+
+export const parseTimeMinutes = (value: unknown): number | null =>
+  typeof value === "string" && value ? parseTime(value) : null;
 
 export const formatMinutes = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;

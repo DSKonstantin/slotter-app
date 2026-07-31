@@ -63,15 +63,12 @@ const Home = () => {
 
   const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
   const refetchMembership = useCallback(() => {
-    // subscription_membership 404-ит, когда оплата выключена (App Store
-    // review-сборка) — в отличие от getMe, который просто опускал поле
     if (!auth || !ispe) return Promise.resolve();
     return getSubscriptionMembership({ userId: auth.userId });
   }, [auth, ispe, getSubscriptionMembership]);
   useRefetchOnForeground(refetchMembership);
 
   const refetchAll = useCallback(() => {
-    // same guard as safeRefetch, but resolves to a promise Promise.all can await
     const tryRefetch = (refetch: () => unknown) => {
       try {
         return Promise.resolve(refetch());
@@ -85,8 +82,6 @@ const Home = () => {
       tryRefetch(refetchAppointments),
       tryRefetch(refetchUpcoming),
       tryRefetch(refetchNotifications),
-      // quota query is skipToken'd when pro_access is true or membership is
-      // still unknown — it never starts, so don't bother refetching it there
       shouldFetchQuota ? tryRefetch(refetchQuota) : Promise.resolve(),
       refetchMembership(),
     ]);
@@ -109,8 +104,6 @@ const Home = () => {
       safeRefetch(refetchAppointments);
       safeRefetch(refetchUpcoming);
       safeRefetch(refetchNotifications);
-      // quota query is skipToken'd when pro_access is true or membership is
-      // still unknown — it never starts, so don't bother refetching it there
       if (shouldFetchQuota) safeRefetch(refetchQuota);
     }, [
       auth,
@@ -129,7 +122,7 @@ const Home = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          paddingBottom: tabBarHeight + bottom + 8,
+          paddingBottom: 8,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -140,9 +133,11 @@ const Home = () => {
         </View>
         <View className="gap-3 mt-5">
           <NotificationBanners />
-          <InsightsCarousel />
         </View>
       </ScrollView>
+      <View style={{ paddingBottom: tabBarHeight + bottom + 8 }}>
+        <InsightsCarousel />
+      </View>
     </SafeAreaView>
   );
 };

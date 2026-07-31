@@ -29,13 +29,13 @@ type Insight = {
 
 const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
   {
-    id: "education-payments",
+    id: "education_payments",
     category: "education",
     iconName: "Star_alt_fill",
     title: "Как работать с приложением",
     body: [{ text: "Изучите основные разделы для работы" }],
-    stories: MOCK_NOTIFICATION_STORIES["education-payments"],
-    onPress: () => onStoryPress("education-payments"),
+    stories: MOCK_NOTIFICATION_STORIES["education_payments"],
+    onPress: () => onStoryPress("education_payments"),
   },
   {
     id: "fill_profile",
@@ -75,8 +75,6 @@ const InsightsCarousel = () => {
 
   const insights = useMemo(() => getMockInsights(setSelectedStoryId), []);
 
-  // Порядок групп в сторис-вьюере повторяет порядок карточек в карусели:
-  // досмотрел одну группу — переходишь к следующей.
   const storyGroups = useMemo(
     () =>
       insights

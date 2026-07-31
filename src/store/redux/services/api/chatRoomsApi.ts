@@ -111,8 +111,6 @@ export const chatRoomsApi = api.injectEndpoints({
           });
         };
 
-        // Reconcile subscriptions with the current cache — picks up rooms
-        // loaded via fetchNextPage (cacheDataLoaded only fires once on initial).
         const reconcile = () => {
           const cacheData = chatRoomsApi.endpoints.getChatRooms.select(arg)(
             getState() as RootState,
@@ -140,7 +138,6 @@ export const chatRoomsApi = api.injectEndpoints({
             if (event.type !== "chat_room.created") return;
 
             updateCachedData((draft) => {
-              // Preserve local state (unread_count, is_notify) when overlapping
               const existing = removeRoomFromPages(draft, event.payload.id);
               const merged: ChatRoom = existing
                 ? {
@@ -154,9 +151,7 @@ export const chatRoomsApi = api.injectEndpoints({
 
             subscribeRoom(event.payload);
           });
-        } catch {
-          // no-op: cacheEntryRemoved resolved before cacheDataLoaded
-        }
+        } catch {}
 
         await cacheEntryRemoved;
         clearInterval(reconcileInterval);
@@ -187,14 +182,11 @@ export const chatRoomsApi = api.injectEndpoints({
           const { data: newRoom } = await queryFulfilled;
           dispatch(
             chatRoomsApi.util.updateQueryData("getChatRooms", {}, (draft) => {
-              // Dedup: Pusher (chat_room.created) may have already added it
               if (findRoomInPages(draft, newRoom.id)) return;
               draft.pages[0]?.rooms.unshift(newRoom);
             }),
           );
-        } catch {
-          // Mutation failed — nothing to patch
-        }
+        } catch {}
       },
     }),
 

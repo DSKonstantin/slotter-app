@@ -30,7 +30,6 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
         paddingTop: topInset,
       }}
     >
-      {/* Room items skeleton */}
       <ContentLoader
         speed={SPEED}
         width={w}
@@ -44,7 +43,6 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
           return (
             <React.Fragment key={i}>
               <Circle cx={AVATAR / 2} cy={cy} r={AVATAR / 2} />
-              {/* Name */}
               <Rect
                 x={textX}
                 y={cy - 18}
@@ -53,7 +51,6 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
                 width={120 + (i % 2) * 30}
                 height={14}
               />
-              {/* Last message */}
               <Rect
                 x={textX}
                 y={cy + 2}
@@ -62,7 +59,6 @@ const ChatRoomsSkeleton = ({ topInset = 0 }: Props) => {
                 width={textW - 60}
                 height={12}
               />
-              {/* Time */}
               <Rect
                 x={w - 36}
                 y={cy - 18}

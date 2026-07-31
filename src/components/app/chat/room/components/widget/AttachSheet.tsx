@@ -283,10 +283,6 @@ const AttachSheet = ({
     return null;
   };
 
-  // Reset wizard state whenever the sheet closes — covers backdrop dismiss,
-  // parent-driven close (e.g. after a successful proposal), and back navigation.
-  // The 200ms delay matches the modal close animation so steps don't visibly
-  // jump back during the slide-out.
   useEffect(() => {
     if (visible) return;
     const t = setTimeout(() => setState(INITIAL_STATE), 200);

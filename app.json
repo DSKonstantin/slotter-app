@@ -2,7 +2,7 @@
   "expo": {
     "name": "Slotter",
     "slug": "slotter",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon/icon.png",
     "scheme": "slotter",
@@ -11,10 +11,15 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": ["ru", "en"],
+        "CFBundleLocalizations": [
+          "ru",
+          "en"
+        ],
         "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       },
       "entitlements": {
         "aps-environment": "production"
@@ -59,8 +64,14 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": ["ru", "en"],
-            "android": ["ru", "en"]
+            "ios": [
+              "ru",
+              "en"
+            ],
+            "android": [
+              "ru",
+              "en"
+            ]
           }
         }
       ],
@@ -72,7 +83,6 @@
           "cameraPermission": "Разрешить $(PRODUCT_NAME) открыть камеру"
         }
       ],
-      "@react-native-community/datetimepicker",
       "expo-secure-store",
       [
         "expo-contacts",
@@ -94,7 +104,10 @@
           "mode": "production",
           "disableLocation": true
         }
-      ]
+      ],
+      "@sentry/react-native",
+      "expo-web-browser",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -11,8 +11,6 @@ import {
 } from "./constants";
 import { parseTime } from "./utils";
 
-// ── Types ────────────────────────────────────────────────────────────
-
 type ParsedBreak = {
   start: number;
   end: number;
@@ -48,8 +46,6 @@ export type CreateSegmentsResult = {
   effectiveStart: number;
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
 export const getSlotMinHeight = (slot: Appointment) => {
   if (slot.status === "cancelled") return SHORT_SLOT_MIN_HEIGHT;
   return slot.duration > 30 ? LONG_SLOT_MIN_HEIGHT : SHORT_SLOT_MIN_HEIGHT;
@@ -57,8 +53,6 @@ export const getSlotMinHeight = (slot: Appointment) => {
 
 export const slotOccupiesTime = (slot: Appointment) =>
   slot.status !== "cancelled" && slot.duration > 0;
-
-// ── Parsing ──────────────────────────────────────────────────────────
 
 const parseAppointments = (
   appointments: Appointment[],
@@ -76,8 +70,6 @@ const parseAppointments = (
     };
   });
 };
-
-// ── Time points ──────────────────────────────────────────────────────
 
 const collectTimePoints = (
   effectiveStart: number,
@@ -122,7 +114,6 @@ const collectTimePoints = (
     timePoints.add(end);
   });
 
-  // Zero-duration appointments nested inside a longer one don't get their own boundary.
   blockingAppointments.forEach(({ slot, start, end }) => {
     const isNested =
       slot.duration === 0 &&
@@ -132,8 +123,6 @@ const collectTimePoints = (
 
     if (!isNested && start >= effectiveStart && start <= effectiveEnd) {
       timePoints.add(start);
-      // Zero-duration outside working hours: add start+1 so the following gap can be compressed.
-      // Inside working hours the next segment is a free slot — no split needed.
       const outsideWork =
         workingStart === undefined ||
         workingEnd === undefined ||
@@ -151,8 +140,6 @@ const collectTimePoints = (
 
   return Array.from(timePoints).sort((a, b) => a - b);
 };
-
-// ── Segment building ─────────────────────────────────────────────────
 
 const buildSegments = (
   timePoints: number[],
@@ -222,8 +209,6 @@ const buildSegments = (
     return { segStart, segEnd, content };
   });
 
-// ── Free range annotation ─────────────────────────────────────────────
-
 const annotateFreeRanges = (segments: Segment[]): Segment[] =>
   segments.map((seg, i) => {
     if (seg.content.kind !== "slots" || !seg.content.showFreeSlotBlock)
@@ -259,8 +244,6 @@ const annotateFreeRanges = (segments: Segment[]): Segment[] =>
     };
   });
 
-// ── Segment height ───────────────────────────────────────────────────
-
 export const getSegmentHeight = (segment: Segment) => {
   const { segStart, segEnd, content } = segment;
   const baseGridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
@@ -274,7 +257,6 @@ export const getSegmentHeight = (segment: Segment) => {
   const filteredBlockHeight = content.filteredBlock
     ? Math.max(SHORT_SLOT_MIN_HEIGHT, content.filteredBlock.minHeight)
     : 0;
-  // Reserve exactly one gridHeight for the Pressable so time marks map 1:1 to the free slot area.
   const freeSlotReserve = content.showFreeSlotBlock
     ? SLOT_GAP + baseGridHeight
     : 0;
@@ -284,8 +266,6 @@ export const getSegmentHeight = (segment: Segment) => {
     slotsMinHeight + filteredBlockHeight + freeSlotReserve,
   );
 };
-
-// ── Public API ───────────────────────────────────────────────────────
 
 export const createSegments = (
   startAt: string | undefined,
@@ -325,8 +305,6 @@ export const createSegments = (
   effectiveStart = Math.max(0, effectiveStart);
   effectiveEnd = Math.min(24 * 60, effectiveEnd);
 
-  // Extend by 1 if a zero-duration appointment sits exactly at the boundary
-  // so collectTimePoints can create a segment for it.
   if (
     parsedAppointments.some(
       (a) => a.slot.duration === 0 && a.start === effectiveEnd,

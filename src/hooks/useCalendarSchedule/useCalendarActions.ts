@@ -42,12 +42,12 @@ export const useCalendarActions = ({
     const currentCalendarDays = getValues("calendarDays") ?? [];
     const nextCalendarDays = currentCalendarDays.map(clearSelectedDay);
 
-    if (!areSameCalendarDays(currentCalendarDays, nextCalendarDays)) {
-      setValue("calendarDays", nextCalendarDays);
-    }
-    setValue("mode", "bulk");
-    setValue("commonDraft", { startAt: "", endAt: "", breaks: [] });
-  }, [getValues, setValue]);
+    reset({
+      mode: "bulk",
+      commonDraft: { startAt: "", endAt: "", breaks: [] },
+      calendarDays: nextCalendarDays,
+    });
+  }, [getValues, reset]);
 
   const toggleDay = useCallback(
     (dateKey: string) => {
@@ -144,7 +144,6 @@ export const useCalendarActions = ({
     [getValues, setValue],
   );
 
-  // Sync commonDraft → calendarDays in bulk mode
   useEffect(() => {
     if (watchedMode !== "bulk") return;
 

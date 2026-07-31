@@ -11,11 +11,6 @@ export type AppointmentStatus =
 export type PaymentMethod = "cash" | "sbp" | "online_bank";
 
 export interface AppointmentCustomer {
-  /**
-   * null — квотная маскировка: у мастера без PRO записи сверх бесплатного
-   * лимита приходят с заглушкой {id: null, name: "—", phone: "—"};
-   * клиент существует, но скрыт до апгрейда (см. isHiddenCustomer)
-   */
   id: number | null;
   name: string;
   phone: string;
@@ -49,7 +44,7 @@ export interface Appointment {
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
-  public_token: string;
+  public_token?: string;
   date: string;
   customer: AppointmentCustomer;
   services: AppointmentService[];
@@ -86,7 +81,7 @@ export interface UpcomingAppointment {
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
-  public_token: string;
+  public_token?: string;
   date: string;
   customer: UpcomingAppointmentCustomer;
   services: AppointmentService[];

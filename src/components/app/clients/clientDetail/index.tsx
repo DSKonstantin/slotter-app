@@ -62,9 +62,6 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
 
-  // Роуты передают Number(id): при битом/отсутствующем параметре (например,
-  // "null" от скрытого квотой клиента) приходит NaN — он проходил проверку
-  // `!== undefined`, и запрос с customer_id=NaN бесконечно падал 404-ми.
   const safeUserCustomerId = Number.isFinite(userCustomerId)
     ? userCustomerId
     : undefined;
@@ -206,9 +203,6 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         }
       >
         {({ topInset, bottomInset }) => {
-          // auth ещё не готов — это не ошибка загрузки, а ожидание;
-          // без этой проверки skip-запрос (auth == null) на миг
-          // показывал бы ErrorScreen вместо скелетона
           if (!auth || customerLoading) {
             return (
               <ClientDetailSkeleton
@@ -217,8 +211,6 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               />
             );
           }
-          // оба id невалидны — запрос никогда не уйдёт (skipToken),
-          // «Повторить» тут нечего повторять, ведём назад
           if (!hasValidId) {
             return (
               <ErrorScreen
@@ -347,7 +339,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   }
                   onPress={() =>
                     userCustomer &&
-                    router.push(Routers.app.clients.history(userCustomer.id))
+                    router.push(Routers.app.client.history(userCustomer.id))
                   }
                 />
                 <HomeCard

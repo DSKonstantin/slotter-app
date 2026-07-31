@@ -6,9 +6,11 @@ import {
   AccountBookingSchema,
   type AccountBookingFormValues,
 } from "@/src/validation/schemas/accountBooking.schema";
+import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Item, StModal, StSvg, Typography } from "@/src/components/ui";
+import { Divider, Item, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { Routers } from "@/src/constants/routers";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import type { AppointmentStep } from "@/src/store/redux/services/api-types";
@@ -36,6 +38,7 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
     <>
       <Item
         title="Шаг записи"
+        className="border-0"
         right={
           <View className="flex-row items-center gap-1">
             <Typography className="text-neutral-500 text-body">
@@ -100,12 +103,32 @@ const Booking = () => {
 
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar title="Бронирование">
+      <ScreenWithToolbar title="Онлайн запись">
         {({ topInset }) => (
           <View style={{ paddingTop: topInset }} className="px-screen">
-            <BookingStepField
-              onSelect={() => methods.handleSubmit(onSubmit)()}
-            />
+            <View className="bg-background-surface rounded-base">
+              <BookingStepField
+                onSelect={() => methods.handleSubmit(onSubmit)()}
+              />
+              <View className="px-4">
+                <Divider />
+              </View>
+
+              <Item
+                title="Условия записи"
+                className="border-0"
+                right={
+                  <StSvg
+                    name="Expand_right"
+                    size={20}
+                    color={colors.neutral[400]}
+                  />
+                }
+                onPress={() =>
+                  router.push(Routers.app.account.bookingConditions)
+                }
+              />
+            </View>
           </View>
         )}
       </ScreenWithToolbar>

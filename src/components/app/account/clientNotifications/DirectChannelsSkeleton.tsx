@@ -10,12 +10,11 @@ const FG = "#F5F5FA";
 
 const CARD_PADDING = 16;
 const ROW_HEIGHT = 46;
-const ROW_GAP = 33; // Divider my-4: 16 + 1 + 16
+const ROW_GAP = 33;
 const COUNT = 2;
 const ICON = 28;
 const TEXT_RADIUS = 8;
 
-// Скелетон строк прямых каналов (Telegram / Макс) внутри карточки
 const DirectChannelsSkeleton = () => {
   const { width } = useWindowDimensions();
   const w = width - SCREEN_PADDING * 2 - CARD_PADDING * 2;

@@ -1,9 +1,6 @@
 import { useCallback, useRef } from "react";
 import { Platform } from "react-native";
 
-// onModalHide fires after the JS animation but before iOS UIKit finishes
-// dismissing the native view controller — presenting a new VC immediately
-// causes it to be silently swallowed on iOS.
 const MODAL_DISMISS_DELAY = Platform.OS === "ios" ? 100 : 0;
 
 export function useModalAction(close: () => void) {

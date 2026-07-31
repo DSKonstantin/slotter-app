@@ -5,20 +5,3 @@ export const StSvg = createIconSetFromIcoMoon(
   "IcoMoon",
   "icomoon.ttf",
 );
-
-// import React from "react";
-// import createIconSet from "@react-native-vector-icons/icomoon";
-// import icoMoonConfig from "./selection.json";
-// import { IconProps } from "@react-native-vector-icons/shared";
-//
-// const SvgIcon = createIconSet(icoMoonConfig);
-//
-// interface CustomIconProps extends IconProps<string> {
-//   name: string;
-// }
-//
-// const StSvg: React.FC<CustomIconProps> = ({ name, ...props }) => {
-//   return <SvgIcon name={name} {...props} />;
-// };
-//
-// export default StSvg;

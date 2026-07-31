@@ -17,7 +17,6 @@ export type GalleryPhoto = {
   isCover: boolean;
 };
 
-/** All values are in pixels */
 export type CropData = {
   originX: number;
   originY: number;

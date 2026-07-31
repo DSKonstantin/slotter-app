@@ -120,7 +120,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
     const date = format(modalDate, "yyyy-MM-dd");
     setModalDate(null);
-    router.push(Routers.app.calendar.dayScheduleCreate(date));
+    router.push(Routers.app.daySchedule.create(date));
   }, [modalDate]);
 
   const renderItem = useCallback(

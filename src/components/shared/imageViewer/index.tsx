@@ -56,7 +56,6 @@ const ImageViewer = ({
     [],
   );
 
-  // Auto-close when the source set empties; clamp the index when it shrinks.
   useEffect(() => {
     if (images.length === 0) {
       onClose();

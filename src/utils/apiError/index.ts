@@ -9,16 +9,13 @@ type ApiError = {
   data: ApiErrorData;
 };
 
-// Messages from the backend that unambiguously mean "your token is dead".
-// Any other 401 (e.g. wrong current_password in credentials update) is a
-// business-logic error — the session is still valid, do NOT log the user out.
 const TOKEN_DEAD_MESSAGES = new Set([
-  "Авторизуйтесь для продолжения", // authenticate_resource! — token missing / invalidated
-  "Срок действия токена истек", // sessions#show — JWT::ExpiredSignature
-  "Недействительный токен", // sessions#show — JWT::DecodeError
-  "Токен отозван", // sessions#show — jti in JwtDenylist
-  "Пользователь не найден", // sessions#show — user deleted from DB
-  "Токен не предоставлен", // sessions#show — blank Authorization header
+  "Авторизуйтесь для продолжения",
+  "Срок действия токена истек",
+  "Недействительный токен",
+  "Токен отозван",
+  "Пользователь не найден",
+  "Токен не предоставлен",
 ]);
 
 export const isAuthError = (e: unknown): boolean => {
@@ -34,7 +31,6 @@ export const isAuthError = (e: unknown): boolean => {
       ? (data as { error: string }).error.trim()
       : null;
 
-  // No parseable message → be conservative and treat as auth error
   if (!message) return true;
 
   return TOKEN_DEAD_MESSAGES.has(message);
@@ -46,10 +42,6 @@ const isApiError = (e: unknown): e is ApiError =>
   "data" in e &&
   typeof (e as ApiError).data === "object";
 
-// Backend sometimes leaks raw technical/English text (e.g. third-party
-// provider errors like "Green API credentials not configured for this
-// channel") instead of a localized message — treat anything without a
-// single Cyrillic letter as not fit to show to the user.
 const isValidMessage = (msg: string) =>
   !msg.startsWith("Translation missing") && /[Ѐ-ӿ]/.test(msg);
 

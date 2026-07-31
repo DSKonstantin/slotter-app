@@ -6,7 +6,6 @@ import { colors } from "@/src/styles/colors";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 
 const CARD_PAD = 16;
-// 15 (title) + 6 (gap) + 12 (subtitle)
 const INNER_H = 33;
 const LOADER_SPEED = 1.2;
 const BG = colors.neutral[100];

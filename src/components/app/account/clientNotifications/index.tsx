@@ -93,6 +93,15 @@ const APP_FEATURES = [
   { icon: "Chat_light" as const, text: "Пишет в чат без лишних мессенджеров" },
 ];
 
+const CLIENT_APP_STORE_URL =
+  "https://apps.apple.com/ru/app/slotter-%D1%82%D1%80%D0%B5%D0%BA%D0%B5%D1%80-%D0%B7%D0%B0%D0%BF%D0%B8%D1%81%D0%B5%D0%B9/id6784702976";
+const CLIENT_PLAY_STORE_URL: string | null = null;
+
+const CLIENT_APP_SHARE_URL = Platform.select({
+  ios: CLIENT_APP_STORE_URL,
+  android: CLIENT_PLAY_STORE_URL,
+});
+
 const TELEGRAM_BOTS = [
   {
     title: "Telegram Bot",
@@ -185,7 +194,6 @@ const ClientNotifications = () => {
     { refetchOnMountOrArgChange: true },
   );
 
-  // safeRefetch: refetch() у skipped-запроса (skipToken / !ispe) кидает синхронно
   const refetchAll = useCallback(async () => {
     await Promise.all([
       safeRefetch(refetchSettings),
@@ -226,11 +234,8 @@ const ClientNotifications = () => {
           c.kind === config.kind &&
           !INACTIVE_DIRECT_CHANNEL_STATUSES.has(c.status),
       );
-      // был ли канал раньше (cancelled/expired) — для «Подключить заново»
-      const hadChannel =
-        !existing && existingChannels.some((c) => c.kind === config.kind);
 
-      return { channel, config, plan, existing, hadChannel };
+      return { channel, config, plan, existing };
     });
   }, [directPlansData, directChannelsData]);
 
@@ -396,8 +401,8 @@ const ClientNotifications = () => {
 
               <Button
                 title="Поделиться приложением"
-                onPress={() => {}}
-                disabled
+                onPress={() => Share.share({ message: CLIENT_APP_SHARE_URL! })}
+                disabled={!CLIENT_APP_SHARE_URL}
                 variant="accent"
                 rightIcon={
                   <StSvg name="link_alt" size={24} color={colors.neutral[0]} />
@@ -470,10 +475,9 @@ const ClientNotifications = () => {
                     />
                   ) : (
                     directChannelRows.map(
-                      ({ channel, config, plan, existing, hadChannel }, i) => {
+                      ({ channel, config, plan, existing }, i) => {
                         const status = getDirectChannelRowStatus(
                           existing,
-                          hadChannel,
                           config.kind,
                         );
                         return (

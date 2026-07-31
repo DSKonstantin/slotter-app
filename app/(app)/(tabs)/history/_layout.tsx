@@ -5,7 +5,6 @@ export default function HistoryLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="slot/[id]" />
     </Stack>
   );
 }

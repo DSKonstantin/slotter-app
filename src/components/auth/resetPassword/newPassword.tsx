@@ -20,11 +20,9 @@ import {
 } from "@/src/validation/schemas/resetPassword.schema";
 
 const ResetPasswordNew = () => {
-  // 1. useState
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // 3. Custom hooks + RTK Query
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
   const handleAuthorized = useHandleAuthorized();
@@ -34,7 +32,6 @@ const ResetPasswordNew = () => {
     defaultValues: { password: "", password_confirmation: "" },
   });
 
-  // 5. useCallback
   const onSubmit = useCallback(
     async ({ password, password_confirmation }: ResetPasswordNewValues) => {
       try {

@@ -103,7 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     runBootstrap();
-    // Run auth bootstrap only once on app start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

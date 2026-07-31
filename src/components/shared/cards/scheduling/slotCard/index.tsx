@@ -28,8 +28,6 @@ interface SlotCardProps {
 }
 
 const getSlotCardInfo = (slot: Appointment) => {
-  // Квотная маскировка: данные записи прячутся под звёздочки, видимыми
-  // остаются только время и серый бейдж «Закончился лимит»
   const isQuotaHidden = isHiddenCustomer(slot.customer);
   const serviceNames = slot.services.map((service) => service.name).join(", ");
   const additionalServicesCount = slot.additional_services?.length ?? 0;

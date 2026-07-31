@@ -21,9 +21,7 @@ export const useScheduleTemplate = () => {
       if (raw) {
         try {
           setInitialValues(JSON.parse(raw));
-        } catch {
-          // corrupted data — fall back to defaults
-        }
+        } catch {}
       }
       setIsLoaded(true);
     });

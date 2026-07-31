@@ -29,22 +29,6 @@ const SecurityScreen = () => {
                 router.push(Routers.app.account.security.changePassword)
               }
             />
-            {/*<Divider className="ml-12 mr-4 flex-1 w-auto" />*/}
-            {/*<Item*/}
-            {/*  title="Электронная почта"*/}
-            {/*  left={*/}
-            {/*    <StSvg name="Mail_fill" size={24} color={colors.neutral[900]} />*/}
-            {/*  }*/}
-            {/*  className="border-0 rounded-none"*/}
-            {/*  right={*/}
-            {/*    <StSvg*/}
-            {/*      name="Expand_right"*/}
-            {/*      size={20}*/}
-            {/*      color={colors.neutral[400]}*/}
-            {/*    />*/}
-            {/*  }*/}
-            {/*  onPress={() => router.push(Routers.app.account.security.email)}*/}
-            {/*/>*/}
           </View>
         </View>
       )}

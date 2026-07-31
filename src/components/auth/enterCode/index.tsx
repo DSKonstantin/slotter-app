@@ -38,7 +38,6 @@ const EnterCode = () => {
   const codeLength = Number(params.code_length ?? "4");
   const initialResendAfter = Number(params.resend_after ?? "60");
 
-  // 1. useState
   const [wrongCode, setWrongCode] = useState<{
     attemptsLeft: number;
   } | null>(null);
@@ -49,7 +48,6 @@ const EnterCode = () => {
     useState(initialResendAfter);
   const [flashcallKey, setFlashcallKey] = useState(0);
 
-  // 3. Custom hooks + RTK Query
   const handleAuthorized = useHandleAuthorized();
   const [confirmCode] = useConfirmCodeMutation();
   const [sendCode, { isLoading: isSendingCode }] = useSendCodeMutation();
@@ -58,7 +56,6 @@ const EnterCode = () => {
     referralCode,
   });
 
-  // 5. useCallback
   const handleExpiredOrDeactivated = useCallback(
     (status: "expired" | "deactivated") => {
       toast.error(
@@ -149,8 +146,6 @@ const EnterCode = () => {
     }
   }, [sendCode, phone]);
 
-  // 6. useEffect
-  // Flashcall: show fallback options after 45 seconds; resets on each resend
   useEffect(() => {
     if (!isFlashcall) return;
     const timeout = setTimeout(

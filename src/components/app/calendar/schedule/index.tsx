@@ -28,11 +28,16 @@ import {
   calendarStyle,
 } from "@/src/styles/calendarTheme";
 import { formatApiDate } from "@/src/utils/date/formatDate";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { ScheduleSettingsModal } from "./ScheduleSettingsModal";
 import { ScheduleTemplateModal } from "./ScheduleTemplateModal";
 import ScheduleSkeleton from "./ScheduleSkeleton";
 
-const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
+type CalendarScheduleProps = {
+  showBack?: boolean;
+};
+
+const CalendarSchedule = ({ showBack = true }: CalendarScheduleProps) => {
   const { date } = useLocalSearchParams<{ date?: string }>();
   const [current, setCurrent] = useState(() => {
     if (!date) return new Date();
@@ -113,9 +118,7 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
           }
 
           const navigate = () =>
-            router.push(
-              Routers.app.calendar.daySchedule(dayData.workingDayId!),
-            );
+            router.push(Routers.app.daySchedule.edit(dayData.workingDayId!));
 
           if (methods.formState.isDirty) {
             Alert.alert(
@@ -140,7 +143,7 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
         <View className="w-full h-[70px]">
           <ScheduleDayCard
             day={date?.day}
-            isWorking={dayData?.isExisting}
+            isWorking={dayData?.isExisting && dayData.isActive}
             scheduleTime={
               dayData?.isExisting ? getScheduleTimeLabel(dayData) : undefined
             }
@@ -157,8 +160,9 @@ const CalendarSchedule = ({ showBack = true }: { showBack?: boolean }) => {
 
   useFocusEffect(
     useCallback(() => {
+      safeRefetch(refetch);
       return () => clearSelection();
-    }, [clearSelection]),
+    }, [refetch, clearSelection]),
   );
 
   return (

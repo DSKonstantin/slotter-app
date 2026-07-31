@@ -143,7 +143,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const [freeSlotRange, setFreeSlotRange] = useState<FreeSlotRange | null>(
     null,
   );
-  // диапазон, по которому тапнули в неактивный день — ждёт включения дня
   const [inactiveDayRange, setInactiveDayRange] =
     useState<FreeSlotRange | null>(null);
   const now = new Date();
@@ -186,12 +185,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const isNowInRange = currentMinutes >= effectiveStart;
 
   const handleSlotPress = useCallback((slot: Appointment) => {
-    // запись скрыта квотой — вместо деталей сразу модалка оплаты PRO
     if (isHiddenCustomer(slot.customer)) {
       setSlotLimitVisible(true);
       return;
     }
-    router.push(Routers.app.calendar.slot(slot.id));
+    router.push(Routers.app.slot(slot.id));
   }, []);
 
   const handleToggleExpand = useCallback((id: number) => {
@@ -200,8 +198,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
 
   const handleFreeSlotPress = useCallback(
     (start: number, end: number) => {
-      // выходной день (isActive === false; undefined считаем рабочим, как
-      // в старом FreeSlotBlock) — сначала предложить включить день
       if (isActive === false) {
         setInactiveDayRange({ start, end });
         return;
@@ -216,7 +212,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   }, []);
 
   const handleInactiveDaySuccess = useCallback(() => {
-    // день включён — сразу в создание слота с начала выбранного интервала
     if (inactiveDayRange) {
       router.push(
         Routers.app.createSlotFlow.selectService({

@@ -130,8 +130,6 @@ const DayScheduleEdit = ({
         ],
       );
     }
-    // диалог должен показываться только на переключение isActive —
-    // остальные значения читаются актуальными в момент срабатывания
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
@@ -208,7 +206,11 @@ const DayScheduleEdit = ({
   );
 };
 
-const CalendarDaySchedule = ({ workingDayId }: { workingDayId: number }) => {
+type CalendarDayScheduleProps = {
+  workingDayId: number;
+};
+
+const CalendarDaySchedule = ({ workingDayId }: CalendarDayScheduleProps) => {
   const auth = useRequiredAuth();
 
   const {

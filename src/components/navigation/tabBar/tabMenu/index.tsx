@@ -35,7 +35,7 @@ const MENU_ITEMS: MenuItem[] = [
   {
     label: "График",
     icon: "Date_today",
-    route: Routers.app.schedule,
+    route: Routers.app.schedule.root,
   },
   {
     label: "Финансы",

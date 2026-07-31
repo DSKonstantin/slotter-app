@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Platform, Pressable, View } from "react-native";
-import RNDateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import { ActivityIndicator, Pressable } from "react-native";
 
-import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
+import { StSvg } from "@/src/components/ui/StSvg";
+import { Typography } from "@/src/components/ui/Typography";
+import { TimeWheelPickerModal } from "@/src/components/ui/pickers/TimeWheelPickerModal";
 import { colors } from "@/src/styles/colors";
+import { FULL_DAY_MINUTE_OPTIONS } from "@/src/utils/date/timeOptions";
 import InfoRow from "./InfoRow";
 
 type Props = {
@@ -18,12 +18,6 @@ type Props = {
   divider?: boolean;
 };
 
-const minutesToDate = (minutes: number): Date => {
-  const d = new Date();
-  d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-  return d;
-};
-
 const EditableDurationRow = ({
   label,
   displayValue,
@@ -34,23 +28,10 @@ const EditableDurationRow = ({
   divider = true,
 }: Props) => {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [tempDate, setTempDate] = useState<Date>(() => minutesToDate(value));
 
-  const handleEdit = () => {
-    setTempDate(minutesToDate(value));
-    setPickerOpen(true);
-  };
-
-  const handleConfirm = () => {
+  const handleConfirm = (minutes: number) => {
     setPickerOpen(false);
-    onSave(tempDate.getHours() * 60 + tempDate.getMinutes());
-  };
-
-  const handleChangeAndroid = (event: DateTimePickerEvent, selected?: Date) => {
-    setPickerOpen(false);
-    if (event.type === "set" && selected) {
-      onSave(selected.getHours() * 60 + selected.getMinutes());
-    }
+    onSave(minutes);
   };
 
   return (
@@ -60,7 +41,9 @@ const EditableDurationRow = ({
         divider={divider}
         right={
           <Pressable
-            onPress={canEdit && !isUpdating ? handleEdit : undefined}
+            onPress={
+              canEdit && !isUpdating ? () => setPickerOpen(true) : undefined
+            }
             disabled={!canEdit || isUpdating}
             hitSlop={8}
             className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
@@ -91,46 +74,15 @@ const EditableDurationRow = ({
         }
       />
 
-      {Platform.OS === "android" && pickerOpen && (
-        <RNDateTimePicker
-          value={tempDate}
-          mode="time"
-          is24Hour
-          themeVariant="light"
-          display="spinner"
-          minuteInterval={5}
-          onChange={handleChangeAndroid}
-        />
-      )}
-
-      {Platform.OS === "ios" && (
-        <StModal visible={pickerOpen} onClose={() => setPickerOpen(false)}>
-          <Typography weight="semibold" className="text-display text-center">
-            Выберите длительность
-          </Typography>
-          <View className="mt-6 items-center">
-            <RNDateTimePicker
-              value={tempDate}
-              mode="time"
-              is24Hour
-              themeVariant="light"
-              display="spinner"
-              minuteInterval={5}
-              onChange={(_, selected) => {
-                if (selected) setTempDate(selected);
-              }}
-            />
-          </View>
-          <View className="mt-6 gap-3">
-            <Button title="Готово" onPress={handleConfirm} />
-            <Button
-              title="Отмена"
-              variant="secondary"
-              onPress={() => setPickerOpen(false)}
-            />
-          </View>
-        </StModal>
-      )}
+      <TimeWheelPickerModal
+        visible={pickerOpen}
+        options={FULL_DAY_MINUTE_OPTIONS}
+        value={value}
+        loop
+        title="Выберите длительность"
+        onConfirm={handleConfirm}
+        onClose={() => setPickerOpen(false)}
+      />
     </>
   );
 };
