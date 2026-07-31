@@ -27,12 +27,13 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "@reduxjs/toolkit": "^2.11.2",
-    "@sentry/react-native": "~7.2.0",
+    "@sentry/react-native": "^8.13.0",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.2.12",
     "axios": "^1.15.0",
     "date-fns": "^4.1.0",
     "expo": "~54.0.33",
+    "expo-asset": "~12.0.13",
     "expo-blur": "~15.0.8",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
@@ -94,6 +95,13 @@
     "tailwind-merge": "2.6.0",
     "yup": "^1.7.1"
   },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@sentry/react-native"
+      ]
+    }
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/react-native": "^14.0.1",
@@ -101,6 +109,7 @@
     "@types/lodash": "^4.17.23",
     "@types/react": "~19.1.0",
     "babel-plugin-transform-remove-console": "^6.9.4",
+    "babel-preset-expo": "~54.0.12",
     "eslint": "^9.39.2",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
