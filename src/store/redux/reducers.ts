@@ -16,15 +16,22 @@ import { api } from "@/src/store/redux/services/api";
 // bootstrap (see AuthContext.runBootstrap) — the rest of `user` (phone, ФИО,
 // subscription_membership/payment metadata, etc.) must not sit in plaintext
 // AsyncStorage. Full user is re-fetched from the API on every app start.
-const authUserTransform = createTransform<AuthState["user"], AuthState["user"]>(
+type PersistedAuthUser = Pick<
+  NonNullable<AuthState["user"]>,
+  "id" | "onboarding_step"
+> | null;
+
+const authUserTransform = createTransform<AuthState["user"], PersistedAuthUser>(
   (user) =>
     user
-      ? ({
+      ? {
           id: user.id,
           onboarding_step: user.onboarding_step,
-        } as AuthState["user"])
-      : user,
-  (user) => user,
+        }
+      : null,
+  // Rehydrated state is intentionally incomplete until `getMe` overwrites it
+  // (app/_layout.tsx blocks rendering on `isLoading` until then).
+  (user) => user as AuthState["user"],
   { whitelist: ["user"] },
 );
 
