@@ -13,6 +13,7 @@ type ItemProps = {
   active?: boolean;
   className?: string;
   titleClassName?: string;
+  contentClassName?: string;
 };
 
 export function Item({
@@ -26,6 +27,7 @@ export function Item({
   active,
   className,
   titleClassName,
+  contentClassName,
 }: ItemProps) {
   const Container = onPress ? Pressable : View;
   const containerProps = onPress
@@ -47,7 +49,12 @@ export function Item({
     >
       {left && <View className="mr-2">{left}</View>}
 
-      <View className="flex-1 flex-row items-center gap-1.5">
+      <View
+        className={twMerge(
+          "flex-1 flex-row items-center gap-1.5",
+          contentClassName,
+        )}
+      >
         <Text
           className={twMerge(
             active

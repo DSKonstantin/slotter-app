@@ -1,8 +1,0 @@
-import React from "react";
-import AccountPreview from "@/src/components/app/account/preview";
-
-const PreviewPage = () => {
-  return <AccountPreview />;
-};
-
-export default PreviewPage;

@@ -11,12 +11,15 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import {
   Avatar,
   Button,
+  Divider,
   StModal,
   StSvg,
   Typography,
 } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { NicknameField } from "@/src/components/onboarding/personalInformation/NicknameField";
 import ImagePickerTrigger from "@/src/components/shared/imagePicker/imagePickerTrigger";
+import AvatarViewer from "./AvatarViewer";
 import {
   useDeleteUserMutation,
   useUpdateUserMutation,
@@ -36,12 +39,14 @@ type FormValues = {
   name: string;
   surname: string;
   profession: string;
+  nickname: string;
   avatar: UploadFile | null;
 };
 
 const PersonalInformation = () => {
   const auth = useRequiredAuth();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
   const [avatarRemoved, setAvatarRemoved] = useState(false);
 
   const user = useAppSelector((s) => s.auth.user);
@@ -55,6 +60,7 @@ const PersonalInformation = () => {
       name: user?.first_name ?? "",
       surname: user?.last_name ?? "",
       profession: user?.profession ?? "",
+      nickname: user?.nickname ?? "",
       avatar: null,
     },
   });
@@ -62,6 +68,9 @@ const PersonalInformation = () => {
   useFormNavigationGuard(methods.formState.isDirty || avatarRemoved);
 
   const avatar = methods.watch("avatar");
+  const avatarUri = avatarRemoved
+    ? undefined
+    : (avatar?.uri ?? user?.avatar_url ?? undefined);
 
   const handlePickAvatar = useCallback(
     (assets: PickedAssets) => {
@@ -75,19 +84,23 @@ const PersonalInformation = () => {
     [methods],
   );
 
-  const handleRemoveAvatar = useCallback(() => {
-    Alert.alert("Удалить фото профиля?", "Фото будет удалено", [
-      { text: "Отмена", style: "cancel" },
-      {
-        text: "Удалить",
-        style: "destructive",
-        onPress: () => {
-          setAvatarRemoved(true);
-          methods.setValue("avatar", null, { shouldDirty: true });
+  const handleRemoveAvatar = useCallback(
+    (onConfirmed?: () => void) => {
+      Alert.alert("Удалить фото профиля?", "Фото будет удалено", [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: () => {
+            setAvatarRemoved(true);
+            methods.setValue("avatar", null, { shouldDirty: true });
+            onConfirmed?.();
+          },
         },
-      },
-    ]);
-  }, [methods]);
+      ]);
+    },
+    [methods],
+  );
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
@@ -97,6 +110,7 @@ const PersonalInformation = () => {
           ...data,
           removeAvatar: avatarRemoved,
         });
+        formData.append("user[nickname]", data.nickname);
         await updateUser({ id: auth.userId, data: formData }).unwrap();
         methods.reset(data);
         setAvatarRemoved(false);
@@ -134,50 +148,60 @@ const PersonalInformation = () => {
                 paddingBottom: 16,
               }}
             >
-              <View className="px-screen gap-4">
-                <View className="items-center">
-                  <View className="relative">
-                    <ImagePickerTrigger
-                      title="Фото профиля"
-                      options={{ aspect: [1, 1], cameraType: CameraType.front }}
-                      includeFiles
-                      onPick={handlePickAvatar}
-                    >
-                      <Avatar
-                        size="xl"
-                        uri={
-                          avatarRemoved
-                            ? undefined
-                            : (avatar?.uri ?? user?.avatar_url ?? undefined)
-                        }
-                        blurhash={
-                          avatar || avatarRemoved
-                            ? undefined
-                            : user?.avatar_blurhash
-                        }
-                        showPhotoIcon={true}
-                        fallbackIcon={
-                          <StSvg
-                            name="Camera"
-                            size={40}
-                            color={colors.neutral[500]}
-                          />
-                        }
-                      />
-                    </ImagePickerTrigger>
-                    {!avatarRemoved && (avatar?.uri ?? user?.avatar_url) && (
+              <View className="px-screen gap-2">
+                <View className="gap-1">
+                  <Typography className="text-neutral-500 text-caption">
+                    Аватар
+                  </Typography>
+                  <View className="relative self-start">
+                    {avatarUri ? (
                       <Pressable
-                        onPress={handleRemoveAvatar}
-                        hitSlop={8}
-                        className="absolute -top-1 -right-1 bg-background-surface rounded-full p-1 active:opacity-70"
+                        onPress={() => setAvatarViewerVisible(true)}
+                        className="active:opacity-70"
                       >
-                        <StSvg
-                          name="Close_round_fill"
-                          size={22}
-                          color={colors.accent.red[500]}
+                        <Avatar
+                          size="xl"
+                          uri={avatarUri}
+                          blurhash={avatar ? undefined : user?.avatar_blurhash}
+                          fallbackIcon={
+                            <StSvg
+                              name="Camera"
+                              size={40}
+                              color={colors.neutral[500]}
+                            />
+                          }
                         />
                       </Pressable>
+                    ) : (
+                      <ImagePickerTrigger
+                        title="Фото профиля"
+                        options={{
+                          aspect: [1, 1],
+                          cameraType: CameraType.front,
+                        }}
+                        includeFiles
+                        onPick={handlePickAvatar}
+                      >
+                        <Avatar
+                          size="xl"
+                          uri={undefined}
+                          fallbackIcon={
+                            <StSvg
+                              name="Camera"
+                              size={40}
+                              color={colors.neutral[500]}
+                            />
+                          }
+                        />
+                      </ImagePickerTrigger>
                     )}
+                    <View className="absolute -bottom-1 -right-1 bg-background-surface rounded-full p-1.5">
+                      <StSvg
+                        name="Edit_fill"
+                        size={16}
+                        color={colors.neutral[900]}
+                      />
+                    </View>
                   </View>
                 </View>
 
@@ -188,6 +212,12 @@ const PersonalInformation = () => {
                     label="Фамилия"
                     placeholder="Иванов"
                   />
+                </View>
+
+                <Divider />
+
+                <View className="gap-1 mt-5">
+                  <NicknameField />
                   <RhfTextField
                     name="profession"
                     label="Специализация"
@@ -255,6 +285,17 @@ const PersonalInformation = () => {
                 />
               </View>
             </StModal>
+
+            {avatarViewerVisible && avatarUri && (
+              <AvatarViewer
+                uri={avatarUri}
+                onClose={() => setAvatarViewerVisible(false)}
+                onPick={handlePickAvatar}
+                onDelete={() =>
+                  handleRemoveAvatar(() => setAvatarViewerVisible(false))
+                }
+              />
+            )}
           </>
         )}
       </ScreenWithToolbar>
