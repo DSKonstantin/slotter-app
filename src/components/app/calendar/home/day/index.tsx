@@ -266,14 +266,14 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           contentInset={
-            iosInsetTrickEnabled ? { top: headerHeight } : undefined
+            iosInsetTrickEnabled ? { top: headerHeight + 8 } : undefined
           }
           contentOffset={
-            iosInsetTrickEnabled ? { x: 0, y: -headerHeight } : undefined
+            iosInsetTrickEnabled ? { x: 0, y: -(headerHeight + 8) } : undefined
           }
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: iosInsetTrickEnabled ? 0 : headerHeight,
+            paddingTop: iosInsetTrickEnabled ? 0 : headerHeight + 8,
             paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
           }}
           onContentSizeChange={() => {
