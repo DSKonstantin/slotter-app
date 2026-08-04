@@ -120,6 +120,8 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     [isLoading, selectedWorkingDay, appointments.length],
   );
 
+  const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
+
   const refetchAll = useCallback(async () => {
     await Promise.all([refetchWorkingDays(), refetchAppointments()]);
   }, [refetchAppointments, refetchWorkingDays]);
@@ -264,14 +266,14 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           contentInset={
-            Platform.OS === "ios" ? { top: headerHeight } : undefined
+            iosInsetTrickEnabled ? { top: headerHeight } : undefined
           }
           contentOffset={
-            Platform.OS === "ios" ? { x: 0, y: -headerHeight } : undefined
+            iosInsetTrickEnabled ? { x: 0, y: -headerHeight } : undefined
           }
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: Platform.OS === "ios" ? 0 : headerHeight,
+            paddingTop: iosInsetTrickEnabled ? 0 : headerHeight,
             paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
           }}
           onContentSizeChange={() => {
