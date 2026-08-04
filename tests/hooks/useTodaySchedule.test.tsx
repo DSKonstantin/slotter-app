@@ -1,4 +1,5 @@
 import React from "react";
+import { addDays } from "date-fns";
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { renderHook, waitFor } from "@testing-library/react-native";
@@ -24,6 +25,7 @@ jest.mock("expo-router", () => ({
 }));
 
 const TODAY_ISO = formatApiDate(new Date());
+const RANGE_END_ISO = formatApiDate(addDays(new Date(), 7));
 
 const buildStore = (loggedIn: boolean) => {
   const authState: AuthState = {
@@ -62,7 +64,7 @@ describe("useTodaySchedule", () => {
     store.dispatch(
       upsertApiQueryData(
         "getWorkingDays",
-        { userId: 1, date_from: TODAY_ISO, date_to: TODAY_ISO },
+        { userId: 1, date_from: TODAY_ISO, date_to: RANGE_END_ISO },
         {},
       ),
     );
@@ -78,7 +80,7 @@ describe("useTodaySchedule", () => {
     store.dispatch(
       upsertApiQueryData(
         "getWorkingDays",
-        { userId: 1, date_from: TODAY_ISO, date_to: TODAY_ISO },
+        { userId: 1, date_from: TODAY_ISO, date_to: RANGE_END_ISO },
         { [TODAY_ISO]: { is_active: true } as WorkingDay },
       ),
     );
@@ -94,7 +96,7 @@ describe("useTodaySchedule", () => {
     store.dispatch(
       upsertApiQueryData(
         "getWorkingDays",
-        { userId: 1, date_from: TODAY_ISO, date_to: TODAY_ISO },
+        { userId: 1, date_from: TODAY_ISO, date_to: RANGE_END_ISO },
         { [TODAY_ISO]: { is_active: false } as WorkingDay },
       ),
     );
