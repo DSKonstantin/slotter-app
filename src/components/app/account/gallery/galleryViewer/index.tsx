@@ -93,7 +93,7 @@ export function GalleryViewer({
               data={items}
               keyExtractor={keyExtractor}
               initialIndex={safeIndex}
-              onVerticalPull={(translateY, released) => {
+              onVerticalPull={({ translateY, released }) => {
                 "worklet";
                 if (released && Math.abs(translateY) > 120) {
                   scheduleOnRN(onClose);

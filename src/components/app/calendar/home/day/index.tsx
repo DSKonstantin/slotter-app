@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
-import { RefreshControl, View } from "react-native";
+import { Platform, RefreshControl, View } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -263,9 +263,15 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          contentInset={
+            Platform.OS === "ios" ? { top: headerHeight } : undefined
+          }
+          contentOffset={
+            Platform.OS === "ios" ? { x: 0, y: -headerHeight } : undefined
+          }
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: headerHeight,
+            paddingTop: Platform.OS === "ios" ? 0 : headerHeight,
             paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
           }}
           onContentSizeChange={() => {
@@ -278,7 +284,11 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
             }
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              progressViewOffset={Platform.select({ android: headerHeight })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
           }
         >
           {content}

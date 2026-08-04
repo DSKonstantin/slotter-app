@@ -101,7 +101,7 @@ const ImageViewer = ({
             data={images}
             keyExtractor={keyExtractor}
             initialIndex={safeIndex}
-            onVerticalPull={(translateY, released) => {
+            onVerticalPull={({ translateY, released }) => {
               "worklet";
 
               if (released && Math.abs(translateY) > 120) {

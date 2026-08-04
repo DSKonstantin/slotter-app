@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { formatApiDate } from "@/src/utils/date/formatDate";
+import { useAssistantScheduleRange } from "@/src/hooks/useAssistantScheduleRange";
 
 type TodayScheduleResult = {
   hasTodayWorkingDay: boolean;
@@ -18,12 +18,12 @@ type TodayScheduleResult = {
 export const useTodaySchedule = (): TodayScheduleResult => {
   const auth = useRequiredAuth();
 
-  const todayISO = useMemo(() => formatApiDate(new Date()), []);
+  const { today: todayISO, rangeEnd } = useAssistantScheduleRange();
 
   const { data, isLoading, isFetching, isError, refetch } =
     useGetWorkingDaysQuery(
       auth
-        ? { userId: auth.userId, date_from: todayISO, date_to: todayISO }
+        ? { userId: auth.userId, date_from: todayISO, date_to: rangeEnd }
         : skipToken,
     );
 
