@@ -1,33 +1,13 @@
 import React, { useState } from "react";
 import { Linking, View } from "react-native";
 import { Image } from "expo-image";
-import { Button, StModal, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
+import { Badge, Button, StModal, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 
-type FeatureItem = {
-  icon: React.ComponentProps<typeof StSvg>["name"];
-  title: string;
-  description: string;
-};
-
-const FEATURES: FeatureItem[] = [
-  {
-    icon: "link_alt",
-    title: "Никнейм профиля",
-    description: "Теперь вы можете поменять свой @никнейм прямо из настроек",
-  },
-  {
-    icon: "Credit_card",
-    title: "Тариф в профиле",
-    description: "Видите свой текущий план сразу на главном экране аккаунта",
-  },
-  {
-    icon: "Edit",
-    title: "Редактирование данных",
-    description:
-      "Отдельный экран для имени, фамилии и специальности — раньше это было разбросано по настройкам",
-  },
+const FEATURES: string[] = [
+  "Теперь вы можете поменять свой @никнейм прямо из настроек.",
+  "Видите свой текущий план сразу на главном экране аккаунта.",
+  "Отдельный экран для имени, фамилии и специальности — раньше это было разбросано по настройкам.",
 ];
 
 const AppUpdateModal: React.FC = () => {
@@ -45,7 +25,7 @@ const AppUpdateModal: React.FC = () => {
 
   return (
     <StModal
-      visible={visible}
+      visible={true}
       onClose={isBlocking ? () => {} : () => setDismissed(true)}
       {...(isBlocking && {
         onBackdropPress: () => {},
@@ -62,40 +42,31 @@ const AppUpdateModal: React.FC = () => {
         }}
       />
 
-      <Typography weight="semibold" className="text-display text-center my-5">
+      <Typography weight="semibold" className="text-display my-5">
         Обновили личный кабинет
       </Typography>
 
-      <View className="gap-4 mb-6">
-        {FEATURES.map((feature) => (
-          <View key={feature.title}>
-            <View className="flex-row items-center gap-2 mb-1">
-              <StSvg
-                name={feature.icon}
-                size={20}
-                color={colors.neutral[900]}
-              />
-              <Typography weight="semibold" className="text-body">
-                {feature.title}
-              </Typography>
-            </View>
-            <Typography
-              weight="medium"
-              className="text-caption text-neutral-500"
-            >
-              {feature.description}
-            </Typography>
-          </View>
+      <View className="gap-3 mb-6">
+        {FEATURES.map((description) => (
+          <Typography weight="regular" key={description} className="text-body">
+            {description}
+          </Typography>
         ))}
       </View>
 
-      <View className="gap-3">
-        <Button
-          title="Обновить приложение"
-          variant="accent"
-          onPress={handleUpdate}
-        />
-      </View>
+      <Button
+        title="Обновить приложение"
+        variant="secondary"
+        leftIcon={
+          <Badge
+            title="New"
+            size="sm"
+            variant="success"
+            className="self-center"
+          />
+        }
+        onPress={handleUpdate}
+      />
     </StModal>
   );
 };
