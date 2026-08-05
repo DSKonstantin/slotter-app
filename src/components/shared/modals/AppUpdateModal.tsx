@@ -25,7 +25,7 @@ const AppUpdateModal: React.FC = () => {
 
   return (
     <StModal
-      visible={true}
+      visible={visible}
       onClose={isBlocking ? () => {} : () => setDismissed(true)}
       {...(isBlocking && {
         onBackdropPress: () => {},
