@@ -24,14 +24,7 @@ const AppUpdateModal: React.FC = () => {
   };
 
   return (
-    <StModal
-      visible={visible}
-      onClose={isBlocking ? () => {} : () => setDismissed(true)}
-      {...(isBlocking && {
-        onBackdropPress: () => {},
-        swipeDirection: undefined,
-      })}
-    >
+    <StModal visible={visible} onClose={() => setDismissed(true)}>
       <Image
         source={require("@/assets/images/app/update-modal.webp")}
         contentFit="cover"
