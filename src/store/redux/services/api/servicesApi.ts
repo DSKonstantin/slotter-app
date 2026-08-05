@@ -48,6 +48,16 @@ const findCategoryInPages = (
   return undefined;
 };
 
+const findMainCategoryInPages = (
+  pages: PaginatedResponse<ServiceCategory>[],
+): ServiceCategory | undefined => {
+  for (const page of pages) {
+    const cat = page.service_categories.find((c) => c.code === "main");
+    if (cat) return cat;
+  }
+  return undefined;
+};
+
 function patchCategoriesCache(
   getState: () => unknown,
   dispatch: Dispatch,
@@ -115,6 +125,22 @@ const servicesApi = api.injectEndpoints({
       ],
     }),
 
+    // Creates a service without requiring a category up front — it lands in
+    // the master's main ("Основные") category, which the backend creates
+    // lazily if it doesn't exist yet. Optionally accepts `service_category_id`
+    // in the payload to target a specific category instead.
+    createServiceForUser: builder.mutation<
+      Service,
+      { userId: number; data: CreateServicePayload | FormData }
+    >({
+      query: ({ userId, data }) => ({
+        url: `/users/${userId}/services`,
+        method: "POST",
+        data: data instanceof FormData ? data : { service: data },
+      }),
+      invalidatesTags: () => [CATEGORIES_TAG],
+    }),
+
     updateService: builder.mutation<
       Service,
       {
@@ -134,7 +160,7 @@ const servicesApi = api.injectEndpoints({
       ) {
         if (data instanceof FormData) return;
 
-        if (data.service_category_id) {
+        if (data.service_category_id !== undefined) {
           const targetCategoryId = data.service_category_id;
           const patches = patchCategoriesCache(getState, dispatch, (draft) => {
             const src = findCategoryInPages(draft.pages, categoryId);
@@ -143,7 +169,10 @@ const servicesApi = api.injectEndpoints({
             if (idx === -1) return;
             const [moved] = src.services.splice(idx, 1);
 
-            const dst = findCategoryInPages(draft.pages, targetCategoryId);
+            const dst =
+              targetCategoryId === null
+                ? findMainCategoryInPages(draft.pages)
+                : findCategoryInPages(draft.pages, targetCategoryId);
             if (!dst) return;
             if (!dst.services) dst.services = [];
             dst.services.push(moved);
@@ -279,6 +308,7 @@ export const {
   useGetServicesQuery,
   useGetServiceQuery,
   useCreateServiceMutation,
+  useCreateServiceForUserMutation,
   useUpdateServiceMutation,
   useUpdateServiceFormMutation,
   useDeleteServiceMutation,

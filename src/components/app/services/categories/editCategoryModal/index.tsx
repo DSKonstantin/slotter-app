@@ -32,6 +32,7 @@ type EditableCategory = {
   id: number;
   name: string;
   color?: string | null;
+  code?: string | null;
   services?: Service[];
 };
 
@@ -252,21 +253,23 @@ const EditCategoryModal = ({ visible, userId, category, onClose }: Props) => {
             loading={isLoading}
           />
 
-          <Button
-            buttonClassName="mx-screen"
-            variant="clear"
-            textClassName="text-accent-red-500"
-            rightIcon={
-              <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
-            }
-            buttonProps={{
-              style: sidePadding,
-            }}
-            title="Удалить категорию"
-            disabled={isDeletingCategory}
-            loading={isDeletingCategory}
-            onPress={handleDeleteCategory}
-          />
+          {category?.code !== "main" && (
+            <Button
+              buttonClassName="mx-screen"
+              variant="clear"
+              textClassName="text-accent-red-500"
+              rightIcon={
+                <StSvg name="Trash" size={24} color={colors.accent.red[500]} />
+              }
+              buttonProps={{
+                style: sidePadding,
+              }}
+              title="Удалить категорию"
+              disabled={isDeletingCategory}
+              loading={isDeletingCategory}
+              onPress={handleDeleteCategory}
+            />
+          )}
         </View>
       </FormProvider>
     </StModal>

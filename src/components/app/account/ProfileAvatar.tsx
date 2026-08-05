@@ -8,6 +8,7 @@ import { colors } from "@/src/styles/colors";
 
 const ProfileAvatar = () => {
   const user = useAppSelector((s) => s.auth.user);
+  const ispe = useAppSelector((s) => s.appVersion.ispe);
   const hasProAccess = user?.subscription_membership?.pro_access ?? false;
 
   return (
@@ -25,32 +26,34 @@ const ProfileAvatar = () => {
             size="xl"
           />
 
-          <View className="absolute -bottom-2 left-1">
-            {hasProAccess ? (
-              <View className="flex-row items-center gap-0.5 bg-primary-green-500 rounded-full px-2 py-0.5 border-[3px] border-background">
-                <StSvg
-                  name="Star_alt_fill"
-                  size={16}
-                  color={colors.neutral[900]}
-                />
-                <Typography
-                  weight="semibold"
-                  className="text-caption text-neutral-900"
-                >
-                  PRO
-                </Typography>
-              </View>
-            ) : (
-              <View className="bg-neutral-100 rounded-full px-2.5 py-0.5 border-[3px] border-background">
-                <Typography
-                  weight="semibold"
-                  className="text-caption text-neutral-900"
-                >
-                  Старт
-                </Typography>
-              </View>
-            )}
-          </View>
+          {ispe && (
+            <View className="absolute -bottom-2 left-1">
+              {hasProAccess ? (
+                <View className="flex-row items-center gap-0.5 bg-primary-green-500 rounded-full px-2 py-0.5 border-[3px] border-background">
+                  <StSvg
+                    name="Star_alt_fill"
+                    size={16}
+                    color={colors.neutral[900]}
+                  />
+                  <Typography
+                    weight="semibold"
+                    className="text-caption text-neutral-900"
+                  >
+                    PRO
+                  </Typography>
+                </View>
+              ) : (
+                <View className="bg-neutral-100 rounded-full px-2.5 py-0.5 border-[3px] border-background">
+                  <Typography
+                    weight="semibold"
+                    className="text-caption text-neutral-900"
+                  >
+                    Старт
+                  </Typography>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View className="gap-1">
