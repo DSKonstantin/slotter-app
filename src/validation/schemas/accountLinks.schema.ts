@@ -6,7 +6,7 @@ export const AccountLinksSchema = yup.object({
   links: yup.array().of(
     yup.object({
       id: yup.number().optional(),
-      title: yup.string().optional(),
+      title: yup.string().trim().max(100, "Максимум 100 символов").optional(),
       url: yup.string().url("Некорректная ссылка").required("Введите ссылку"),
     }),
   ),

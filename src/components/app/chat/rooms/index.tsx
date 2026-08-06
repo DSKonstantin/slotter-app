@@ -56,6 +56,12 @@ export default function ChatRoomsScreen() {
     [data],
   );
 
+  const isRoomsEmpty = useMemo(() => rooms.length === 0, [rooms.length]);
+  const iosInsetTrickEnabled = useMemo(
+    () => Platform.OS === "ios" && !isRoomsEmpty,
+    [isRoomsEmpty],
+  );
+
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
@@ -98,16 +104,16 @@ export default function ChatRoomsScreen() {
                 disabled: true,
               }}
               contentInset={
-                Platform.OS === "ios" ? { top: topInset } : undefined
+                iosInsetTrickEnabled ? { top: topInset } : undefined
               }
               contentOffset={
-                Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+                iosInsetTrickEnabled ? { x: 0, y: -topInset } : undefined
               }
               contentContainerStyle={{
-                paddingTop: Platform.OS === "ios" ? 0 : topInset,
+                paddingTop: iosInsetTrickEnabled ? 0 : topInset,
                 paddingBottom: bottomInset + 8,
                 paddingHorizontal: SCREEN_PADDING,
-                flexGrow: 1,
+                ...(isRoomsEmpty ? { flexGrow: 1 } : null),
               }}
               refreshControl={
                 <RefreshControl

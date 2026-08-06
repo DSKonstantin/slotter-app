@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Alert, Platform, RefreshControl, View } from "react-native";
+import { Platform, RefreshControl, View } from "react-native";
 import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -53,6 +53,8 @@ const Contacts = () => {
   const [deleteUserLink, { isLoading: isDeleting }] =
     useDeleteUserLinkMutation();
 
+  const isSaving = isCreating || isUpdating || isDeleting;
+
   const methods = useForm<AccountLinksFormValues>({
     resolver: yupResolver(AccountLinksSchema),
     defaultValues: {
@@ -67,7 +69,6 @@ const Contacts = () => {
     name: "links",
   });
 
-  const watchedLinks = methods.watch("links") ?? [];
   const dirtyLinks = methods.formState.dirtyFields.links ?? [];
 
   useFormNavigationGuard(methods.formState.isDirty);
@@ -83,55 +84,28 @@ const Contacts = () => {
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
 
   const handleRemove = (index: number) => {
-    if (!auth) return;
-
-    const link = methods.getValues(`links.${index}`);
-
-    if (!link) return;
-
-    Alert.alert(
-      "Удалить ссылку?",
-      "Это действие нельзя отменить",
-      [
-        {
-          text: "Отмена",
-          style: "cancel",
-        },
-        {
-          text: "Удалить",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (link.id) {
-                await deleteUserLink({
-                  userId: auth.userId,
-                  id: link.id,
-                }).unwrap();
-              }
-
-              remove(index);
-              methods.reset(methods.getValues());
-            } catch (error) {
-              toast.error(
-                getApiErrorMessage(error, "Не удалось удалить ссылку"),
-              );
-            }
-          },
-        },
-      ],
-      { cancelable: true },
-    );
+    remove(index);
   };
 
   const onSubmit = async (data: AccountLinksFormValues) => {
     if (!auth) return;
 
     try {
+      const remainingIds = new Set(
+        data.links?.map((link) => link.id).filter(Boolean),
+      );
+      const removedLinkIds = userLinks
+        .filter((link) => !remainingIds.has(link.id))
+        .map((link) => link.id);
+
       await Promise.all([
         updateUser({
           id: auth.userId,
           data: { address: data.address },
         }).unwrap(),
+        ...removedLinkIds.map((id) =>
+          deleteUserLink({ userId: auth.userId, id }).unwrap(),
+        ),
         ...map(data.links, async (link, index) => {
           const isDirty = dirtyLinks[index];
 
@@ -223,20 +197,36 @@ const Contacts = () => {
                   paddingBottom: 16,
                 }}
               >
-                <View className="px-screen gap-2">
+                <View className="px-screen gap-1">
                   <AddressField />
 
                   {fields.map((field, index) => (
-                    <View key={field.id} className="gap-1">
+                    <View key={field.id} className="gap-2 mt-2">
                       <RhfTextField
                         label={`Ссылка №${index + 1}`}
+                        hideErrorText
                         name={`links.${index}.title`}
                         placeholder="Название ссылки"
+                        endAdornment={
+                          <IconButton
+                            size="xs"
+                            disabled={isSaving}
+                            onPress={() => handleRemove(index)}
+                            icon={
+                              <StSvg
+                                name="close_ring_fill_light"
+                                size={24}
+                                color={colors.neutral[400]}
+                              />
+                            }
+                          />
+                        }
                       />
 
                       <RhfTextField
                         name={`links.${index}.url`}
                         placeholder="https://вашассылка.com"
+                        hideErrorText
                         autoCapitalize="none"
                         keyboardType="url"
                         startAdornment={
@@ -246,26 +236,7 @@ const Contacts = () => {
                             color={colors.neutral[900]}
                           />
                         }
-                        endAdornment={
-                          watchedLinks[index]?.url ? (
-                            <IconButton
-                              size="xs"
-                              disabled={isDeleting}
-                              loading={isDeleting}
-                              onPress={() => handleRemove(index)}
-                              icon={
-                                <StSvg
-                                  name="close_ring_fill_light"
-                                  size={24}
-                                  color={colors.neutral[400]}
-                                />
-                              }
-                            />
-                          ) : null
-                        }
                       />
-
-                      <Divider />
                     </View>
                   ))}
 
@@ -299,8 +270,8 @@ const Contacts = () => {
               >
                 <Button
                   title="Сохранить изменения"
-                  loading={isCreating || isUpdating}
-                  disabled={isCreating || isUpdating}
+                  loading={isSaving}
+                  disabled={isSaving}
                   onPress={methods.handleSubmit(onSubmit)}
                   rightIcon={
                     <StSvg

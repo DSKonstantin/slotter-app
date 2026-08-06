@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { Avatar, Badge } from "@/src/components/ui";
+import { pluralize } from "@/src/utils/text/pluralize";
 
 type Props = {
   name: string;
@@ -54,7 +55,8 @@ const ClientInfoCard = ({
         )}
 
         <Text className="font-inter-regular text-caption text-neutral-400 mt-1">
-          {visitsCount} визитов | {totalSpent} потрачено
+          {visitsCount} {pluralize(visitsCount, ["визит", "визита", "визитов"])}{" "}
+          | {totalSpent} потрачено
         </Text>
       </View>
     </View>

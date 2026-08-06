@@ -147,7 +147,9 @@ const TabMenu = () => {
                   <StSvg
                     name={item.icon}
                     size={24}
-                    color={colors.neutral[900]}
+                    color={
+                      item.disabled ? colors.neutral[500] : colors.neutral[900]
+                    }
                   />
                   <Typography
                     weight={isActive ? "semibold" : "medium"}

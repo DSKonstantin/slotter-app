@@ -21,16 +21,13 @@ import {
   ServiceImagesPicker,
   ServicePhotosValue,
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
-import { useGetFirstServiceCategoryQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
-import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
+import { useCreateServiceForUserMutation } from "@/src/store/redux/services/api/servicesApi";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
-import { skipToken } from "@reduxjs/toolkit/query";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 
 const Service = () => {
@@ -39,16 +36,8 @@ const Service = () => {
     createDefaultServicePhotos(),
   );
 
-  const {
-    data: defaultCategory,
-    isLoading: isCategoryLoading,
-    isError: isCategoryError,
-    refetch: refetchCategory,
-  } = useGetFirstServiceCategoryQuery(
-    auth ? { userId: auth.userId } : skipToken,
-  );
-
-  const [createService, { isLoading }] = useCreateServiceMutation();
+  const [createServiceForUser, { isLoading }] =
+    useCreateServiceForUserMutation();
   const [updateUser, { isLoading: isUpdatingStep }] = useUpdateUserMutation();
   const [skipUser, { isLoading: isSkipping }] = useUpdateUserMutation();
 
@@ -60,16 +49,6 @@ const Service = () => {
       duration: "",
     },
   });
-
-  if (isCategoryError) {
-    return (
-      <ErrorScreen
-        title="Не удалось загрузить данные"
-        onRetry={refetchCategory}
-        withTabBar={false}
-      />
-    );
-  }
 
   const handleSkip = async () => {
     if (!auth) return;
@@ -88,12 +67,6 @@ const Service = () => {
     if (!auth) return;
 
     try {
-      const categoryId = defaultCategory?.id;
-      if (!categoryId) {
-        toast.error("Не удалось определить категорию услуг");
-        return;
-      }
-
       const formData = buildServiceFormData({
         name: data.name,
         price: data.price,
@@ -104,8 +77,8 @@ const Service = () => {
       });
       appendPhotosToFormData(formData, photos);
 
-      await createService({
-        categoryId,
+      await createServiceForUser({
+        userId: auth.userId,
         data: formData,
       }).unwrap();
 
@@ -142,7 +115,7 @@ const Service = () => {
             primary={{
               title: "Сохранить",
               loading: isLoading || isUpdatingStep,
-              disabled: isLoading || isUpdatingStep || isCategoryLoading,
+              disabled: isLoading || isUpdatingStep,
               onPress: methods.handleSubmit(onSubmit),
             }}
             secondary={{

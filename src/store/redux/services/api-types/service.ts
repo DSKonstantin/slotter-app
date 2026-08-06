@@ -12,7 +12,7 @@ export interface ServiceCategory {
 
 export type CreateServiceCategoryPayload = {
   name: string;
-  is_active: boolean;
+  is_active?: boolean;
   color?: string | null;
 };
 
@@ -66,6 +66,7 @@ export type CreateServicePayload = {
   duration: number;
   is_active?: boolean;
   is_available_online?: boolean;
+  service_category_id?: number | null;
   additional_service_ids?: number[];
   position?: number;
   main_photo?: { uri: string; name: string; type: string };
@@ -79,7 +80,7 @@ export type UpdateServicePayload = Partial<{
   duration: number;
   is_active: boolean;
   is_available_online: boolean;
-  service_category_id: number;
+  service_category_id: number | null;
   additional_service_ids: number[];
   position: number;
   main_photo: { uri: string; name: string; type: string };

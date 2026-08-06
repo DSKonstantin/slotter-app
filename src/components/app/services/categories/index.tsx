@@ -31,6 +31,7 @@ type SelectedCategory = {
   id: number;
   name: string;
   color?: string | null;
+  code?: string | null;
 };
 
 const AppServicesCategories = () => {

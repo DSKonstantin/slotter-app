@@ -40,7 +40,15 @@ const Home = () => {
           params: {
             date_from: today,
             date_to: today,
-            status: ["pending", "confirmed", "arrived"],
+            status: [
+              "requested",
+              "pending",
+              "confirmed",
+              "arrived",
+              "completed",
+              "missed",
+              "delayed",
+            ],
           },
         }
       : skipToken,

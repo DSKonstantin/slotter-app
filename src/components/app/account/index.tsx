@@ -25,6 +25,8 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { toast } from "@backpackapp-io/react-native-toast";
 import ProfileAvatar from "@/src/components/app/account/ProfileAvatar";
 import { useAppSelector } from "@/src/store/redux/store";
+import { SlotterCardsIcon } from "@/src/components/shared/svg/SlotterCardsIcon";
+import ClientNotificationsPromoCard from "@/src/components/app/account/ClientNotificationsPromoCard";
 
 type NavItem = {
   title: string;
@@ -87,11 +89,6 @@ const AccountScreen = () => {
           icon: "link_alt",
           route: () => router.push(Routers.app.account.contacts),
         },
-        {
-          title: "Просмотр страницы",
-          icon: "Eye_fill",
-          route: () => router.push(Routers.app.account.preview),
-        },
       ],
     },
     {
@@ -101,12 +98,6 @@ const AccountScreen = () => {
           title: "Настройки онлайн-записи",
           icon: "Setting_alt_fill",
           route: () => router.push(Routers.app.account.booking),
-        },
-        {
-          title: "Уведомления клиентам",
-          icon: "Message_fill",
-          route: () =>
-            router.push(Routers.app.account.clientNotifications.root),
         },
       ],
     },
@@ -173,7 +164,16 @@ const AccountScreen = () => {
                   <Button
                     title="Личный кабинет"
                     variant="secondary"
+                    textClassName="flex-1"
                     size="lg"
+                    leftIcon={<SlotterCardsIcon size={24} />}
+                    rightIcon={
+                      <StSvg
+                        name="External"
+                        size={24}
+                        color={colors.neutral[900]}
+                      />
+                    }
                     buttonClassName="rounded-full h-[62px]"
                     onPress={handleUpgrade}
                   />
@@ -254,12 +254,16 @@ const AccountScreen = () => {
                       </React.Fragment>
                     ))}
                   </View>
+
+                  {section.label === "Запись и оплата" && (
+                    <ClientNotificationsPromoCard />
+                  )}
                 </View>
               ))}
             </View>
 
             <Pressable
-              className="flex-row items-center justify-center gap-2 mt-7 py-2 active:opacity-70"
+              className="mx-screen rounded-base min-h-[50px] flex-row items-center justify-center gap-2 mt-7 py-2 active:opacity-70 bg-background-surface"
               disabled={isLoggingOut}
               onPress={() =>
                 Alert.alert(

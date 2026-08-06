@@ -20,7 +20,6 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
-import { NicknameField } from "@/src/components/onboarding/personalInformation/NicknameField";
 
 const ProfileSettings = () => {
   const auth = useRequiredAuth();
@@ -30,7 +29,6 @@ const ProfileSettings = () => {
   const methods = useForm<AccountProfileSettingsFormValues>({
     resolver: yupResolver(AccountProfileSettingsSchema),
     defaultValues: {
-      nickname: user?.nickname ?? "",
       tags: [],
       atHome: user?.is_home_work ?? false,
       online: user?.is_online_work ?? false,
@@ -47,7 +45,6 @@ const ProfileSettings = () => {
         await updateUser({
           id: auth.userId,
           data: {
-            nickname: data.nickname,
             is_home_work: data.atHome,
             is_online_work: data.online,
             is_out_call: data.onRoad,
@@ -104,18 +101,27 @@ const ProfileSettings = () => {
                     Виды работы
                   </Typography>
                   <View className="gap-2">
+                    <Item title="Онлайн" right={<RHFSwitch name="online" />} />
                     <Item
-                      title="Дома / в студии"
+                      title="Офлайн"
+                      contentClassName="flex-col items-start"
+                      titleAccessory={
+                        <Typography
+                          weight="regular"
+                          numberOfLines={1}
+                          className="text-caption text-neutral-400"
+                        >
+                          Дома/в кабинете/офисе
+                        </Typography>
+                      }
                       right={<RHFSwitch name="atHome" />}
                     />
-                    <Item title="Онлайн" right={<RHFSwitch name="online" />} />
                     <Item
                       title="На выезд"
                       right={<RHFSwitch name="onRoad" />}
                     />
                   </View>
                 </View>
-                <NicknameField />
               </View>
             </KeyboardAwareScrollView>
 

@@ -1,15 +1,16 @@
 import { useCallback, useMemo } from "react";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useLocalSearchParams } from "expo-router";
 
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAssistantScheduleRange } from "@/src/hooks/useAssistantScheduleRange";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import {
   useGetAppointmentsQuery,
   useGetUpcomingAppointmentsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
-import { formatApiDate } from "@/src/utils/date/formatDate";
 import { parseTime } from "@/src/utils/date/formatTime";
 import type {
   Appointment,
@@ -43,8 +44,8 @@ export const useHomeAssistantState = (): Result => {
     fromOnboarding?: string;
   }>();
 
+  const { today, rangeEnd } = useAssistantScheduleRange();
   const now = new Date();
-  const today = formatApiDate(now);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const {
@@ -54,7 +55,7 @@ export const useHomeAssistantState = (): Result => {
     refetch: refetchWorkingDays,
   } = useGetWorkingDaysQuery(
     auth
-      ? { userId: auth.userId, date_from: today, date_to: today }
+      ? { userId: auth.userId, date_from: today, date_to: rangeEnd }
       : skipToken,
   );
 
@@ -109,7 +110,20 @@ export const useHomeAssistantState = (): Result => {
 
     const todayWd = workingDaysData?.[today];
 
-    if (!todayWd) return { kind: "no_schedule" };
+    if (!todayWd) {
+      const nearestActiveDate = Object.entries(workingDaysData ?? {})
+        .filter(([, wd]) => wd?.is_active)
+        .map(([date]) => date)
+        .sort()[0];
+
+      const daysUntilNearestActive = nearestActiveDate
+        ? differenceInCalendarDays(parseISO(nearestActiveDate), parseISO(today))
+        : Infinity;
+
+      return {
+        kind: daysUntilNearestActive > 7 ? "no_schedule" : "day_off",
+      };
+    }
     if (!todayWd.is_active) return { kind: "day_off" };
 
     const endMinutes = parseTime(todayWd.end_at);

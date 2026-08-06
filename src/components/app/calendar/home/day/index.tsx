@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
-import { RefreshControl, View } from "react-native";
+import { Platform, RefreshControl, View } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -119,6 +119,8 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     () => !isLoading && !selectedWorkingDay && appointments.length === 0,
     [isLoading, selectedWorkingDay, appointments.length],
   );
+
+  const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
 
   const refetchAll = useCallback(async () => {
     await Promise.all([refetchWorkingDays(), refetchAppointments()]);
@@ -263,9 +265,15 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          contentInset={
+            iosInsetTrickEnabled ? { top: headerHeight + 8 } : undefined
+          }
+          contentOffset={
+            iosInsetTrickEnabled ? { x: 0, y: -(headerHeight + 8) } : undefined
+          }
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: headerHeight,
+            paddingTop: iosInsetTrickEnabled ? 0 : headerHeight + 8,
             paddingBottom: isEmpty || hasError ? 0 : bottomInset + 80,
           }}
           onContentSizeChange={() => {
@@ -278,7 +286,11 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
             }
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              progressViewOffset={Platform.select({ android: headerHeight })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
           }
         >
           {content}

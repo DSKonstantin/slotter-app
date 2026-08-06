@@ -178,7 +178,6 @@ export const Routers = {
           "/(app)/(tabs)/account/security/change-password" as const,
         email: "/(app)/(tabs)/account/security/email" as const,
       },
-      preview: "/(app)/(tabs)/account/preview" as const,
       gallery: "/(app)/(tabs)/account/gallery" as const,
       clientNotifications: {
         root: "/(app)/(tabs)/account/client-notifications" as const,
