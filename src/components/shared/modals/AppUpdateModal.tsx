@@ -14,8 +14,8 @@ const AppUpdateModal: React.FC = () => {
   const { updateStatus, storeUrl } = useAppSelector((s) => s.appVersion);
   const [dismissed, setDismissed] = useState(false);
 
-  const isBlocking = updateStatus === "red";
-  const visible = isBlocking || (updateStatus === "yellow" && !dismissed);
+  const visible =
+    (updateStatus === "red" || updateStatus === "yellow") && !dismissed;
 
   const handleUpdate = () => {
     if (storeUrl) {
