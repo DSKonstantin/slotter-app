@@ -32,24 +32,24 @@ const InsightCard = ({ category, iconName, title, body, onPress }: Props) => {
   const styles = INSIGHT_CATEGORY_CONFIG[category];
 
   return (
-    <View className="relative">
+    <View className="relative flex-1">
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onPress}
-        className="bg-background rounded-base p-4 gap-2 min-h-[132px]"
+        className="flex-1 flex-row bg-background rounded-base p-4 gap-2"
       >
-        <View className="flex-row items-center gap-2">
-          <StSvg name={iconName} size={28} color={styles.color} />
-          <Badge
-            title={styles.label}
-            size="sm"
-            className={styles.pillBg}
-            textStyle={{ color: styles.pillTextColor }}
-          />
-        </View>
+        <View className="flex-1 gap-2">
+          <View className="flex-row items-center gap-2">
+            <StSvg name={iconName} size={28} color={styles.color} />
+            <Badge
+              title={styles.label}
+              size="sm"
+              className={styles.pillBg}
+              textStyle={{ color: styles.pillTextColor }}
+            />
+          </View>
 
-        <View className="flex-row items-center gap-2">
-          <View className="flex-1 gap-1">
+          <View className="gap-1">
             <Typography
               weight="semibold"
               className="text-body text-neutral-900"
@@ -77,9 +77,12 @@ const InsightCard = ({ category, iconName, title, body, onPress }: Props) => {
                 : body}
             </Typography>
           </View>
+        </View>
+
+        <View className="self-center">
           <StSvg
             name="Expand_right_light"
-            size={20}
+            size={24}
             color={colors.neutral[500]}
           />
         </View>

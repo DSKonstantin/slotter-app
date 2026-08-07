@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { ActivityIndicator, Alert, AppState, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  AppState,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
@@ -7,6 +15,7 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import RetryInline from "@/src/components/shared/retryInline";
 import { Item, Switch } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
 import {
   useGetNotificationSettingsQuery,
   useUpdateNotificationSettingsMutation,
@@ -36,6 +45,8 @@ const AccountNotifications = () => {
 
   const { data, isLoading, isFetching, isError, refetch } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+
+  const { refreshing, onRefresh } = useRefresh(refetch);
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
 
@@ -84,8 +95,26 @@ const AccountNotifications = () => {
 
   return (
     <ScreenWithToolbar title="Уведомления">
-      {({ topInset }) => (
-        <View style={{ paddingTop: topInset }} className="px-screen">
+      {({ topInset, bottomInset }) => (
+        <ScrollView
+          className="px-screen"
+          showsVerticalScrollIndicator={false}
+          contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+          contentOffset={
+            Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+          }
+          contentContainerStyle={{
+            paddingTop: Platform.OS === "ios" ? 0 : topInset,
+            paddingBottom: bottomInset + 16,
+          }}
+          refreshControl={
+            <RefreshControl
+              progressViewOffset={Platform.select({ android: topInset })}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
+        >
           <View className="overflow-hidden gap-2">
             <Item
               title="Push-уведомления"
@@ -116,7 +145,7 @@ const AccountNotifications = () => {
               ))
             )}
           </View>
-        </View>
+        </ScrollView>
       )}
     </ScreenWithToolbar>
   );

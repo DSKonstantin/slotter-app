@@ -16,6 +16,7 @@ import NotificationStoriesModal, {
 import { MOCK_NOTIFICATION_STORIES } from "./mockStories";
 
 const AUTO_PLAY_INTERVAL = 6000;
+const DEFAULT_CARD_HEIGHT = 132;
 
 type Insight = {
   id: number | string;
@@ -69,6 +70,7 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
 const InsightsCarousel = () => {
   const [index, setIndex] = useState(0);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  const [cardHeight, setCardHeight] = useState(DEFAULT_CARD_HEIGHT);
   const isScrollingRef = useRef(false);
   const carouselRef = useRef<ICarouselInstance>(null);
   const { width: screenWidth } = useWindowDimensions();
@@ -94,7 +96,7 @@ const InsightsCarousel = () => {
 
   const renderItem = useCallback(
     ({ item }: { item: Insight }) => (
-      <View className="px-screen">
+      <View className="px-screen flex-1">
         <InsightCard
           category={item.category}
           iconName={item.iconName}
@@ -114,12 +116,36 @@ const InsightsCarousel = () => {
   return (
     <>
       <View className="gap-2.5">
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", opacity: 0, width: screenWidth }}
+        >
+          {insights.map((insight) => (
+            <View
+              key={insight.id}
+              className="px-screen"
+              onLayout={(e) => {
+                const measured = Math.ceil(e.nativeEvent.layout.height);
+                setCardHeight((prev) => Math.max(prev, measured));
+              }}
+            >
+              <InsightCard
+                category={insight.category}
+                iconName={insight.iconName}
+                title={insight.title}
+                body={insight.body}
+                onPress={() => {}}
+              />
+            </View>
+          ))}
+        </View>
+
         <Carousel
           ref={carouselRef}
           data={insights}
           renderItem={renderItem}
           width={screenWidth}
-          height={132}
+          height={cardHeight}
           loop
           autoPlay
           autoPlayInterval={AUTO_PLAY_INTERVAL}

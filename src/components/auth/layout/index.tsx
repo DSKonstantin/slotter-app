@@ -86,14 +86,14 @@ export function AuthScreenLayout({
       {footer && stickyFooter ? (
         <KeyboardStickyView
           offset={{ closed: 0, opened: bottom }}
-          style={{ paddingBottom: bottom }}
+          style={{ paddingBottom: bottom + 8 }}
         >
           <View className="px-screen py-2">{footer}</View>
         </KeyboardStickyView>
       ) : footer ? (
         <View
           className="px-screen py-2 bg-background"
-          style={{ paddingBottom: bottom }}
+          style={{ paddingBottom: bottom + 8 }}
         >
           {footer}
         </View>
