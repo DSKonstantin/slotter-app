@@ -1,21 +1,28 @@
 import React, { useState } from "react";
-import { Linking, View } from "react-native";
+import { Linking } from "react-native";
 import { Image } from "expo-image";
 import { Badge, Button, StModal, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 
-const FEATURES: string[] = [
-  "Теперь вы можете поменять свой @никнейм прямо из настроек.",
-  "Видите свой текущий план сразу на главном экране аккаунта.",
-  "Отдельный экран для имени, фамилии и специальности — раньше это было разбросано по настройкам.",
-];
+const DESCRIPTION =
+  "Приложение стало еще лучше, нам важно, чтобы вы обновили его";
+
+const UPDATE_BUTTON_GLOW = [
+  "0px 2px 5px 0px #D6FFA31F",
+  "0px 9px 9px 0px #D6FFA31A",
+  "0px 19px 12px 0px #D6FFA30F",
+  "0px 35px 14px 0px #D6FFA305",
+  "0px 54px 15px 0px #D6FFA300",
+].join(", ");
 
 const AppUpdateModal: React.FC = () => {
   const { updateStatus, storeUrl } = useAppSelector((s) => s.appVersion);
   const [dismissed, setDismissed] = useState(false);
 
+  const isForced = updateStatus === "red";
   const visible =
-    (updateStatus === "red" || updateStatus === "yellow") && !dismissed;
+    (updateStatus === "red" || updateStatus === "yellow") &&
+    (isForced || !dismissed);
 
   const handleUpdate = () => {
     if (storeUrl) {
@@ -24,7 +31,11 @@ const AppUpdateModal: React.FC = () => {
   };
 
   return (
-    <StModal visible={visible} onClose={() => setDismissed(true)}>
+    <StModal
+      visible={visible}
+      onClose={() => setDismissed(true)}
+      dismissible={!isForced}
+    >
       <Image
         source={require("@/assets/images/app/update-modal.webp")}
         contentFit="cover"
@@ -35,17 +46,13 @@ const AppUpdateModal: React.FC = () => {
         }}
       />
 
-      <Typography weight="semibold" className="text-display my-5">
-        Обновили личный кабинет
+      <Typography weight="semibold" className="text-display mt-5 mb-2">
+        Обновили приложение
       </Typography>
 
-      <View className="gap-3 mb-6">
-        {FEATURES.map((description) => (
-          <Typography weight="regular" key={description} className="text-body">
-            {description}
-          </Typography>
-        ))}
-      </View>
+      <Typography weight="regular" className="text-body mb-6">
+        {DESCRIPTION}
+      </Typography>
 
       <Button
         title="Обновить приложение"
@@ -59,6 +66,9 @@ const AppUpdateModal: React.FC = () => {
           />
         }
         onPress={handleUpdate}
+        buttonProps={{
+          style: { boxShadow: UPDATE_BUTTON_GLOW },
+        }}
       />
     </StModal>
   );

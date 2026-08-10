@@ -29,6 +29,7 @@ type StModalProps = {
   scrollable?: boolean;
   scrollRef?: (ref: ScrollView | null) => void;
   contentRef?: React.Ref<View>;
+  dismissible?: boolean;
 } & Partial<ModalProps>;
 
 export const StModal = ({
@@ -44,6 +45,7 @@ export const StModal = ({
   scrollable = false,
   scrollRef: externalScrollRef,
   contentRef,
+  dismissible = true,
   ...props
 }: StModalProps) => {
   const { height } = useWindowDimensions();
@@ -102,10 +104,10 @@ export const StModal = ({
   return (
     <Modal
       isVisible={visible}
-      swipeDirection={"down"}
+      swipeDirection={dismissible ? "down" : undefined}
       swipeThreshold={swipeThreshold}
-      onBackdropPress={onClose}
-      onSwipeComplete={onClose}
+      onBackdropPress={dismissible ? onClose : undefined}
+      onSwipeComplete={dismissible ? onClose : undefined}
       statusBarTranslucent
       style={[styles.container, { paddingTop: top }]}
       {...swipeAwareProps}
@@ -115,7 +117,7 @@ export const StModal = ({
         className="py-3 relative rounded-t-large bg-background overflow-hidden"
         style={containerStyle}
       >
-        <BottomSheetHandle />
+        {dismissible && <BottomSheetHandle />}
 
         {header}
 
