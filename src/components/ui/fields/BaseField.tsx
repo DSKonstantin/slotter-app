@@ -16,6 +16,7 @@ type BaseFieldProps = {
   disabled?: boolean;
   size?: FieldSize;
   multiline?: boolean;
+  className?: string;
 
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
@@ -39,6 +40,7 @@ export function BaseField({
   disabled,
   size = "md",
   multiline,
+  className,
   startAdornment,
   hideErrorText = false,
   endAdornment,
@@ -83,6 +85,7 @@ export function BaseField({
           multiline ? styles.baseTop : styles.baseCenter,
           styles.sizes[size],
           disabled && styles.disabled,
+          className,
         )}
         style={[
           { borderColor: animatedBorderColor as unknown as string },

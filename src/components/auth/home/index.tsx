@@ -52,7 +52,7 @@ const AuthHome = () => {
             title={<StSvg name="union" size={25} color={colors.neutral[0]} />}
           />
         </View>
-        <View className="flex-1 justify-between gap-8">
+        <View className="flex-1 justify-between gap-8 pb-[8px]">
           <View className="flex-1 justify-end items-center px-screen">
             <View className="gap-2">
               <Typography

@@ -389,6 +389,26 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                 )}
               </View>
 
+              <Card
+                onPress={() => setComingSoonVisible(true)}
+                title="Документы"
+                left={
+                  <StSvg
+                    name="File_dock_fill"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                }
+                right={
+                  <StSvg
+                    name="Expand_right_light"
+                    size={24}
+                    color={colors.neutral[500]}
+                  />
+                }
+                className="mb-4"
+              />
+
               <Button
                 title="Удалить клиента"
                 variant="clear"

@@ -15,6 +15,7 @@ type InputProps = {
   hideErrorText?: boolean;
   size?: FieldSize;
   inputClassName?: string;
+  fieldClassName?: string;
   ref?: Ref<View>;
 
   startAdornment?: ReactNode;
@@ -32,6 +33,7 @@ export function Input({
   disabled,
   size = "md",
   inputClassName,
+  fieldClassName,
   startAdornment,
   endAdornment,
   onEndAdornmentPress,
@@ -49,6 +51,7 @@ export function Input({
       hideErrorText={hideErrorText}
       disabled={disabled}
       size={size}
+      className={fieldClassName}
       multiline={props.multiline}
       startAdornment={startAdornment}
       endAdornment={endAdornment}
