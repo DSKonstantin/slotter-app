@@ -10,6 +10,7 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "@/src/validation/schemas/login.schema";
 import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
+import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -22,6 +23,7 @@ import { AccountDeactivatedModal } from "@/src/components/auth/verify/AccountDea
 
 const Login = () => {
   const [loginMutation, { isLoading }] = useLoginMutation();
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
   const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -49,6 +51,9 @@ const Login = () => {
         }).unwrap();
 
         await login(result.token);
+        getSubscriptionMembership({ userId: result.resource.id }).catch(
+          () => {},
+        );
         router.replace(getRedirectPath(result.resource));
       } catch (error) {
         const code = getApiErrorCode(error);
@@ -59,7 +64,7 @@ const Login = () => {
         }
       }
     },
-    [login, loginMutation],
+    [login, loginMutation, getSubscriptionMembership],
   );
 
   return (
