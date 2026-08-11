@@ -38,6 +38,9 @@ const BOOKING_STEPS: { label: string; value: AppointmentStep }[] = [
   { label: "15 минут", value: "fifteen_minutes" },
   { label: "30 минут", value: "thirty_minutes" },
   { label: "1 час", value: "one_hour" },
+  { label: "2 часа", value: "two_hours" },
+  { label: "3 чаа", value: "three_hours" },
+  { label: "4 часа", value: "four_hours" },
 ];
 
 const formatStep = (value: AppointmentStep) =>

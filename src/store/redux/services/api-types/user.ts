@@ -6,7 +6,10 @@ export type AppointmentStep =
   | "ten_minutes"
   | "fifteen_minutes"
   | "thirty_minutes"
-  | "one_hour";
+  | "one_hour"
+  | "two_hours"
+  | "three_hours"
+  | "four_hours";
 
 export enum UserType {
   USER = "user",
