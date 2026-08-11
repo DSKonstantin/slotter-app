@@ -2,8 +2,14 @@ import { format, parseISO, getHours, getMinutes } from "date-fns";
 
 export const combineDayTime = (day: string, time: string) => `${day}T${time}`;
 
-export const formatTimeString = (time: string) =>
-  format(parseISO(time), "HH:mm");
+export const formatTimeString = (time: string) => {
+  if (!time) return "";
+  const isoMatch = time.match(/T(\d{2}):(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}:${isoMatch[2]}`;
+  const timeMatch = time.match(/^(\d{1,2}):(\d{2})/);
+  if (timeMatch) return `${timeMatch[1]}:${timeMatch[2]}`;
+  return "";
+};
 
 export const formatTime = (date: Date) => {
   if (!date) return "";
