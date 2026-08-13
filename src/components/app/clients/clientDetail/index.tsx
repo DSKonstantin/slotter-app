@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { Alert, View, RefreshControl, Platform } from "react-native";
+import { Alert, View, RefreshControl, Platform, Share } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -29,7 +30,7 @@ import {
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
-import { useAppDispatch } from "@/src/store/redux/store";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
   clearSlotDraft,
   setSelectedCustomer,
@@ -59,7 +60,9 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [editNameVisible, setEditNameVisible] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const auth = useRequiredAuth();
+  const token = useAppSelector((s) => s.auth.token);
   const dispatch = useAppDispatch();
 
   const safeUserCustomerId = Number.isFinite(userCustomerId)
@@ -90,6 +93,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const [createChatRoom] = useCreateChatRoomMutation();
 
   const userCustomer = customerData?.user_customer;
+  const userCustomerWithConsents = userCustomer;
   const customer = userCustomer?.customer;
   const savedNote = userCustomer?.note ?? "";
 
@@ -168,6 +172,35 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
     methods.reset(methods.getValues());
     router.push(Routers.app.createSlotFlow.selectService());
   }, [customer, dispatch, methods]);
+
+  const handleDownloadConsent = useCallback(async () => {
+    if (!auth || !userCustomerWithConsents) return;
+    const consents = userCustomerWithConsents.consents ?? [];
+    const consent = consents.find((c) => c.kind === "personal_data") ?? consents[0];
+    if (!consent) return;
+    setIsDownloading(true);
+    try {
+      if (!token) {
+        console.log("[Download] no token");
+        return;
+      }
+      const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL!.replace(/\/+$/, "");
+      const url = `${baseURL}/users/${auth.userId}/consents/${consent.id}/download`;
+      console.log("[Download] url:", url);
+      const localUri = (FileSystem.cacheDirectory ?? "") + `consent_${consent.kind}_${consent.id}.pdf`;
+      const result = await FileSystem.downloadAsync(url, localUri, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("[Download] status:", result.status, "uri:", result.uri);
+      if (result.status !== 200) throw new Error(`HTTP ${result.status}`);
+      await Share.share({ url: result.uri });
+    } catch (e) {
+      console.log("[Download] error:", e);
+      toast.error("Не удалось скачать документ");
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [auth, userCustomerWithConsents]);
 
   const handleOpenChat = async () => {
     if (!auth || !customer || !userCustomer) return;
@@ -389,25 +422,27 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                 )}
               </View>
 
-              <Card
-                onPress={() => setComingSoonVisible(true)}
-                title="Документы"
-                left={
-                  <StSvg
-                    name="File_dock_fill"
-                    size={24}
-                    color={colors.neutral[900]}
-                  />
-                }
-                right={
-                  <StSvg
-                    name="Expand_right_light"
-                    size={24}
-                    color={colors.neutral[500]}
-                  />
-                }
-                className="mb-4"
-              />
+              {(userCustomerWithConsents?.consents?.length ?? 0) > 0 && (
+                <Card
+                  onPress={isDownloading ? undefined : handleDownloadConsent}
+                  title="Документы"
+                  left={
+                    <StSvg
+                      name="File_dock_fill"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
+                  right={
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[500]}
+                    />
+                  }
+                  className="mb-4"
+                />
+              )}
 
               <Button
                 title="Удалить клиента"

@@ -87,6 +87,8 @@ export type {
   GetUserCustomersStatisticsResponse,
   UserCustomersStatisticDelta,
   UserCustomersStatisticAvgCheck,
+  Consent,
+  ConsentKind,
 } from "./userCustomer";
 export type {
   WorkingDay,
