@@ -30,6 +30,8 @@ export interface Consent {
   customer_name: string;
   customer_phone: string;
   created_at: string;
+  is_current: boolean;
+  revoked_at: string | null;
 }
 
 export interface UserCustomer {

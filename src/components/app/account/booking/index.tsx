@@ -244,9 +244,10 @@ const Booking = () => {
                   weight="regular"
                   className="text-caption text-neutral-500"
                 >
-                  При онлайн-записи клиенту единоразово будет предложено
-                  подтвердить своё согласие на обработку персональных данных.
-                  Полученное согласие будет храниться в карточке клиента
+                  При онлайн-записи клиенту будет предложено подтвердить своё
+                  согласие на обработку персональных данных единоразово для
+                  каждой редакции текста. Полученное согласие будет храниться в
+                  карточке клиента
                 </Typography>
 
                 {requiresConsent && (
@@ -300,30 +301,27 @@ const Booking = () => {
                 )}
               </View>
 
-              {requiresConsent && (
-                <View className="bg-background-surface rounded-base p-4 gap-3">
-                  <View className="flex-row items-center justify-between">
-                    <Typography weight="medium" className="text-body flex-1">
-                      Запрашивать согласие на получение информационно-рекламной
-                      рассылки
-                    </Typography>
-                    <Switch
-                      disabled={isSaving}
-                      value={requiresMarketingConsent}
-                      onChange={handleMarketingConsentToggle}
-                    />
-                  </View>
-                  <Typography
-                    weight="regular"
-                    className="text-caption text-neutral-500"
-                  >
-                    Подтверждение будет необязательным при онлайн-записи.
-                    Наличие согласия учитывается при создании массовых рассылок
-                    и приглашений на повторный визит. Сохраняется в карточке
-                    клиента.
+              <View className="bg-background-surface rounded-base p-4 gap-3">
+                <View className="flex-row items-center justify-between">
+                  <Typography weight="medium" className="text-body flex-1">
+                    Запрашивать согласие на получение информационно-рекламной
+                    рассылки
                   </Typography>
+                  <Switch
+                    disabled={isSaving}
+                    value={requiresMarketingConsent}
+                    onChange={handleMarketingConsentToggle}
+                  />
                 </View>
-              )}
+                <Typography
+                  weight="regular"
+                  className="text-caption text-neutral-500"
+                >
+                  Согласие необязательно для клиента. Без него не будут
+                  отправляться приглашения на повторный визит и поздравления.
+                  Сохраняется в карточке клиента.
+                </Typography>
+              </View>
             </View>
           </KeyboardAwareScrollView>
         )}

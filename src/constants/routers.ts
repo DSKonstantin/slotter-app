@@ -66,6 +66,17 @@ export const Routers = {
             ...(kind === "customer" && { kind: "customer" as const }),
           },
         }) as const,
+      consents: (
+        id: string | number,
+        kind: "customer" | "userCustomer" = "userCustomer",
+      ) =>
+        ({
+          pathname: "/(app)/client/[id]/consents",
+          params: {
+            id: String(id),
+            ...(kind === "customer" && { kind: "customer" as const }),
+          },
+        }) as const,
     },
     slot: (id: string | number) =>
       ({
