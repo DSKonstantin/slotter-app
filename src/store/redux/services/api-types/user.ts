@@ -40,6 +40,10 @@ export interface User {
   is_notify_new_appointment: boolean;
   is_notify_customer_cancel: boolean;
   is_notify_reminders: boolean;
+  is_personal_data_consent_enabled: boolean;
+  personal_data_consent_text: string | null;
+  is_marketing_consent_enabled: boolean;
+  personal_data_consent_template?: string;
   gallery_photos: GalleryPhoto[];
   subscription_membership?: SubscriptionMembership;
 }

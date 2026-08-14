@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Pressable, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useController, useForm } from "react-hook-form";
@@ -98,12 +98,18 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
 
 const Booking = () => {
   const user = useAppSelector((s) => s.auth.user);
-  const [updateUser] = useUpdateUserMutation();
+  const [updateUser, { isLoading: isSaving }] = useUpdateUserMutation();
+  const [updateUserSilent] = useUpdateUserMutation();
 
-  const [requiresConsent, setRequiresConsent] = useState(false);
-  const [consentText, setConsentText] = useState("");
-  const [requiresMarketingConsent, setRequiresMarketingConsent] =
-    useState(false);
+  const [requiresConsent, setRequiresConsent] = useState(
+    user?.is_personal_data_consent_enabled ?? false
+  );
+  const [consentText, setConsentText] = useState(
+    user?.personal_data_consent_text ?? ""
+  );
+  const [requiresMarketingConsent, setRequiresMarketingConsent] = useState(
+    user?.is_marketing_consent_enabled ?? false
+  );
   const [consentInfoVisible, setConsentInfoVisible] = useState(false);
 
   const methods = useForm<AccountBookingFormValues>({
@@ -123,6 +129,50 @@ const Booking = () => {
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
     }
+  };
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveConsents = useCallback(
+    (params: {
+      consent: boolean;
+      text: string;
+      marketing: boolean;
+    }) => {
+      if (!user) return;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      debounceRef.current = setTimeout(async () => {
+        try {
+          await updateUserSilent({
+            id: user.id,
+            data: {
+              is_personal_data_consent_enabled: params.consent,
+              personal_data_consent_text: params.text || null,
+              is_marketing_consent_enabled: params.marketing,
+            },
+          }).unwrap();
+        } catch (e) {
+          toast.error(getApiErrorMessage(e, "Не удалось сохранить согласия"));
+        }
+      }, 500);
+    },
+    [user, updateUserSilent],
+  );
+
+  const handleConsentToggle = (value: boolean) => {
+    setRequiresConsent(value);
+    saveConsents({ consent: value, text: consentText, marketing: requiresMarketingConsent });
+  };
+
+  const handleConsentTextChange = (text: string) => {
+    setConsentText(text);
+    saveConsents({ consent: requiresConsent, text, marketing: requiresMarketingConsent });
+  };
+
+  const handleMarketingConsentToggle = (value: boolean) => {
+    setRequiresMarketingConsent(value);
+    saveConsents({ consent: requiresConsent, text: consentText, marketing: value });
   };
 
   return (
@@ -185,8 +235,9 @@ const Booking = () => {
                       />
                     </Pressable>
                     <Switch
+                      disabled={isSaving}
                       value={requiresConsent}
-                      onChange={setRequiresConsent}
+                      onChange={handleConsentToggle}
                     />
                   </View>
                 </View>
@@ -194,9 +245,10 @@ const Booking = () => {
                   weight="regular"
                   className="text-caption text-neutral-500"
                 >
-                  При онлайн-записи клиенту единоразово будет предложено
-                  подтвердить своё согласие на обработку персональных данных.
-                  Полученное согласие будет храниться в карточке клиента
+                  При онлайн-записи клиенту будет предложено подтвердить своё
+                  согласие на обработку персональных данных единоразово для
+                  каждой редакции текста. Полученное согласие будет храниться в
+                  карточке клиента
                 </Typography>
 
                 {requiresConsent && (
@@ -212,27 +264,34 @@ const Booking = () => {
                       fieldClassName="bg-background"
                       placeholder="Стандартный текст согласия на обработку персональных данных"
                       value={consentText}
-                      onChangeText={setConsentText}
+                      onChangeText={handleConsentTextChange}
                     />
                     <View className="flex-row items-center justify-between">
                       <Pressable
+                        disabled={isSaving}
                         className="active:opacity-70"
-                        onPress={() => setConsentText(DEFAULT_CONSENT_TEXT)}
+                        onPress={() => {
+                          const template =
+                            user?.personal_data_consent_template ||
+                            DEFAULT_CONSENT_TEXT;
+                          handleConsentTextChange(template);
+                        }}
                       >
                         <Typography
                           weight="medium"
-                          className="text-caption text-primary-blue-500"
+                          className={`text-caption ${isSaving ? "text-neutral-300" : "text-primary-blue-500"}`}
                         >
                           Применить стандартный шаблон
                         </Typography>
                       </Pressable>
                       <Pressable
+                        disabled={isSaving}
                         className="active:opacity-70"
-                        onPress={() => setConsentText("")}
+                        onPress={() => handleConsentTextChange("")}
                       >
                         <Typography
                           weight="regular"
-                          className="text-caption text-neutral-500"
+                          className={`text-caption ${isSaving ? "text-neutral-300" : "text-neutral-500"}`}
                         >
                           Очистить
                         </Typography>
@@ -242,29 +301,27 @@ const Booking = () => {
                 )}
               </View>
 
-              {requiresConsent && (
-                <View className="bg-background-surface rounded-base p-4 gap-3">
-                  <View className="flex-row items-center justify-between">
-                    <Typography weight="medium" className="text-body flex-1">
-                      Запрашивать согласие на получение информационно-рекламной
-                      рассылки
-                    </Typography>
-                    <Switch
-                      value={requiresMarketingConsent}
-                      onChange={setRequiresMarketingConsent}
-                    />
-                  </View>
-                  <Typography
-                    weight="regular"
-                    className="text-caption text-neutral-500"
-                  >
-                    Подтверждение будет необязательным при онлайн-записи.
-                    Наличие согласия учитывается при создании массовых рассылок
-                    и приглашений на повторный визит. Сохраняется в карточке
-                    клиента.
+              <View className="bg-background-surface rounded-base p-4 gap-3">
+                <View className="flex-row items-center justify-between">
+                  <Typography weight="medium" className="text-body flex-1">
+                    Запрашивать согласие на получение информационно-рекламной
+                    рассылки
                   </Typography>
+                  <Switch
+                    disabled={isSaving}
+                    value={requiresMarketingConsent}
+                    onChange={handleMarketingConsentToggle}
+                  />
                 </View>
-              )}
+                <Typography
+                  weight="regular"
+                  className="text-caption text-neutral-500"
+                >
+                  Согласие необязательно для клиента. Без него не будут
+                  отправляться приглашения на повторный визит и поздравления.
+                  Сохраняется в карточке клиента.
+                </Typography>
+              </View>
             </View>
           </KeyboardAwareScrollView>
         )}

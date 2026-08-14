@@ -21,12 +21,26 @@ export interface UserCustomerStats {
   display_date: string | null;
 }
 
+export type ConsentKind = "personal_data" | "marketing";
+
+export interface Consent {
+  id: number;
+  kind: ConsentKind;
+  text: string;
+  customer_name: string;
+  customer_phone: string;
+  created_at: string;
+  is_current: boolean;
+  revoked_at: string | null;
+}
+
 export interface UserCustomer {
   id: number;
   customer: UserCustomerPerson;
   customer_tag: CustomerTag | null;
   note: string | null;
   stats: UserCustomerStats;
+  consents: Consent[];
 }
 
 export type UserCustomerSort =
