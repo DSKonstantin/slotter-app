@@ -5,7 +5,10 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import Svg, { Path, Rect } from "react-native-svg";
 import { Typography, Divider, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import type { Consent, ConsentKind } from "@/src/store/redux/services/api-types";
+import type {
+  Consent,
+  ConsentKind,
+} from "@/src/store/redux/services/api-types";
 import { useAppSelector } from "@/src/store/redux/store";
 
 function DownloadIcon({ color }: { color: string }) {
@@ -79,7 +82,9 @@ function ConsentRow({ consent, fileName, userId }: ConsentRowProps) {
   };
 
   return (
-    <View className={`flex-row items-center gap-3 ${dimmed ? "opacity-50" : ""}`}>
+    <View
+      className={`flex-row items-center gap-3 ${dimmed ? "opacity-50" : ""}`}
+    >
       <View
         className="w-12 h-12 rounded-xl items-center justify-center"
         style={{ backgroundColor: colors.primary.green[100] }}
@@ -111,8 +116,31 @@ function ConsentRow({ consent, fileName, userId }: ConsentRowProps) {
         disabled={downloading}
         onPress={handleDownload}
       >
-        <DownloadIcon color={downloading ? colors.neutral[400] : colors.neutral[900]} />
+        <DownloadIcon
+          color={downloading ? colors.neutral[400] : colors.neutral[900]}
+        />
       </Pressable>
+    </View>
+  );
+}
+
+function UnsignedConsentRow() {
+  return (
+    <View className="flex-row items-center gap-3">
+      <View
+        className="w-12 h-12 rounded-xl items-center justify-center"
+        style={{ backgroundColor: colors.accent.red[100] }}
+      >
+        <StSvg name="close_ring_fill" size={24} color={colors.accent.red[500]} />
+      </View>
+      <View className="flex-1 gap-0.5">
+        <Typography weight="medium" className="text-body">
+          Документ недоступен
+        </Typography>
+        <Typography className="text-caption text-accent-red-500">
+          Согласие не подтверждено
+        </Typography>
+      </View>
     </View>
   );
 }
@@ -121,23 +149,34 @@ type Props = {
   userId: number;
   consents: Consent[];
   customerName?: string;
+  enabledKinds?: ConsentKind[];
 };
 
 const KIND_ORDER: ConsentKind[] = ["personal_data", "marketing"];
 
-export default function ConsentsSection({ userId, consents, customerName }: Props) {
-  if (consents.length === 0) return null;
+export default function ConsentsSection({
+  userId,
+  consents,
+  customerName,
+  enabledKinds = [],
+}: Props) {
+  const allKinds = KIND_ORDER.filter(
+    (k) => consents.some((c) => c.kind === k) || enabledKinds.includes(k),
+  );
 
-  const grouped = KIND_ORDER.map((kind) => {
+  if (allKinds.length === 0) return null;
+
+  const grouped = allKinds.map((kind) => {
     const sorted = [...consents.filter((c) => c.kind === kind)].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     );
     const withVersion = sorted.map((consent, index) => ({
       consent,
       version: index + 1,
     }));
-    return { kind, items: withVersion.reverse() };
-  }).filter((g) => g.items.length > 0);
+    return { kind, items: withVersion.reverse(), unsigned: sorted.length === 0 };
+  });
 
   const lastName = customerName ? getLastName(customerName) : "";
 
@@ -149,26 +188,33 @@ export default function ConsentsSection({ userId, consents, customerName }: Prop
         </Typography>
       )}
 
-      {grouped.map(({ kind, items }) => (
-        <View key={kind} className="bg-background-surface rounded-2xl p-4 gap-3">
+      {grouped.map(({ kind, items, unsigned }) => (
+        <View
+          key={kind}
+          className="bg-background-surface rounded-2xl p-4 gap-3"
+        >
           <Typography weight="medium" className="text-body">
             {KIND_LABEL[kind]}
           </Typography>
           <Divider />
-          {items.map(({ consent, version }) => {
-            const prefix = KIND_FILE_PREFIX[kind];
-            const fileName = lastName
-              ? `${prefix}_${lastName}_v${version}.pdf`
-              : `consent_${kind}_${consent.id}.pdf`;
-            return (
-              <ConsentRow
-                key={consent.id}
-                consent={consent}
-                fileName={fileName}
-                userId={userId}
-              />
-            );
-          })}
+          {unsigned ? (
+            <UnsignedConsentRow />
+          ) : (
+            items.map(({ consent, version }) => {
+              const prefix = KIND_FILE_PREFIX[kind];
+              const fileName = lastName
+                ? `${prefix}_${lastName}_v${version}.pdf`
+                : `consent_${kind}_${consent.id}.pdf`;
+              return (
+                <ConsentRow
+                  key={consent.id}
+                  consent={consent}
+                  fileName={fileName}
+                  userId={userId}
+                />
+              );
+            })
+          )}
         </View>
       ))}
     </View>

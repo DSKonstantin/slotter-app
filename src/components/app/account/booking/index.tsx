@@ -99,6 +99,7 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
 const Booking = () => {
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading: isSaving }] = useUpdateUserMutation();
+  const [updateUserSilent] = useUpdateUserMutation();
 
   const [requiresConsent, setRequiresConsent] = useState(
     user?.is_personal_data_consent_enabled ?? false
@@ -143,7 +144,7 @@ const Booking = () => {
 
       debounceRef.current = setTimeout(async () => {
         try {
-          await updateUser({
+          await updateUserSilent({
             id: user.id,
             data: {
               is_personal_data_consent_enabled: params.consent,
@@ -156,7 +157,7 @@ const Booking = () => {
         }
       }, 500);
     },
-    [user, updateUser],
+    [user, updateUserSilent],
   );
 
   const handleConsentToggle = (value: boolean) => {
@@ -260,7 +261,6 @@ const Booking = () => {
                       multiline
                       numberOfLines={4}
                       hideErrorText
-                      editable={!isSaving}
                       fieldClassName="bg-background"
                       placeholder="Стандартный текст согласия на обработку персональных данных"
                       value={consentText}

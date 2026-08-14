@@ -395,6 +395,46 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                   router.push(Routers.app.client.consents(userCustomer.id))
                 }
                 title="Документы"
+                subtitle={(() => {
+                  const consents = userCustomer?.consents ?? [];
+                  const kinds = ["personal_data", "marketing"] as const;
+                  const outdated = kinds.filter((k) => {
+                    const kindConsents = consents.filter((c) => c.kind === k);
+                    if (kindConsents.length === 0) return false;
+                    if (kindConsents.some((c) => c.is_current)) return false;
+                    // мастер поменял текст — подпись есть, но не актуальна и не отозвана клиентом
+                    return kindConsents.some((c) => c.revoked_at === null);
+                  }).length;
+                  const total = kinds.filter((k) =>
+                    consents.some((c) => c.kind === k),
+                  ).length;
+                  const confirmed = kinds.filter((k) =>
+                    consents.some((c) => c.kind === k && c.is_current),
+                  ).length;
+
+                  let text: string;
+                  let color: string;
+
+                  if (outdated > 0) {
+                    text = `${outdated} ${outdated === 1 ? "согласие устарело" : "согласия устарели"}`;
+                    color = colors.accent.red[500];
+                  } else if (total === 0 || confirmed < total) {
+                    text =
+                      total === 0
+                        ? "Согласия не подтверждены"
+                        : `${confirmed} из ${total} согласий подтверждены`;
+                    color = colors.neutral[500];
+                  } else {
+                    text = `${confirmed} из ${total} согласий подтверждены`;
+                    color = colors.primary.green[600];
+                  }
+
+                  return (
+                    <Typography className="text-caption" style={{ color }}>
+                      {text}
+                    </Typography>
+                  );
+                })()}
                 left={
                   <StSvg
                     name="File_dock_fill"

@@ -10,6 +10,8 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { safeRefetch } from "@/src/utils/safeRefetch";
 import { SCREEN_PADDING } from "@/src/constants/layout";
+import { useAppSelector } from "@/src/store/redux/store";
+import type { ConsentKind } from "@/src/store/redux/services/api-types";
 
 type Props = { userCustomerId?: number; customerId?: number };
 
@@ -26,9 +28,15 @@ const ClientConsents = ({ userCustomerId, customerId }: Props) => {
   );
 
   const { refreshing, onRefresh } = useRefresh(refetch);
+  const masterUser = useAppSelector((s) => s.auth.user);
   const userCustomer = data?.user_customer;
   const consents = userCustomer?.consents ?? [];
   const customerName = userCustomer?.customer?.name;
+
+  const enabledKinds: ConsentKind[] = [
+    ...(masterUser?.is_personal_data_consent_enabled ? (["personal_data"] as ConsentKind[]) : []),
+    ...(masterUser?.is_marketing_consent_enabled ? (["marketing"] as ConsentKind[]) : []),
+  ];
 
   return (
     <ScreenWithToolbar title="Документы">
@@ -60,7 +68,7 @@ const ClientConsents = ({ userCustomerId, customerId }: Props) => {
             contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
             contentOffset={Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined}
           >
-            {consents.length === 0 ? (
+            {consents.length === 0 && enabledKinds.length === 0 ? (
               <View className="mt-6">
                 <Typography className="text-body text-neutral-400 text-center">
                   Клиент пока не подписал ни одного документа
@@ -72,6 +80,7 @@ const ClientConsents = ({ userCustomerId, customerId }: Props) => {
                   userId={auth.userId}
                   consents={consents}
                   customerName={customerName}
+                  enabledKinds={enabledKinds}
                 />
               )
             )}
