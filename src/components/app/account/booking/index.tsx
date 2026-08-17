@@ -39,7 +39,7 @@ const BOOKING_STEPS: { label: string; value: AppointmentStep }[] = [
   { label: "30 минут", value: "thirty_minutes" },
   { label: "1 час", value: "one_hour" },
   { label: "2 часа", value: "two_hours" },
-  { label: "3 чаа", value: "three_hours" },
+  { label: "3 чаcа", value: "three_hours" },
   { label: "4 часа", value: "four_hours" },
 ];
 
@@ -102,13 +102,13 @@ const Booking = () => {
   const [updateUserSilent] = useUpdateUserMutation();
 
   const [requiresConsent, setRequiresConsent] = useState(
-    user?.is_personal_data_consent_enabled ?? false
+    user?.is_personal_data_consent_enabled ?? false,
   );
   const [consentText, setConsentText] = useState(
-    user?.personal_data_consent_text ?? ""
+    user?.personal_data_consent_text ?? "",
   );
   const [requiresMarketingConsent, setRequiresMarketingConsent] = useState(
-    user?.is_marketing_consent_enabled ?? false
+    user?.is_marketing_consent_enabled ?? false,
   );
   const [consentInfoVisible, setConsentInfoVisible] = useState(false);
 
@@ -134,11 +134,7 @@ const Booking = () => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const saveConsents = useCallback(
-    (params: {
-      consent: boolean;
-      text: string;
-      marketing: boolean;
-    }) => {
+    (params: { consent: boolean; text: string; marketing: boolean }) => {
       if (!user) return;
       if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -162,17 +158,29 @@ const Booking = () => {
 
   const handleConsentToggle = (value: boolean) => {
     setRequiresConsent(value);
-    saveConsents({ consent: value, text: consentText, marketing: requiresMarketingConsent });
+    saveConsents({
+      consent: value,
+      text: consentText,
+      marketing: requiresMarketingConsent,
+    });
   };
 
   const handleConsentTextChange = (text: string) => {
     setConsentText(text);
-    saveConsents({ consent: requiresConsent, text, marketing: requiresMarketingConsent });
+    saveConsents({
+      consent: requiresConsent,
+      text,
+      marketing: requiresMarketingConsent,
+    });
   };
 
   const handleMarketingConsentToggle = (value: boolean) => {
     setRequiresMarketingConsent(value);
-    saveConsents({ consent: requiresConsent, text: consentText, marketing: value });
+    saveConsents({
+      consent: requiresConsent,
+      text: consentText,
+      marketing: value,
+    });
   };
 
   return (
@@ -214,16 +222,14 @@ const Booking = () => {
               </View>
 
               <View className="bg-background-surface rounded-base p-4 gap-3">
-                <View className="flex-row items-start justify-between gap-3">
-                  <View className="flex-1 flex-row flex-wrap items-center gap-1.5">
+                <View className="flex-row items-start  gap-3">
+                  <View className="flex-1 flex-row items-start">
                     <Typography
                       weight="medium"
                       className="flex-shrink text-body"
                     >
                       Запрашивать согласие у клиентов
                     </Typography>
-                  </View>
-                  <View className="flex-row gap-1 items-center">
                     <Pressable
                       className="active:opacity-70"
                       onPress={() => setConsentInfoVisible(true)}
@@ -234,6 +240,8 @@ const Booking = () => {
                         color={colors.primary.blue[500]}
                       />
                     </Pressable>
+                  </View>
+                  <View className="flex-row gap-1 items-center">
                     <Switch
                       disabled={isSaving}
                       value={requiresConsent}
@@ -361,8 +369,8 @@ const Booking = () => {
             <Typography weight="medium">
               (сбор, хранения, использование и т.д).
             </Typography>{" "}
-              Внизу согласия будет автоматически добавлен обязательный абзац -
-            оне сообщает клиенту, что данные передаются в{" "}
+            Внизу согласия будет автоматически добавлен обязательный абзац - оне
+            сообщает клиенту, что данные передаются в{" "}
             <Typography weight="medium">Slotter</Typography> как третьей
             стороны.
           </Typography>
