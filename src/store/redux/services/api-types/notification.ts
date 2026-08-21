@@ -23,6 +23,7 @@ export type NotificationKind =
   | "subscription_expired"
   | "direct_channel_grace"
   | "direct_channel_expired"
+  | "reactivation_profile_1"
   | "direct_channel_disconnected";
 
 export type NotificationCancelVariant =

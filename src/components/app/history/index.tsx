@@ -55,13 +55,14 @@ function isAppointmentSubject(
 }
 
 const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
-  const badge =
-    NOTIFICATION_KIND_CONFIG[item.kind]?.badge ?? DEFAULT_NOTIFICATION_BADGE;
+  const kindConfig = NOTIFICATION_KIND_CONFIG[item.kind];
+  const badge = kindConfig?.badge ?? DEFAULT_NOTIFICATION_BADGE;
   const person = item.subject
     ? isAppointmentSubject(item.subject)
       ? item.subject.customer
       : item.subject.interlocutor
     : undefined;
+  const AvatarFallback = !person ? kindConfig?.avatarFallback : undefined;
 
   return (
     <Pressable
@@ -73,6 +74,7 @@ const NotificationRow = memo(({ item, onPress }: NotificationRowProps) => {
           name={person?.name ?? ""}
           uri={person?.avatar_url ?? undefined}
           blurhash={person?.avatar_blurhash}
+          fallbackIcon={AvatarFallback ? <AvatarFallback /> : undefined}
           size="md"
         />
         <View
@@ -219,7 +221,7 @@ const HistoryScreen = () => {
     <ScreenWithToolbar
       showBack={false}
       title={
-        <View className="items-center">
+        <View className="items-center justify-center">
           <Typography
             numberOfLines={1}
             weight="semibold"
@@ -227,14 +229,14 @@ const HistoryScreen = () => {
           >
             Журнал событий
           </Typography>
-          <Typography
-            numberOfLines={1}
-            className={`min-w-0 text-caption ${unreadCount > 0 ? "text-neutral-400" : "text-transparent"}`}
-          >
-            {unreadCount > 0
-              ? `${unreadCount} ${pluralize(unreadCount, ["новое", "новых", "новых"])}`
-              : " "}
-          </Typography>
+          {unreadCount > 0 && (
+            <Typography
+              numberOfLines={1}
+              className="min-w-0 text-caption text-neutral-400"
+            >
+              {`${unreadCount} ${pluralize(unreadCount, ["новое", "новых", "новых"])}`}
+            </Typography>
+          )}
         </View>
       }
       rightButton={

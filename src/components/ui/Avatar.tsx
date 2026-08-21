@@ -47,7 +47,10 @@ export function Avatar({
         height: dimension,
         borderRadius: dimension / 2,
       }}
-      className={twMerge("relative items-center justify-center bg-neutral-100")}
+      className={twMerge(
+        "relative items-center justify-center",
+        (!uri && !initials && fallbackIcon) ? "bg-white border border-neutral-100" : "bg-neutral-100",
+      )}
     >
       {uri ? (
         <Image

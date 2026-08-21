@@ -1,6 +1,8 @@
+import type React from "react";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import type { NotificationKind } from "@/src/store/redux/services/api-types";
+import { SlotterLogo } from "@/src/components/shared/svg/SlotterLogo";
 
 export type NotificationBadgeConfig = {
   icon: string;
@@ -16,6 +18,9 @@ type KindConfig = {
    * usual subject-based navigation — for the "money" kinds where the user
    * needs to fix a payment. */
   openUpgrade?: boolean;
+  /** Component rendered in the avatar slot when the notification has no
+   * subject (no customer/interlocutor linked). */
+  avatarFallback?: React.ComponentType;
 };
 
 export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
@@ -94,9 +99,14 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
   direct_channel_expired: {
     badge: { icon: "Alarm_fill", color: colors.accent.red[500] },
   },
+  reactivation_profile_1: {
+    badge: { icon: "Alarm_fill", color: colors.accent.red[500] },
+    avatarFallback: SlotterLogo,
+  },
   direct_channel_disconnected: {
     badge: { icon: "link_alt", color: colors.accent.orange[500] },
     detailRoute: Routers.app.account.clientNotifications.root,
+    avatarFallback: SlotterLogo,
   },
 };
 
