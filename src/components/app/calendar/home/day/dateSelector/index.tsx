@@ -7,7 +7,7 @@ import React, {
   memo,
 } from "react";
 import { FlatList, TouchableOpacity, View } from "react-native";
-import { format, addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
+import { addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -16,7 +16,12 @@ import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
 import DateSelectorModal from "@/src/components/app/calendar/home/day/dateSelector/DateSelectorModal";
 import { Typography } from "@/src/components/ui";
-import { formatShortDayName } from "@/src/utils/date/formatDate";
+import {
+  formatShortDayName,
+  formatDayNumber,
+  formatApiDate,
+  isCurrentDay,
+} from "@/src/utils/date/formatDate";
 
 const ITEM_WIDTH = 44;
 const ITEM_GAP = 12;
@@ -25,12 +30,20 @@ interface DateItemProps {
   item: Date;
   isSelected: boolean;
   isEmpty: boolean;
+  isToday: boolean;
   workingDayId?: number;
   onPress: (id: number | undefined, date: Date, isEmpty: boolean) => void;
 }
 
 const DateItem = memo<DateItemProps>(
-  ({ item, isSelected, isEmpty, workingDayId, onPress }) => (
+  ({
+    item,
+    isSelected,
+    isEmpty,
+    isToday: isTodayFlag,
+    workingDayId,
+    onPress,
+  }) => (
     <TouchableOpacity
       onPress={() => onPress(workingDayId, item, isEmpty)}
       style={{ width: ITEM_WIDTH }}
@@ -41,7 +54,11 @@ const DateItem = memo<DateItemProps>(
       <Typography
         weight="regular"
         className={`text-caption my-1 ${
-          isSelected ? "text-neutral-0" : "text-neutral-500"
+          isSelected
+            ? "text-neutral-0"
+            : isTodayFlag
+              ? "text-primary-blue-500"
+              : "text-neutral-500"
         }`}
       >
         {formatShortDayName(item)}
@@ -52,8 +69,17 @@ const DateItem = memo<DateItemProps>(
           isSelected ? "bg-background-surface" : "bg-transparent"
         }`}
       >
-        <Typography weight="semibold" className="text-body text-neutral-900">
-          {format(item, "d")}
+        <Typography
+          weight="semibold"
+          className={`text-body ${
+            isSelected
+              ? "text-neutral-900"
+              : isTodayFlag
+                ? "text-primary-blue-500"
+                : "text-neutral-900"
+          }`}
+        >
+          {formatDayNumber(item)}
         </Typography>
       </View>
     </TouchableOpacity>
@@ -118,23 +144,25 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   const handleCreatePress = useCallback(() => {
     if (!modalDate) return;
 
-    const date = format(modalDate, "yyyy-MM-dd");
+    const date = formatApiDate(modalDate);
     setModalDate(null);
     router.push(Routers.app.daySchedule.create(date));
   }, [modalDate]);
 
   const renderItem = useCallback(
     ({ item }: { item: Date }) => {
-      const dateString = format(item, "yyyy-MM-dd");
+      const dateString = formatApiDate(item);
       const workingDay = workingDaysData?.[dateString] ?? undefined;
       const isSelected = isSameDay(item, selectedDate);
       const isEmpty = Boolean(workingDaysData) && !workingDay;
+      const isTodayFlag = isCurrentDay(dateString);
 
       return (
         <DateItem
           item={item}
           isSelected={isSelected}
           isEmpty={isEmpty && !isSelected}
+          isToday={isTodayFlag}
           workingDayId={workingDay?.id}
           onPress={handleDatePress}
         />

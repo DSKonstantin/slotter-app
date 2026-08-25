@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { twMerge } from "tailwind-merge";
 
 type ItemProps = {
-  title: string;
+  title?: string;
   subtitle?: string;
   titleAccessory?: React.ReactNode;
   left?: React.ReactNode;
@@ -55,16 +55,19 @@ export function Item({
           contentClassName,
         )}
       >
-        <Text
-          className={twMerge(
-            active
-              ? "font-inter-regular text-primary-blue-500 text-[16px]"
-              : "font-inter-regular text-body",
-            titleClassName,
-          )}
-        >
-          {title}
-        </Text>
+        {title && (
+          <Text
+            className={twMerge(
+              active
+                ? "font-inter-regular text-primary-blue-500 text-[16px]"
+                : "font-inter-regular text-body",
+              titleClassName,
+            )}
+          >
+            {title}
+          </Text>
+        )}
+
         {titleAccessory}
         {subtitle && (
           <Text

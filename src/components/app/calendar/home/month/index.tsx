@@ -87,8 +87,13 @@ const MonthCalendarView = ({ bottomInset }: { bottomInset: number }) => {
       </ScrollView>
 
       <CalendarActionButton
-        mode="month"
-        onPress={() => setIsOpen(true)}
+        buttons={[
+          {
+            icon: "Edit_fill",
+            onPress: () => setIsOpen(true),
+            title: "Настроить график",
+          },
+        ]}
         bottomInset={bottomInset}
       />
 

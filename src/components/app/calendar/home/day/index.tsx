@@ -31,6 +31,7 @@ import EmptyStateScreen, {
 } from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { isToday } from "@/src/utils/date/isToday";
 
 const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const [isRetrying, setIsRetrying] = useState(false);
@@ -104,6 +105,11 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
       router.push(Routers.app.daySchedule.create(selectedDay));
     }
   }, [router, isDayLoading, selectedWorkingDay, selectedDay]);
+
+  const handlePressToday = useCallback(() => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    router.setParams({ date: today });
+  }, [router]);
 
   const hasError = useMemo(
     () => isDayError || isAppointmentsError,
@@ -298,8 +304,19 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
       </View>
       {!hasError && !isLoading && !isEmpty && (
         <CalendarActionButton
-          onPress={handlePress}
-          title={selectedWorkingDay ? "Изменить день" : "Настроить день"}
+          buttons={[
+            {
+              title: "Сегодня",
+              onPress: handlePressToday,
+              variant: "secondary",
+              buttonClassName: "border border-neutral-200",
+              show: !isToday(selectedDay),
+            },
+            {
+              icon: "Edit_fill",
+              onPress: handlePress,
+            },
+          ]}
           bottomInset={bottomInset}
         />
       )}

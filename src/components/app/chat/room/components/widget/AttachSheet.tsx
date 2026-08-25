@@ -290,7 +290,7 @@ const AttachSheet = ({
   }, [visible]);
 
   return (
-    <StModal visible={visible} onClose={onClose} keyboardAware>
+    <StModal visible={visible} onClose={onClose}>
       <View className="flex-row items-center mb-2 gap-2">
         <IconButton
           size="sm"

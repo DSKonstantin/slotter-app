@@ -87,8 +87,11 @@ const ServiceFormBody = ({
         paddingBottom: insets.bottomInset + 8,
       }}
       refreshControl={
-        refetch && !isDirty ? (
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        refetch ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={isDirty ? undefined : onRefresh}
+          />
         ) : undefined
       }
     >
@@ -125,19 +128,23 @@ const ServiceFormBody = ({
         <Divider className="mt-1 mb-6" />
 
         <Item
-          title="Доступно для онлайн-записи"
           titleAccessory={
-            <IconButton
-              size="xs"
-              onPress={() => setInfoVisible(true)}
-              icon={
-                <StSvg
-                  name="Info_alt_fill"
-                  size={26}
-                  color={colors.primary.blue[500]}
-                />
-              }
-            />
+            <View className="flex-1 flex-row items-center gap-1">
+              <Typography weight="regular" className="text-body flex-1">
+                Доступно для онлайн-записи
+              </Typography>
+              <IconButton
+                size="xs"
+                onPress={() => setInfoVisible(true)}
+                icon={
+                  <StSvg
+                    name="Info_alt_fill"
+                    size={26}
+                    color={colors.primary.blue[500]}
+                  />
+                }
+              />
+            </View>
           }
           right={<RHFSwitch name="isAvailableOnline" />}
         />

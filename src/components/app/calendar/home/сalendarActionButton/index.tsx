@@ -1,31 +1,44 @@
-import React, { useCallback } from "react";
+import React from "react";
+import { View } from "react-native";
 import { Button, FloatingFooter, StSvg } from "@/src/components/ui";
+import type { CustomBtn } from "@/src/components/ui/Button";
 import { colors } from "@/src/styles/colors";
 
-interface Props {
-  mode?: string;
-  title?: string;
+interface ButtonConfig extends Omit<CustomBtn, "title" | "onPress"> {
+  icon?: string;
   onPress: () => void;
+  title?: string;
+  show?: boolean;
+}
+
+interface Props {
+  buttons: ButtonConfig[];
   bottomInset: number;
 }
 
-const CalendarActionButton = ({ mode, title, onPress, bottomInset }: Props) => {
-  const handlePress = useCallback(() => {
-    onPress();
-  }, [onPress]);
-
+const CalendarActionButton = ({ buttons, bottomInset }: Props) => {
   return (
     <FloatingFooter className="left-auto" offset={bottomInset + 8}>
-      <Button
-        onPress={handlePress}
-        title={
-          title ??
-          (mode === "month" ? "Настроить расписание" : "Настроить день")
-        }
-        rightIcon={
-          <StSvg name="Edit_fill" size={24} color={colors.neutral[0]} />
-        }
-      />
+      <View className="flex-row gap-2">
+        {buttons
+          .filter((btn) => btn.show !== false)
+          .map((btn, idx) => {
+            const { icon, onPress, title, show, ...buttonProps } = btn;
+            return (
+              <Button
+                key={idx}
+                onPress={onPress}
+                title={title}
+                rightIcon={
+                  icon ? (
+                    <StSvg name={icon} size={24} color={colors.neutral[0]} />
+                  ) : undefined
+                }
+                {...buttonProps}
+              />
+            );
+          })}
+      </View>
     </FloatingFooter>
   );
 };

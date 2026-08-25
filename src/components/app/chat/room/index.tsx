@@ -5,7 +5,13 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Pressable,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";
@@ -615,7 +621,10 @@ export default function ChatRoom({ roomId }: Props) {
                 isSendButtonAlwaysVisible
                 minInputToolbarHeight={0}
                 keyboardAvoidingViewProps={{
-                  keyboardVerticalOffset: -bottomInsetArea + 8,
+                  keyboardVerticalOffset:
+                    Platform.OS === "android"
+                      ? -bottomInsetArea
+                      : -bottomInsetArea + 8,
                 }}
                 textInputProps={{
                   placeholder: "Сообщение...",
