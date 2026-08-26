@@ -16,12 +16,15 @@ import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
 import DateSelectorModal from "@/src/components/app/calendar/home/day/dateSelector/DateSelectorModal";
 import { Typography } from "@/src/components/ui";
+import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
 import {
   formatShortDayName,
   formatDayNumber,
   formatApiDate,
   isCurrentDay,
 } from "@/src/utils/date/formatDate";
+
+const PROGRESS_RING_SIZE = 40;
 
 const ITEM_WIDTH = 44;
 const ITEM_GAP = 12;
@@ -32,6 +35,7 @@ interface DateItemProps {
   isEmpty: boolean;
   isToday: boolean;
   workingDayId?: number;
+  progress?: number;
   onPress: (id: number | undefined, date: Date, isEmpty: boolean) => void;
 }
 
@@ -42,6 +46,7 @@ const DateItem = memo<DateItemProps>(
     isEmpty,
     isToday: isTodayFlag,
     workingDayId,
+    progress,
     onPress,
   }) => (
     <TouchableOpacity
@@ -64,23 +69,33 @@ const DateItem = memo<DateItemProps>(
         {formatShortDayName(item)}
       </Typography>
 
-      <View
-        className={`w-[32px] h-[32px] justify-center items-center rounded-full overflow-hidden ${
-          isSelected ? "bg-background-surface" : "bg-transparent"
-        }`}
-      >
-        <Typography
-          weight="semibold"
-          className={`text-body ${
-            isSelected
-              ? "text-neutral-900"
-              : isTodayFlag
-                ? "text-primary-blue-500"
-                : "text-neutral-900"
+      <View className="justify-center items-center">
+        {progress !== undefined && !isSelected && (
+          <View className="absolute">
+            <CircularProgressDay
+              progress={progress}
+              size={PROGRESS_RING_SIZE}
+            />
+          </View>
+        )}
+        <View
+          className={`w-[32px] h-[32px] justify-center items-center rounded-full overflow-hidden ${
+            isSelected ? "bg-background-surface" : "bg-transparent"
           }`}
         >
-          {formatDayNumber(item)}
-        </Typography>
+          <Typography
+            weight="semibold"
+            className={`text-body ${
+              isSelected
+                ? "text-neutral-900"
+                : isTodayFlag
+                  ? "text-primary-blue-500"
+                  : "text-neutral-900"
+            }`}
+          >
+            {formatDayNumber(item)}
+          </Typography>
+        </View>
       </View>
     </TouchableOpacity>
   ),
@@ -92,6 +107,7 @@ interface DateSelectorProps {
   onSelectDate: (date: Date) => void;
   selectedDate: Date;
   workingDaysData?: WorkingDaysResponse;
+  progressMap?: Record<string, number>;
   isLoading?: boolean;
 }
 
@@ -99,6 +115,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   onSelectDate,
   selectedDate,
   workingDaysData,
+  progressMap,
   isLoading = false,
 }) => {
   const [modalDate, setModalDate] = useState<Date | null>(null);
@@ -164,11 +181,12 @@ const DateSelector: React.FC<DateSelectorProps> = ({
           isEmpty={isEmpty && !isSelected}
           isToday={isTodayFlag}
           workingDayId={workingDay?.id}
+          progress={progressMap?.[dateString]}
           onPress={handleDatePress}
         />
       );
     },
-    [workingDaysData, selectedDate, handleDatePress],
+    [workingDaysData, selectedDate, progressMap, handleDatePress],
   );
 
   useEffect(() => {
