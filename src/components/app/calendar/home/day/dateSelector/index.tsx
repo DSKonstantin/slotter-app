@@ -143,13 +143,13 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   );
 
   const handleDatePress = useCallback(
-    (id: number | undefined, date: Date, isEmpty: boolean) => {
+    (id: number | undefined, date: Date) => {
       if (!workingDaysData) {
         onSelectDate(date);
         return;
       }
 
-      if (isEmpty || !id) {
+      if (!id) {
         setModalDate(date);
       } else {
         onSelectDate(date);
@@ -171,7 +171,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({
       const dateString = formatApiDate(item);
       const workingDay = workingDaysData?.[dateString] ?? undefined;
       const isSelected = isSameDay(item, selectedDate);
-      const isEmpty = Boolean(workingDaysData) && !workingDay;
+      const isEmpty =
+        Boolean(workingDaysData) && (!workingDay || !workingDay.is_active);
       const isTodayFlag = isCurrentDay(dateString);
 
       return (
