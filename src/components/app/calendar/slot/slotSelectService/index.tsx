@@ -273,16 +273,22 @@ const SlotSelectService: React.FC<Props> = ({
                   duration: appointmentDuration,
                 };
 
-        await new Promise<void>((resolve, reject) =>
+        const confirmed = await new Promise<boolean>((resolve) =>
           Alert.alert(
             "Изменение услуг",
             "Длительность записи останется прежней.",
             [
-              { text: "Отмена", style: "cancel", onPress: reject },
-              { text: "Сохранить", onPress: () => resolve() },
+              {
+                text: "Отмена",
+                style: "cancel",
+                onPress: () => resolve(false),
+              },
+              { text: "Сохранить", onPress: () => resolve(true) },
             ],
           ),
         );
+
+        if (!confirmed) return;
 
         await updateAppointment({
           id: Number(appointmentId),

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback, memo } from "react";
 import { Pressable, Animated, ViewStyle } from "react-native";
 import { colors } from "@/src/styles/colors";
 import { twMerge } from "tailwind-merge";
@@ -14,7 +14,7 @@ type SwitchProps = {
   className?: string;
 };
 
-export function Switch({
+function SwitchComponent({
   value,
   onChange,
   disabled = false,
@@ -22,31 +22,38 @@ export function Switch({
   height = 28,
   className,
 }: SwitchProps) {
-  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const position = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const color = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   const thumbSize = height - 4;
-  const translateX = anim.interpolate({
+  const translateX = position.interpolate({
     inputRange: [0, 1],
     outputRange: [2, width - thumbSize - 2],
   });
 
-  const bgColor = anim.interpolate({
+  const bgColor = color.interpolate({
     inputRange: [0, 1],
     outputRange: [colors.background.switch, colors.primary.green[500]],
   });
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (disabled) return;
     onChange(!value);
-  };
+  }, [disabled, onChange, value]);
 
   useEffect(() => {
-    Animated.timing(anim, {
-      toValue: value ? 1 : 0,
+    const toValue = value ? 1 : 0;
+    Animated.timing(position, {
+      toValue,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(color, {
+      toValue,
       duration: 200,
       useNativeDriver: false,
     }).start();
-  }, [anim, value]);
+  }, [position, color, value]);
 
   return (
     <Pressable
@@ -82,3 +89,5 @@ export function Switch({
     </Pressable>
   );
 }
+
+export const Switch = memo(SwitchComponent);

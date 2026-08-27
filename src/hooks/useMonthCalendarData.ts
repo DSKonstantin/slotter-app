@@ -4,11 +4,8 @@ import { eachDayOfInterval, endOfMonth } from "date-fns";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
-import { parseTime } from "@/src/utils/date/formatTime";
-import type {
-  Appointment,
-  WorkingDay,
-} from "@/src/store/redux/services/api-types";
+import { calculateProgressMap } from "@/src/utils/date/dayProgress";
+import type { Appointment } from "@/src/store/redux/services/api-types";
 
 type Params = {
   auth: { userId: number } | null;
@@ -84,37 +81,10 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
               }),
           );
 
-    const progressMap: Record<string, number> = {};
-    if (workingDaysData) {
-      for (const [date, workingDay] of Object.entries(workingDaysData)) {
-        if (!workingDay) continue;
-
-        const dayAppointments = appointmentsByDate[date] ?? [];
-        if (dayAppointments.length === 0) continue;
-
-        const wd = workingDay as WorkingDay;
-        const wdStart = parseTime(wd.start_at);
-        const wdEnd = parseTime(wd.end_at);
-        const availableMinutes =
-          wdEnd -
-          wdStart -
-          (wd.working_day_breaks ?? []).reduce(
-            (sum, b) => sum + parseTime(b.end_at) - parseTime(b.start_at),
-            0,
-          );
-
-        if (availableMinutes <= 0) continue;
-
-        const bookedMinutes = dayAppointments.reduce((sum, a) => {
-          const apptStart = parseTime(a.start_time);
-          const apptEnd = parseTime(a.end_time);
-          const overlapStart = Math.max(apptStart, wdStart);
-          const overlapEnd = Math.min(apptEnd, wdEnd);
-          return sum + Math.max(0, overlapEnd - overlapStart);
-        }, 0);
-        progressMap[date] = Math.min(1, bookedMinutes / availableMinutes);
-      }
-    }
+    const progressMap = calculateProgressMap(
+      workingDaysData,
+      appointmentsByDate,
+    );
 
     const totalAppointments = Object.values(appointmentsByDate).reduce(
       (sum, arr) => sum + arr.length,

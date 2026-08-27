@@ -1,34 +1,41 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { colors } from "@/src/styles/colors";
 
 interface Props {
   progress?: number;
+  size?: number;
 }
 
-const SIZE = 44;
+const DEFAULT_SIZE = 44;
 const STROKE_WIDTH = 2;
-const RADIUS = (SIZE - STROKE_WIDTH) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const CircularProgressDayComponent = ({ progress = 0 }: Props) => {
+const CircularProgressDayComponent = ({
+  progress = 0,
+  size = DEFAULT_SIZE,
+}: Props) => {
+  const { radius, circumference } = useMemo(() => {
+    const radius = (size - STROKE_WIDTH) / 2;
+    return { radius, circumference: 2 * Math.PI * radius };
+  }, [size]);
+
   return (
-    <View style={styles.container}>
-      <Svg width={SIZE} height={SIZE}>
+    <View style={[styles.container, { width: size, height: size }]}>
+      <Svg width={size} height={size}>
         <Circle
           stroke={colors.primary.green[500]}
           fill="none"
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={RADIUS}
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
           strokeWidth={STROKE_WIDTH}
-          strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-          strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={circumference * (1 - progress)}
           transform={`
-              rotate(90 ${SIZE / 2} ${SIZE / 2})
+              rotate(90 ${size / 2} ${size / 2})
               scale(-1,1)
-              translate(-${SIZE},0)
+              translate(-${size},0)
           `}
           strokeLinecap="round"
         />
@@ -39,8 +46,8 @@ const CircularProgressDayComponent = ({ progress = 0 }: Props) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: SIZE,
-    height: SIZE,
+    width: DEFAULT_SIZE,
+    height: DEFAULT_SIZE,
   },
 });
 

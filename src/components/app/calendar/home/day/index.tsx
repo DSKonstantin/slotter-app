@@ -26,11 +26,13 @@ import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDa
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { Appointment } from "@/src/store/redux/services/api-types";
+import { calculateProgressMap } from "@/src/utils/date/dayProgress";
 import EmptyStateScreen, {
   ErrorScreen,
 } from "@/src/components/shared/emptyStateScreen";
 import DateSelector from "@/src/components/app/calendar/home/day/dateSelector";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { isToday } from "@/src/utils/date/isToday";
 
 const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const [isRetrying, setIsRetrying] = useState(false);
@@ -79,6 +81,27 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
       : skipToken,
   );
 
+  const { data: monthAppointmentsData, refetch: refetchMonthAppointments } =
+    useGetAppointmentsQuery(
+      auth
+        ? {
+            userId: auth.userId,
+            params: {
+              ...dateRange,
+              status: [
+                "requested",
+                "pending",
+                "confirmed",
+                "arrived",
+                "delayed",
+                "missed",
+                "completed",
+              ],
+            },
+          }
+        : skipToken,
+    );
+
   const selectedWorkingDay = useMemo(
     () => workingDaysData?.[selectedDay] ?? undefined,
     [workingDaysData, selectedDay],
@@ -87,6 +110,16 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const appointments = useMemo(
     () => (appointmentsData as Appointment[] | undefined) ?? [],
     [appointmentsData],
+  );
+
+  const progressMap = useMemo(
+    () =>
+      calculateProgressMap(
+        workingDaysData,
+        (monthAppointmentsData as Record<string, Appointment[]> | undefined) ??
+          {},
+      ),
+    [workingDaysData, monthAppointmentsData],
   );
 
   const handleSelectDate = useCallback(
@@ -104,6 +137,11 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
       router.push(Routers.app.daySchedule.create(selectedDay));
     }
   }, [router, isDayLoading, selectedWorkingDay, selectedDay]);
+
+  const handlePressToday = useCallback(() => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    router.setParams({ date: today });
+  }, [router]);
 
   const hasError = useMemo(
     () => isDayError || isAppointmentsError,
@@ -123,8 +161,12 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
 
   const refetchAll = useCallback(async () => {
-    await Promise.all([refetchWorkingDays(), refetchAppointments()]);
-  }, [refetchAppointments, refetchWorkingDays]);
+    await Promise.all([
+      refetchWorkingDays(),
+      refetchAppointments(),
+      refetchMonthAppointments(),
+    ]);
+  }, [refetchAppointments, refetchWorkingDays, refetchMonthAppointments]);
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
 
@@ -206,7 +248,8 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   useFocusEffect(
     useCallback(() => {
       safeRefetch(refetchAppointments);
-    }, [refetchAppointments]),
+      safeRefetch(refetchMonthAppointments);
+    }, [refetchAppointments, refetchMonthAppointments]),
   );
 
   useEffect(() => {
@@ -256,6 +299,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
             selectedDate={selectedDate}
             onSelectDate={handleSelectDate}
             workingDaysData={workingDaysData ?? undefined}
+            progressMap={progressMap}
             isLoading={isDayLoading}
           />
         </Animated.View>
@@ -298,8 +342,19 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
       </View>
       {!hasError && !isLoading && !isEmpty && (
         <CalendarActionButton
-          onPress={handlePress}
-          title={selectedWorkingDay ? "Изменить день" : "Настроить день"}
+          buttons={[
+            {
+              title: "Сегодня",
+              onPress: handlePressToday,
+              variant: "secondary",
+              buttonClassName: "border border-neutral-200",
+              show: !isToday(selectedDay),
+            },
+            {
+              icon: "Edit_fill",
+              onPress: handlePress,
+            },
+          ]}
           bottomInset={bottomInset}
         />
       )}

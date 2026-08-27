@@ -8,7 +8,7 @@ import {
 import { twMerge } from "tailwind-merge";
 
 export interface CustomBtn {
-  title: string;
+  title?: string;
   onPress: () => void;
   size?: "xs" | "sm" | "md" | "lg";
   variant?: "primary" | "secondary" | "accent" | "clear" | "destructive";
@@ -64,18 +64,20 @@ export const Button: React.FC<CustomBtn> = ({
       ) : (
         <>
           {leftIcon && leftIcon}
-          <Text
-            className={twMerge(
-              styles.textBase,
-              styles.textVariants[variant],
-              textVariant === "accent" && styles.textAccent,
-              disabled && styles.textDisabled,
-              textClassName,
-            )}
-            {...textProps}
-          >
-            {title}
-          </Text>
+          {title && (
+            <Text
+              className={twMerge(
+                styles.textBase,
+                styles.textVariants[variant],
+                textVariant === "accent" && styles.textAccent,
+                disabled && styles.textDisabled,
+                textClassName,
+              )}
+              {...textProps}
+            >
+              {title}
+            </Text>
+          )}
           {rightIcon && rightIcon}
         </>
       )}

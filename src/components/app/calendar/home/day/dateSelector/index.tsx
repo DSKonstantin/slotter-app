@@ -7,7 +7,7 @@ import React, {
   memo,
 } from "react";
 import { FlatList, TouchableOpacity, View } from "react-native";
-import { format, addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
+import { addDays, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -16,7 +16,15 @@ import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 import DateSelectorSkeleton from "./DateSelectorSkeleton";
 import DateSelectorModal from "@/src/components/app/calendar/home/day/dateSelector/DateSelectorModal";
 import { Typography } from "@/src/components/ui";
-import { formatShortDayName } from "@/src/utils/date/formatDate";
+import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
+import {
+  formatShortDayName,
+  formatDayNumber,
+  formatApiDate,
+  isCurrentDay,
+} from "@/src/utils/date/formatDate";
+
+const PROGRESS_RING_SIZE = 40;
 
 const ITEM_WIDTH = 44;
 const ITEM_GAP = 12;
@@ -25,12 +33,22 @@ interface DateItemProps {
   item: Date;
   isSelected: boolean;
   isEmpty: boolean;
+  isToday: boolean;
   workingDayId?: number;
+  progress?: number;
   onPress: (id: number | undefined, date: Date, isEmpty: boolean) => void;
 }
 
 const DateItem = memo<DateItemProps>(
-  ({ item, isSelected, isEmpty, workingDayId, onPress }) => (
+  ({
+    item,
+    isSelected,
+    isEmpty,
+    isToday: isTodayFlag,
+    workingDayId,
+    progress,
+    onPress,
+  }) => (
     <TouchableOpacity
       onPress={() => onPress(workingDayId, item, isEmpty)}
       style={{ width: ITEM_WIDTH }}
@@ -41,20 +59,43 @@ const DateItem = memo<DateItemProps>(
       <Typography
         weight="regular"
         className={`text-caption my-1 ${
-          isSelected ? "text-neutral-0" : "text-neutral-500"
+          isSelected
+            ? "text-neutral-0"
+            : isTodayFlag
+              ? "text-primary-blue-500"
+              : "text-neutral-500"
         }`}
       >
         {formatShortDayName(item)}
       </Typography>
 
-      <View
-        className={`w-[32px] h-[32px] justify-center items-center rounded-full overflow-hidden ${
-          isSelected ? "bg-background-surface" : "bg-transparent"
-        }`}
-      >
-        <Typography weight="semibold" className="text-body text-neutral-900">
-          {format(item, "d")}
-        </Typography>
+      <View className="justify-center items-center">
+        {progress !== undefined && !isSelected && (
+          <View className="absolute">
+            <CircularProgressDay
+              progress={progress}
+              size={PROGRESS_RING_SIZE}
+            />
+          </View>
+        )}
+        <View
+          className={`w-[32px] h-[32px] justify-center items-center rounded-full overflow-hidden ${
+            isSelected ? "bg-background-surface" : "bg-transparent"
+          }`}
+        >
+          <Typography
+            weight="semibold"
+            className={`text-body ${
+              isSelected
+                ? "text-neutral-900"
+                : isTodayFlag
+                  ? "text-primary-blue-500"
+                  : "text-neutral-900"
+            }`}
+          >
+            {formatDayNumber(item)}
+          </Typography>
+        </View>
       </View>
     </TouchableOpacity>
   ),
@@ -66,6 +107,7 @@ interface DateSelectorProps {
   onSelectDate: (date: Date) => void;
   selectedDate: Date;
   workingDaysData?: WorkingDaysResponse;
+  progressMap?: Record<string, number>;
   isLoading?: boolean;
 }
 
@@ -73,6 +115,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   onSelectDate,
   selectedDate,
   workingDaysData,
+  progressMap,
   isLoading = false,
 }) => {
   const [modalDate, setModalDate] = useState<Date | null>(null);
@@ -118,29 +161,32 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   const handleCreatePress = useCallback(() => {
     if (!modalDate) return;
 
-    const date = format(modalDate, "yyyy-MM-dd");
+    const date = formatApiDate(modalDate);
     setModalDate(null);
     router.push(Routers.app.daySchedule.create(date));
   }, [modalDate]);
 
   const renderItem = useCallback(
     ({ item }: { item: Date }) => {
-      const dateString = format(item, "yyyy-MM-dd");
+      const dateString = formatApiDate(item);
       const workingDay = workingDaysData?.[dateString] ?? undefined;
       const isSelected = isSameDay(item, selectedDate);
       const isEmpty = Boolean(workingDaysData) && !workingDay;
+      const isTodayFlag = isCurrentDay(dateString);
 
       return (
         <DateItem
           item={item}
           isSelected={isSelected}
           isEmpty={isEmpty && !isSelected}
+          isToday={isTodayFlag}
           workingDayId={workingDay?.id}
+          progress={progressMap?.[dateString]}
           onPress={handleDatePress}
         />
       );
     },
-    [workingDaysData, selectedDate, handleDatePress],
+    [workingDaysData, selectedDate, progressMap, handleDatePress],
   );
 
   useEffect(() => {

@@ -615,7 +615,7 @@ export default function ChatRoom({ roomId }: Props) {
                 isSendButtonAlwaysVisible
                 minInputToolbarHeight={0}
                 keyboardAvoidingViewProps={{
-                  keyboardVerticalOffset: -bottomInsetArea + 8,
+                  keyboardVerticalOffset: -bottomInsetArea,
                 }}
                 textInputProps={{
                   placeholder: "Сообщение...",

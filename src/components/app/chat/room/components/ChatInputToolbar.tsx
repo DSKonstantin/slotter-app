@@ -12,6 +12,7 @@ const ChatInputToolbar = (props: InputToolbarProps<IMessage>) => {
       containerStyle={{
         backgroundColor: "transparent",
         borderTopWidth: 0,
+        paddingBottom: 8,
       }}
       primaryStyle={{ alignItems: "flex-end" }}
     />
