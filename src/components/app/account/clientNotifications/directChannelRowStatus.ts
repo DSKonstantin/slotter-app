@@ -2,7 +2,6 @@ import type {
   DirectChannelKind,
   SubscriptionDirectChannel,
 } from "@/src/store/redux/services/api-types";
-import { isDirectChannelActive } from "@/src/utils/directChannel";
 import { colors } from "@/src/styles/colors";
 
 export type DirectChannelRowStatus = {
@@ -28,7 +27,16 @@ export function getDirectChannelRowStatus(
       emphasized: true,
     };
   }
-  if (isDirectChannelActive(channel)) {
+  if (channel.status === "active") {
+    if (channel.provisioning_status === "awaiting_auth") {
+      return {
+        label: "Переподключите канал",
+        iconName: "Refresh_2",
+        color: colors.accent.red[500],
+        webPath: checkoutPath,
+        emphasized: true,
+      };
+    }
     return {
       label: "Управлять",
       iconName: "Setting_alt_fill",

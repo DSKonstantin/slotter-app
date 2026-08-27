@@ -1,12 +1,7 @@
 export type DirectChannelKind = "telegram_direct" | "max_direct";
 
 export type DirectChannelStatus =
-  | "pending"
-  | "paid"
-  | "active"
-  | "grace"
-  | "cancelled"
-  | "expired";
+  "pending" | "paid" | "active" | "grace" | "cancelled" | "expired";
 
 export type DirectChannelProvisioningStatus =
   | "none"
@@ -14,7 +9,8 @@ export type DirectChannelProvisioningStatus =
   | "topped_up"
   | "connecting"
   | "awaiting_auth"
-  | "active";
+  | "active"
+  | "failed";
 
 export type SubscriptionDirectPlan = {
   id: number;
