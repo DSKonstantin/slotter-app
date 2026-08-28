@@ -1,11 +1,8 @@
-export type AppointmentStep =
-  | "five_minutes"
-  | "ten_minutes"
-  | "fifteen_minutes"
-  | "thirty_minutes"
-  | "one_hour";
+import type { AppointmentStep } from "@/src/store/redux/services/api-types/user";
 
-export type AppointmentStepMinutes = 5 | 10 | 15 | 30 | 60;
+export type { AppointmentStep };
+
+export type AppointmentStepMinutes = 5 | 10 | 15 | 30 | 60 | 120 | 180 | 240;
 
 const STEP_MINUTES: Record<AppointmentStep, AppointmentStepMinutes> = {
   five_minutes: 5,
@@ -13,6 +10,9 @@ const STEP_MINUTES: Record<AppointmentStep, AppointmentStepMinutes> = {
   fifteen_minutes: 15,
   thirty_minutes: 30,
   one_hour: 60,
+  two_hours: 120,
+  three_hours: 180,
+  four_hours: 240,
 };
 
 export const appointmentStepToMinutes = (
