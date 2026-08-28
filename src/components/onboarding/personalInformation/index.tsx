@@ -1,10 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
-import { View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 import { Avatar, Divider, Item, StSvg, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -35,6 +35,7 @@ const PersonalInformation = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
 
   const methods = useForm({
     resolver: yupResolver(PersonalInformationSchema),
@@ -53,13 +54,19 @@ const PersonalInformation = () => {
   });
 
   const avatar = methods.watch("avatar");
+  const avatarUri = avatarRemoved
+    ? undefined
+    : (avatar?.uri ?? user?.avatar_url ?? undefined);
 
   const onSubmit = useCallback(
     async (data: PersonalInformationFormValues) => {
       if (!auth) return;
 
       try {
-        const formData = buildUserFormData(data);
+        const formData = buildUserFormData({
+          ...data,
+          removeAvatar: avatarRemoved,
+        });
 
         formData.append("user[nickname]", data.nickname);
         if (data.address) {
@@ -82,17 +89,32 @@ const PersonalInformation = () => {
         );
       }
     },
-    [auth, updateUser],
+    [auth, updateUser, avatarRemoved],
   );
 
   const handlePickAvatar = useCallback(
     (assets: PickedAssets) => {
       const asset = assets[0];
       if (!asset) return;
+      setAvatarRemoved(false);
       methods.setValue("avatar", assetToFile(asset, "avatar.jpg"));
     },
     [methods],
   );
+
+  const handleRemoveAvatar = useCallback(() => {
+    Alert.alert("Удалить аватар?", "Фото будет удалено", [
+      { text: "Отмена", style: "cancel" },
+      {
+        text: "Удалить",
+        style: "destructive",
+        onPress: () => {
+          setAvatarRemoved(true);
+          methods.setValue("avatar", null);
+        },
+      },
+    ]);
+  }, [methods]);
 
   if (!auth) return null;
 
@@ -133,25 +155,41 @@ const PersonalInformation = () => {
             </Typography>
 
             <View className="items-center my-4">
-              <ImagePickerTrigger
-                title="Загрузить аватар"
-                includeFiles
-                options={{ aspect: [1, 1], cameraType: CameraType.front }}
-                onPick={handlePickAvatar}
-              >
-                <Avatar
-                  size="xl"
-                  uri={avatar?.uri ?? user?.avatar_url ?? undefined}
-                  blurhash={avatar ? undefined : user?.avatar_blurhash}
-                  fallbackIcon={
+              <View className="relative">
+                <ImagePickerTrigger
+                  title="Загрузить аватар"
+                  includeFiles
+                  options={{ aspect: [1, 1], cameraType: CameraType.front }}
+                  onPick={handlePickAvatar}
+                >
+                  <Avatar
+                    size="xl"
+                    uri={avatarUri}
+                    blurhash={avatar ? undefined : user?.avatar_blurhash}
+                    fallbackIcon={
+                      <StSvg
+                        name="Camera"
+                        size={40}
+                        color={colors.neutral[500]}
+                      />
+                    }
+                  />
+                </ImagePickerTrigger>
+
+                {avatarUri ? (
+                  <Pressable
+                    onPress={handleRemoveAvatar}
+                    hitSlop={10}
+                    className="absolute -top-1 -right-1 rounded-full w-[24px] h-[24px] bg-white items-center justify-center"
+                  >
                     <StSvg
-                      name="Camera"
-                      size={40}
-                      color={colors.neutral[500]}
+                      name="Close_round_fill_light"
+                      size={18}
+                      color={colors.neutral[900]}
                     />
-                  }
-                />
-              </ImagePickerTrigger>
+                  </Pressable>
+                ) : null}
+              </View>
             </View>
           </View>
           <View className="gap-2">
