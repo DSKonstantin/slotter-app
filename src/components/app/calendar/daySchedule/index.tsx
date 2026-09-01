@@ -24,6 +24,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatTimeFromISO } from "@/src/utils/date/formatTime";
 import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, Divider, FloatingFooter, StSvg } from "@/src/components/ui";
@@ -86,54 +87,11 @@ const DayScheduleEdit = ({
   const { handleSubmit, control } = methods;
   const isActive = useWatch({ control, name: "isActive" });
 
-  useEffect(() => {
-    const prev = prevIsActiveRef.current;
-    prevIsActiveRef.current = isActive;
+  useFormNavigationGuard(methods.formState.isDirty);
 
-    if (prev && !isActive) {
-      Alert.alert(
-        "Сделать день выходным?",
-        "День будет отмечен как нерабочий и сохранён",
-        [
-          {
-            text: "Отмена",
-            style: "cancel",
-            onPress: () => methods.setValue("isActive", true),
-          },
-          {
-            text: "Сохранить",
-            onPress: async () => {
-              try {
-                await updateWorkingDay({
-                  userId,
-                  id: workingDay.id,
-                  data: {
-                    is_active: false,
-                    start_at: workingDay.start_at,
-                    end_at: workingDay.end_at,
-                    working_day_breaks_attributes: (
-                      workingDay.working_day_breaks ?? []
-                    ).map((b) => ({
-                      id: b.id,
-                      start_at: b.start_at,
-                      end_at: b.end_at,
-                    })),
-                  },
-                }).unwrap();
-                router.back();
-              } catch (e) {
-                toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
-                methods.setValue("isActive", true);
-              }
-            },
-          },
-        ],
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive]);
-
-  const onSubmit = async (data: DayScheduleFormValues) => {
+  const submitSchedule = async (
+    data: DayScheduleFormValues,
+  ): Promise<boolean> => {
     try {
       await updateWorkingDay({
         userId,
@@ -154,11 +112,46 @@ const DayScheduleEdit = ({
           ],
         },
       }).unwrap();
+      methods.reset(data);
       router.back();
+      return true;
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
+      return false;
     }
   };
+
+  useEffect(() => {
+    const prev = prevIsActiveRef.current;
+    prevIsActiveRef.current = isActive;
+
+    if (prev && !isActive) {
+      Alert.alert(
+        "Сделать день выходным?",
+        "День будет отмечен как нерабочий и сохранён",
+        [
+          {
+            text: "Отмена",
+            style: "cancel",
+            onPress: () => methods.setValue("isActive", true),
+          },
+          {
+            text: "Сохранить",
+            onPress: async () => {
+              const ok = await submitSchedule({
+                ...methods.getValues(),
+                isActive: false,
+              });
+              if (!ok) methods.setValue("isActive", true);
+            },
+          },
+        ],
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
+
+  const onSubmit = (data: DayScheduleFormValues) => submitSchedule(data);
 
   return (
     <FormProvider {...methods}>

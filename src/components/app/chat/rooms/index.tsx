@@ -48,13 +48,14 @@ export default function ChatRoomsScreen() {
     await Share.share({ url, message: url });
   }, [user?.nickname]);
 
-  const rooms = useMemo(
-    () =>
-      (data?.pages.flatMap((p) => p.rooms) ?? []).filter(
-        (r) => r.interlocutor != null,
-      ),
-    [data],
-  );
+  const rooms = useMemo(() => {
+    const seen = new Set<number>();
+    return (data?.pages.flatMap((p) => p.rooms) ?? []).filter((r) => {
+      if (r.interlocutor == null || seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    });
+  }, [data]);
 
   const isRoomsEmpty = useMemo(() => rooms.length === 0, [rooms.length]);
   const iosInsetTrickEnabled = useMemo(

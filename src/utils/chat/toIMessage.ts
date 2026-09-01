@@ -1,33 +1,43 @@
 import type {
   ChatMessage,
   ChatMessageReply,
+  ChatMessageReplyOwner,
+  ChatRoomInterlocutor,
 } from "@/src/store/redux/services/api-types";
 import type { ChatIMessage } from "./types";
+
+const DELETED_USER_ID = "deleted";
+const DELETED_USER_NAME = "Удалённый пользователь";
+
+const ownerToGiftedUser = (
+  owner: ChatRoomInterlocutor | ChatMessageReplyOwner | null,
+): ChatIMessage["user"] => {
+  if (!owner) {
+    return { _id: DELETED_USER_ID, name: DELETED_USER_NAME };
+  }
+
+  return {
+    _id: `${owner.type.toLowerCase()}_${owner.id}`,
+    name: owner.name,
+    avatar: owner.avatar_url ?? undefined,
+  };
+};
 
 const replyToIMessage = (reply: ChatMessageReply): ChatIMessage => ({
   _id: reply.id,
   text: reply.body ?? "",
   createdAt: new Date(reply.created_at).getTime(),
-  user: {
-    _id: `${reply.owner.type.toLowerCase()}_${reply.owner.id}`,
-    name: reply.owner.name,
-    avatar: reply.owner.avatar_url ?? undefined,
-  },
+  user: ownerToGiftedUser(reply.owner),
 });
 
 export const toIMessage = (msg: ChatMessage): ChatIMessage => {
-  const giftedOwnerId = `${msg.owner.type.toLowerCase()}_${msg.owner.id}`;
   const firstImage = msg.images?.[0];
 
   return {
     _id: msg.id,
     text: msg.body ?? "",
     createdAt: new Date(msg.created_at).getTime(),
-    user: {
-      _id: giftedOwnerId,
-      name: msg.owner.name,
-      avatar: msg.owner.avatar_url ?? undefined,
-    },
+    user: ownerToGiftedUser(msg.owner),
     image: firstImage?.url,
     system: false,
     sent: true,

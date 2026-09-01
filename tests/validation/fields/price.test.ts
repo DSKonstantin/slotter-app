@@ -15,4 +15,9 @@ describe("priceField", () => {
     expect(priceField.isValidSync("-1")).toBe(false);
     expect(priceField.isValidSync("abc")).toBe(false);
   });
+
+  it("rejects whitespace-only and spaced numbers — #23", () => {
+    expect(priceField.isValidSync("   ")).toBe(false);
+    expect(priceField.isValidSync("1 500")).toBe(false);
+  });
 });

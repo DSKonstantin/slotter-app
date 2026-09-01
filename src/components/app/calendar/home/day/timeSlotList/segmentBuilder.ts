@@ -10,6 +10,7 @@ import {
   SLOT_GAP,
 } from "./constants";
 import { parseTime } from "./utils";
+import { parseEndOfDayMinutes } from "@/src/utils/date/formatTime";
 
 type ParsedBreak = {
   start: number;
@@ -275,7 +276,7 @@ export const createSegments = (
   visibleStatuses: AppointmentStatus[],
 ): CreateSegmentsResult => {
   const workingStart = startAt ? parseTime(startAt) : undefined;
-  const workingEnd = endAt ? parseTime(endAt) : undefined;
+  const workingEnd = endAt ? parseEndOfDayMinutes(endAt) : undefined;
   const parsedBreaks = breaks.map((b) => ({
     start: parseTime(b.start_at),
     end: parseTime(b.end_at),

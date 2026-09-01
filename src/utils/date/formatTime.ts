@@ -47,6 +47,13 @@ export const parseTime = (time?: string | number | null) => {
 export const parseTimeMinutes = (value: unknown): number | null =>
   typeof value === "string" && value ? parseTime(value) : null;
 
+export const END_OF_DAY_MINUTES = 1440;
+
+export const parseEndOfDayMinutes = (time?: string | null): number => {
+  const minutes = parseTime(time);
+  return minutes === 0 && time ? END_OF_DAY_MINUTES : minutes;
+};
+
 export const formatMinutes = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 

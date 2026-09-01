@@ -5,6 +5,7 @@ import { colors } from "@/src/styles/colors";
 import { useGetAvailableSlotsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import { formatSlotDate } from "@/src/utils/date/formatDate";
 import { parseISO } from "date-fns";
+import { skipToken } from "@reduxjs/toolkit/query";
 import RetryInline from "@/src/components/shared/retryInline";
 import { useSlotStep } from "@/src/hooks/useSlotStep";
 import { groupSlotsByHour } from "@/src/utils/schedule/groupSlotsByHour";
@@ -32,13 +33,17 @@ const SlotPicker = ({
 }: Props) => {
   const { stepMinutes, useHourGrouping } = useSlotStep();
 
+  const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+
   const {
     data: slots,
     isLoading,
     isError,
     refetch,
   } = useGetAvailableSlotsQuery(
-    { userId, date: formatSlotDate(parseISO(date)), step: stepMinutes },
+    isValidDate
+      ? { userId, date: formatSlotDate(parseISO(date)), step: stepMinutes }
+      : skipToken,
     { refetchOnMountOrArgChange: true },
   );
 

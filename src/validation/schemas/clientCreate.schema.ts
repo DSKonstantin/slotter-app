@@ -5,7 +5,7 @@ import type { CustomerTag } from "@/src/store/redux/services/api-types";
 
 export const ClientCreateSchema = Yup.object({
   name: nameField,
-  phone: phoneField.optional().default(""),
+  phone: phoneField,
   comment: Yup.string(),
   customer_tag: Yup.mixed<CustomerTag>().nullable().optional(),
 });

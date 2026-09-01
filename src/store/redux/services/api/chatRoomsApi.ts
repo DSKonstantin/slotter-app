@@ -78,16 +78,30 @@ export const chatRoomsApi = api.injectEndpoints({
           roomSubs.set(room.id, sub);
 
           sub?.on("message", (data: RoomChannelEvent) => {
-            if (data.type !== "message.created") return;
-
             const { user: authUser, resourceType } = (getState() as RootState)
               .auth;
             const currentId =
               authUser && resourceType
                 ? `${resourceType}_${authUser.id}`
                 : null;
-            const ownerId = `${data.payload.owner.type.toLowerCase()}_${data.payload.owner.id}`;
-            const isOwn = ownerId === currentId;
+
+            if (data.type === "read") {
+              const viewerId = `${data.viewer.type.toLowerCase()}_${data.viewer.id}`;
+              if (viewerId !== currentId) return;
+              updateCachedData((draft) => {
+                const target = findRoomInPages(draft, room.id);
+                if (target) target.unread_count = 0;
+              });
+              return;
+            }
+
+            if (data.type !== "message.created") return;
+
+            const owner = data.payload.owner;
+            const ownerId = owner
+              ? `${owner.type.toLowerCase()}_${owner.id}`
+              : null;
+            const isOwn = ownerId != null && ownerId === currentId;
 
             updateCachedData((draft) => {
               const movedRoom = removeRoomFromPages(draft, room.id);
@@ -98,13 +112,21 @@ export const chatRoomsApi = api.injectEndpoints({
                 id: data.payload.id,
                 body: data.payload.body,
                 created_at: data.payload.created_at,
-                owner: {
-                  id: data.payload.owner.id,
-                  type: data.payload.owner.type,
-                  name: data.payload.owner.name,
-                  avatar_url: data.payload.owner.avatar_url,
-                  avatar_blurhash: data.payload.owner.avatar_blurhash,
-                },
+                owner: owner
+                  ? {
+                      id: owner.id,
+                      type: owner.type,
+                      name: owner.name,
+                      avatar_url: owner.avatar_url,
+                      avatar_blurhash: owner.avatar_blurhash,
+                    }
+                  : {
+                      id: 0,
+                      type: "user",
+                      name: "Удалённый пользователь",
+                      avatar_url: null,
+                      avatar_blurhash: null,
+                    },
               };
               draft.pages[0]?.rooms.unshift(movedRoom);
             });
@@ -116,9 +138,17 @@ export const chatRoomsApi = api.injectEndpoints({
             getState() as RootState,
           ).data;
           if (!cacheData) return;
+          const liveIds = new Set<number>();
           for (const page of cacheData.pages) {
             for (const room of page.rooms) {
+              liveIds.add(room.id);
               subscribeRoom(room);
+            }
+          }
+          for (const [id, sub] of roomSubs) {
+            if (!liveIds.has(id)) {
+              sub?.disconnect();
+              roomSubs.delete(id);
             }
           }
         };

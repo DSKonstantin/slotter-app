@@ -3,6 +3,7 @@ import {
   formatDuration,
   formatMinutes,
   formatTimeFromISO,
+  parseEndOfDayMinutes,
   parseTime,
 } from "@/src/utils/date/formatTime";
 
@@ -57,6 +58,23 @@ describe("parseTime", () => {
 
   it("falls back to 0 when nothing matches", () => {
     expect(parseTime("not a time")).toBe(0);
+  });
+});
+
+describe("parseEndOfDayMinutes", () => {
+  it("treats midnight as end of day (1440), not 0 — #52", () => {
+    expect(parseEndOfDayMinutes("00:00")).toBe(1440);
+    expect(parseEndOfDayMinutes("2026-07-22T00:00:00+03:00")).toBe(1440);
+  });
+
+  it("returns 0 for empty / unset (distinct from midnight)", () => {
+    expect(parseEndOfDayMinutes("")).toBe(0);
+    expect(parseEndOfDayMinutes(null)).toBe(0);
+    expect(parseEndOfDayMinutes(undefined)).toBe(0);
+  });
+
+  it("passes through a normal end time", () => {
+    expect(parseEndOfDayMinutes("18:30")).toBe(18 * 60 + 30);
   });
 });
 

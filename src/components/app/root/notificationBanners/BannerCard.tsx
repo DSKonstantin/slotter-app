@@ -3,14 +3,9 @@ import { Pressable, TextProps, TouchableOpacity, View } from "react-native";
 
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import type { BannerVariant } from "./bannerConfig";
 
-export type BannerVariant =
-  | "info"
-  | "action"
-  | "warning"
-  | "alert"
-  | "error"
-  | "critical";
+export type { BannerVariant };
 
 const VARIANTS: Record<
   BannerVariant,

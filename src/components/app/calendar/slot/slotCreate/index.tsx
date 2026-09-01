@@ -147,16 +147,22 @@ const SlotCreate: React.FC = () => {
       if (!auth) return;
 
       if (!values.customerId) {
-        await new Promise<void>((resolve, reject) =>
+        const confirmed = await new Promise<boolean>((resolve) =>
           Alert.alert(
             "Продолжить без выбранного клиента",
             "Уведомление о записи не будет отправлено. Клиента можно добавить позже.",
             [
-              { text: "Вернуться назад", style: "cancel", onPress: reject },
-              { text: "Подтвердить", onPress: () => resolve() },
+              {
+                text: "Вернуться назад",
+                style: "cancel",
+                onPress: () => resolve(false),
+              },
+              { text: "Подтвердить", onPress: () => resolve(true) },
             ],
+            { cancelable: true, onDismiss: () => resolve(false) },
           ),
         );
+        if (!confirmed) return;
       }
 
       try {

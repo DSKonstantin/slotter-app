@@ -67,7 +67,7 @@ const RescheduleModal = ({
     isError: isSlotsError,
     refetch: refetchSlots,
   } = useGetAvailableSlotsQuery(
-    auth
+    auth && isValidDate && visible
       ? {
           userId: auth.userId,
           date: formatSlotDate(parseISO(dateValue)),
@@ -75,9 +75,7 @@ const RescheduleModal = ({
           appointment_id: appointmentId,
         }
       : skipToken,
-
     {
-      skip: !visible || !isValidDate,
       refetchOnMountOrArgChange: true,
     },
   );

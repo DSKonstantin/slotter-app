@@ -140,13 +140,13 @@ export interface ChatMessageReply {
   id: number;
   body: string | null;
   created_at: string;
-  owner: ChatMessageReplyOwner;
+  owner: ChatMessageReplyOwner | null;
 }
 
 export interface ChatMessage {
   id: number;
   body: string | null;
-  owner: ChatRoomInterlocutor;
+  owner: ChatRoomInterlocutor | null;
   chat_room_id: number;
   images: ChatMessageImage[];
   chat_widget: ChatWidget | null;
