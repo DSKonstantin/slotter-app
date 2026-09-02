@@ -8,6 +8,7 @@ import AppointmentCard from "@/src/components/shared/cards/scheduling/appointmen
 import RetryInline from "@/src/components/shared/retryInline";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
+import { isActiveAppointmentStatus } from "@/src/constants/appointmentStatuses";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { formatTimeString } from "@/src/utils/date/formatTime";
 import { isHiddenCustomer } from "@/src/utils/customer";
@@ -27,7 +28,7 @@ const DayScheduleAppointments = ({ userId, date }: Props) => {
   const appointments = useMemo(
     () =>
       ((data as Appointment[] | undefined) ?? [])
-        .slice()
+        .filter((a) => isActiveAppointmentStatus(a.status))
         .sort((a, b) => a.start_time.localeCompare(b.start_time)),
     [data],
   );
