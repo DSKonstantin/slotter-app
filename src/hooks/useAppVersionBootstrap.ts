@@ -11,10 +11,11 @@ interface AppVersionBootstrapResult {
 }
 
 export function useAppVersionBootstrap(): AppVersionBootstrapResult {
-  const dispatch = useAppDispatch();
   const [ready, setReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
+
+  const dispatch = useAppDispatch();
 
   const bootstrap = useCallback(() => {
     setIsLoading(true);

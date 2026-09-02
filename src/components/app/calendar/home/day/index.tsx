@@ -122,6 +122,46 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     [workingDaysData, monthAppointmentsData],
   );
 
+  const hasError = useMemo(
+    () => isDayError || isAppointmentsError,
+    [isDayError, isAppointmentsError],
+  );
+
+  const isLoading = useMemo(
+    () => isDayLoading || isAppointmentsLoading,
+    [isDayLoading, isAppointmentsLoading],
+  );
+
+  const isEmpty = useMemo(
+    () => !isLoading && !selectedWorkingDay && appointments.length === 0,
+    [isLoading, selectedWorkingDay, appointments.length],
+  );
+
+  const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const maxScrollY = Math.max(
+        event.contentSize.height - event.layoutMeasurement.height,
+        0,
+      );
+      const y = Math.min(Math.max(event.contentOffset.y, 0), maxScrollY);
+      const diff = y - scrollY.value;
+
+      const next = headerTranslateY.value - diff;
+      headerTranslateY.value = Math.min(
+        0,
+        Math.max(-headerHeightShared.value, next),
+      );
+
+      scrollY.value = y;
+    },
+  });
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: headerTranslateY.value }],
+  }));
+
   const handleSelectDate = useCallback(
     (date: Date) => {
       router.setParams({ date: format(date, "yyyy-MM-dd") });
@@ -142,23 +182,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     const today = format(new Date(), "yyyy-MM-dd");
     router.setParams({ date: today });
   }, [router]);
-
-  const hasError = useMemo(
-    () => isDayError || isAppointmentsError,
-    [isDayError, isAppointmentsError],
-  );
-
-  const isLoading = useMemo(
-    () => isDayLoading || isAppointmentsLoading,
-    [isDayLoading, isAppointmentsLoading],
-  );
-
-  const isEmpty = useMemo(
-    () => !isLoading && !selectedWorkingDay && appointments.length === 0,
-    [isLoading, selectedWorkingDay, appointments.length],
-  );
-
-  const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
 
   const refetchAll = useCallback(async () => {
     await Promise.all([
@@ -259,29 +282,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   useEffect(() => {
     headerHeightShared.value = headerHeight;
   }, [headerHeight, headerHeightShared]);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      const maxScrollY = Math.max(
-        event.contentSize.height - event.layoutMeasurement.height,
-        0,
-      );
-      const y = Math.min(Math.max(event.contentOffset.y, 0), maxScrollY);
-      const diff = y - scrollY.value;
-
-      const next = headerTranslateY.value - diff;
-      headerTranslateY.value = Math.min(
-        0,
-        Math.max(-headerHeightShared.value, next),
-      );
-
-      scrollY.value = y;
-    },
-  });
-
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
 
   if (!auth) return null;
 

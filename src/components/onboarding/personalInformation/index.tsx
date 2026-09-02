@@ -32,10 +32,11 @@ import { assetToFile } from "@/src/utils/files/assetToFile";
 import { NicknameField } from "./NicknameField";
 
 const PersonalInformation = () => {
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
+
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const [updateUser, { isLoading }] = useUpdateUserMutation();
-  const [avatarRemoved, setAvatarRemoved] = useState(false);
 
   const methods = useForm({
     resolver: yupResolver(PersonalInformationSchema),

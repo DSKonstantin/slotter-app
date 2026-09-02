@@ -73,7 +73,6 @@ interface Props {
 }
 
 const SlotDetails: React.FC<Props> = ({ slotId }) => {
-  const auth = useRequiredAuth();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [actionsVisible, setActionsVisible] = useState(false);
@@ -83,6 +82,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
+  const [editingField, setEditingField] = useState<EditingField>(null);
+
+  const isSavingRef = useRef(false);
+
+  const auth = useRequiredAuth();
   const { scheduleAction, onModalHide } = useModalAction(() =>
     setActionsVisible(false),
   );
@@ -90,8 +94,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     scheduleAction: schedulePaymentAction,
     onModalHide: onPaymentModalHide,
   } = useModalAction(() => setPaymentMethodVisible(false));
-  const [editingField, setEditingField] = useState<EditingField>(null);
-  const isSavingRef = useRef(false);
 
   const {
     data: slot,
@@ -130,6 +132,32 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   });
 
   const id = Number(slotId);
+
+  const derived = useMemo(() => {
+    if (!slot) return null;
+    return {
+      canEdit: !isHiddenCustomer(slot.customer),
+      canReschedule:
+        !isHiddenCustomer(slot.customer) &&
+        (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
+      statusConfig: STATUS_CONFIG[slot.status] ?? null,
+      timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
+      serviceNames: slot.services.map((s) => s.name).join(", "),
+      additionalServiceNames: slot.additional_services
+        .map((s) => s.name)
+        .join(", "),
+      serviceSelectionParams: {
+        date: slot.date,
+        time: slot.start_time,
+        appointmentId: String(slot.id),
+        duration: String(slot.duration),
+        selectedServiceIds: slot.services.map((s) => s.id).join(","),
+        selectedAdditionalServiceIds: slot.additional_services
+          .map((s) => s.id)
+          .join(","),
+      },
+    };
+  }, [slot]);
 
   const handleUpdate = useCallback(
     async (
@@ -170,32 +198,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       ),
     [handleUpdate, methods],
   );
-
-  const derived = useMemo(() => {
-    if (!slot) return null;
-    return {
-      canEdit: !isHiddenCustomer(slot.customer),
-      canReschedule:
-        !isHiddenCustomer(slot.customer) &&
-        (EDITABLE_STATUSES as readonly string[]).includes(slot.status),
-      statusConfig: STATUS_CONFIG[slot.status] ?? null,
-      timeString: `${formatDayMonth(slot.date)}, ${formatTimeString(slot.start_time)}`,
-      serviceNames: slot.services.map((s) => s.name).join(", "),
-      additionalServiceNames: slot.additional_services
-        .map((s) => s.name)
-        .join(", "),
-      serviceSelectionParams: {
-        date: slot.date,
-        time: slot.start_time,
-        appointmentId: String(slot.id),
-        duration: String(slot.duration),
-        selectedServiceIds: slot.services.map((s) => s.id).join(","),
-        selectedAdditionalServiceIds: slot.additional_services
-          .map((s) => s.id)
-          .join(","),
-      },
-    };
-  }, [slot]);
 
   useEffect(() => {
     if (!slot) return;

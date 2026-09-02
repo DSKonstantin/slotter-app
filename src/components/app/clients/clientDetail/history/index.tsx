@@ -74,9 +74,10 @@ type Props =
   | { customerId: number; userCustomerId?: undefined };
 
 const ClientHistory = ({ customerId, userCustomerId }: Props) => {
-  const auth = useRequiredAuth();
   const [filterActive, setFilterActive] = useState(false);
   const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[0]);
+
+  const auth = useRequiredAuth();
 
   const {
     data: customerData,

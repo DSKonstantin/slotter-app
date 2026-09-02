@@ -111,6 +111,7 @@ export function NewChatSheet({ visible, onClose }: Props) {
   );
 
   const { data: roomsData } = useGetChatRoomsInfiniteQuery({});
+  const [createChatRoom] = useCreateChatRoomMutation();
 
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
@@ -143,8 +144,6 @@ export function NewChatSheet({ visible, onClose }: Props) {
       })),
     [customersData, roomByCustomerId],
   );
-
-  const [createChatRoom] = useCreateChatRoomMutation();
 
   const handleSearch = useCallback((text: string) => {
     setSearch(text);

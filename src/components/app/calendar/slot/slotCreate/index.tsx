@@ -46,10 +46,10 @@ import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { PAYMENT_OPTIONS } from "@/src/constants/payment";
 
 const SlotCreate: React.FC = () => {
-  const auth = useRequiredAuth();
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
 
+  const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.slotDraft);
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();

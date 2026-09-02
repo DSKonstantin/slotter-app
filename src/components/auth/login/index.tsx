@@ -22,13 +22,13 @@ import { Routers } from "@/src/constants/routers";
 import { AccountDeactivatedModal } from "@/src/components/auth/verify/AccountDeactivatedModal";
 
 const Login = () => {
-  const [loginMutation, { isLoading }] = useLoginMutation();
-  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
-  const { login } = useAuth();
-
   const [showPassword, setShowPassword] = useState(false);
   const [accountDeactivatedVisible, setAccountDeactivatedVisible] =
     useState(false);
+
+  const [loginMutation, { isLoading }] = useLoginMutation();
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
+  const { login } = useAuth();
 
   const methods = useForm({
     resolver: yupResolver(loginSchema),

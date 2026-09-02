@@ -44,7 +44,9 @@ export const ACTIVE_APPOINTMENT_STATUSES = [
   "delayed",
 ] as const satisfies readonly AppointmentStatus[];
 
-const ACTIVE_STATUS_SET = new Set<AppointmentStatus>(ACTIVE_APPOINTMENT_STATUSES);
+const ACTIVE_STATUS_SET = new Set<AppointmentStatus>(
+  ACTIVE_APPOINTMENT_STATUSES,
+);
 
 export const isActiveAppointmentStatus = (status: AppointmentStatus): boolean =>
   ACTIVE_STATUS_SET.has(status);

@@ -21,12 +21,12 @@ import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import EyeToggle from "@/src/components/shared/EyeToggle";
 
 const ChangePassword = () => {
-  const auth = useRequiredAuth();
-  const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
-
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const auth = useRequiredAuth();
+  const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
 
   const methods = useForm<ChangePasswordFormValues>({
     resolver: yupResolver(changePasswordSchema),

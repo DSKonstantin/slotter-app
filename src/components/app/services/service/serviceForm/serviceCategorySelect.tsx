@@ -44,7 +44,6 @@ const CategoriesSkeleton = () => (
 );
 
 const ServiceCategorySelect = () => {
-  const auth = useRequiredAuth();
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
   const categoriesListRef =
@@ -52,6 +51,8 @@ const ServiceCategorySelect = () => {
   const scrollFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+
+  const auth = useRequiredAuth();
   const { control } = useFormContext();
   const {
     field: { value: selectedCategoryId, onChange: onCategoryChange },

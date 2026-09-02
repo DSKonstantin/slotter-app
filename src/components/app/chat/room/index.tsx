@@ -119,9 +119,23 @@ export default function ChatRoom({ roomId }: Props) {
   messagesRef.current = messages;
 
   const [createMessage] = useCreateChatMessageMutation();
+  const [createAppointment] = useCreateAppointmentMutation();
+  const [cancelAppointment] = useCancelAppointmentMutation();
+  const [customerAcceptAppointment] = useCustomerAcceptAppointmentMutation();
+
   const retryPayloadsRef = useRef<
     Map<string, Parameters<typeof createMessage>[0]>
   >(new Map());
+
+  const userName = useMemo(
+    () =>
+      currentUser
+        ? [currentUser.first_name, currentUser.last_name]
+            .filter(Boolean)
+            .join(" ") || String(currentUser.id)
+        : "",
+    [currentUser],
+  );
 
   const sendMessage = useCallback(
     (arg: Parameters<typeof createMessage>[0]) => {
@@ -138,20 +152,6 @@ export default function ChatRoom({ roomId }: Props) {
       sendMessage(arg);
     },
     [sendMessage],
-  );
-
-  const [createAppointment] = useCreateAppointmentMutation();
-  const [cancelAppointment] = useCancelAppointmentMutation();
-  const [customerAcceptAppointment] = useCustomerAcceptAppointmentMutation();
-
-  const userName = useMemo(
-    () =>
-      currentUser
-        ? [currentUser.first_name, currentUser.last_name]
-            .filter(Boolean)
-            .join(" ") || String(currentUser.id)
-        : "",
-    [currentUser],
   );
 
   const handleOpenInterlocutor = useCallback(() => {
