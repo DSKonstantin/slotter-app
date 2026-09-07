@@ -33,6 +33,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
   const dispatch = useDispatch();
   const { isAuthenticated, isOnboardingComplete } = useAppSelector(
     (s) => ({
@@ -43,8 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [getMe] = useLazyGetMeQuery();
   const [logoutSession] = useLogoutSessionMutation();
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
 
   const login = useCallback(
     async (newToken: string) => {
@@ -101,11 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     runBootstrap();
   }, [runBootstrap]);
 
-  useEffect(() => {
-    runBootstrap();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const value = useMemo(
     () => ({
       isAuthenticated,
@@ -126,6 +122,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       retry,
     ],
   );
+
+  useEffect(() => {
+    runBootstrap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

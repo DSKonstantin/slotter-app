@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { FlatList, View } from "react-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import ContentLoader, { Rect } from "react-content-loader/native";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -76,14 +76,26 @@ const CreateAdditionalService = () => {
     name: "additionalServices",
   });
 
-  const { data, isLoading, isError, refetch } =
-    useGetAdditionalServicesInfiniteQuery(
-      auth ? { userId: auth.userId } : skipToken,
-    );
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetAdditionalServicesInfiniteQuery(
+    auth ? { userId: auth.userId } : skipToken,
+  );
 
   const additionalServicesFromApi = useMemo(() => {
     return data?.pages.flatMap((page) => page.additional_services) ?? [];
   }, [data]);
+
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleToggle = (service: AdditionalService) => {
     const existingIndex = fields.findIndex(
@@ -127,6 +139,15 @@ const CreateAdditionalService = () => {
             data={additionalServicesFromApi}
             keyExtractor={(service) => String(service.id)}
             showsHorizontalScrollIndicator={false}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View className="justify-center px-3">
+                  <ActivityIndicator color={colors.neutral[400]} />
+                </View>
+              ) : null
+            }
             contentContainerStyle={{
               paddingHorizontal: SCREEN_PADDING,
               gap: 8,

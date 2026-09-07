@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { Platform, RefreshControl, ScrollView, View } from "react-native";
@@ -17,6 +17,7 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { generateMonthRange } from "@/src/utils/date/generateMonthRange";
 import { formatApiDate, subMonths } from "@/src/utils/date/formatDate";
 import { safeRefetch } from "@/src/utils/safeRefetch";
+import { useToday } from "@/src/hooks/useToday";
 import {
   INCOME_GROUP_OPTIONS,
   MONTH_NAMES_SHORT,
@@ -28,28 +29,37 @@ import IncomeBreakdownServices from "./IncomeBreakdownServices";
 import IncomeBreakdownClients from "./IncomeBreakdownClients";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 
-const today = new Date();
+const PERIOD_DEFS = [
+  { label: "3 месяца", value: "3m" },
+  { label: "6 месяцев", value: "6m" },
+  { label: "За год", value: "1y" },
+] as const;
 
-const PERIODS = [
-  {
-    label: "3 месяца",
-    value: "3m",
-    date_from: formatApiDate(subMonths(today, 3)),
-    date_to: formatApiDate(today),
-  },
-  {
-    label: "6 месяцев",
-    value: "6m",
-    date_from: formatApiDate(subMonths(today, 6)),
-    date_to: formatApiDate(today),
-  },
-  {
-    label: "За год",
-    value: "1y",
-    date_from: formatApiDate(new Date(today.getFullYear(), 0, 1)),
-    date_to: formatApiDate(today),
-  },
-];
+type Period = (typeof PERIOD_DEFS)[number] & {
+  date_from: string;
+  date_to: string;
+};
+
+const buildPeriods = (today: Date): Period[] => {
+  const dateTo = formatApiDate(today);
+  return [
+    {
+      ...PERIOD_DEFS[0],
+      date_from: formatApiDate(subMonths(today, 3)),
+      date_to: dateTo,
+    },
+    {
+      ...PERIOD_DEFS[1],
+      date_from: formatApiDate(subMonths(today, 6)),
+      date_to: dateTo,
+    },
+    {
+      ...PERIOD_DEFS[2],
+      date_from: formatApiDate(new Date(today.getFullYear(), 0, 1)),
+      date_to: dateTo,
+    },
+  ];
+};
 
 const formatPeriodLabel = (period: string) => {
   const monthIndex = parseInt(period.split("-")[1], 10) - 1;
@@ -58,8 +68,17 @@ const formatPeriodLabel = (period: string) => {
 
 const FinancesIncomeScreen = () => {
   const [groupBy, setGroupBy] = useState(INCOME_GROUP_OPTIONS[0].value);
-  const [selectedPeriod, setSelectedPeriod] = useState(PERIODS[0]);
+  const [selectedValue, setSelectedValue] = useState<string>(
+    PERIOD_DEFS[0].value,
+  );
   const auth = useRequiredAuth();
+
+  const today = useToday();
+  const periods = useMemo(() => buildPeriods(today), [today]);
+  const selectedPeriod = useMemo(
+    () => periods.find((p) => p.value === selectedValue) ?? periods[0],
+    [periods, selectedValue],
+  );
 
   const {
     data,
@@ -153,12 +172,8 @@ const FinancesIncomeScreen = () => {
             <TrendChartCard
               title="График доходов по месяцам"
               data={chartData.length > 0 ? chartData : undefined}
-              periods={PERIODS}
-              onPeriodChange={(p) =>
-                setSelectedPeriod(
-                  PERIODS.find((pr) => pr.value === p.value) ?? PERIODS[0],
-                )
-              }
+              periods={periods}
+              onPeriodChange={(p) => setSelectedValue(p.value)}
             />
 
             <Card

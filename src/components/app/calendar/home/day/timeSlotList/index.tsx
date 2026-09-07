@@ -24,6 +24,7 @@ import { isHiddenCustomer } from "@/src/utils/customer";
 import TimeLabels from "./TimeLabels";
 import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
 import { parseTime, formatTime } from "./utils";
+import { parseEndOfDayMinutes } from "@/src/utils/date/formatTime";
 import { Routers } from "@/src/constants/routers";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import {
@@ -37,7 +38,9 @@ import {
   slotOccupiesTime,
 } from "./segmentBuilder";
 import CurrentTimeIndicator from "@/src/components/app/calendar/home/day/timeSlotList/CurrentTimeIndicator";
-import { isCurrentDay } from "@/src/utils/date/formatDate";
+import { formatApiDate } from "@/src/utils/date/formatDate";
+import { useNow } from "@/src/hooks/useNow";
+import { useToday } from "@/src/hooks/useToday";
 
 type TimeSlotListProps = {
   appointments: Appointment[];
@@ -88,10 +91,8 @@ const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
   effectiveStart,
   timelineEnd,
 }: AutoCurrentTimeIndicatorProps) {
-  const [currentMinutes, setCurrentMinutes] = useState(() => {
-    const d = new Date();
-    return d.getHours() * 60 + d.getMinutes();
-  });
+  const now = useNow();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   const nowOffset = useMemo(() => {
     if (currentMinutes < effectiveStart) return 0;
@@ -99,27 +100,6 @@ const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
       return segments.reduce((acc, seg) => acc + getSegmentHeight(seg), 0);
     return computeNowOffset(segments, currentMinutes);
   }, [segments, currentMinutes, effectiveStart, timelineEnd]);
-
-  useEffect(() => {
-    const tick = () => {
-      const d = new Date();
-      setCurrentMinutes(d.getHours() * 60 + d.getMinutes());
-    };
-
-    const now = new Date();
-    const msToNext = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-
-    let interval: ReturnType<typeof setInterval>;
-    const timeout = setTimeout(() => {
-      tick();
-      interval = setInterval(tick, 60_000);
-    }, msToNext);
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-    };
-  }, []);
 
   return (
     <CurrentTimeIndicator top={nowOffset} time={formatTime(currentMinutes)} />
@@ -137,7 +117,8 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   isActive,
   onHighlightScroll,
 }) => {
-  const isToday = isCurrentDay(date);
+  const today = useToday();
+  const isToday = date === formatApiDate(today);
   const [expandedSlotId, setExpandedSlotId] = useState<number | null>(null);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
   const [freeSlotRange, setFreeSlotRange] = useState<FreeSlotRange | null>(
@@ -172,10 +153,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
         .map((a) => `${a.id}-${a.start_time}-${a.end_time}`)
         .join("|"),
       visibleStatuses.join("|"),
+      highlightSlotId,
     ]);
-  }, [date, startAt, endAt, appointments, visibleStatuses]);
+  }, [date, startAt, endAt, appointments, visibleStatuses, highlightSlotId]);
 
-  const timelineEnd = parseTime(endAt ?? "23:59");
+  const timelineEnd = parseEndOfDayMinutes(endAt ?? "23:59");
 
   const nowOffset = useMemo(
     () => computeNowOffset(segments, currentMinutes),

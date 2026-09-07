@@ -9,12 +9,12 @@ import { useCalendarForm } from "./useCalendarForm";
 import { useCalendarActions } from "./useCalendarActions";
 
 export const useCalendarSchedule = (current: Date) => {
+  const [modalTemplate, setModalTemplate] = useState(false);
+
   const dispatch = useAppDispatch();
   const intent = useAppSelector((state) => state.calendar.scheduleIntent);
   const { initialValues: templateValues, isLoaded: isTemplateLoaded } =
     useScheduleTemplate();
-
-  const [modalTemplate, setModalTemplate] = useState(false);
 
   const {
     auth,

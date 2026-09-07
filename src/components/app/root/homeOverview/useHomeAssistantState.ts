@@ -6,16 +6,24 @@ import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAssistantScheduleRange } from "@/src/hooks/useAssistantScheduleRange";
+import { useNow } from "@/src/hooks/useNow";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import {
   useGetAppointmentsQuery,
   useGetUpcomingAppointmentsQuery,
 } from "@/src/store/redux/services/api/appointmentsApi";
-import { parseTime } from "@/src/utils/date/formatTime";
+import { parseEndOfDayMinutes, parseTime } from "@/src/utils/date/formatTime";
 import type {
   Appointment,
   UpcomingAppointment,
+  AppointmentStatus,
 } from "@/src/store/redux/services/api-types";
+
+const TERMINAL_STATUSES: AppointmentStatus[] = [
+  "completed",
+  "missed",
+  "cancelled",
+];
 
 export type AssistantState =
   | { kind: "loading" }
@@ -45,7 +53,7 @@ export const useHomeAssistantState = (): Result => {
   }>();
 
   const { today, rangeEnd } = useAssistantScheduleRange();
-  const now = new Date();
+  const now = useNow();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const {
@@ -126,7 +134,7 @@ export const useHomeAssistantState = (): Result => {
     }
     if (!todayWd.is_active) return { kind: "day_off" };
 
-    const endMinutes = parseTime(todayWd.end_at);
+    const endMinutes = parseEndOfDayMinutes(todayWd.end_at);
 
     if (endMinutes > 0 && nowMinutes >= endMinutes)
       return { kind: "completed" };
@@ -149,8 +157,10 @@ export const useHomeAssistantState = (): Result => {
 
     const current =
       sorted.find((a) => {
+        if (TERMINAL_STATUSES.includes(a.status)) return false;
         const start = parseTime(a.start_time);
-        return nowMinutes >= start && nowMinutes < start + a.duration;
+        const end = parseTime(a.end_time) || start + a.duration;
+        return nowMinutes >= start && nowMinutes < end;
       }) ?? null;
 
     const upcomingToday = (upcomingData?.appointments ?? []).filter(

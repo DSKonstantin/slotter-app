@@ -13,12 +13,13 @@ type Props = {
 };
 
 const ZoomableImage = ({ uri }: Props) => {
-  const { width, height } = useWindowDimensions();
   const [resolution, setResolution] = useState<{
     width: number;
     height: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const { width, height } = useWindowDimensions();
 
   const size = resolution
     ? fitContainer(resolution.width / resolution.height, { width, height })

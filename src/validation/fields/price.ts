@@ -3,7 +3,8 @@ import * as Yup from "yup";
 export const priceField = Yup.string()
   .required("Введите цену")
   .test("is-non-negative-number", "Введите корректную цену", (value) => {
-    if (!value) return false;
-    const num = Number(value);
-    return !isNaN(num) && num >= 0;
+    const trimmed = value?.trim() ?? "";
+    if (!trimmed) return false;
+    const num = Number(trimmed);
+    return Number.isFinite(num) && num >= 0;
   });

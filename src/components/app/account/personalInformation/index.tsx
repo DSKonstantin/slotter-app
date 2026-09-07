@@ -44,11 +44,11 @@ type FormValues = {
 };
 
 const PersonalInformation = () => {
-  const auth = useRequiredAuth();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
   const [avatarRemoved, setAvatarRemoved] = useState(false);
 
+  const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
   const [updateUser, { isLoading }] = useUpdateUserMutation();

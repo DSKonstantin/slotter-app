@@ -12,13 +12,12 @@ import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import useMonthCalendarData from "@/src/hooks/useMonthCalendarData";
 
 const MonthCalendarView = ({ bottomInset }: { bottomInset: number }) => {
-  const routerInstance = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [pendingMonth, setPendingMonth] = useState<Date | null>(null);
-  const auth = useRequiredAuth();
 
+  const routerInstance = useRouter();
+  const auth = useRequiredAuth();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
-  const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
   const [currentMonth, setCurrentMonth] = useState(() =>
     startOfMonth(parseISO(selectedDay)),
@@ -34,6 +33,8 @@ const MonthCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     refreshing,
     handleRefresh,
   } = useMonthCalendarData({ auth, fetchMonth, currentMonth });
+
+  const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 
   const handleSelectDate = useCallback(
     (date: Date) => {

@@ -34,6 +34,8 @@ const showSystemSettingsAlert = (title: string, openSettings: () => void) => {
 };
 
 const AccountNotifications = () => {
+  const appState = useRef(AppState.currentState);
+
   const auth = useRequiredAuth();
   const {
     isGranted,
@@ -64,8 +66,6 @@ const AccountNotifications = () => {
     },
     [auth, updateSettings],
   );
-
-  const appState = useRef(AppState.currentState);
 
   const handleTogglePush = async (value: boolean) => {
     if (!value) {

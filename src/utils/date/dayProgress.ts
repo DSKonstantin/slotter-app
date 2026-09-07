@@ -1,4 +1,4 @@
-import { parseTime } from "@/src/utils/date/formatTime";
+import { parseEndOfDayMinutes, parseTime } from "@/src/utils/date/formatTime";
 import type {
   Appointment,
   WorkingDay,
@@ -12,7 +12,7 @@ export const calculateDayProgress = (
   if (!workingDay || appointments.length === 0) return undefined;
 
   const wdStart = parseTime(workingDay.start_at);
-  const wdEnd = parseTime(workingDay.end_at);
+  const wdEnd = parseEndOfDayMinutes(workingDay.end_at);
   const availableMinutes =
     wdEnd -
     wdStart -
@@ -25,7 +25,7 @@ export const calculateDayProgress = (
 
   const bookedMinutes = appointments.reduce((sum, a) => {
     const apptStart = parseTime(a.start_time);
-    const apptEnd = parseTime(a.end_time);
+    const apptEnd = parseEndOfDayMinutes(a.end_time);
     const overlapStart = Math.max(apptStart, wdStart);
     const overlapEnd = Math.min(apptEnd, wdEnd);
     return sum + Math.max(0, overlapEnd - overlapStart);

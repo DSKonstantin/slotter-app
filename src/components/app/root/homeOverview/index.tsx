@@ -2,17 +2,20 @@ import React, { useCallback, useState } from "react";
 import { Pressable, View } from "react-native";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { formatShortDayName } from "@/src/utils/date/formatDate";
+import { formatApiDate, formatShortDayName } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { useTodaySchedule } from "@/src/hooks/useTodaySchedule";
+import { useToday } from "@/src/hooks/useToday";
 import SpecialistHomeAssistant from "@/src/components/app/root/homeOverview/specialistHomeAssistant";
-
-const today = new Date();
-const dateChip = `Сегодня • ${formatShortDayName(today)} • ${formatDayMonth(today.toISOString())}`;
 
 const HomeOverview = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const { isTodayDayOff, isReady } = useTodaySchedule();
+
+  const today = useToday();
+  const dateChip = `Сегодня • ${formatShortDayName(today)} • ${formatDayMonth(
+    formatApiDate(today),
+  )}`;
 
   const toggle = useCallback(() => setIsExpanded((v) => !v), []);
 

@@ -15,16 +15,23 @@ import {
 
 export type { DayScheduleFormValues };
 
-export const DayScheduleForm = () => {
+type DayScheduleFormProps = {
+  lockScheduleWhenInactive?: boolean;
+};
+
+export const DayScheduleForm = ({
+  lockScheduleWhenInactive = true,
+}: DayScheduleFormProps) => {
   const { control } = useFormContext<DayScheduleFormValues>();
   const isActive = useWatch({ control, name: "isActive" });
+  const locked = lockScheduleWhenInactive && !isActive;
 
   return (
     <>
       <Item title="Рабочий день" right={<RHFSwitch name="isActive" />} />
       <View
-        pointerEvents={!isActive ? "none" : "auto"}
-        className={`mt-5 ${!isActive ? "opacity-40" : "opacity-100"}`}
+        pointerEvents={locked ? "none" : "auto"}
+        className={`mt-5 ${locked ? "opacity-40" : "opacity-100"}`}
       >
         <RhfTextField name="date" label="Дата" disabled={true} />
 

@@ -85,7 +85,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                   paddingBottom: bottomInset + 82,
                 }}
               >
-                <DayScheduleForm />
+                <DayScheduleForm lockScheduleWhenInactive={false} />
               </ScrollView>
             </SafeAreaView>
             <FloatingFooter offset={bottomInset + 8}>

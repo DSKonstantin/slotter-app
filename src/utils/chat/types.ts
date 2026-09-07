@@ -9,4 +9,5 @@ export type ChatIMessage = IMessage & {
   images?: ChatMessageImage[];
   widget?: ChatWidget | null;
   reply_to?: ChatIMessage | null;
+  failed?: boolean;
 };

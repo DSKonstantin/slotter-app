@@ -55,8 +55,9 @@ type ConsentRowProps = {
 };
 
 function ConsentRow({ consent, fileName, userId }: ConsentRowProps) {
-  const token = useAppSelector((s) => s.auth.token);
   const [downloading, setDownloading] = useState(false);
+
+  const token = useAppSelector((s) => s.auth.token);
 
   const isOutdated = !consent.is_current && !consent.revoked_at;
   const isRevoked = !!consent.revoked_at;

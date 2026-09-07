@@ -6,9 +6,9 @@ import { safeRefetch } from "@/src/utils/safeRefetch";
 export function useRefetchOnForeground(refetch: () => unknown) {
   const refetchRef = useRef(refetch);
   refetchRef.current = refetch;
+  const appState = useRef(AppState.currentState);
 
   const navigation = useNavigation();
-  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     const subscription = AppState.addEventListener(

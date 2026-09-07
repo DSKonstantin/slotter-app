@@ -5,11 +5,12 @@ import { Autocomplete } from "@/src/components/ui/fields/Autocomplete";
 import { useDaDataSuggestions } from "@/src/hooks/useDaDataSuggestions";
 
 export function AddressField() {
+  const [query, setQuery] = useState("");
+  const justSelected = useRef(false);
+
   const { control } = useFormContext();
   const hideAddress = useWatch({ name: "hideAddress" });
-  const [query, setQuery] = useState("");
   const { suggestions, isLoading } = useDaDataSuggestions(query);
-  const justSelected = useRef(false);
 
   return (
     <View className="gap-2">

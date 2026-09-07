@@ -4,7 +4,11 @@ import { endOfMonth, parseISO, startOfMonth } from "date-fns";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
-import { formatMinutes, parseTime } from "@/src/utils/date/formatTime";
+import {
+  formatMinutes,
+  parseEndOfDayMinutes,
+  parseTime,
+} from "@/src/utils/date/formatTime";
 import { buildMinuteOptions } from "@/src/utils/date/timeOptions";
 import { TimeWheelField } from "@/src/components/ui/fields/TimeWheelField";
 
@@ -63,7 +67,7 @@ export function RhfWorkingDayTimePickerField({
     ? parseTime(workingDay.start_at)
     : undefined;
   const endMinutes = workingDay?.is_active
-    ? parseTime(workingDay.end_at)
+    ? parseEndOfDayMinutes(workingDay.end_at)
     : undefined;
 
   const breaks = useMemo(() => {
@@ -81,7 +85,7 @@ export function RhfWorkingDayTimePickerField({
       .filter((a) => a.status !== "cancelled")
       .map((a) => ({
         startMinutes: parseTime(a.start_time),
-        endMinutes: parseTime(a.end_time),
+        endMinutes: parseEndOfDayMinutes(a.end_time),
       }));
 
     if (!duration || occupiedRanges.length === 0) {

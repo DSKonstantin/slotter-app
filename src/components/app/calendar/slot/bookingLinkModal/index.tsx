@@ -36,15 +36,19 @@ const CHANNEL_OPTIONS = [
 ];
 
 const BookingLinkModal = ({ visible, bookingUrl, onClose }: Props) => {
-  const auth = useRequiredAuth();
   const [channel, setChannel] = useState("slotter");
+
+  const auth = useRequiredAuth();
 
   const methods = useForm<FormValues>({
     defaultValues: { customerId: 0, message: "" },
   });
 
-  const [createChatRoom] = useCreateChatRoomMutation();
-  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  const [createChatRoom, { isLoading: isCreatingRoom }] =
+    useCreateChatRoomMutation();
+  const [sendMessage, { isLoading: isSendingMessage }] =
+    useSendMessageMutation();
+  const isSending = isCreatingRoom || isSendingMessage;
 
   const fullBookingUrl = useMemo(
     () => `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${bookingUrl}`,

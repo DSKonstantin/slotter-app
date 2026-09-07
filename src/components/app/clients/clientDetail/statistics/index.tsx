@@ -59,6 +59,7 @@ const ClientStatistics = ({ customerId }: Props) => {
     auth
       ? { userId: auth.userId, id: customerId, params: { period } }
       : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   const { refreshing, onRefresh } = useRefresh(refetch);

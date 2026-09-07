@@ -13,6 +13,11 @@ import { suggestNicknames } from "@/src/utils/text/suggestNickname";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 export function NicknameField() {
+  const [focused, setFocused] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  const suggestionSelectedRef = useRef(false);
+
   const {
     control,
     watch,
@@ -25,12 +30,8 @@ export function NicknameField() {
     { data, isFetching, isError, error: queryError, reset },
   ] = useLazyCheckNicknameQuery();
 
-  const [focused, setFocused] = useState(false);
-  const [pending, setPending] = useState(false);
-
   const checkNicknameRef = useRef(checkNickname);
   checkNicknameRef.current = checkNickname;
-  const suggestionSelectedRef = useRef(false);
 
   const debouncedCheck = useMemo(
     () => debounce((val: string) => checkNicknameRef.current(val), 400),

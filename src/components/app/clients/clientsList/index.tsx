@@ -105,18 +105,19 @@ type ClientsContentProps = {
 };
 
 const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
+  const [comingSoonVisible, setComingSoonVisible] = useState(false);
+  const savedTagIdRef = useRef<number | undefined>(undefined);
+
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
 
   const search = useAppSelector(selectClientsSearch);
   const tagId = useAppSelector(selectClientsTagId);
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [comingSoonVisible, setComingSoonVisible] = useState(false);
 
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const debouncedSetSearch = useRef(
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
   ).current;
-  const savedTagIdRef = useRef<number | undefined>(undefined);
 
   const {
     data: tagsData,

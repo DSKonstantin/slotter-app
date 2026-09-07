@@ -16,6 +16,10 @@ export const useScheduleTemplate = () => {
     useState<ScheduleTemplateFormValues>(defaultValues);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const save = useCallback(async (values: ScheduleTemplateFormValues) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+  }, []);
+
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
       if (raw) {
@@ -25,10 +29,6 @@ export const useScheduleTemplate = () => {
       }
       setIsLoaded(true);
     });
-  }, []);
-
-  const save = useCallback(async (values: ScheduleTemplateFormValues) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(values));
   }, []);
 
   return { initialValues, save, isLoaded };

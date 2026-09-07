@@ -143,9 +143,10 @@ const DIRECT_CHANNEL_UI_CONFIG: Record<
 const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
 
 const ClientNotifications = () => {
-  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
+
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
 
@@ -170,14 +171,7 @@ const ClientNotifications = () => {
     auth && ispe ? { userId: auth.userId } : skipToken,
   );
 
-  const isDirectLoading = isDirectPlansLoading || isDirectChannelsLoading;
-  const isDirectError = isDirectPlansError || isDirectChannelsError;
-  const isDirectFetching = isDirectPlansFetching || isDirectChannelsFetching;
-
-  const handleRetryDirect = useCallback(() => {
-    refetchDirectPlans();
-    refetchDirectChannels();
-  }, [refetchDirectPlans, refetchDirectChannels]);
+  useRefetchOnForeground(refetchDirectChannels);
 
   const periodRange = useMemo(
     () => getPeriodRange(activePeriod),
@@ -194,23 +188,9 @@ const ClientNotifications = () => {
     { refetchOnMountOrArgChange: true },
   );
 
-  const refetchAll = useCallback(async () => {
-    await Promise.all([
-      safeRefetch(refetchSettings),
-      safeRefetch(refetchStats),
-      safeRefetch(refetchDirectPlans),
-      safeRefetch(refetchDirectChannels),
-    ]);
-  }, [
-    refetchSettings,
-    refetchStats,
-    refetchDirectPlans,
-    refetchDirectChannels,
-  ]);
-
-  const { refreshing, onRefresh } = useRefresh(refetchAll);
-
-  useRefetchOnForeground(refetchDirectChannels);
+  const isDirectLoading = isDirectPlansLoading || isDirectChannelsLoading;
+  const isDirectError = isDirectPlansError || isDirectChannelsError;
+  const isDirectFetching = isDirectPlansFetching || isDirectChannelsFetching;
 
   const notificationSettingsSummary = useMemo(() => {
     const all = asArray(settingsData?.customer).flatMap((group) =>
@@ -259,6 +239,27 @@ const ClientNotifications = () => {
       },
     ];
   }, [statsData]);
+
+  const handleRetryDirect = useCallback(() => {
+    refetchDirectPlans();
+    refetchDirectChannels();
+  }, [refetchDirectPlans, refetchDirectChannels]);
+
+  const refetchAll = useCallback(async () => {
+    await Promise.all([
+      safeRefetch(refetchSettings),
+      safeRefetch(refetchStats),
+      safeRefetch(refetchDirectPlans),
+      safeRefetch(refetchDirectChannels),
+    ]);
+  }, [
+    refetchSettings,
+    refetchStats,
+    refetchDirectPlans,
+    refetchDirectChannels,
+  ]);
+
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   const handleBotPress = (url: string) => {
     Alert.alert("Отправьте клиенту ссылку бот", url, [
