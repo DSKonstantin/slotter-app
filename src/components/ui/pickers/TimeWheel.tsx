@@ -13,17 +13,6 @@ const SELECTED_TOP = (PICKER_HEIGHT - ITEM_HEIGHT) / 2;
 const FADE_HEIGHT = ITEM_HEIGHT * 2;
 const FADE_COLOR = colors.background.DEFAULT;
 
-// Odd multiplier: duplicates each option list this many times so scrolling
-// in either direction feels endless. Split per column because the underlying
-// wheel-picker library scales several things off the *size* of this looped
-// array (its snapToOffsets list, the initial-scroll-index jump distance, and
-// a linear findIndex it runs to resolve the current index) — so it's not
-// just a memory/useMemo knob. What actually needs covering is a physical
-// row-buffer (how many rows a hard fling can cross), which is independent of
-// how many distinct values a column has — so the *shorter* list (hours, up
-// to 24 values) needs proportionally more loops than the *longer* one
-// (minutes, up to 60) to cover the same buffer, while still ending up with a
-// smaller total array (the actual cost driver) than one shared count would.
 const HOUR_LOOP_REPEAT_COUNT = 15;
 const MINUTE_LOOP_REPEAT_COUNT = 7;
 
@@ -86,9 +75,6 @@ type TimeWheelProps = {
   options: number[];
   value?: number;
   onChange: (minutes: number) => void;
-  /** Loops both columns endlessly. Only correct when the minute list is the
-   * same for every hour (i.e. an unconstrained, full-day range) — do not
-   * pass this for schedule-constrained pickers. */
   loop?: boolean;
 };
 
@@ -101,9 +87,6 @@ export const TimeWheel = memo(function TimeWheel({
   const { width: screenWidth } = useWindowDimensions();
   const pickerWidth = Math.min(320, screenWidth - 64);
 
-  // Single O(n) pass over `options` builds both the hour list and the
-  // per-hour minute lists together, instead of computing hourOptions and
-  // then re-scanning the full `options` array once per hour (O(n*h)).
   const { hourOptions, minuteOptionsByHour } = useMemo(() => {
     const byHour: Record<number, WheelOption[]> = {};
     const hours: WheelOption[] = [];
@@ -129,9 +112,6 @@ export const TimeWheel = memo(function TimeWheel({
     [minuteOptionsByHour, selectedHour],
   );
 
-  // In loop mode the minute list is guaranteed identical for every hour (see
-  // the `loop` doc comment above), so the looped data only needs to be
-  // rebuilt when the option set itself changes — not on every hour scroll.
   const canonicalMinuteOptions = useMemo(() => {
     if (!loop || hourOptions.length === 0) return [];
     return minuteOptionsByHour[hourOptions[0].value] ?? [];

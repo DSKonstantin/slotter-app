@@ -31,6 +31,7 @@ const AppCreateService = ({ categoryId }: AppCreateServiceProps) => {
       description: "",
       isAvailableOnline: true,
       isActive: true,
+      breakAfter: 0,
       additionalServices: [],
       photos: defaultServicePhotos,
     },

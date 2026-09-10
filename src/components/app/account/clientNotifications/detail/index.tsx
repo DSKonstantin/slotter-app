@@ -1,12 +1,14 @@
 import React, { useCallback } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import RetryInline from "@/src/components/shared/retryInline";
 import { colors } from "@/src/styles/colors";
-import { Divider, Item, Switch, Typography } from "@/src/components/ui";
+import { Routers } from "@/src/constants/routers";
+import { Divider, Item, StSvg, Switch, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import {
   useGetNotificationSettingsQuery,
@@ -28,15 +30,18 @@ const CONFIG: Record<
   {
     toggleLabel: string;
     onlineTimeValue: string;
+    templatePreview: string;
   }
 > = {
   reminder: {
     toggleLabel: "Уведомление напоминания",
     onlineTimeValue: "За 2 часа, За день",
+    templatePreview: "Анна, напоминаем о записи …",
   },
   reschedule: {
     toggleLabel: "Уведомление переноса",
     onlineTimeValue: "За 2 часа, За день",
+    templatePreview: "Анна, запись перенесена на …",
   },
 };
 
@@ -100,6 +105,36 @@ const NotificationDetailScreen = ({ kind }: Props) => {
                 right={<Switch value={enabled} onChange={handleToggle} />}
               />
             )}
+          </View>
+
+          <Typography className="text-caption text-neutral-500 mb-2">
+            Текст уведомления
+          </Typography>
+
+          <View className="bg-background-surface rounded-base overflow-hidden mb-5">
+            <Pressable
+              onPress={() =>
+                router.push(
+                  Routers.app.account.clientNotifications.template(kind),
+                )
+              }
+              className="flex-row items-center p-4 active:opacity-70"
+            >
+              <View className="flex-1">
+                <Typography className="text-body">Шаблон сообщения</Typography>
+                <Typography
+                  weight="regular"
+                  className="text-caption text-neutral-500 mt-1"
+                >
+                  {config.templatePreview}
+                </Typography>
+              </View>
+              <StSvg
+                name="Expand_right_light"
+                size={24}
+                color={colors.neutral[300]}
+              />
+            </Pressable>
           </View>
 
           <Typography className="text-caption text-neutral-500 mb-2">

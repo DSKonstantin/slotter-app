@@ -126,6 +126,13 @@ export const Routers = {
       root: "/(app)/(tabs)/clients",
       create: "/(app)/(tabs)/clients/create" as const,
       statistics: "/(app)/(tabs)/clients/statistics" as const,
+      broadcast: "/(app)/(tabs)/clients/broadcast" as const,
+      broadcastCreate: "/(app)/(tabs)/clients/broadcast/create" as const,
+      broadcastEdit: (id: string | number) =>
+        ({
+          pathname: "/(app)/(tabs)/clients/broadcast/[id]",
+          params: { id: String(id) },
+        }) as const,
     },
 
     schedule: {
@@ -191,14 +198,16 @@ export const Routers = {
       },
       gallery: "/(app)/(tabs)/account/gallery" as const,
       clientNotifications: {
-        root: "/(app)/(tabs)/account/client-notifications" as const,
-        statistics:
-          "/(app)/(tabs)/account/client-notifications/statistics" as const,
-        types: "/(app)/(tabs)/account/client-notifications/types" as const,
-        reminder:
-          "/(app)/(tabs)/account/client-notifications/reminder" as const,
-        reschedule:
-          "/(app)/(tabs)/account/client-notifications/reschedule" as const,
+        root: "/(app)/client-notifications" as const,
+        statistics: "/(app)/client-notifications/statistics" as const,
+        types: "/(app)/client-notifications/types" as const,
+        reminder: "/(app)/client-notifications/reminder" as const,
+        reschedule: "/(app)/client-notifications/reschedule" as const,
+        template: (kind: string) =>
+          ({
+            pathname: "/(app)/client-notifications/template/[kind]",
+            params: { kind },
+          }) as const,
       },
       support: "/(app)/(tabs)/account/support" as const,
     },

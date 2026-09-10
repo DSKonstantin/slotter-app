@@ -11,7 +11,6 @@ export default function AccountLayout() {
       <Stack.Screen name="notifications" />
       <Stack.Screen name="security" />
       <Stack.Screen name="gallery" />
-      <Stack.Screen name="client-notifications" />
       <Stack.Screen name="support" />
     </Stack>
   );

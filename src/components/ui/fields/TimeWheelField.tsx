@@ -16,9 +16,11 @@ type TimeWheelFieldProps = {
 
   label?: string;
   placeholder?: string;
+  title?: string;
   error?: FieldError;
   disabled?: boolean;
   hideErrorText?: boolean;
+  fieldClassName?: string;
   isLoading?: boolean;
   loop?: boolean;
   /** Text shown instead of the placeholder when `options` is empty (e.g.
@@ -41,9 +43,11 @@ export const TimeWheelField = ({
   defaultValue,
   label,
   placeholder = "чч:мм",
+  title = "Выберите время",
   error,
   disabled,
   hideErrorText,
+  fieldClassName,
   isLoading = false,
   loop = false,
   emptyMessage,
@@ -58,6 +62,12 @@ export const TimeWheelField = ({
   const noOptions = !isLoading && options.length === 0;
   const fieldDisabled = disabled || isLoading || noOptions;
 
+  const handleOpen = () => {
+    if (fieldDisabled) return;
+    setOpen(true);
+    onOpen?.();
+  };
+
   return (
     <View>
       <BaseField
@@ -66,7 +76,9 @@ export const TimeWheelField = ({
         error={error}
         hideErrorText={hideErrorText}
         disabled={fieldDisabled}
+        className={fieldClassName}
         startAdornment={startAdornment}
+        onEndAdornmentPress={fieldDisabled ? undefined : handleOpen}
         endAdornment={
           endAdornment !== undefined ? (
             endAdornment
@@ -80,12 +92,7 @@ export const TimeWheelField = ({
           <Pressable
             className="flex-1 justify-center"
             disabled={fieldDisabled}
-            onPress={() => {
-              if (!fieldDisabled) {
-                setOpen(true);
-                onOpen?.();
-              }
-            }}
+            onPress={handleOpen}
           >
             <Text
               className="font-inter-regular text-[16px] px-4"
@@ -110,7 +117,7 @@ export const TimeWheelField = ({
         options={options}
         value={value}
         defaultValue={defaultValue}
-        title="Выберите время"
+        title={title}
         isLoading={isLoading}
         loop={loop}
         onConfirm={(minutes) => {

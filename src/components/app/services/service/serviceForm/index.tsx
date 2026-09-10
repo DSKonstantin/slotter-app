@@ -22,6 +22,7 @@ import {
 } from "@/src/components/shared/imagePicker/serviceImagesPicker";
 import { colors } from "@/src/styles/colors";
 import ServiceCategorySelect from "@/src/components/app/services/service/serviceForm/serviceCategorySelect";
+import BreakAfterField from "@/src/components/app/services/service/serviceForm/BreakAfterField";
 import CreateAdditionalService from "@/src/components/app/services/service/createAdditionalService";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
@@ -166,6 +167,10 @@ const ServiceFormBody = ({
           </View>
           <Button title="Понятно" onPress={() => setInfoVisible(false)} />
         </StModal>
+
+        <View className="mt-3">
+          <BreakAfterField />
+        </View>
       </View>
 
       <CreateAdditionalService />

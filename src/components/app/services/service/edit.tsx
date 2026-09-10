@@ -65,6 +65,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       description: "",
       isAvailableOnline: false,
       isActive: true,
+      breakAfter: 0,
       additionalServices: [],
       photos: defaultServicePhotos,
     },
@@ -143,6 +144,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       description: service.description ?? "",
       isAvailableOnline: service.is_available_online ?? false,
       isActive: service.is_active ?? true,
+      breakAfter: 0,
       additionalServices: (service.additional_services ?? []).map(
         (additionalService) => ({
           serviceId: additionalService.id,

@@ -10,7 +10,9 @@ type RhfTimeWheelFieldProps = {
 
   label?: string;
   placeholder?: string;
+  title?: string;
   hideErrorText?: boolean;
+  fieldClassName?: string;
   disabled?: boolean;
   isLoading?: boolean;
   loop?: boolean;
@@ -29,7 +31,9 @@ export function RhfTimeWheelField({
   defaultValue,
   label,
   placeholder,
+  title,
   hideErrorText,
+  fieldClassName,
   disabled,
   isLoading,
   loop,
@@ -55,8 +59,10 @@ export function RhfTimeWheelField({
       defaultValue={defaultValue}
       label={label}
       placeholder={placeholder}
+      title={title}
       error={error}
       hideErrorText={hideErrorText}
+      fieldClassName={fieldClassName}
       disabled={disabled}
       isLoading={isLoading}
       loop={loop}

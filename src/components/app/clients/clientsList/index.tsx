@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import debounce from "lodash/debounce";
-import { View, FlatList, ActivityIndicator, Pressable } from "react-native";
+import { View, FlatList, ActivityIndicator } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
@@ -30,9 +30,10 @@ import type { UserCustomer } from "@/src/store/redux/services/api-types";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { safeRefetch } from "@/src/utils/safeRefetch";
-import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
+import ClientsHeaderCard from "./ClientsHeaderCard";
+import BroadcastEntryCard from "./BroadcastEntryCard";
 import ClientsListSkeleton from "./ClientsListSkeleton";
 import ClientsFiltersSkeleton from "./ClientsFiltersSkeleton";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -105,7 +106,6 @@ type ClientsContentProps = {
 };
 
 const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
-  const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const savedTagIdRef = useRef<number | undefined>(undefined);
 
   const auth = useRequiredAuth();
@@ -283,47 +283,13 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           ListHeaderComponent={
             !searchMode ? (
               <View className="flex-row gap-2.5 pb-2">
-                <Pressable
-                  className="min-h-[98px] flex-1 bg-background-surface p-4 rounded-base justify-between active:opacity-70"
+                <ClientsHeaderCard
+                  iconName="Pipe_fill"
+                  label="Статистика"
+                  disabled={isTrueEmptyState}
                   onPress={() => router.push(Routers.app.clients.statistics)}
-                >
-                  <View className="flex-row justify-between">
-                    <StSvg
-                      name="Pipe_fill"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                    <StSvg
-                      name="Expand_right_light"
-                      size={24}
-                      color={colors.neutral[500]}
-                    />
-                  </View>
-                  <Typography weight="semibold" className="text-body">
-                    Статистика
-                  </Typography>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setComingSoonVisible(true)}
-                  className="opacity-40 min-h-[98px] flex-1 bg-background-surface p-4 rounded-base justify-between active:opacity-70"
-                >
-                  <View className="flex-row justify-between">
-                    <StSvg
-                      name="Message_alt_fill"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                    <StSvg
-                      name="Expand_right_light"
-                      size={24}
-                      color={colors.neutral[500]}
-                    />
-                  </View>
-                  <Typography weight="semibold" className="text-body">
-                    Рассылка
-                  </Typography>
-                </Pressable>
+                />
+                <BroadcastEntryCard disabled={isTrueEmptyState} />
               </View>
             ) : null
           }
@@ -387,11 +353,6 @@ const ClientsContent = ({ topInset, bottomInset }: ClientsContentProps) => {
           }
         />
       )}
-
-      <ComingSoonModal
-        visible={comingSoonVisible}
-        onClose={() => setComingSoonVisible(false)}
-      />
     </View>
   );
 };

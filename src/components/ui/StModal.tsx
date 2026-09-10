@@ -13,7 +13,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BottomSheetHandle } from "./BottomSheetHandle";
+import { IconButton } from "./IconButton";
+import { StSvg } from "./StSvg";
 import { SCREEN_PADDING } from "@/src/constants/layout";
+import { colors } from "@/src/styles/colors";
+
+export type StModalHeaderAction = {
+  icon: React.ReactNode;
+  onPress: () => void;
+  accessibilityLabel?: string;
+};
 
 type StModalProps = {
   visible: boolean;
@@ -21,6 +30,9 @@ type StModalProps = {
   children: React.ReactNode;
   header?: React.ReactNode;
   footer?: React.ReactNode;
+  headerLeft?: StModalHeaderAction;
+  headerRight?: StModalHeaderAction;
+  headerCloseButton?: boolean;
   containerClassName?: string;
   horizontalPadding?: boolean;
   keyboardAware?: boolean;
@@ -38,6 +50,9 @@ export const StModal = ({
   children,
   header,
   footer,
+  headerLeft,
+  headerRight,
+  headerCloseButton = false,
   horizontalPadding = true,
   keyboardAware = false,
   keyboardAwareBottomOffset,
@@ -119,6 +134,39 @@ export const StModal = ({
       >
         {dismissible && <BottomSheetHandle />}
 
+        {headerLeft && (
+          <IconButton
+            size="sm"
+            buttonClassName="bg-transparent absolute left-3 top-1 z-10"
+            hitSlop={12}
+            onPress={headerLeft.onPress}
+            accessibilityLabel={headerLeft.accessibilityLabel}
+            icon={headerLeft.icon}
+          />
+        )}
+        {headerCloseButton && (
+          <IconButton
+            size="sm"
+            buttonClassName="bg-transparent absolute right-3 top-1 z-10"
+            hitSlop={12}
+            onPress={onClose}
+            accessibilityLabel="Закрыть"
+            icon={
+              <StSvg name="Close_round" size={20} color={colors.neutral[900]} />
+            }
+          />
+        )}
+        {headerRight && (
+          <IconButton
+            size="sm"
+            buttonClassName="bg-transparent absolute right-3 top-1 z-10"
+            hitSlop={12}
+            onPress={headerRight.onPress}
+            accessibilityLabel={headerRight.accessibilityLabel}
+            icon={headerRight.icon}
+          />
+        )}
+
         {header}
 
         {keyboardAware ? (
@@ -141,7 +189,11 @@ export const StModal = ({
             onLayout={handleLayout}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            style={styles.scrollFlex}
+            style={
+              fullHeight
+                ? styles.scrollFlex
+                : { maxHeight: height - top, flexShrink: 1 }
+            }
           >
             <View ref={contentRef} collapsable={false}>
               {children}

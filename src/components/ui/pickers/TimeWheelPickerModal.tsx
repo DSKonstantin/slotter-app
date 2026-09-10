@@ -23,6 +23,7 @@ type TimeWheelPickerModalProps = {
   value?: number | null;
   defaultValue?: number;
   title: string;
+  description?: string;
   confirmLabel?: string;
   cancelLabel?: string | null;
   isLoading?: boolean;
@@ -59,6 +60,7 @@ export const TimeWheelPickerModal = ({
   value,
   defaultValue,
   title,
+  description,
   confirmLabel = "Готово",
   cancelLabel = "Отмена",
   isLoading = false,
@@ -69,18 +71,6 @@ export const TimeWheelPickerModal = ({
   const [draft, setDraft] = useState(() =>
     resolveInitial(value, options, defaultValue),
   );
-  // Bumped only on a genuine closed→open transition, so TimeWheel below
-  // remounts and re-derives its wheel position from `draft` instead of
-  // keeping whatever scroll position was left over from a previous open.
-  // NOT bumped on the initial mount itself (wasVisible starts equal to
-  // `visible`, so a component that mounts already-visible — e.g. keyed by
-  // the caller per range — doesn't get an extra, unnecessary remount right
-  // after mounting, which raced with the wheel library's own initial-scroll
-  // setup). NOT keyed on `options`/`value` either, which can get a new
-  // reference on unrelated parent re-renders (e.g. RTK Query refetches) and
-  // would otherwise remount (and interrupt) the wheel mid-scroll. The
-  // loading→loaded transition is already handled by the isLoading/skeleton
-  // branch below mounting a fresh TimeWheel on its own.
   const wasVisible = useRef(visible);
   const [wheelKey, setWheelKey] = useState(0);
 
@@ -102,24 +92,28 @@ export const TimeWheelPickerModal = ({
       // no scroll-offset feedback without `scrollable`), so it wins the
       // touch responder and the wheel never gets to scroll. Must stay off.
       swipeDirection={undefined}
+      headerCloseButton
       header={
-        <Typography
-          weight="semibold"
-          className="text-display text-neutral-900 mb-4 text-center"
-        >
-          {title}
-        </Typography>
+        <View className="mb-4">
+          <Typography
+            weight="semibold"
+            className="text-display text-neutral-900 text-center"
+          >
+            {title}
+          </Typography>
+          {description ? (
+            <Typography className="text-body text-neutral-500 text-center mt-2">
+              {description}
+            </Typography>
+          ) : null}
+        </View>
       }
       footer={
         !isLoading && (
           <View className="gap-3">
             <Button title={confirmLabel} onPress={() => onConfirm(draft)} />
             {cancelLabel !== null && (
-              <Button
-                title={cancelLabel}
-                variant="secondary"
-                onPress={onClose}
-              />
+              <Button title={cancelLabel} variant="clear" onPress={onClose} />
             )}
           </View>
         )

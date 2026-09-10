@@ -41,6 +41,7 @@ import CustomerPickerModal from "@/src/components/shared/modals/CustomerPickerMo
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import { isHiddenCustomer } from "@/src/utils/customer";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
+import ClientNotificationNotice from "@/src/components/app/calendar/slot/ClientNotificationNotice";
 import {
   formatDayMonth,
   formatDuration,
@@ -409,6 +410,8 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       }
                     />
                   )}
+
+                  {slot.status === "pending" && <ClientNotificationNotice />}
                 </View>
 
                 <View className="mx-screen gap-2 mt-5 bg-background-surface rounded-base p-5">

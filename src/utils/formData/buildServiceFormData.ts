@@ -5,6 +5,7 @@ type ServiceFormValues = {
   description: string;
   isAvailableOnline: boolean;
   isActive: boolean;
+  breakAfter?: number;
   additionalServices?: { serviceId: number }[];
 };
 

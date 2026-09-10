@@ -52,7 +52,11 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "User_circle",
     route: Routers.app.account.root,
   },
-  { label: "Акции", icon: "Percent", disabled: true },
+  {
+    label: "Уведомление клиентам",
+    icon: "Message_alt_fill",
+    route: Routers.app.account.clientNotifications.root,
+  },
 ];
 
 const TabMenu = () => {
@@ -115,7 +119,7 @@ const TabMenu = () => {
       />
       <View className="flex-row items-end gap-2">
         <View className="flex-1">
-          <Pressable
+          <View
             className="bg-white rounded-[30px] py-2.5"
             style={{
               shadowColor: "#000",
@@ -153,7 +157,7 @@ const TabMenu = () => {
                   />
                   <Typography
                     weight={isActive ? "semibold" : "medium"}
-                    className={`text-body ${
+                    className={`flex-1  text-body ${
                       item.disabled ? "text-neutral-300" : "text-neutral-900"
                     }`}
                   >
@@ -162,7 +166,7 @@ const TabMenu = () => {
                 </Pressable>
               );
             })}
-          </Pressable>
+          </View>
         </View>
 
         <IconButton
