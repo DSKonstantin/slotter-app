@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
@@ -8,171 +8,263 @@ import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar"
 import RetryInline from "@/src/components/shared/retryInline";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
-import { Divider, Item, StSvg, Switch, Typography } from "@/src/components/ui";
+import { Divider, StSvg, Switch, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppSelector } from "@/src/store/redux/store";
+import { useUpdateNotificationSettingsMutation } from "@/src/store/redux/services/api/notificationsApi";
 import {
-  useGetNotificationSettingsQuery,
-  useUpdateNotificationSettingsMutation,
-} from "@/src/store/redux/services/api/notificationsApi";
+  useGetNotificationTemplatesQuery,
+  useResetNotificationTemplateMutation,
+} from "@/src/store/redux/services/api/notificationTemplatesApi";
+import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { asArray } from "@/src/utils/asArray";
-import type { NotificationKind } from "@/src/store/redux/services/api-types";
+import type { NotificationTemplateKind } from "@/src/store/redux/services/api-types";
+import RebookDaysModal from "./RebookDaysModal";
 
-type DetailKind = "reminder" | "reschedule";
-
-const KIND_MAP: Record<DetailKind, NotificationKind> = {
-  reminder: "appointment_reminder",
-  reschedule: "appointment_rescheduled",
+type ToggleRowProps = {
+  title: string;
+  description: string;
+  value: boolean;
+  onChange: () => void;
 };
 
-const CONFIG: Record<
-  DetailKind,
-  {
-    toggleLabel: string;
-    onlineTimeValue: string;
-    templatePreview: string;
-  }
-> = {
-  reminder: {
-    toggleLabel: "Уведомление напоминания",
-    onlineTimeValue: "За 2 часа, За день",
-    templatePreview: "Анна, напоминаем о записи …",
-  },
-  reschedule: {
-    toggleLabel: "Уведомление переноса",
-    onlineTimeValue: "За 2 часа, За день",
-    templatePreview: "Анна, запись перенесена на …",
-  },
-};
+const ToggleRow = ({ title, description, value, onChange }: ToggleRowProps) => (
+  <View className="flex-row items-start justify-between gap-3 p-4">
+    <View className="flex-1">
+      <Typography className="text-body">{title}</Typography>
+      <Typography
+        weight="regular"
+        className="text-caption text-neutral-500 mt-1"
+      >
+        {description}
+      </Typography>
+    </View>
+    <Switch value={value} onChange={onChange} />
+  </View>
+);
 
-type Props = { kind: DetailKind };
+type Props = { kind: NotificationTemplateKind };
 
 const NotificationDetailScreen = ({ kind }: Props) => {
-  const config = CONFIG[kind];
-  const notificationKind = KIND_MAP[kind];
+  const [daysModalVisible, setDaysModalVisible] = useState(false);
 
   const auth = useRequiredAuth();
+  const user = useAppSelector((s) => s.auth.user);
 
   const { data, isLoading, isFetching, isError, refetch } =
-    useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+    useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
+  const [resetTemplate, { isLoading: isResetting }] =
+    useResetNotificationTemplateMutation();
+  const [updateUser] = useUpdateUserMutation();
 
-  const settingItem = asArray(data?.customer)
-    .flatMap((group) => asArray(group.items))
-    .find((s) => s.kind === notificationKind);
-
-  const enabled = settingItem?.enabled ?? false;
+  const row = data?.notification_templates.find((r) => r.kind === kind);
+  const rebookDaysOptions = data?.rebook_days_options ?? [];
 
   const handleToggle = useCallback(() => {
-    if (!auth) return;
+    if (!auth || !row) return;
     updateSettings({
       userId: auth.userId,
-      customer: { [notificationKind]: !enabled },
+      customer: { [kind]: !row.enabled },
     })
       .unwrap()
       .catch((e: unknown) => {
         toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
       });
-  }, [auth, updateSettings, notificationKind, enabled]);
+  }, [auth, row, updateSettings, kind]);
+
+  const handleReset = useCallback(() => {
+    if (!auth) return;
+    resetTemplate({ userId: auth.userId, kind })
+      .unwrap()
+      .catch((e: unknown) => {
+        toast.error(getApiErrorMessage(e, "Не удалось сбросить шаблон"));
+      });
+  }, [auth, kind, resetTemplate]);
+
+  const handleConsentToggle = useCallback(() => {
+    if (!auth || !user) return;
+    updateUser({
+      id: auth.userId,
+      data: {
+        is_marketing_consent_enabled: !user.is_marketing_consent_enabled,
+      },
+    })
+      .unwrap()
+      .catch((e: unknown) => {
+        toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
+      });
+  }, [auth, user, updateUser]);
+
+  const handleSelectDays = useCallback(
+    (days: number) => {
+      if (!auth) return;
+      setDaysModalVisible(false);
+      updateUser({ id: auth.userId, data: { rebook_days_count: days } })
+        .unwrap()
+        .catch((e: unknown) => {
+          toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
+        });
+    },
+    [auth, updateUser],
+  );
 
   return (
-    <ScreenWithToolbar title={settingItem?.title}>
-      {({ topInset, bottomInset }) => (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: topInset,
-            paddingBottom: bottomInset + 8,
-          }}
-          className="px-screen"
-        >
-          <View className="bg-background-surface rounded-base overflow-hidden mb-5">
-            {isLoading ? (
-              <View className="items-center py-4">
-                <ActivityIndicator color={colors.neutral[400]} />
-              </View>
-            ) : isError ? (
-              <RetryInline
-                text="Не удалось загрузить настройки"
-                onRetry={refetch}
-                isLoading={isFetching}
-                className="p-4"
-              />
-            ) : (
-              <Item
-                title={config.toggleLabel}
-                right={<Switch value={enabled} onChange={handleToggle} />}
-              />
-            )}
-          </View>
-
-          <Typography className="text-caption text-neutral-500 mb-2">
-            Текст уведомления
-          </Typography>
-
-          <View className="bg-background-surface rounded-base overflow-hidden mb-5">
-            <Pressable
-              onPress={() =>
-                router.push(
-                  Routers.app.account.clientNotifications.template(kind),
-                )
-              }
-              className="flex-row items-center p-4 active:opacity-70"
-            >
-              <View className="flex-1">
-                <Typography className="text-body">Шаблон сообщения</Typography>
-                <Typography
-                  weight="regular"
-                  className="text-caption text-neutral-500 mt-1"
-                >
-                  {config.templatePreview}
-                </Typography>
-              </View>
-              <StSvg
-                name="Expand_right_light"
-                size={24}
-                color={colors.neutral[300]}
-              />
-            </Pressable>
-          </View>
-
-          <Typography className="text-caption text-neutral-500 mb-2">
-            Время отправки
-          </Typography>
-
-          <View className="bg-background-surface rounded-base overflow-hidden mb-5">
-            <Item
-              title="При онлайн-записи"
-              className="border-0"
-              right={
-                <Typography
-                  weight="regular"
-                  className="text-body text-neutral-500"
-                >
-                  {config.onlineTimeValue}
-                </Typography>
-              }
-            />
-            <Divider className="mx-4" />
-            <Item
-              title="При обычной записи"
-              className="border-0"
-              right={
-                <View className="flex-row items-center">
-                  <Typography
-                    weight="regular"
-                    className="text-body text-neutral-500"
-                  >
-                    Выключено
-                  </Typography>
+    <>
+      <ScreenWithToolbar title={row?.title}>
+        {({ topInset, bottomInset }) => (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingTop: topInset,
+              paddingBottom: bottomInset + 8,
+            }}
+            className="px-screen"
+          >
+            <View className="bg-background-surface rounded-base overflow-hidden mb-5">
+              {isLoading ? (
+                <View className="items-center py-4">
+                  <ActivityIndicator color={colors.neutral[400]} />
                 </View>
-              }
-            />
-          </View>
-        </ScrollView>
-      )}
-    </ScreenWithToolbar>
+              ) : isError && !row ? (
+                <RetryInline
+                  text="Не удалось загрузить настройки"
+                  onRetry={refetch}
+                  isLoading={isFetching}
+                  className="p-4"
+                />
+              ) : row ? (
+                <ToggleRow
+                  title={row.switch_title}
+                  description={row.description}
+                  value={row.enabled}
+                  onChange={handleToggle}
+                />
+              ) : null}
+            </View>
+
+            {kind === "appointment_reminder" && (
+              <>
+                <Typography className="text-caption text-neutral-500 mb-2">
+                  Время отправки
+                </Typography>
+                <View className="bg-background-surface rounded-base overflow-hidden mb-5">
+                  <View className="flex-row items-center justify-between p-4">
+                    <Typography weight="regular" className="text-body">
+                      При онлайн-записи
+                    </Typography>
+                    <Typography
+                      weight="regular"
+                      className="text-body text-neutral-500"
+                    >
+                      За 2 часа, За 24 часа
+                    </Typography>
+                  </View>
+                </View>
+              </>
+            )}
+
+            {kind === "rebook_suggestion" && user && (
+              <>
+                <Typography className="text-caption text-neutral-500 mb-2">
+                  Дополнительно
+                </Typography>
+                <View className="bg-background-surface rounded-base overflow-hidden mb-5">
+                  <ToggleRow
+                    title="Только с согласием на рекламу"
+                    description="Влияет на все уведомления о возвращаемости: повторный визит, день рождения, приглашение после отмены"
+                    value={user.is_marketing_consent_enabled}
+                    onChange={handleConsentToggle}
+                  />
+                  <Divider className="mx-4" />
+                  <Pressable
+                    onPress={() => setDaysModalVisible(true)}
+                    className="flex-row items-center justify-between p-4 active:opacity-70"
+                  >
+                    <Typography className="text-body">
+                      Отправлять через
+                    </Typography>
+                    <View className="flex-row gap-1 items-center">
+                      <Typography
+                        weight="regular"
+                        className="text-body text-neutral-500"
+                      >
+                        {user.rebook_days_count} дней
+                      </Typography>
+                      <StSvg
+                        name="Expand_down_light"
+                        size={24}
+                        color={colors.neutral[500]}
+                      />
+                    </View>
+                  </Pressable>
+                </View>
+              </>
+            )}
+
+            {row && (
+              <View style={{ opacity: row.enabled ? 1 : 0.4 }}>
+                <Typography className="text-caption text-neutral-500 mb-2">
+                  Текст уведомления
+                </Typography>
+
+                <View className="bg-background-surface rounded-base overflow-hidden mb-5">
+                  <Pressable
+                    onPress={() =>
+                      router.push(
+                        Routers.app.account.clientNotifications.editor(kind),
+                      )
+                    }
+                    className="flex-row items-center p-4 active:opacity-70"
+                  >
+                    <View className="flex-1">
+                      <Typography className="text-body">
+                        Шаблон сообщения
+                      </Typography>
+                      <Typography
+                        weight="regular"
+                        numberOfLines={1}
+                        className="text-caption text-neutral-500 mt-1"
+                      >
+                        {row.preview}
+                      </Typography>
+                    </View>
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[300]}
+                    />
+                  </Pressable>
+                  {row.is_custom && (
+                    <>
+                      <Divider className="mx-4" />
+                      <Pressable
+                        onPress={handleReset}
+                        disabled={isResetting}
+                        className="p-4 active:opacity-70"
+                      >
+                        <Typography className="text-body text-accent-red-500">
+                          Сбросить
+                        </Typography>
+                      </Pressable>
+                    </>
+                  )}
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        )}
+      </ScreenWithToolbar>
+
+      <RebookDaysModal
+        visible={daysModalVisible}
+        options={rebookDaysOptions}
+        current={user?.rebook_days_count}
+        onClose={() => setDaysModalVisible(false)}
+        onSelect={handleSelectDays}
+      />
+    </>
   );
 };
 

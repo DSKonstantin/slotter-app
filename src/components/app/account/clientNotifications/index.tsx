@@ -1,17 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { format } from "date-fns";
 import {
-  format,
-  startOfDay,
-  endOfDay,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
-import {
-  ActivityIndicator,
   Alert,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   Share,
@@ -29,25 +21,19 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRefetchOnForeground } from "@/src/hooks/useRefetchOnForeground";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { safeRefetch } from "@/src/utils/safeRefetch";
-import {
-  useGetNotificationSettingsQuery,
-  useGetNotificationStatsQuery,
-} from "@/src/store/redux/services/api/notificationsApi";
+import { useGetNotificationSettingsQuery } from "@/src/store/redux/services/api/notificationsApi";
+import { useGetNotificationTemplatesQuery } from "@/src/store/redux/services/api/notificationTemplatesApi";
 import {
   useGetSubscriptionDirectPlansQuery,
   useGetSubscriptionDirectChannelsQuery,
 } from "@/src/store/redux/services/api/subscriptionDirectApi";
-import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
+import type {
+  DirectChannelKind,
+  NotificationKind,
+} from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { getDirectChannelRowStatus } from "./directChannelRowStatus";
-import {
-  Badge,
-  Button,
-  Card,
-  Divider,
-  StSvg,
-  Typography,
-} from "@/src/components/ui";
+import { Button, Card, Divider, StSvg, Typography } from "@/src/components/ui";
 import { SlotterLogo } from "@/src/components/shared/svg/SlotterLogo";
 import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
 import DirectDiffModal from "./DirectDiffModal";
@@ -56,41 +42,17 @@ import { Routers } from "@/src/constants/routers";
 import { asArray } from "@/src/utils/asArray";
 import { useAppSelector } from "@/src/store/redux/store";
 
-const FILTER_PERIODS = ["Сегодня", "Неделя", "Месяц"] as const;
-
-const DATE_FORMAT = "yyyy-MM-dd";
-
-function getPeriodRange(periodIndex: number): { from: string; to: string } {
-  const now = new Date();
-  if (periodIndex === 0) {
-    return {
-      from: format(startOfDay(now), DATE_FORMAT),
-      to: format(endOfDay(now), DATE_FORMAT),
-    };
-  }
-  if (periodIndex === 1) {
-    return {
-      from: format(startOfWeek(now, { weekStartsOn: 1 }), DATE_FORMAT),
-      to: format(endOfWeek(now, { weekStartsOn: 1 }), DATE_FORMAT),
-    };
-  }
-  return {
-    from: format(startOfMonth(now), DATE_FORMAT),
-    to: format(endOfMonth(now), DATE_FORMAT),
-  };
-}
-
 const APP_FEATURES = [
   {
     icon: "Refresh_2_light" as const,
-    text: "Клиент сам записывается повторно",
+    text: "Повторная запись",
   },
-  { icon: "close_ring_light" as const, text: "Переносит и отменяет запись" },
+  { icon: "close_ring_light" as const, text: "Перенос и отмена" },
   {
     icon: "Chat_alt_3_light" as const,
-    text: "Оставляет отзыв прямо в приложении",
+    text: "Отзывы в приложении",
   },
-  { icon: "Chat_light" as const, text: "Пишет в чат без лишних мессенджеров" },
+  { icon: "Chat_light" as const, text: "Встроенный чат" },
 ];
 
 const CLIENT_APP_STORE_URL =
@@ -143,12 +105,14 @@ const DIRECT_CHANNEL_UI_CONFIG: Record<
 const INACTIVE_DIRECT_CHANNEL_STATUSES = new Set(["cancelled", "expired"]);
 
 const ClientNotifications = () => {
-  const [activePeriod, setActivePeriod] = useState(0);
   const [diffModalVisible, setDiffModalVisible] = useState(false);
 
   const ispe = useAppSelector((state) => state.appVersion.ispe);
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
+
+  const { data: templatesData, refetch: refetchTemplates } =
+    useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
   const { data: settingsData, refetch: refetchSettings } =
     useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
@@ -173,32 +137,22 @@ const ClientNotifications = () => {
 
   useRefetchOnForeground(refetchDirectChannels);
 
-  const periodRange = useMemo(
-    () => getPeriodRange(activePeriod),
-    [activePeriod],
-  );
-
-  const {
-    data: statsData,
-    isLoading: isStatsLoading,
-    isError: isStatsError,
-    refetch: refetchStats,
-  } = useGetNotificationStatsQuery(
-    auth ? { userId: auth.userId, ...periodRange } : skipToken,
-    { refetchOnMountOrArgChange: true },
-  );
-
   const isDirectLoading = isDirectPlansLoading || isDirectChannelsLoading;
   const isDirectError = isDirectPlansError || isDirectChannelsError;
   const isDirectFetching = isDirectPlansFetching || isDirectChannelsFetching;
 
-  const notificationSettingsSummary = useMemo(() => {
-    const all = asArray(settingsData?.customer).flatMap((group) =>
-      asArray(group.items),
-    );
-    const enabled = all.filter((s) => s.enabled).length;
-    return { enabled, total: all.length };
-  }, [settingsData]);
+  const notificationTemplatesSummary = useMemo(() => {
+    const rows = asArray(templatesData?.notification_templates);
+    const templateKinds = new Set<NotificationKind>(rows.map((r) => r.kind));
+    const otherItems = asArray(settingsData?.customer)
+      .flatMap((group) => asArray(group.items))
+      .filter((item) => !templateKinds.has(item.kind));
+
+    const enabled =
+      rows.filter((r) => r.enabled).length +
+      otherItems.filter((item) => item.enabled).length;
+    return { enabled, total: rows.length + otherItems.length };
+  }, [templatesData, settingsData]);
 
   const directChannelRows = useMemo(() => {
     const activePlans = asArray(directPlansData).filter((p) => p.is_active);
@@ -219,27 +173,6 @@ const ClientNotifications = () => {
     });
   }, [directPlansData, directChannelsData]);
 
-  const stats = useMemo(() => {
-    const t = statsData?.notification_stats.totals;
-    return [
-      {
-        value: String(t?.sent ?? 0),
-        label: "Отправлено",
-        color: "text-primary-blue-500",
-      },
-      {
-        value: String((t?.sent ?? 0) - (t?.failed ?? 0)),
-        label: "Доставлено",
-        color: "text-green-700",
-      },
-      {
-        value: String(t?.failed ?? 0),
-        label: "Ошибки",
-        color: "text-accent-red-500",
-      },
-    ];
-  }, [statsData]);
-
   const handleRetryDirect = useCallback(() => {
     refetchDirectPlans();
     refetchDirectChannels();
@@ -247,14 +180,14 @@ const ClientNotifications = () => {
 
   const refetchAll = useCallback(async () => {
     await Promise.all([
+      safeRefetch(refetchTemplates),
       safeRefetch(refetchSettings),
-      safeRefetch(refetchStats),
       safeRefetch(refetchDirectPlans),
       safeRefetch(refetchDirectChannels),
     ]);
   }, [
+    refetchTemplates,
     refetchSettings,
-    refetchStats,
     refetchDirectPlans,
     refetchDirectChannels,
   ]);
@@ -298,170 +231,99 @@ const ClientNotifications = () => {
               />
             }
           >
-            <View className="flex-row justify-between items-center mb-2">
-              <Typography weight="semibold" className="text-body">
-                Статистика
-              </Typography>
-              <Button
-                title="Подробнее"
-                size="xs"
-                buttonClassName="gap-0"
-                textClassName="text-neutral-500 text-[13px]"
-                variant="clear"
+            <View className="flex-row gap-2 mb-2">
+              <Pressable
                 onPress={() =>
                   router.push(
                     Routers.app.account.clientNotifications.statistics,
                   )
                 }
-                rightIcon={
+                className="flex-1 bg-background-surface rounded-base p-4 active:opacity-70"
+              >
+                <View className="flex-row items-start justify-between mb-2">
                   <StSvg
-                    name="Expand_right"
-                    size={16}
+                    name="Pipe_fill"
+                    size={24}
+                    color={colors.neutral[900]}
+                  />
+                  <StSvg
+                    name="Expand_right_light"
+                    size={24}
                     color={colors.neutral[500]}
                   />
-                }
-              />
-            </View>
+                </View>
+                <Typography className="text-body">Статистика</Typography>
+              </Pressable>
 
-            <View className="bg-background-surface p-4 rounded-base gap-5">
-              <View className="flex-row flex-wrap gap-2">
-                {FILTER_PERIODS.map((period, i) => (
-                  <Badge
-                    key={period}
-                    title={period}
-                    variant={i === activePeriod ? "accent" : "ghost"}
-                    onPress={() => setActivePeriod(i)}
+              <Pressable
+                onPress={() =>
+                  router.push(Routers.app.account.clientNotifications.broadcast)
+                }
+                className="flex-1 bg-background-surface rounded-base p-4 active:opacity-70"
+              >
+                <View className="flex-row items-start justify-between mb-2">
+                  <StSvg
+                    name="Message_alt_fill"
+                    size={24}
+                    color={colors.neutral[900]}
                   />
-                ))}
-              </View>
-
-              {isStatsLoading ? (
-                <View className="h-[52px] items-center justify-center">
-                  <ActivityIndicator color={colors.neutral[400]} />
+                  <StSvg
+                    name="Expand_right_light"
+                    size={24}
+                    color={colors.neutral[500]}
+                  />
                 </View>
-              ) : isStatsError ? (
-                <RetryInline
-                  text="Не удалось загрузить статистику"
-                  onRetry={refetchStats}
-                  layout="column"
+                <Typography className="text-body">Рассылка</Typography>
+              </Pressable>
+            </View>
+
+            <Card
+              title="Виды уведомлений"
+              subtitle={
+                notificationTemplatesSummary.total > 0
+                  ? `Активно: ${notificationTemplatesSummary.enabled} / ${notificationTemplatesSummary.total}`
+                  : undefined
+              }
+              subtitleProps={{
+                style: {
+                  color: colors.primary.green[600],
+                },
+              }}
+              onPress={() =>
+                router.push(Routers.app.account.clientNotifications.types)
+              }
+              right={
+                <StSvg
+                  name="Expand_right_light"
+                  size={24}
+                  color={colors.neutral[500]}
                 />
-              ) : (
-                <View className="flex-row flex-wrap gap-2">
-                  {stats.map(({ value, label, color }) => (
-                    <View key={label} className="flex-1">
-                      <Typography
-                        weight="semibold"
-                        className={`text-display ${color}`}
-                      >
-                        {value}
-                      </Typography>
-                      <Typography
-                        weight="regular"
-                        className="text-neutral-500 text-caption"
-                      >
-                        {label}
-                      </Typography>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-              Бесплатные каналы
-            </Typography>
-
-            <View className="bg-background-surface p-4 rounded-base">
-              <View className="flex-row gap-2 items-center">
-                <SlotterLogo size={32} />
-                <View>
-                  <Typography className="text-body">
-                    Slotter - трекер услуг и мастеров
-                  </Typography>
-                  <Typography
-                    weight="regular"
-                    className="text-caption text-neutral-500"
-                  >
-                    Приложение для клиентов
-                  </Typography>
-                </View>
-              </View>
-
-              <Divider className="my-4" />
-
-              <View className="mb-2.5 gap-2">
-                {APP_FEATURES.map(({ icon, text }) => (
-                  <View key={text} className="flex-row gap-2 items-center">
-                    <StSvg name={icon} size={20} color={colors.neutral[900]} />
-                    <Typography weight="regular" className="text-caption">
-                      {text}
-                    </Typography>
-                  </View>
-                ))}
-              </View>
-
-              <Button
-                title="Поделиться приложением"
-                onPress={() => Share.share({ message: CLIENT_APP_SHARE_URL! })}
-                disabled={!CLIENT_APP_SHARE_URL}
-                variant="accent"
-                rightIcon={
-                  <StSvg name="link_alt" size={24} color={colors.neutral[0]} />
-                }
-              />
-            </View>
-
-            <View className="my-2 flex-row gap-2">
-              {TELEGRAM_BOTS.map(({ title, icon, url }) => (
-                <Card
-                  key={title}
-                  title={title}
-                  left={icon}
-                  onPress={() => handleBotPress(url)}
-                  className="flex-1"
-                  right={
-                    <StSvg
-                      name="Expand_right_light"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                />
-              ))}
-            </View>
-
-            <Typography
-              weight="regular"
-              className="text-caption text-neutral-500"
-            >
-              Клиент получит уведомление, если подписался на бота или установил
-              приложение
-            </Typography>
+              }
+            />
 
             {ispe && (
               <>
-                <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-                  Прямые уведомления
-                </Typography>
-
-                <Card
-                  title="Чем отличается от бесплатных?"
-                  left={
+                <View className="mt-5 mb-2 flex-row gap-2 justify-between">
+                  <Typography className="text-caption text-neutral-500 shrink-0">
+                    Прямые уведомления
+                  </Typography>
+                  <Pressable
+                    onPress={() => setDiffModalVisible(true)}
+                    className="flex-row items-center gap-1 shrink active:opacity-70"
+                  >
                     <StSvg
                       name="Info_alt_fill"
-                      size={28}
-                      color={colors.neutral[500]}
+                      size={20}
+                      color={colors.primary.blue[500]}
                     />
-                  }
-                  right={
-                    <StSvg
-                      name="Expand_right_light"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                  onPress={() => setDiffModalVisible(true)}
-                />
+                    <Typography
+                      numberOfLines={1}
+                      className="text-caption text-primary-blue-500 shrink"
+                    >
+                      В чем преимущество?
+                    </Typography>
+                  </Pressable>
+                </View>
 
                 <View className="bg-background-surface p-4 rounded-base mt-2">
                   {isDirectLoading ? (
@@ -553,32 +415,107 @@ const ClientNotifications = () => {
             )}
 
             <Typography className="text-caption text-neutral-500 mt-5 mb-2">
-              Настройки
+              Бесплатные каналы уведомлений
             </Typography>
 
-            <Card
-              title="Виды уведомлений"
-              subtitle={
-                notificationSettingsSummary.total > 0
-                  ? `Включено: ${notificationSettingsSummary.enabled} / ${notificationSettingsSummary.total}`
-                  : undefined
-              }
-              subtitleProps={{
-                style: {
-                  color: colors.primary.green[600],
-                },
-              }}
-              onPress={() =>
-                router.push(Routers.app.account.clientNotifications.types)
-              }
-              right={
-                <StSvg
-                  name="Expand_right_light"
-                  size={24}
-                  color={colors.neutral[900]}
+            <View className="bg-background-surface p-4 rounded-base">
+              <View className="flex-row gap-2 items-center">
+                <SlotterLogo size={32} />
+                <View>
+                  <Typography className="text-body">
+                    Slotter - трекер услуг и мастеров
+                  </Typography>
+                  <Typography
+                    weight="regular"
+                    className="text-caption text-neutral-500"
+                  >
+                    Приложение для клиентов
+                  </Typography>
+                </View>
+              </View>
+
+              <Divider className="my-4" />
+
+              <View className="mb-3 gap-2">
+                <View className="flex-row gap-2">
+                  {APP_FEATURES.slice(0, 2).map(({ icon, text }) => (
+                    <View
+                      key={text}
+                      className="flex-1 flex-row gap-1 items-center"
+                    >
+                      <StSvg
+                        name={icon}
+                        size={20}
+                        color={colors.neutral[900]}
+                      />
+                      <Typography weight="regular" className="text-caption">
+                        {text}
+                      </Typography>
+                    </View>
+                  ))}
+                </View>
+                <View className="flex-row gap-2">
+                  {APP_FEATURES.slice(2, 4).map(({ icon, text }) => (
+                    <View
+                      key={text}
+                      className="flex-1 flex-row gap-1 items-center"
+                    >
+                      <StSvg
+                        name={icon}
+                        size={20}
+                        color={colors.neutral[900]}
+                      />
+                      <Typography weight="regular" className="text-caption">
+                        {text}
+                      </Typography>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <Button
+                title="Поделиться приложением"
+                onPress={() => Share.share({ message: CLIENT_APP_SHARE_URL! })}
+                disabled={!CLIENT_APP_SHARE_URL}
+                variant="accent"
+                buttonClassName="bg-background border border-neutral-100"
+                textClassName="text-primary-blue-500"
+                rightIcon={
+                  <StSvg
+                    name="link_alt"
+                    size={24}
+                    color={colors.primary.blue[500]}
+                  />
+                }
+              />
+            </View>
+
+            <View className="my-2 flex-row gap-2">
+              {TELEGRAM_BOTS.map(({ title, icon, url }) => (
+                <Card
+                  key={title}
+                  title={title}
+                  left={icon}
+                  onPress={() => handleBotPress(url)}
+                  className="flex-1"
+                  right={
+                    <StSvg
+                      name="Expand_right_light"
+                      size={24}
+                      color={colors.neutral[900]}
+                    />
+                  }
                 />
-              }
-            />
+              ))}
+            </View>
+
+            <Typography
+              weight="regular"
+              className="text-caption text-neutral-500"
+            >
+              Клиент получит уведомление, если подписался на бота или установил
+              приложение
+            </Typography>
           </ScrollView>
         )}
       </ScreenWithToolbar>

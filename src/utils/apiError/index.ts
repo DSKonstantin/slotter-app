@@ -50,6 +50,12 @@ export const isQuotaExceeded = (e: unknown): boolean => {
   return (e.data as { error?: unknown }).error === "QUOTA_EXCEEDED";
 };
 
+export const isDirectChannelRequired = (e: unknown): boolean => {
+  if (!isApiError(e)) return false;
+  if ((e as { status?: unknown }).status !== 402) return false;
+  return (e.data as { error?: unknown }).error === "DIRECT_CHANNEL_REQUIRED";
+};
+
 export const getApiErrorCode = (e: unknown): string | null => {
   if (!isApiError(e)) return null;
   const code = (e.data as { code?: unknown }).code;

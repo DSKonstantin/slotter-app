@@ -6,7 +6,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, StSvg } from "@/src/components/ui";
+import { StSvg } from "@/src/components/ui";
+import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -125,20 +126,12 @@ const ChangePassword = () => {
               </View>
             </KeyboardAwareScrollView>
 
-            <View
-              className="px-screen"
-              style={{ paddingBottom: bottomInset + 8 }}
-            >
-              <Button
-                title="Сохранить"
-                onPress={methods.handleSubmit(onSubmit)}
-                loading={isLoading}
-                disabled={isLoading}
-                rightIcon={
-                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-                }
-              />
-            </View>
+            <FormSaveFooter
+              title="Сохранить"
+              bottomInset={bottomInset}
+              loading={isLoading}
+              onPress={methods.handleSubmit(onSubmit)}
+            />
           </>
         )}
       </ScreenWithToolbar>

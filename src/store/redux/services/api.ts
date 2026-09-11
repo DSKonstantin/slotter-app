@@ -34,6 +34,7 @@ export const api = createApi({
     "ChatMessages",
     "Notifications",
     "NotificationSettings",
+    "NotificationTemplates",
     "UserLinks",
     "SubscriptionMembership",
     "SubscriptionPlans",

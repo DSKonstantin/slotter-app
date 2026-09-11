@@ -201,11 +201,15 @@ export const Routers = {
         root: "/(app)/client-notifications" as const,
         statistics: "/(app)/client-notifications/statistics" as const,
         types: "/(app)/client-notifications/types" as const,
-        reminder: "/(app)/client-notifications/reminder" as const,
-        reschedule: "/(app)/client-notifications/reschedule" as const,
-        template: (kind: string) =>
+        broadcast: "/(app)/client-notifications/broadcast" as const,
+        detail: (kind: string) =>
           ({
-            pathname: "/(app)/client-notifications/template/[kind]",
+            pathname: "/(app)/client-notifications/[kind]",
+            params: { kind },
+          }) as const,
+        editor: (kind: string) =>
+          ({
+            pathname: "/(app)/client-notifications/[kind]/editor",
             params: { kind },
           }) as const,
       },

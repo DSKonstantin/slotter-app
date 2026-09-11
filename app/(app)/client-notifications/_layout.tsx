@@ -6,9 +6,8 @@ export default function ClientNotificationsLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="statistics" />
       <Stack.Screen name="types" />
-      <Stack.Screen name="reminder" />
-      <Stack.Screen name="reschedule" />
-      <Stack.Screen name="template/[kind]" />
+      <Stack.Screen name="[kind]" />
+      <Stack.Screen name="broadcast" />
     </Stack>
   );
 }

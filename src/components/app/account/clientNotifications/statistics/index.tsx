@@ -24,6 +24,7 @@ import { useGetNotificationStatsQuery } from "@/src/store/redux/services/api/not
 
 const FILTER_PERIODS = ["Неделя", "Месяц"] as const;
 const DATE_FORMAT = "yyyy-MM-dd";
+const DISPLAY_DATE_FORMAT = "dd.MM";
 
 function getPeriodRange(periodIndex: number): { from: string; to: string } {
   const now = new Date();
@@ -37,6 +38,22 @@ function getPeriodRange(periodIndex: number): { from: string; to: string } {
     from: format(startOfMonth(now), DATE_FORMAT),
     to: format(endOfMonth(now), DATE_FORMAT),
   };
+}
+
+function getPeriodLabel(periodIndex: number): string {
+  const now = new Date();
+  const title = FILTER_PERIODS[periodIndex];
+  if (periodIndex === 0) {
+    const from = format(
+      startOfWeek(now, { weekStartsOn: 1 }),
+      DISPLAY_DATE_FORMAT,
+    );
+    const to = format(endOfWeek(now, { weekStartsOn: 1 }), DISPLAY_DATE_FORMAT);
+    return `${title} (${from} - ${to})`;
+  }
+  const from = format(startOfMonth(now), DISPLAY_DATE_FORMAT);
+  const to = format(endOfMonth(now), DISPLAY_DATE_FORMAT);
+  return `${title} (${from} - ${to})`;
 }
 
 const NotificationsStatistics = () => {
@@ -79,7 +96,11 @@ const NotificationsStatistics = () => {
       label: "Доставлено",
       color: "text-primary-green-600",
     },
-    { value: String(failed), label: "Ошибки", color: "text-accent-red-500" },
+    {
+      value: String(failed),
+      label: "Не доставлено",
+      color: "text-accent-red-500",
+    },
     {
       value: deliverability,
       label: "Доставляемость",
@@ -148,7 +169,7 @@ const NotificationsStatistics = () => {
               {FILTER_PERIODS.map((period, i) => (
                 <Badge
                   key={period}
-                  title={period}
+                  title={getPeriodLabel(i)}
                   variant={i === activePeriod ? "accent" : "ghost"}
                   onPress={() => setActivePeriod(i)}
                 />

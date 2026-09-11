@@ -10,6 +10,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
 import { AddressField } from "@/src/components/shared/addressField";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
@@ -266,24 +267,11 @@ const Contacts = () => {
                 </View>
               </KeyboardAwareScrollView>
 
-              <View
-                className="px-screen"
-                style={{ paddingBottom: bottomInset + 8 }}
-              >
-                <Button
-                  title="Сохранить изменения"
-                  loading={isSaving}
-                  disabled={isSaving}
-                  onPress={methods.handleSubmit(onSubmit)}
-                  rightIcon={
-                    <StSvg
-                      name="Save_fill"
-                      size={24}
-                      color={colors.neutral[0]}
-                    />
-                  }
-                />
-              </View>
+              <FormSaveFooter
+                bottomInset={bottomInset}
+                loading={isSaving}
+                onPress={methods.handleSubmit(onSubmit)}
+              />
             </>
           );
         }}

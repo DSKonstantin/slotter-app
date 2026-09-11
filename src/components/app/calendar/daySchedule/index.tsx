@@ -84,10 +84,14 @@ const DayScheduleEdit = ({
     },
   });
 
-  const { handleSubmit, control } = methods;
+  const {
+    handleSubmit,
+    control,
+    formState: { isDirty },
+  } = methods;
   const isActive = useWatch({ control, name: "isActive" });
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(isDirty);
 
   const submitSchedule = async (
     data: DayScheduleFormValues,
@@ -164,7 +168,7 @@ const DayScheduleEdit = ({
           }
           contentContainerStyle={{
             paddingTop: Platform.OS === "ios" ? 0 : topInset,
-            paddingBottom: bottomInset + 82,
+            paddingBottom: bottomInset + (isDirty ? 82 : 8),
           }}
           refreshControl={
             <RefreshControl
@@ -184,17 +188,19 @@ const DayScheduleEdit = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-      <FloatingFooter offset={bottomInset + 8}>
-        <Button
-          title="Сохранить изменения"
-          loading={isLoading}
-          disabled={isLoading}
-          rightIcon={
-            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-          }
-          onPress={handleSubmit(onSubmit)}
-        />
-      </FloatingFooter>
+      {isDirty && (
+        <FloatingFooter offset={bottomInset + 8}>
+          <Button
+            title="Сохранить изменения"
+            loading={isLoading}
+            disabled={isLoading}
+            rightIcon={
+              <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+            }
+            onPress={handleSubmit(onSubmit)}
+          />
+        </FloatingFooter>
+      )}
     </FormProvider>
   );
 };
