@@ -10,9 +10,10 @@ import connectChannelImage from "@/assets/images/app/connect-messaging-channel.w
 type Props = {
   visible: boolean;
   onClose: () => void;
+  onConnect?: () => void;
 };
 
-const ConnectChannelModal = ({ visible, onClose }: Props) => (
+const ConnectChannelModal = ({ visible, onClose, onConnect }: Props) => (
   <StModal visible={visible} onClose={onClose}>
     <Image
       source={connectChannelImage}
@@ -41,6 +42,10 @@ const ConnectChannelModal = ({ visible, onClose }: Props) => (
       }
       onPress={() => {
         onClose();
+        if (onConnect) {
+          onConnect();
+          return;
+        }
         router.push(Routers.app.account.clientNotifications.root);
       }}
     />
