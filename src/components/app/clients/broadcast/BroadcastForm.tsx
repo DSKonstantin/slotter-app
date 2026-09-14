@@ -285,7 +285,7 @@ const BroadcastForm = ({ broadcastId }: Props) => {
                   >
                     0
                   </Typography>
-                  <StSvg name="Users" size={24} color={colors.neutral[900]} />
+                  <StSvg name="Users" size={20} color={colors.neutral[900]} />
                 </View>
                 <View
                   className="mt-5"

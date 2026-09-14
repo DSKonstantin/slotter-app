@@ -12,15 +12,15 @@ import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import {
   useGetNotificationTemplatesQuery,
   useGetNotificationTemplateVariablesQuery,
+  usePreviewNotificationTemplateMutation,
+  useResetNotificationTemplateMutation,
   useSaveNotificationTemplateMutation,
 } from "@/src/store/redux/services/api/notificationTemplatesApi";
-import {
-  getApiErrorMessage,
-  isDirectChannelRequired,
-} from "@/src/utils/apiError";
+import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { NotificationTemplateKind } from "@/src/store/redux/services/api-types";
 import ConnectChannelModal from "@/src/components/app/clients/broadcast/ConnectChannelModal";
-import MessageTemplateEditor from "./MessageTemplateEditor";
+import MessageTemplateEditor from "./editor/MessageTemplateEditor";
+import { useDirectChannelErrorGate } from "./useDirectChannelErrorGate";
 
 type MessageTemplateScreenProps = {
   kind: NotificationTemplateKind;
@@ -28,10 +28,15 @@ type MessageTemplateScreenProps = {
 
 const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
   const [serverError, setServerError] = useState<string | null>(null);
-  const [channelModalVisible, setChannelModalVisible] = useState(false);
+  const [bypassGuard, setBypassGuard] = useState(false);
 
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
+  const {
+    channelModalVisible,
+    setChannelModalVisible,
+    guardDirectChannelError,
+  } = useDirectChannelErrorGate();
 
   const { data: templatesData, isLoading: isRowLoading } =
     useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
@@ -39,6 +44,10 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
     useGetNotificationTemplateVariablesQuery(kind);
   const [saveTemplate, { isLoading: isSaving }] =
     useSaveNotificationTemplateMutation();
+  const [previewTemplate, { isLoading: isPreviewing }] =
+    usePreviewNotificationTemplateMutation();
+  const [resetTemplate, { isLoading: isResetting }] =
+    useResetNotificationTemplateMutation();
 
   const row = templatesData?.notification_templates.find(
     (r) => r.kind === kind,
@@ -49,27 +58,45 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
     (text: string) => {
       if (!auth || !row) return;
       setServerError(null);
-      saveTemplate({
-        userId: auth.userId,
-        kind,
-        channel: row.channel ?? "auto",
-        body: text,
-      })
+      previewTemplate({ userId: auth.userId, kind, body: text })
         .unwrap()
+        .then(() =>
+          saveTemplate({
+            userId: auth.userId,
+            kind,
+            channel: row.channel ?? "auto",
+            body: text,
+          }).unwrap(),
+        )
         .then(() => {
           toast.success("Шаблон сохранён");
+          setBypassGuard(true);
           router.back();
         })
         .catch((e: unknown) => {
-          if (isDirectChannelRequired(e)) {
-            setChannelModalVisible(true);
-            return;
-          }
-          setServerError(getApiErrorMessage(e, "Не удалось сохранить шаблон"));
+          guardDirectChannelError(e, (err) =>
+            setServerError(
+              getApiErrorMessage(err, "Не удалось сохранить шаблон"),
+            ),
+          );
         });
     },
-    [auth, row, kind, saveTemplate],
+    [auth, row, kind, previewTemplate, saveTemplate, guardDirectChannelError],
   );
+
+  const handleReset = useCallback(() => {
+    if (!auth) return;
+    resetTemplate({ userId: auth.userId, kind })
+      .unwrap()
+      .then(() => {
+        toast.success("Шаблон сброшен");
+      })
+      .catch((e: unknown) => {
+        guardDirectChannelError(e, (err) =>
+          toast.error(getApiErrorMessage(err, "Не удалось сбросить шаблон")),
+        );
+      });
+  }, [auth, kind, resetTemplate, guardDirectChannelError]);
 
   if (isRowLoading || isVariablesLoading || !row) {
     return (
@@ -93,11 +120,15 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
     <>
       <MessageTemplateEditor
         initialValue={row.body ?? ""}
+        fallbackPreview={row.preview}
         variables={variables}
         senderName="Ваше имя"
-        isSaving={isSaving}
+        isSaving={isSaving || isPreviewing}
+        bypassGuard={bypassGuard}
         serverError={serverError}
         onSave={handleSave}
+        onReset={row.is_custom ? handleReset : undefined}
+        isResetting={isResetting}
       />
       <ConnectChannelModal
         visible={channelModalVisible}

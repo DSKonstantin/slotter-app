@@ -100,7 +100,7 @@ const NotificationBanners = () => {
     return null;
 
   return (
-    <View className="gap-2 px-screen">
+    <View className="gap-2">
       {showQuotaBanner && (
         <BannerCard
           variant={quotaRemaining <= 0 ? "error" : "alert"}

@@ -1,0 +1,160 @@
+import React, { useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { skipToken } from "@reduxjs/toolkit/query";
+
+import { SegmentedControl, Tag, Typography } from "@/src/components/ui";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useToday } from "@/src/hooks/useToday";
+import { useGetFinancesSummaryQuery } from "@/src/store/redux/services/api/financesApi";
+import {
+  useGetUserCustomersQuery,
+  useGetUserCustomersStatisticsQuery,
+} from "@/src/store/redux/services/api/userCustomersApi";
+import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { colors } from "@/src/styles/colors";
+
+import StatsIllustration from "./StatsIllustration";
+import { useWorkloadStats } from "./useWorkloadStats";
+
+type StatTab = "clients" | "finances" | "workload";
+
+type StatBlockProps = {
+  label: string;
+  value: string | number;
+  tagTitle?: string;
+  tagVariant?: "mint" | "error";
+};
+
+const StatBlock = ({ label, value, tagTitle, tagVariant }: StatBlockProps) => (
+  <>
+    <Typography className="text-body text-neutral-900">{label}</Typography>
+    <Typography weight="bold" className="text-4xl text-neutral-900">
+      {value}
+    </Typography>
+    {tagTitle && (
+      <Tag
+        title={tagTitle}
+        variant={tagVariant ?? "mint"}
+        containerClassName="bg-[#DEFAA0] px-3"
+        size="sm"
+        containerStyle={{
+          borderRadius: 16,
+        }}
+      />
+    )}
+  </>
+);
+
+const OPTIONS = [
+  { label: "Клиенты", value: "clients" },
+  { label: "Финансы", value: "finances" },
+  { label: "Загрузка", value: "workload" },
+];
+
+const HomeStats = () => {
+  const [tab, setTab] = useState<StatTab>("clients");
+  const auth = useRequiredAuth();
+  const today = useToday();
+
+  const { data: customersData } = useGetUserCustomersQuery(
+    auth ? { userId: auth.userId, per_count: 1 } : skipToken,
+  );
+  const { data: customersStatsData } = useGetUserCustomersStatisticsQuery(
+    auth
+      ? { userId: auth.userId, params: { period: "current_month" } }
+      : skipToken,
+  );
+  const { data: financesData } = useGetFinancesSummaryQuery(
+    auth
+      ? {
+          userId: auth.userId,
+          month: today.getMonth() + 1,
+          year: today.getFullYear(),
+        }
+      : skipToken,
+  );
+  const { averageLoadPercent, deltaPercent } = useWorkloadStats();
+
+  const totalClients = customersData?.pagination.total_count ?? 0;
+  const newClients = customersStatsData?.new_clients.count ?? 0;
+  const incomeCents = financesData?.income_cents ?? 0;
+  const growthPercent = financesData?.growth_percent;
+
+  const statBlockProps: StatBlockProps = useMemo(
+    () =>
+      tab === "clients"
+        ? {
+            label: "Всего",
+            value: totalClients,
+            tagTitle:
+              newClients > 0 ? `+${newClients} новых в этом месяце` : undefined,
+            tagVariant: "mint",
+          }
+        : tab === "finances"
+          ? {
+              label: "Доход",
+              value: formatRublesFromCents(incomeCents),
+              tagTitle:
+                growthPercent != null && incomeCents > 0
+                  ? `${growthPercent > 0 ? "+" : ""}${growthPercent}% к прошлому месяцу`
+                  : undefined,
+              tagVariant:
+                growthPercent != null && growthPercent >= 0 ? "mint" : "error",
+            }
+          : {
+              label: "Средняя загрузка",
+              value: `${averageLoadPercent}%`,
+              tagTitle: `${deltaPercent > 0 ? "+" : ""}${deltaPercent}% к прошлому месяцу`,
+              tagVariant: deltaPercent >= 0 ? "mint" : "error",
+            },
+    [
+      tab,
+      totalClients,
+      newClients,
+      incomeCents,
+      growthPercent,
+      averageLoadPercent,
+      deltaPercent,
+    ],
+  );
+
+  const hasData = tab === "workload" || totalClients > 0 || incomeCents > 0;
+  if (!hasData) return null;
+
+  return (
+    <View>
+      <LinearGradient
+        colors={[colors.primary.green[500], "#E1F6B1"]}
+        locations={[0.4716, 0.8199]}
+        start={{ x: 0.045, y: 0.293 }}
+        end={{ x: 0.955, y: 0.707 }}
+        style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+      />
+      <View className="p-4 gap-4">
+        <SegmentedControl
+          options={OPTIONS}
+          value={tab}
+          onChange={(v) => setTab(v as StatTab)}
+          className="bg-[#DEFAA0] gap-1 rounded-full p-2"
+          segmentClassName="rounded-full"
+          activeSegmentClassName="bg-neutral-0"
+          inactiveSegmentClassName="bg-neutral-0/50"
+          segmentLabelClassName="text-neutral-900"
+        />
+
+        <View className="flex-row items-end justify-between">
+          <View className="gap-1 flex-1">
+            <StatBlock {...statBlockProps} />
+          </View>
+
+          <View style={{ maxHeight: 192, overflow: "hidden" }}>
+            <StatsIllustration />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+export default HomeStats;

@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -9,6 +16,8 @@ import RetryInline from "@/src/components/shared/retryInline";
 import { Divider, Item, StSvg, Switch, Typography } from "@/src/components/ui";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import {
   useGetNotificationSettingsQuery,
   useUpdateNotificationSettingsMutation,
@@ -26,7 +35,7 @@ import type {
 import {
   STAGE_ORDER,
   STAGE_TITLES,
-} from "@/src/components/app/account/clientNotifications/templates/stageTitles";
+} from "@/src/components/app/account/clientNotifications/stageTitles";
 
 const KNOWN_STAGES = new Set<string>(STAGE_ORDER);
 
@@ -103,6 +112,12 @@ const NotificationTypes = () => {
     [auth, updateSettings],
   );
 
+  const refetchAll = useCallback(async () => {
+    await Promise.all([safeRefetch(refetch), safeRefetch(refetchSettings)]);
+  }, [refetch, refetchSettings]);
+
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
+
   return (
     <ScreenWithToolbar title="Виды уведомлений">
       {({ topInset, bottomInset }) => {
@@ -131,11 +146,22 @@ const NotificationTypes = () => {
         return (
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
             }}
             className="px-screen"
+            refreshControl={
+              <RefreshControl
+                progressViewOffset={Platform.select({ android: topInset })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
           >
             {sections.map((section) => (
               <View key={section.key} className="mb-5">

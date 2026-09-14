@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import type { TemplateVariable } from "@/src/store/redux/services/api-types";
-import { renderPreview } from "./renderPreview";
+import { renderPreview } from "../tokenText/renderPreview";
 
 type TemplatePreviewBubbleProps = {
   text: string;

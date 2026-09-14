@@ -1,5 +1,5 @@
 import { api } from "../api";
-import { renderPreview } from "@/src/components/app/account/clientNotifications/templates/renderPreview";
+import { renderPreview } from "@/src/components/app/account/clientNotifications/templates/tokenText/renderPreview";
 import type { RootState } from "@/src/store/redux/store";
 import type {
   NotificationTemplateKind,

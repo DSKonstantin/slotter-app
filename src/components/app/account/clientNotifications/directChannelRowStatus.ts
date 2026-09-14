@@ -16,7 +16,7 @@ export function getDirectChannelRowStatus(
   channel: SubscriptionDirectChannel | undefined,
   kind: DirectChannelKind,
 ): DirectChannelRowStatus {
-  const checkoutPath = `/notifications?channel=${kind}`;
+  const checkoutPath = `/notifications/${kind}`;
 
   if (!channel) {
     return {

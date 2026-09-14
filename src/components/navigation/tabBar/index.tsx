@@ -1,6 +1,7 @@
 import React, { memo, useCallback } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { router, useSegments, type Href } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Typography,
@@ -11,6 +12,7 @@ import {
 import { colors } from "@/src/styles/colors";
 import { COMPACT_BREAKPOINT, TABS } from "@/src/constants/tabs";
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
+import { useHasUnreadChat } from "@/src/hooks/useHasUnreadChat";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
@@ -22,6 +24,7 @@ type TabItemProps = {
   isAtRoot: boolean;
   extendActive?: boolean;
   compact: boolean;
+  showDot?: boolean;
   onPress: (key: string, isActive: boolean, isAtRoot: boolean) => void;
 };
 
@@ -32,6 +35,7 @@ const TabItem = memo(
     isAtRoot,
     extendActive,
     compact,
+    showDot,
     onPress,
   }: TabItemProps) => {
     const handlePress = useCallback(() => {
@@ -48,11 +52,19 @@ const TabItem = memo(
             className={`absolute inset-y-0 rounded-full bg-neutral-100 ${extendActive ? "-inset-x-1" : "inset-x-0"}`}
           />
         )}
-        <StSvg
-          name={tab.icon as string}
-          size={compact ? 24 : 32}
-          color={isActive ? colors.neutral[900] : colors.neutral[500]}
-        />
+        <View className="relative">
+          <StSvg
+            name={tab.icon as string}
+            size={compact ? 24 : 32}
+            color={isActive ? colors.neutral[900] : colors.neutral[500]}
+          />
+          {showDot && (
+            <View
+              className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+              style={{ backgroundColor: colors.accent.red[500] }}
+            />
+          )}
+        </View>
 
         <Typography
           weight="semibold"
@@ -76,6 +88,7 @@ const StTabBar: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const tabBarHeight = useTabBarHeight();
+  const hasUnreadChat = useHasUnreadChat();
   const segments = useSegments() as string[];
 
   const compact = width < COMPACT_BREAKPOINT;
@@ -87,10 +100,12 @@ const StTabBar: React.FC = () => {
   const handleTabPress = useCallback(
     (key: string, isActive: boolean, isAtRoot: boolean) => {
       if (!isInTabs) {
+        void Haptics.selectionAsync();
         router.replace(getTabHref(key));
         return;
       }
       if (isActive && isAtRoot) return;
+      void Haptics.selectionAsync();
       router.navigate(getTabHref(key));
     },
     [isInTabs],
@@ -133,6 +148,7 @@ const StTabBar: React.FC = () => {
                 isAtRoot={isActive ? isActiveTabAtRoot : true}
                 extendActive={tab.key === "calendar"}
                 compact={compact}
+                showDot={tab.key === "chat" && hasUnreadChat}
                 onPress={handleTabPress}
               />
             );

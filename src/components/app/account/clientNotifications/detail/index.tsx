@@ -1,5 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -10,12 +17,11 @@ import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { Divider, StSvg, Switch, Typography } from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateNotificationSettingsMutation } from "@/src/store/redux/services/api/notificationsApi";
-import {
-  useGetNotificationTemplatesQuery,
-  useResetNotificationTemplateMutation,
-} from "@/src/store/redux/services/api/notificationTemplatesApi";
+import { useGetNotificationTemplatesQuery } from "@/src/store/redux/services/api/notificationTemplatesApi";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { NotificationTemplateKind } from "@/src/store/redux/services/api-types";
@@ -55,8 +61,6 @@ const NotificationDetailScreen = ({ kind }: Props) => {
     useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
   const [updateSettings] = useUpdateNotificationSettingsMutation();
-  const [resetTemplate, { isLoading: isResetting }] =
-    useResetNotificationTemplateMutation();
   const [updateUser] = useUpdateUserMutation();
 
   const row = data?.notification_templates.find((r) => r.kind === kind);
@@ -73,15 +77,6 @@ const NotificationDetailScreen = ({ kind }: Props) => {
         toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
       });
   }, [auth, row, updateSettings, kind]);
-
-  const handleReset = useCallback(() => {
-    if (!auth) return;
-    resetTemplate({ userId: auth.userId, kind })
-      .unwrap()
-      .catch((e: unknown) => {
-        toast.error(getApiErrorMessage(e, "Не удалось сбросить шаблон"));
-      });
-  }, [auth, kind, resetTemplate]);
 
   const handleConsentToggle = useCallback(() => {
     if (!auth || !user) return;
@@ -110,17 +105,34 @@ const NotificationDetailScreen = ({ kind }: Props) => {
     [auth, updateUser],
   );
 
+  const refetchAll = useCallback(async () => {
+    await safeRefetch(refetch);
+  }, [refetch]);
+
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
+
   return (
     <>
       <ScreenWithToolbar title={row?.title}>
         {({ topInset, bottomInset }) => (
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
             contentContainerStyle={{
-              paddingTop: topInset,
+              paddingTop: Platform.OS === "ios" ? 0 : topInset,
               paddingBottom: bottomInset + 8,
             }}
             className="px-screen"
+            refreshControl={
+              <RefreshControl
+                progressViewOffset={Platform.select({ android: topInset })}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
           >
             <View className="bg-background-surface rounded-base overflow-hidden mb-5">
               {isLoading ? (
@@ -236,20 +248,6 @@ const NotificationDetailScreen = ({ kind }: Props) => {
                       color={colors.neutral[300]}
                     />
                   </Pressable>
-                  {row.is_custom && (
-                    <>
-                      <Divider className="mx-4" />
-                      <Pressable
-                        onPress={handleReset}
-                        disabled={isResetting}
-                        className="p-4 active:opacity-70"
-                      >
-                        <Typography className="text-body text-accent-red-500">
-                          Сбросить
-                        </Typography>
-                      </Pressable>
-                    </>
-                  )}
                 </View>
               </View>
             )}

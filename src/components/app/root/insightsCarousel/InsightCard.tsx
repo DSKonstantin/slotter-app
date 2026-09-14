@@ -1,93 +1,62 @@
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Image, type ImageSource } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { Badge, StSvg, Typography } from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
-
-import { INSIGHT_CATEGORY_CONFIG } from "./config";
+import { Typography } from "@/src/components/ui";
 
 export type InsightCategory =
-  | "analytics"
-  | "tip"
-  | "reminder"
-  | "update"
-  | "offer"
-  | "event"
-  | "education";
+  "analytics" | "tip" | "reminder" | "update" | "offer" | "event" | "education";
 
-export type BodyPart = {
-  text: string;
-  highlight?: boolean;
-};
+export const CARD_WIDTH = 110;
+export const CARD_HEIGHT = 125;
 
 type Props = {
   category: InsightCategory;
-  iconName: string;
   title: string;
-  body: BodyPart[] | string;
+  imageSource?: ImageSource | number;
   onPress: () => void;
 };
 
-const InsightCard = ({ category, iconName, title, body, onPress }: Props) => {
-  const styles = INSIGHT_CATEGORY_CONFIG[category];
-
+const InsightCard = ({ title, imageSource, onPress }: Props) => {
   return (
-    <View className="relative flex-1">
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={onPress}
-        className="flex-1 flex-row bg-background rounded-base p-4 gap-2"
-      >
-        <View className="flex-1 gap-2">
-          <View className="flex-row items-center gap-2">
-            <StSvg name={iconName} size={28} color={styles.color} />
-            <Badge
-              title={styles.label}
-              size="sm"
-              className={styles.pillBg}
-              textStyle={{ color: styles.pillTextColor }}
-            />
-          </View>
+    <Pressable
+      onPress={onPress}
+      style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
+      className="rounded-base overflow-hidden active:opacity-90"
+    >
+      {imageSource ? (
+        <Image
+          source={imageSource}
+          style={{ width: "100%", height: "100%" }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="w-full h-full bg-neutral-200" />
+      )}
 
-          <View className="gap-1">
-            <Typography
-              weight="semibold"
-              className="text-body text-neutral-900"
-              numberOfLines={2}
-            >
-              {title}
-            </Typography>
-            <Typography
-              className="text-caption text-neutral-500"
-              numberOfLines={2}
-            >
-              {Array.isArray(body)
-                ? body.map((p, i) =>
-                    p.highlight ? (
-                      <Typography
-                        key={i}
-                        className="text-caption text-neutral-900"
-                      >
-                        {p.text}
-                      </Typography>
-                    ) : (
-                      p.text
-                    ),
-                  )
-                : body}
-            </Typography>
-          </View>
-        </View>
+      <LinearGradient
+        colors={["rgba(0,0,0,0.7)", "rgba(0,0,0,0.7)", "rgba(0,0,0,0)"]}
+        locations={[0, 0.226, 0.6298]}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}
+      />
 
-        <View className="self-center">
-          <StSvg
-            name="Expand_right_light"
-            size={24}
-            color={colors.neutral[500]}
-          />
-        </View>
-      </TouchableOpacity>
-    </View>
+      <View className="absolute top-0 left-0 right-0 p-3">
+        <Typography
+          weight="semibold"
+          className="text-[14px] leading-5 text-neutral-0"
+          numberOfLines={4}
+        >
+          {title}
+        </Typography>
+      </View>
+    </Pressable>
   );
 };
 

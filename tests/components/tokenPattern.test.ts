@@ -1,7 +1,7 @@
 import {
   ANY_TOKEN_RE,
   STRICT_TOKEN_RE,
-} from "@/src/components/app/account/clientNotifications/templates/tokenPattern";
+} from "@/src/components/app/account/clientNotifications/templates/tokenText/tokenPattern";
 
 const matchAllKeys = (re: RegExp, text: string) =>
   [...text.matchAll(re)].map((m) => m[1]);

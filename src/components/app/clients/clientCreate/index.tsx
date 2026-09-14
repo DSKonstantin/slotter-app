@@ -219,7 +219,6 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                         <RhfTextField
                           label="Телефон"
                           name="phone"
-                          maxLength={16}
                           hideErrorText
                           placeholder="+7 (___) ___-__-__"
                           keyboardType="phone-pad"

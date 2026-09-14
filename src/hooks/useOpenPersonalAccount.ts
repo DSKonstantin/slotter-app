@@ -7,16 +7,12 @@ export function useOpenPersonalAccount() {
   const token = useAppSelector((s) => s.auth.token);
 
   return useCallback(
-    async (path: string = "") => {
-      const sep = path.includes("?") ? "&" : "?";
-      try {
-        await Linking.openURL(
-          `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${userId}${path}${sep}token=${token}`,
-        );
-      } catch {
+    (path: string = "") =>
+      Linking.openURL(
+        `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/personal-account/${userId}${path}?token=${token}`,
+      ).catch(() => {
         Alert.alert("Не удалось открыть ссылку", "Попробуйте ещё раз");
-      }
-    },
+      }),
     [userId, token],
   );
 }

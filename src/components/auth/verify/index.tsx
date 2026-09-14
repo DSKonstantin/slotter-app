@@ -214,7 +214,6 @@ const Verify = () => {
               name="phone"
               placeholder="+ 7 999 000-00-00"
               maskFn={maskPhone}
-              maxLength={16}
               hideErrorText
               keyboardType="number-pad"
             />

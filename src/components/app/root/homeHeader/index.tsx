@@ -1,17 +1,26 @@
 import React, { useCallback, useState } from "react";
 import { Pressable, View } from "react-native";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 import { colors } from "@/src/styles/colors";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
 import CreateActionModal from "./CreateActionModal";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import ProfileLinkModal from "@/src/components/app/root/homeHeader/ProfileLinkModal";
+import BellPinActiveIcon from "@/src/components/app/root/homeHeader/BellPinActiveIcon";
 
 const HomeHeader = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [profileActionsVisible, setProfileActionsVisible] = useState(false);
+  const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
+  const { data: notificationsData } = useGetNotificationsQuery(
+    auth ? { per_count: 50, is_read: false } : skipToken,
+  );
+  const unreadCount = notificationsData?.unread_count ?? 0;
   const fullName = [user?.first_name, user?.last_name]
     .filter(Boolean)
     .join(" ");
@@ -26,9 +35,13 @@ const HomeHeader = () => {
     router.push(Routers.app.account.root);
   }, []);
 
+  const handleOpenHistory = useCallback(() => {
+    router.push(Routers.app.history.root);
+  }, []);
+
   return (
     <View className="flex-row items-center justify-between px-screen py-2.5">
-      <View className="flex-row items-center gap-3 mr-3">
+      <View className="flex-1 flex-row items-center gap-3 mr-3">
         <Pressable onPress={handleOpenProfile} className="active:opacity-70">
           <Avatar
             uri={user?.avatar_url ?? undefined}
@@ -38,7 +51,7 @@ const HomeHeader = () => {
           />
         </Pressable>
 
-        <View className="">
+        <View className="flex-1">
           <Pressable onPress={handleOpenProfile} className="active:opacity-70">
             <Typography
               weight="semibold"
@@ -52,7 +65,10 @@ const HomeHeader = () => {
             onPress={() => setProfileActionsVisible(true)}
             className="flex-row items-center gap-1 active:opacity-70"
           >
-            <Typography className="text-caption text-neutral-500">
+            <Typography
+              className="text-caption text-neutral-500 shrink"
+              numberOfLines={1}
+            >
               {profileLink ?? "-"}
             </Typography>
             {profileLink && (
@@ -64,12 +80,28 @@ const HomeHeader = () => {
         </View>
       </View>
 
-      <IconButton
-        size="sm"
-        buttonClassName="bg-background"
-        onPress={() => setModalVisible(true)}
-        icon={<StSvg name="Add_round" size={24} color={colors.neutral[900]} />}
-      />
+      <View className="flex-row items-center gap-2">
+        <IconButton
+          onPress={handleOpenHistory}
+          icon={
+            unreadCount > 0 ? (
+              <BellPinActiveIcon size={24} />
+            ) : (
+              <StSvg
+                name="Bell_pin_fill"
+                size={24}
+                color={colors.neutral[900]}
+              />
+            )
+          }
+        />
+        <IconButton
+          onPress={() => setModalVisible(true)}
+          icon={
+            <StSvg name="Add_round" size={24} color={colors.neutral[900]} />
+          }
+        />
+      </View>
 
       <CreateActionModal
         visible={modalVisible}

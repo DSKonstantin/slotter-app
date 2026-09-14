@@ -1,6 +1,8 @@
-import { renderPreview } from "@/src/components/app/account/clientNotifications/templates/renderPreview";
-import { validateBody } from "@/src/components/app/account/clientNotifications/templates/validateBody";
-import { insertToken } from "@/src/components/app/account/clientNotifications/templates/insertToken";
+import { renderPreview } from "@/src/components/app/account/clientNotifications/templates/tokenText/renderPreview";
+import { validateBody } from "@/src/components/app/account/clientNotifications/templates/tokenText/validateBody";
+import { insertToken } from "@/src/components/app/account/clientNotifications/templates/tokenText/insertToken";
+import { collapseTokenOnDelete } from "@/src/components/app/account/clientNotifications/templates/tokenText/collapseTokenOnDelete";
+import { getActiveTokenTrigger } from "@/src/components/app/account/clientNotifications/templates/tokenText/activeTokenTrigger";
 import type { TemplateVariable } from "@/src/store/redux/services/api-types";
 
 const vars: TemplateVariable[] = [
@@ -119,5 +121,71 @@ describe("insertToken", () => {
     const r = insertToken("", { start: 0, end: 0 }, "{{TIME_SERVICE}}", 500);
     expect(r.text).toBe("{{TIME_SERVICE}}");
     expect(r.selection).toEqual({ start: 16, end: 16 });
+  });
+});
+
+describe("collapseTokenOnDelete", () => {
+  const oldText = "Hi {{CLIENT_NAME}} bye";
+
+  it("бэкспейс сразу после токена удаляет его целиком", () => {
+    const newText = oldText.slice(0, 17) + oldText.slice(18);
+    const r = collapseTokenOnDelete(oldText, newText);
+    expect(r).toEqual({ text: "Hi  bye", selection: { start: 3, end: 3 } });
+  });
+
+  it("бэкспейс из середины токена удаляет его целиком", () => {
+    const newText = oldText.slice(0, 10) + oldText.slice(11);
+    const r = collapseTokenOnDelete(oldText, newText);
+    expect(r).toEqual({ text: "Hi  bye", selection: { start: 3, end: 3 } });
+  });
+
+  it("удаление символа вне токена не трогается", () => {
+    const newText = oldText.slice(1);
+    expect(collapseTokenOnDelete(oldText, newText)).toBeNull();
+  });
+
+  it("удаление диапазона (не один символ) не трогается", () => {
+    const newText = "Hi  bye";
+    expect(collapseTokenOnDelete(oldText, newText)).toBeNull();
+  });
+
+  it("текст без токенов не трогается", () => {
+    const text = "Just text";
+    const newText = text.slice(0, -1);
+    expect(collapseTokenOnDelete(text, newText)).toBeNull();
+  });
+});
+
+describe("getActiveTokenTrigger", () => {
+  it("только что открытые скобки — пустой запрос", () => {
+    expect(getActiveTokenTrigger("Hi {{", 5)).toEqual({
+      start: 3,
+      query: "",
+    });
+  });
+
+  it("печатает имя переменной — запрос растёт", () => {
+    expect(getActiveTokenTrigger("Hi {{cli", 8)).toEqual({
+      start: 3,
+      query: "cli",
+    });
+  });
+
+  it("токен уже закрыт — триггера нет", () => {
+    const text = "Hi {{CLIENT_NAME}} bye";
+    expect(getActiveTokenTrigger(text, 18)).toBeNull();
+  });
+
+  it("пробел внутри скобок ломает триггер", () => {
+    expect(getActiveTokenTrigger("Hi {{cli ent", 12)).toBeNull();
+  });
+
+  it("нет открывающих скобок вообще", () => {
+    expect(getActiveTokenTrigger("Hi there", 8)).toBeNull();
+  });
+
+  it("более поздние скобки после курсора не учитываются", () => {
+    const text = "Hi {{CLIENT_NAME}} bye {{";
+    expect(getActiveTokenTrigger(text, 2)).toBeNull();
   });
 });
