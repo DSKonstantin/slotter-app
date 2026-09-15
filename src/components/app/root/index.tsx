@@ -34,7 +34,6 @@ import InsightsCarousel from "@/src/components/app/root/insightsCarousel";
 const Home = () => {
   const [statsHeight, setStatsHeight] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
-  const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
   const homeOverviewRef = useRef<HomeOverviewHandle>(null);
   const auth = useRequiredAuth();
   const ispe = useAppSelector((s) => s.appVersion.ispe);
@@ -111,7 +110,7 @@ const Home = () => {
 
   useFocusEffect(
     useCallback(() => {
-      homeOverviewRef.current?.collapse();
+      homeOverviewRef.current?.expand();
       if (!auth) return;
       safeRefetch(refetchSchedule);
       safeRefetch(refetchAppointments);
@@ -134,40 +133,40 @@ const Home = () => {
       <HomeHeader />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!isOverviewExpanded}
+        style={{
+          flexGrow: 0,
+          marginTop: 8,
+        }}
         contentContainerStyle={{
-          flexGrow: 1,
           paddingBottom: 8,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View>
-          <InsightsCarousel />
-        </View>
+        <InsightsCarousel />
+      </ScrollView>
+
+      <View
+        className="flex-1"
+        onLayout={(e: LayoutChangeEvent) =>
+          setContainerHeight(e.nativeEvent.layout.height)
+        }
+      >
         <View
-          className="flex-1"
+          className="px-screen gap-3 pt-[16px] pb-[8px]"
           onLayout={(e: LayoutChangeEvent) =>
-            setContainerHeight(e.nativeEvent.layout.height)
+            setStatsHeight(e.nativeEvent.layout.height)
           }
         >
-          <View
-            className="px-screen gap-3 pt-[16px] pb-[8px]"
-            onLayout={(e: LayoutChangeEvent) =>
-              setStatsHeight(e.nativeEvent.layout.height)
-            }
-          >
-            <HomeStats />
-          </View>
-          <HomeOverview
-            ref={homeOverviewRef}
-            statsHeight={statsHeight}
-            containerHeight={containerHeight}
-            onExpandedChange={setIsOverviewExpanded}
-          />
+          <HomeStats />
         </View>
-      </ScrollView>
+        <HomeOverview
+          ref={homeOverviewRef}
+          statsHeight={statsHeight}
+          containerHeight={containerHeight}
+        />
+      </View>
     </SafeAreaView>
   );
 };

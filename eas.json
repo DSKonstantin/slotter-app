@@ -13,12 +13,21 @@
       "environment": "production",
       "autoIncrement": true
     },
+    "staging": {
+      "autoIncrement": true,
+      "environment": "preview"
+    },
     "production": {
       "autoIncrement": true,
       "environment": "production"
     }
   },
   "submit": {
+    "staging": {
+      "ios": {
+        "ascAppId": "6770947241"
+      }
+    },
     "production": {}
   }
 }

@@ -43,6 +43,14 @@ const CustomerSelectField = ({ showCreateButton = true }: Props) => {
     [setValue],
   );
 
+  const handleClear = useCallback(() => {
+    setSelectedCustomer(null);
+    setValue("customerId", undefined, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [setValue]);
+
   useEffect(() => {
     const source = createdCustomer ?? selectedCustomerFromDraft;
     if (!source) return;
@@ -66,6 +74,16 @@ const CustomerSelectField = ({ showCreateButton = true }: Props) => {
             startAdornment={
               <StSvg name="Search" size={24} color={colors.neutral[900]} />
             }
+            endAdornment={
+              selectedCustomer ? (
+                <StSvg
+                  name="Close_round"
+                  size={16}
+                  color={colors.neutral[900]}
+                />
+              ) : undefined
+            }
+            onEndAdornmentPress={selectedCustomer ? handleClear : undefined}
             displayValue={selectedCustomer?.name}
             placeholder="Поиск по имени или телефону"
             onPress={() => setModalVisible(true)}

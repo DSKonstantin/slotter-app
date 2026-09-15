@@ -144,6 +144,7 @@ function InitialLayout() {
           name="(password-reset)"
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="webview" options={{ headerShown: false }} />
       </Stack>
       <Toasts overrideDarkMode={true} />
       <StatusBar style="auto" />

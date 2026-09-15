@@ -1,17 +1,24 @@
-import React, { useEffect, useImperativeHandle, useState } from "react";
-import { LayoutChangeEvent, ScrollView, View } from "react-native";
+import React, {
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Extrapolation,
   interpolate,
-  SharedValue,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import BottomSheet, {
+  BottomSheetScrollView,
+  useBottomSheet,
+} from "@gorhom/bottom-sheet";
+import Svg, { Path } from "react-native-svg";
 import { StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatApiDate, formatShortDayName } from "@/src/utils/date/formatDate";
@@ -21,12 +28,11 @@ import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import SpecialistHomeAssistant from "@/src/components/app/root/homeOverview/specialistHomeAssistant";
 // import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
-const TAP_SLOP = 4;
-const VELOCITY_THRESHOLD = 500;
 const EXPANDED_TOP_INSET = 16;
 const SPRING_CONFIG = { damping: 30, stiffness: 250, overshootClamping: true };
 const GLOW_RAISE = 8;
 const GLOW_HEIGHT = 25 + GLOW_RAISE;
+const GLOW_FADE_DURATION = 220;
 const GLOW_LOCATIONS = [0, 0.05, 0.3, 0.45, 0.75, 1] as const;
 const GLOW_COLORS = [
   "rgba(200,246,96,0.04)",
@@ -36,9 +42,55 @@ const GLOW_COLORS = [
   "rgba(200,246,96,0.16)",
   "rgba(200,246,96,0.16)",
 ] as const;
+const COLLAPSED_INDEX = 0;
+const EXPANDED_INDEX = 1;
+const HANDLE_GLYPH_WIDTH = 60;
+const HANDLE_GLYPH_HEIGHT = 11;
+const HANDLE_GLYPH_PATH =
+  "M0 7.46542C0 9.29402 1.64195 10.685 3.44567 10.3843L29.5068 6.04082C29.8333 5.98639 30.1667 5.98639 30.4932 6.04082L56.5543 10.3843C58.358 10.685 60 9.29402 60 7.46542C60 6.01886 58.9542 4.78432 57.5273 4.5465L30.4932 0.0408182C30.1667 -0.013607 29.8333 -0.013607 29.5068 0.0408173L2.47269 4.5465C1.04581 4.78432 0 6.01886 0 7.46542Z";
 
 export type HomeOverviewHandle = {
   collapse: () => void;
+  expand: () => void;
+};
+
+const Handle = () => {
+  const { animatedIndex } = useBottomSheet();
+
+  const pillStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      animatedIndex.value,
+      [COLLAPSED_INDEX, EXPANDED_INDEX],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+  const glyphStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      animatedIndex.value,
+      [COLLAPSED_INDEX, EXPANDED_INDEX],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  return (
+    <View className="items-center justify-center py-2 h-9">
+      <Animated.View className="absolute" style={pillStyle}>
+        <View className="w-[60px] h-[6px] rounded-full bg-background" />
+      </Animated.View>
+      <Animated.View className="absolute" style={glyphStyle}>
+        <Svg
+          width={HANDLE_GLYPH_WIDTH}
+          height={HANDLE_GLYPH_HEIGHT}
+          viewBox={`0 0 ${HANDLE_GLYPH_WIDTH} ${HANDLE_GLYPH_HEIGHT}`}
+          fill="none"
+        >
+          <Path d={HANDLE_GLYPH_PATH} fill={colors.background.DEFAULT} />
+        </Svg>
+      </Animated.View>
+    </View>
+  );
 };
 
 type Props = {
@@ -54,99 +106,58 @@ const HomeOverview = ({
   containerHeight,
   onExpandedChange,
 }: Props) => {
-  const [handleHeight, setHandleHeight] = useState(20);
+  const bottomSheetRef = useRef<React.ComponentRef<typeof BottomSheet>>(null);
 
-  const restOffset = useSharedValue(0);
-  const translateY = useSharedValue(2000);
-  const startY = useSharedValue(0);
-  const hasMeasured = useSharedValue(false);
-  const isExpanded = useSharedValue(false);
-
+  const glowOpacity = useSharedValue(0);
   const today = useToday();
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
+  const snapPoints = useMemo(
+    () => [
+      Math.max(containerHeight - statsHeight, 0),
+      Math.max(containerHeight - EXPANDED_TOP_INSET, 0),
+    ],
+    [containerHeight, statsHeight],
+  );
+
+  const handleChange = useCallback(
+    (nextIndex: number) => {
+      const expanded = nextIndex === EXPANDED_INDEX;
+      glowOpacity.value = withTiming(expanded ? 1 : 0, {
+        duration: GLOW_FADE_DURATION,
+      });
+      onExpandedChange?.(expanded);
+    },
+    [glowOpacity, onExpandedChange],
+  );
 
   const timeChip = `Сегодня • ${formatShortDayName(today)} • ${formatDayMonth(
     formatApiDate(today),
   )}`;
-
-  const notifyExpanded = (expanded: boolean) => {
-    onExpandedChange?.(expanded);
-  };
-
-  const pan = Gesture.Pan()
-    .onStart(() => {
-      startY.value = translateY.value;
-    })
-    .onUpdate((e) => {
-      const next = startY.value + e.translationY;
-      translateY.value = Math.min(
-        Math.max(next, EXPANDED_TOP_INSET),
-        restOffset.value,
-      );
-    })
-    .onEnd((e) => {
-      const dragged = Math.abs(e.translationY);
-      const wasExpanded = startY.value < restOffset.value / 2;
-
-      let shouldExpand: boolean;
-      if (dragged < TAP_SLOP) {
-        shouldExpand = !wasExpanded;
-      } else if (Math.abs(e.velocityY) > VELOCITY_THRESHOLD) {
-        shouldExpand = e.velocityY < 0;
-      } else {
-        shouldExpand = translateY.value < restOffset.value / 2;
-      }
-
-      isExpanded.value = shouldExpand;
-      translateY.value = withSpring(
-        shouldExpand ? EXPANDED_TOP_INSET : restOffset.value,
-        {
-          ...SPRING_CONFIG,
-          velocity: e.velocityY,
-        },
-      );
-      scheduleOnRN(notifyExpanded, shouldExpand);
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      translateY.value,
-      [EXPANDED_TOP_INSET, restOffset.value],
-      [1, 0],
-      Extrapolation.CLAMP,
-    ),
-    transform: [{ translateY: translateY.value - GLOW_RAISE }],
-  }));
+  const isReady = statsHeight > 0 && containerHeight > 0;
 
   useImperativeHandle(ref, () => ({
     collapse: () => {
-      if (!hasMeasured.value) return;
-      isExpanded.value = false;
-      translateY.value = withSpring(restOffset.value, SPRING_CONFIG);
-      notifyExpanded(false);
+      bottomSheetRef.current?.snapToIndex(COLLAPSED_INDEX);
+    },
+    expand: () => {
+      bottomSheetRef.current?.snapToIndex(EXPANDED_INDEX);
     },
   }));
 
-  useEffect(() => {
-    if (statsHeight <= 0) return;
-    restOffset.value = statsHeight;
-    if (!hasMeasured.value) {
-      hasMeasured.value = true;
-      translateY.value = statsHeight;
-    } else if (!isExpanded.value) {
-      translateY.value = statsHeight;
-    }
-  }, [statsHeight, restOffset, translateY, hasMeasured, isExpanded]);
+  if (!isReady) return null;
 
   return (
     <>
       <Animated.View
         pointerEvents="none"
-        className="absolute top-0 left-0 right-0"
-        style={[{ height: GLOW_HEIGHT }, glowStyle]}
+        className="absolute left-0 right-0"
+        style={[
+          { top: EXPANDED_TOP_INSET - GLOW_RAISE, height: GLOW_HEIGHT },
+          glowStyle,
+        ]}
       >
         <LinearGradient
           colors={GLOW_COLORS}
@@ -155,67 +166,39 @@ const HomeOverview = ({
         />
       </Animated.View>
 
-      <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 10,
-            elevation: 10,
-          },
-          animatedStyle,
-        ]}
-        className="bg-background-surface rounded-t-large overflow-hidden"
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={COLLAPSED_INDEX}
+        snapPoints={snapPoints}
+        topInset={EXPANDED_TOP_INSET}
+        animationConfigs={SPRING_CONFIG}
+        enableDynamicSizing={false}
+        handleComponent={Handle}
+        backgroundStyle={{
+          backgroundColor: colors.background.surface,
+          borderTopLeftRadius: 36,
+          borderTopRightRadius: 36,
+        }}
+        onChange={handleChange}
       >
-        <GestureDetector gesture={pan}>
-          <View
-            className="items-center py-2"
-            onLayout={(e: LayoutChangeEvent) =>
-              setHandleHeight(e.nativeEvent.layout.height)
-            }
-          >
-            <View className="w-20 h-1 rounded-full bg-neutral-300" />
-          </View>
-        </GestureDetector>
-
-        <ContentBody
-          timeChip={timeChip}
-          translateY={translateY}
-          containerHeight={containerHeight}
-          handleHeight={handleHeight}
-        />
-      </Animated.View>
+        <ContentBody timeChip={timeChip} />
+      </BottomSheet>
     </>
   );
 };
 
 type ContentBodyProps = {
   timeChip: string;
-  translateY: SharedValue<number>;
-  containerHeight: number;
-  handleHeight: number;
 };
 
-const ContentBody = ({
-  timeChip,
-  translateY,
-  containerHeight,
-  handleHeight,
-}: ContentBodyProps) => {
+const ContentBody = ({ timeChip }: ContentBodyProps) => {
   const { bottom } = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
 
-  const visibleHeightStyle = useAnimatedStyle(() => ({
-    height: Math.max(containerHeight - translateY.value - handleHeight, 0),
-  }));
-
   return (
-    <Animated.View
-      className="px-screen gap-3"
-      style={[{ paddingBottom: tabBarHeight + bottom }, visibleHeightStyle]}
+    <View
+      className="px-screen gap-3 flex-1"
+      style={{ paddingBottom: tabBarHeight + bottom }}
     >
       <View className="flex-row items-center gap-2 justify-center">
         <StSvg name="SlotterAI" size={14} color={colors.neutral[500]} />
@@ -228,12 +211,15 @@ const ContentBody = ({
         {timeChip}
       </Typography>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <BottomSheetScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <SpecialistHomeAssistant />
-      </ScrollView>
+      </BottomSheetScrollView>
 
       {/*<NotificationBanners />*/}
-    </Animated.View>
+    </View>
   );
 };
 

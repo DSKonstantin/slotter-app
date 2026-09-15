@@ -131,7 +131,7 @@ const ServiceFormBody = ({
         <Item
           titleAccessory={
             <View className="flex-1 flex-row items-center gap-1">
-              <Typography weight="regular" className="text-body flex-1">
+              <Typography weight="regular" className="text-body">
                 Доступно для онлайн-записи
               </Typography>
               <IconButton

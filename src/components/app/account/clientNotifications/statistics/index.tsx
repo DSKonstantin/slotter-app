@@ -80,10 +80,10 @@ const NotificationsStatistics = () => {
 
   const totals = statsData?.notification_stats.totals;
   const sent = totals?.sent ?? 0;
-  const delivered = (totals?.sent ?? 0) - (totals?.failed ?? 0);
+  const delivered = totals?.delivered ?? 0;
   const failed = totals?.failed ?? 0;
   const deliverability =
-    sent > 0 ? `${Math.round(((sent - failed) / sent) * 100)}%` : "—";
+    sent > 0 ? `${Math.round((delivered / sent) * 100)}%` : "—";
 
   const stats = [
     {

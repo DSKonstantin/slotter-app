@@ -1,5 +1,10 @@
 export const Routers = {
   root: "/",
+  webview: (url: string, title?: string) =>
+    ({
+      pathname: "/webview",
+      params: { url, ...(title && { title }) },
+    }) as const,
   resetPassword: {
     root: "/(password-reset)",
     verify: "/(password-reset)/verify",

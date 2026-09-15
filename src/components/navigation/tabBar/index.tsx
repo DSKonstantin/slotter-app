@@ -100,18 +100,19 @@ const StTabBar: React.FC = () => {
   const handleTabPress = useCallback(
     (key: string, isActive: boolean, isAtRoot: boolean) => {
       if (!isInTabs) {
-        void Haptics.selectionAsync();
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         router.replace(getTabHref(key));
         return;
       }
       if (isActive && isAtRoot) return;
-      void Haptics.selectionAsync();
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.navigate(getTabHref(key));
     },
     [isInTabs],
   );
 
   const handleMenuPress = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     dispatch(setTabMenuOpen(!isMenuOpen));
   }, [dispatch, isMenuOpen]);
 

@@ -17,6 +17,8 @@ import { colors } from "@/src/styles/colors";
 import StatsIllustration from "./StatsIllustration";
 import { useWorkloadStats } from "./useWorkloadStats";
 
+const ILLUSTRATION_BLEED = 30;
+
 type StatTab = "clients" | "finances" | "workload";
 
 type StatBlockProps = {
@@ -28,21 +30,23 @@ type StatBlockProps = {
 
 const StatBlock = ({ label, value, tagTitle, tagVariant }: StatBlockProps) => (
   <>
-    <Typography className="text-body text-neutral-900">{label}</Typography>
-    <Typography weight="bold" className="text-4xl text-neutral-900">
-      {value}
-    </Typography>
-    {tagTitle && (
-      <Tag
-        title={tagTitle}
-        variant={tagVariant ?? "mint"}
-        containerClassName="bg-[#DEFAA0] px-3"
-        size="sm"
-        containerStyle={{
-          borderRadius: 16,
-        }}
-      />
-    )}
+    <View className="flex-1 justify-center">
+      <Typography className="text-body text-neutral-900">{label}</Typography>
+      <Typography weight="bold" className="text-4xl text-neutral-900">
+        {value}
+      </Typography>
+    </View>
+
+    <Tag
+      title={tagTitle ?? " "}
+      variant={tagVariant ?? "mint"}
+      containerClassName="bg-[#DEFAA0] px-3"
+      size="sm"
+      containerStyle={{
+        borderRadius: 16,
+        opacity: tagTitle ? 1 : 0,
+      }}
+    />
   </>
 );
 
@@ -123,15 +127,26 @@ const HomeStats = () => {
   if (!hasData) return null;
 
   return (
-    <View>
+    <View className="rounded-base overflow-hidden min-h-[192px]">
       <LinearGradient
         colors={[colors.primary.green[500], "#E1F6B1"]}
         locations={[0.4716, 0.8199]}
         start={{ x: 0.045, y: 0.293 }}
         end={{ x: 0.955, y: 0.707 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+        style={StyleSheet.absoluteFill}
       />
-      <View className="p-4 gap-4">
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: -ILLUSTRATION_BLEED,
+          right: 0,
+        }}
+      >
+        <StatsIllustration />
+      </View>
+
+      <View className="p-4 gap-2 flex-1">
         <SegmentedControl
           options={OPTIONS}
           value={tab}
@@ -143,13 +158,9 @@ const HomeStats = () => {
           segmentLabelClassName="text-neutral-900"
         />
 
-        <View className="flex-row items-end justify-between">
+        <View className="flex-row items-end justify-between flex-1">
           <View className="gap-1 flex-1">
             <StatBlock {...statBlockProps} />
-          </View>
-
-          <View style={{ maxHeight: 192, overflow: "hidden" }}>
-            <StatsIllustration />
           </View>
         </View>
       </View>

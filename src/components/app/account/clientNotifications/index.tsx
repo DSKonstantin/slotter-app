@@ -36,6 +36,8 @@ import { getDirectChannelRowStatus } from "./directChannelRowStatus";
 import { Button, Card, Divider, StSvg, Typography } from "@/src/components/ui";
 import { SlotterLogo } from "@/src/components/shared/svg/SlotterLogo";
 import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
+import ClientsHeaderCard from "@/src/components/app/clients/clientsList/ClientsHeaderCard";
+import BroadcastEntryCard from "@/src/components/app/clients/clientsList/BroadcastEntryCard";
 import DirectDiffModal from "./DirectDiffModal";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
@@ -231,50 +233,19 @@ const ClientNotifications = () => {
               />
             }
           >
-            <View className="flex-row gap-2 mb-2">
-              <Pressable
+            <View className="flex-row gap-2.5 mb-2">
+              <ClientsHeaderCard
+                iconName="Pipe_fill"
+                label="Статистика"
                 onPress={() =>
                   router.push(
                     Routers.app.account.clientNotifications.statistics,
                   )
                 }
-                className="flex-1 bg-background-surface rounded-base p-4 active:opacity-70"
-              >
-                <View className="flex-row items-start justify-between mb-2">
-                  <StSvg
-                    name="Pipe_fill"
-                    size={24}
-                    color={colors.neutral[900]}
-                  />
-                  <StSvg
-                    name="Expand_right_light"
-                    size={24}
-                    color={colors.neutral[500]}
-                  />
-                </View>
-                <Typography className="text-body">Статистика</Typography>
-              </Pressable>
-
-              <Pressable
-                onPress={() =>
-                  router.push(Routers.app.account.clientNotifications.broadcast)
-                }
-                className="flex-1 bg-background-surface rounded-base p-4 active:opacity-70"
-              >
-                <View className="flex-row items-start justify-between mb-2">
-                  <StSvg
-                    name="Message_alt_fill"
-                    size={24}
-                    color={colors.neutral[900]}
-                  />
-                  <StSvg
-                    name="Expand_right_light"
-                    size={24}
-                    color={colors.neutral[500]}
-                  />
-                </View>
-                <Typography className="text-body">Рассылка</Typography>
-              </Pressable>
+              />
+              <BroadcastEntryCard
+                route={Routers.app.account.clientNotifications.broadcast}
+              />
             </View>
 
             <Card
@@ -303,7 +274,7 @@ const ClientNotifications = () => {
 
             {ispe && (
               <>
-                <View className="mt-5 mb-2 flex-row gap-2 justify-between">
+                <View className="mt-5 flex-row gap-2 justify-between">
                   <Typography className="text-caption text-neutral-500 shrink-0">
                     Прямые уведомления
                   </Typography>
@@ -313,7 +284,7 @@ const ClientNotifications = () => {
                   >
                     <StSvg
                       name="Info_alt_fill"
-                      size={20}
+                      size={16}
                       color={colors.primary.blue[500]}
                     />
                     <Typography
@@ -478,7 +449,7 @@ const ClientNotifications = () => {
                 onPress={() => Share.share({ message: CLIENT_APP_SHARE_URL! })}
                 disabled={!CLIENT_APP_SHARE_URL}
                 variant="accent"
-                buttonClassName="bg-background border border-neutral-100"
+                buttonClassName="bg-background"
                 textClassName="text-primary-blue-500"
                 rightIcon={
                   <StSvg

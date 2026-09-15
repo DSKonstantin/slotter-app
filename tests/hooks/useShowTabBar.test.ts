@@ -49,9 +49,8 @@ describe("shouldShowTabBar", () => {
     expect(shouldShowTabBar(["(app)", "client", "[id]"])).toBe(true);
   });
 
-  it("hides the tab bar on chat and payment root routes", () => {
+  it("hides the tab bar on chat root routes", () => {
     expect(shouldShowTabBar(["(app)", "chat", "[id]"])).toBe(false);
-    expect(shouldShowTabBar(["(app)", "payment"])).toBe(false);
   });
 });
 

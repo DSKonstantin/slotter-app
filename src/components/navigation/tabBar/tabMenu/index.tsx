@@ -8,6 +8,7 @@ import {
 import { BlurView } from "expo-blur";
 import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
 
 import { IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -71,8 +72,14 @@ const TabMenu = () => {
     dispatch(setTabMenuOpen(false));
   }, [dispatch]);
 
+  const handleCloseButtonPress = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    handleClose();
+  }, [handleClose]);
+
   const handleNavigate = useCallback(
     (route?: string, isActive?: boolean, isAtRoot?: boolean) => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       handleClose();
       if (!route) return;
       if (!isActive) {
@@ -178,7 +185,7 @@ const TabMenu = () => {
               color={colors.neutral[900]}
             />
           }
-          onPress={handleClose}
+          onPress={handleCloseButtonPress}
         />
       </View>
     </BlurView>

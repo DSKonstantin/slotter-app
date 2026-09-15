@@ -41,26 +41,21 @@ const HomeHeader = () => {
 
   return (
     <View className="flex-row items-center justify-between px-screen py-2.5">
-      <View className="flex-1 flex-row items-center gap-3 mr-3">
-        <Pressable onPress={handleOpenProfile} className="active:opacity-70">
-          <Avatar
-            uri={user?.avatar_url ?? undefined}
-            blurhash={user?.avatar_blurhash}
-            name={fullName}
-            size="md"
-          />
-        </Pressable>
+      <Pressable
+        onPress={handleOpenProfile}
+        className="flex-1 flex-row items-center gap-3 mr-3 active:opacity-70"
+      >
+        <Avatar
+          uri={user?.avatar_url ?? undefined}
+          blurhash={user?.avatar_blurhash}
+          name={fullName}
+          size="md"
+        />
 
         <View className="flex-1">
-          <Pressable onPress={handleOpenProfile} className="active:opacity-70">
-            <Typography
-              weight="semibold"
-              className="text-body"
-              numberOfLines={1}
-            >
-              {fullName}
-            </Typography>
-          </Pressable>
+          <Typography weight="semibold" className="text-body" numberOfLines={1}>
+            {fullName}
+          </Typography>
           <Pressable
             onPress={() => setProfileActionsVisible(true)}
             className="flex-row items-center gap-1 active:opacity-70"
@@ -78,7 +73,7 @@ const HomeHeader = () => {
             )}
           </Pressable>
         </View>
-      </View>
+      </Pressable>
 
       <View className="flex-row items-center gap-2">
         <IconButton
@@ -87,18 +82,18 @@ const HomeHeader = () => {
             unreadCount > 0 ? (
               <BellPinActiveIcon size={24} />
             ) : (
-              <StSvg
-                name="Bell_pin_fill"
-                size={24}
-                color={colors.neutral[900]}
-              />
+              <StSvg name="Bell_fill" size={24} color={colors.neutral[900]} />
             )
           }
         />
         <IconButton
           onPress={() => setModalVisible(true)}
           icon={
-            <StSvg name="Add_round" size={24} color={colors.neutral[900]} />
+            <StSvg
+              name="Add_round"
+              size={24}
+              color={colors.primary.blue[500]}
+            />
           }
         />
       </View>
