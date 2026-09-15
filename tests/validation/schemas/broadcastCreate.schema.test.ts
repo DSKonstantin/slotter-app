@@ -5,13 +5,13 @@ const base = {
   message: "Скидка 20% до конца месяца",
   onlyConsented: true,
   isScheduled: false,
-  channel: "auto",
+  channel: "telegram",
 };
 
 const scheduled = {
   ...base,
   isScheduled: true,
-  scheduledDate: { from: "2026-09-10", to: "2026-09-12" },
+  scheduledDate: "2026-09-10",
   scheduledTime: 600,
 };
 
@@ -36,7 +36,16 @@ describe("broadcastCreateSchema", () => {
     );
   });
 
-  it("leaves channel optional", () => {
+  it("rejects a message longer than 4000 characters", () => {
+    expect(
+      broadcastCreateSchema.isValidSync({
+        ...base,
+        message: "a".repeat(4001),
+      }),
+    ).toBe(false);
+  });
+
+  it("requires a channel", () => {
     expect(
       broadcastCreateSchema.isValidSync({
         name: base.name,
@@ -44,34 +53,21 @@ describe("broadcastCreateSchema", () => {
         onlyConsented: base.onlyConsented,
         isScheduled: false,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   describe("when isScheduled is true", () => {
     const noDate = { ...base, isScheduled: true, scheduledTime: 600 };
-    const noTime = {
-      ...base,
-      isScheduled: true,
-      scheduledDate: { from: "2026-09-10", to: "2026-09-12" },
-    };
+    const noTime = { ...base, isScheduled: true, scheduledDate: "2026-09-10" };
 
-    it("rejects a missing scheduledDate with «Укажите период»", () => {
+    it("rejects a missing scheduledDate with «Укажите дату»", () => {
       expect(broadcastCreateSchema.isValidSync(noDate)).toBe(false);
       expect(
         broadcastCreateSchema.isValidSync({ ...noDate, scheduledDate: null }),
       ).toBe(false);
       expect(() => broadcastCreateSchema.validateSync(noDate)).toThrow(
-        "Укажите период",
+        "Укажите дату",
       );
-    });
-
-    it("requires both endpoints of scheduledDate", () => {
-      expect(
-        broadcastCreateSchema.isValidSync({
-          ...scheduled,
-          scheduledDate: { from: "2026-09-10" },
-        }),
-      ).toBe(false);
     });
 
     it("rejects a missing scheduledTime with «Укажите время»", () => {

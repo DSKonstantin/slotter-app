@@ -3,7 +3,7 @@ import { View } from "react-native";
 
 import { Input, Typography } from "@/src/components/ui";
 import { parseDigits } from "@/src/utils/text/parseDigits";
-import type { AudienceFilters } from "../broadcastMock";
+import type { AudienceFilters } from "./types";
 
 type VisitsValue = AudienceFilters["visits"];
 

@@ -211,3 +211,18 @@ export type {
   SubscriptionDirectChannel,
   GetSubscriptionDirectChannelsResponse,
 } from "./subscriptionDirect";
+export type {
+  BroadcastStatus,
+  BroadcastStopReason,
+  BroadcastStats,
+  ApiAudienceFilters,
+  MarketingBroadcast,
+  GetMarketingBroadcastsParams,
+  GetMarketingBroadcastsResponse,
+  GetMarketingBroadcastResponse,
+  CreateMarketingBroadcastPayload,
+  AudienceCount,
+  GetMarketingBroadcastAudienceResponse,
+  GetMarketingBroadcastAudiencePayload,
+  ValidationErrors,
+} from "./marketingBroadcast";

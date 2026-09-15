@@ -1,10 +1,12 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
-import { FlashList } from "@shopify/flash-list";
+import debounce from "lodash/debounce";
 import { router } from "expo-router";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
+import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import { InfiniteFlashList } from "@/src/components/shared/list/infiniteFlashList";
 import {
   Badge,
   Button,
@@ -16,14 +18,28 @@ import {
 import { colors } from "@/src/styles/colors";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { Routers } from "@/src/constants/routers";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useRefresh } from "@/src/hooks/useRefresh";
+import { useGetMarketingBroadcastsPaginatedInfiniteQuery } from "@/src/store/redux/services/api/marketingBroadcastsApi";
+import type { MarketingBroadcast } from "@/src/store/redux/services/api-types";
 import BroadcastCard from "./BroadcastCard";
 import { useBroadcastGate } from "./useBroadcastGate";
-import {
-  BROADCASTS,
-  BROADCAST_FILTERS,
-  type BroadcastFilter,
-  type BroadcastItem,
-} from "./broadcastMock";
+
+const SEARCH_DEBOUNCE_MS = 300;
+
+type BroadcastFilter = "all" | "scheduled" | "completed";
+
+const STATUS_PARAMS: Record<BroadcastFilter, string | undefined> = {
+  all: undefined,
+  scheduled: "preparing,scheduled,running,paused",
+  completed: "completed,cancelled",
+};
+
+const BROADCAST_FILTERS: { label: string; value: BroadcastFilter }[] = [
+  { label: "Все", value: "all" },
+  { label: "Запланированные", value: "scheduled" },
+  { label: "Завершённые", value: "completed" },
+];
 
 type ContentProps = {
   topInset: number;
@@ -33,42 +49,94 @@ type ContentProps = {
 const Separator = () => <View className="h-3" />;
 
 const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
+  const auth = useRequiredAuth();
   const [filter, setFilter] = useState<BroadcastFilter>("all");
-  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const { guard, isLoading: gateLoading, modal } = useBroadcastGate();
 
+  const debouncedSetSearch = useRef(
+    debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
+  ).current;
+
   const { searchMode } = useToolbarSearch({
     placeholder: "Название или текст",
-    onChange: setSearch,
-    onClose: () => setSearch(""),
+    onChange: (value) => debouncedSetSearch(value),
+    onClose: () => {
+      debouncedSetSearch.cancel();
+      setDebouncedSearch("");
+    },
   });
 
+  const queryParams = useMemo(
+    () => ({
+      userId: auth!.userId,
+      status: STATUS_PARAMS[filter],
+      query: debouncedSearch || undefined,
+    }),
+    [auth, filter, debouncedSearch],
+  );
+
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetch,
+  } = useGetMarketingBroadcastsPaginatedInfiniteQuery(queryParams);
+
   const items = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return BROADCASTS.filter((item) => {
-      const matchesFilter = filter === "all" || item.filter === filter;
-      const matchesSearch =
-        query === "" ||
-        item.title.toLowerCase().includes(query) ||
-        item.message.toLowerCase().includes(query);
-      return matchesFilter && matchesSearch;
+    if (!data?.pages) return [];
+    const unique = new Map<number, MarketingBroadcast>();
+    data.pages.forEach((page) => {
+      page.marketing_broadcasts.forEach((b) => unique.set(b.id, b));
     });
-  }, [filter, search]);
+    return [...unique.values()];
+  }, [data?.pages]);
+
+  const handleRefresh = useCallback(
+    () => refetch({ refetchCachedPages: false }),
+    [refetch],
+  );
+
+  const { refreshing, onRefresh } = useRefresh(handleRefresh);
+
+  const handleEndReached = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const renderItem = useCallback(
-    ({ item }: { item: BroadcastItem }) => <BroadcastCard item={item} />,
+    ({ item }: { item: MarketingBroadcast }) => <BroadcastCard item={item} />,
     [],
   );
 
+  if (isError && !data) {
+    return (
+      <ErrorScreen
+        title="Не удалось загрузить рассылки"
+        isLoading={isFetching}
+        onRetry={onRefresh}
+      />
+    );
+  }
+
   return (
     <>
-      <FlashList
+      <InfiniteFlashList
         data={items}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         ItemSeparatorComponent={Separator}
         showsVerticalScrollIndicator={false}
+        isRefreshing={refreshing}
+        onRefresh={onRefresh}
+        onEndReached={handleEndReached}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
         contentContainerStyle={{
           paddingTop: topInset,
           paddingBottom: bottomInset + 120,
@@ -89,9 +157,11 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
           )
         }
         ListEmptyComponent={
-          <Typography className="text-body text-neutral-400 text-center mt-10">
-            Рассылок пока нет
-          </Typography>
+          isLoading ? null : (
+            <Typography className="text-body text-neutral-400 text-center mt-10">
+              Рассылок пока нет
+            </Typography>
+          )
         }
       />
 

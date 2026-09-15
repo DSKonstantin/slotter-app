@@ -133,7 +133,7 @@ export const Routers = {
       statistics: "/(app)/(tabs)/clients/statistics" as const,
       broadcast: "/(app)/(tabs)/clients/broadcast" as const,
       broadcastCreate: "/(app)/(tabs)/clients/broadcast/create" as const,
-      broadcastEdit: (id: string | number) =>
+      broadcastDetail: (id: string | number) =>
         ({
           pathname: "/(app)/(tabs)/clients/broadcast/[id]",
           params: { id: String(id) },

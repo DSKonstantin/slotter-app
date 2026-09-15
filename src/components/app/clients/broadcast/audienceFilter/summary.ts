@@ -1,4 +1,4 @@
-import type { AudienceFilters } from "../broadcastMock";
+import type { AudienceFilters } from "./types";
 
 const countActiveFilters = (filters: AudienceFilters | undefined): number => {
   if (!filters) return 0;

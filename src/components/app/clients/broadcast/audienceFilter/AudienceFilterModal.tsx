@@ -6,7 +6,7 @@ import { Button, Item, StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatShortDateRange } from "@/src/utils/date/formatDate";
 import { rangeToDatePair, type DateRange } from "@/src/utils/date/dateRange";
-import type { AudienceFilters } from "../broadcastMock";
+import type { AudienceFilters } from "./types";
 import { InlineNumberRow } from "./InlineNumberRow";
 import { VisitsFilter } from "./VisitsFilter";
 import { DateRangeFilter } from "./DateRangeFilter";

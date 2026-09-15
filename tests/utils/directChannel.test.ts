@@ -1,27 +1,14 @@
 import { isDirectChannelActive } from "@/src/utils/directChannel";
 
 describe("isDirectChannelActive", () => {
-  it("is true only when both status and provisioning_status are active", () => {
-    expect(
-      isDirectChannelActive({
-        status: "active",
-        provisioning_status: "active",
-      }),
-    ).toBe(true);
+  it("is true when provisioning_status is active, regardless of billing status", () => {
+    expect(isDirectChannelActive({ provisioning_status: "active" })).toBe(true);
   });
 
-  it("is false when only one of the two is active", () => {
+  it("is false when provisioning_status is not active", () => {
     expect(
-      isDirectChannelActive({
-        status: "active",
-        provisioning_status: "awaiting_auth",
-      }),
+      isDirectChannelActive({ provisioning_status: "awaiting_auth" }),
     ).toBe(false);
-    expect(
-      isDirectChannelActive({
-        status: "pending",
-        provisioning_status: "active",
-      }),
-    ).toBe(false);
+    expect(isDirectChannelActive({ provisioning_status: "none" })).toBe(false);
   });
 });

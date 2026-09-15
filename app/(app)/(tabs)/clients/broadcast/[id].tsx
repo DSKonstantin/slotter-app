@@ -1,10 +1,10 @@
 import React from "react";
 import { useLocalSearchParams } from "expo-router";
-import BroadcastForm from "@/src/components/app/clients/broadcast/BroadcastForm";
+import BroadcastDetail from "@/src/components/app/clients/broadcast/BroadcastDetail";
 
-const BroadcastEditPage = () => {
+const BroadcastDetailPage = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <BroadcastForm broadcastId={id} />;
+  return <BroadcastDetail broadcastId={Number(id)} />;
 };
 
-export default BroadcastEditPage;
+export default BroadcastDetailPage;

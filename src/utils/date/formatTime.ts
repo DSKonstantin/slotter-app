@@ -2,6 +2,13 @@ import { format, parseISO, getHours, getMinutes } from "date-fns";
 
 export const combineDayTime = (day: string, time: string) => `${day}T${time}`;
 
+export const combineDateAndMinutesToIso = (date: string, minutes: number) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return new Date(year, month - 1, day, hours, mins).toISOString();
+};
+
 export const formatTimeString = (time: string) => {
   if (!time) return "";
   const isoMatch = time.match(/T(\d{2}):(\d{2})/);

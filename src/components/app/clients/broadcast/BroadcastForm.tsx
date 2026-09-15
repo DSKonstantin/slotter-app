@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
+import debounce from "lodash/debounce";
 import {
   FormProvider,
   useForm,
@@ -11,6 +12,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { randomUUID } from "expo-crypto";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -24,21 +26,48 @@ import {
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { RHFSelect } from "@/src/components/hookForm/rhf-select";
-import { RhfDateRangeField } from "@/src/components/hookForm/rhf-date-range-field";
+import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfTimeWheelField } from "@/src/components/hookForm/rhf-time-wheel-field";
 import { colors } from "@/src/styles/colors";
 import { FULL_DAY_MINUTE_OPTIONS } from "@/src/utils/date/timeOptions";
-import { formatMinutes } from "@/src/utils/date/formatTime";
-import { formatShortDateRange } from "@/src/utils/date/formatDate";
+import {
+  combineDateAndMinutesToIso,
+  formatDayMonth,
+  formatMinutes,
+} from "@/src/utils/date/formatTime";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 import { useClientNotificationsConnected } from "@/src/hooks/useClientNotificationsConnected";
+import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useDirectChannelErrorGate } from "@/src/components/app/account/clientNotifications/templates/useDirectChannelErrorGate";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import {
+  useCreateMarketingBroadcastMutation,
+  useGetMarketingBroadcastAudienceMutation,
+} from "@/src/store/redux/services/api/marketingBroadcastsApi";
+import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
 import {
   broadcastCreateSchema,
   type BroadcastCreateFormValues,
 } from "@/src/validation/schemas/broadcastCreate.schema";
-import { EMPTY_AUDIENCE_FILTERS, getBroadcastById } from "./broadcastMock";
+import { EMPTY_AUDIENCE_FILTERS } from "./audienceFilter/types";
+import { mapAudienceFilters } from "./mapAudienceFilters";
 import { AudienceFilterModal } from "./audienceFilter/AudienceFilterModal";
 import { summarizeAudienceFilters } from "./audienceFilter/summary";
+import ConnectChannelModal from "./ConnectChannelModal";
+
+const CHANNEL_KIND_BY_VALUE: Record<string, DirectChannelKind> = {
+  telegram: "telegram_direct",
+  max: "max_direct",
+};
+
+const AUDIENCE_DEBOUNCE_MS = 400;
+
+const FIELD_ERROR_MAP: Record<string, keyof BroadcastCreateFormValues> = {
+  name: "name",
+  body: "message",
+  channel_kind: "channel",
+  scheduled_at: "scheduledDate",
+};
 
 const SectionLabel = ({ children }: { children: string }) => (
   <Typography className="text-caption text-neutral-500 mb-2">
@@ -52,33 +81,39 @@ const Hint = ({ children }: { children: string }) => (
   </Typography>
 );
 
-type Props = {
-  broadcastId?: string;
-};
-
-const BroadcastForm = ({ broadcastId }: Props) => {
+const BroadcastForm = () => {
   const [footerHeight, setFooterHeight] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [recipientsCount, setRecipientsCount] = useState(0);
+
+  const idempotencyKeyRef = useRef(randomUUID());
 
   const insets = useSafeAreaInsets();
+  const auth = useRequiredAuth();
   const { channels } = useClientNotificationsConnected();
+  const {
+    channelModalVisible,
+    setChannelModalVisible,
+    guardDirectChannelError,
+  } = useDirectChannelErrorGate();
 
-  const editing = broadcastId != null;
-  const existing = getBroadcastById(broadcastId);
+  const [createBroadcast, { isLoading: isCreating }] =
+    useCreateMarketingBroadcastMutation();
+  const [getAudience] = useGetMarketingBroadcastAudienceMutation();
 
   const methods = useForm<BroadcastCreateFormValues>({
     resolver: yupResolver(
       broadcastCreateSchema,
     ) as Resolver<BroadcastCreateFormValues>,
     defaultValues: {
-      name: existing?.form.name ?? "",
-      message: existing?.form.message ?? "",
-      onlyConsented: existing?.form.onlyConsented ?? true,
-      isScheduled: existing?.form.isScheduled ?? false,
-      scheduledDate: existing?.form.scheduledDate ?? null,
-      scheduledTime: existing?.form.scheduledTime,
-      channel: existing?.form.channel ?? "",
-      audienceFilters: existing?.form.audienceFilters ?? {},
+      name: "",
+      message: "",
+      onlyConsented: true,
+      isScheduled: false,
+      scheduledDate: null,
+      scheduledTime: undefined,
+      channel: "",
+      audienceFilters: {},
     },
     mode: "onChange",
   });
@@ -87,6 +122,7 @@ const BroadcastForm = ({ broadcastId }: Props) => {
     control,
     handleSubmit,
     setValue,
+    setError,
     formState: { isDirty, isValid },
   } = methods;
 
@@ -94,6 +130,7 @@ const BroadcastForm = ({ broadcastId }: Props) => {
 
   const isScheduled = useWatch({ control, name: "isScheduled" });
   const audienceFilters = useWatch({ control, name: "audienceFilters" });
+  const onlyConsented = useWatch({ control, name: "onlyConsented" });
 
   const channelOptions = useMemo(
     () => [
@@ -109,29 +146,82 @@ const BroadcastForm = ({ broadcastId }: Props) => {
 
   const audienceSummary = summarizeAudienceFilters(audienceFilters);
 
+  const fetchAudience = useRef(
+    debounce((filtersArg: unknown, consentArg: boolean) => {
+      if (!auth) return;
+      getAudience({
+        userId: auth.userId,
+        body: {
+          is_marketing_consent_required: consentArg,
+          audience_filters: mapAudienceFilters(filtersArg as never),
+        },
+      })
+        .unwrap()
+        .then((res) => setRecipientsCount(res.audience.recipients_count))
+        .catch(() => {});
+    }, AUDIENCE_DEBOUNCE_MS),
+  ).current;
+
+  useEffect(() => {
+    fetchAudience(audienceFilters, onlyConsented);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audienceFilters, onlyConsented]);
+
+  useEffect(() => () => fetchAudience.cancel(), [fetchAudience]);
+
   const onSubmit = (data: BroadcastCreateFormValues) => {
-    void data;
-    toast.success(
-      editing
-        ? "Изменения сохранены"
-        : data.isScheduled
-          ? "Рассылка запланирована"
-          : "Рассылка запущена",
-    );
-    router.back();
+    if (!auth) return;
+
+    createBroadcast({
+      userId: auth.userId,
+      idempotencyKey: idempotencyKeyRef.current,
+      body: {
+        name: data.name,
+        body: data.message,
+        channel_kind: CHANNEL_KIND_BY_VALUE[data.channel],
+        scheduled_at:
+          data.isScheduled && data.scheduledDate && data.scheduledTime != null
+            ? combineDateAndMinutesToIso(data.scheduledDate, data.scheduledTime)
+            : undefined,
+        is_marketing_consent_required: data.onlyConsented,
+        audience_filters: mapAudienceFilters(data.audienceFilters),
+      },
+    })
+      .unwrap()
+      .then(() => {
+        toast.success(
+          data.isScheduled ? "Рассылка запланирована" : "Рассылка запущена",
+        );
+        router.back();
+      })
+      .catch((e: unknown) => {
+        guardDirectChannelError(e, (err) => {
+          const errors = (
+            err as { data?: { errors?: Record<string, string[]> } }
+          )?.data?.errors;
+          if (errors) {
+            let handled = false;
+            Object.entries(errors).forEach(([field, messages]) => {
+              const formField = FIELD_ERROR_MAP[field];
+              if (formField && messages[0]) {
+                setError(formField, { message: messages[0] });
+                handled = true;
+              }
+            });
+            if (handled) return;
+          }
+          toast.error(getApiErrorMessage(err, "Не удалось создать рассылку"));
+        });
+      });
   };
 
-  const submitTitle = editing
-    ? "Сохранить"
-    : isScheduled
-      ? "Запланировать рассылку"
-      : "Запустить рассылку";
+  const submitTitle = isScheduled
+    ? "Запланировать рассылку"
+    : "Запустить рассылку";
 
   return (
     <FormProvider {...methods}>
-      <ScreenWithToolbar
-        title={editing ? "Редактировать рассылку" : "Создать рассылку"}
-      >
+      <ScreenWithToolbar title="Создать рассылку">
         {({ topInset }) => (
           <>
             <KeyboardAwareScrollView
@@ -209,13 +299,11 @@ const BroadcastForm = ({ broadcastId }: Props) => {
 
                       <View className="flex-row gap-2">
                         <View className="flex-1">
-                          <RhfDateRangeField
+                          <RhfCalendarDatePicker
                             name="scheduledDate"
                             label="Дата"
-                            title="Дата отложенной рассылки"
-                            placeholder="дд.мм – дд.мм"
-                            formatDisplay={formatShortDateRange}
-                            fieldClassName="bg-background-card"
+                            placeholder="дд.мм"
+                            displayFormat={formatDayMonth}
                             hideErrorText
                             endAdornment={
                               <StSvg
@@ -263,6 +351,9 @@ const BroadcastForm = ({ broadcastId }: Props) => {
                   items={channelOptions}
                   inline
                 />
+                <Hint>
+                  Рассылка отправляется постепенно, по правилам мессенджеров
+                </Hint>
               </View>
             </KeyboardAwareScrollView>
 
@@ -283,7 +374,7 @@ const BroadcastForm = ({ broadcastId }: Props) => {
                     weight="regular"
                     className="text-body text-neutral-900"
                   >
-                    0
+                    {recipientsCount}
                   </Typography>
                   <StSvg name="Users" size={20} color={colors.neutral[900]} />
                 </View>
@@ -294,7 +385,7 @@ const BroadcastForm = ({ broadcastId }: Props) => {
                   <Button
                     title={submitTitle}
                     variant="accent"
-                    disabled={!isValid}
+                    disabled={!isValid || isCreating}
                     onPress={handleSubmit(onSubmit)}
                   />
                 </View>
@@ -308,6 +399,11 @@ const BroadcastForm = ({ broadcastId }: Props) => {
               onApply={(filters) =>
                 setValue("audienceFilters", filters, { shouldDirty: true })
               }
+            />
+
+            <ConnectChannelModal
+              visible={channelModalVisible}
+              onClose={() => setChannelModalVisible(false)}
             />
           </>
         )}

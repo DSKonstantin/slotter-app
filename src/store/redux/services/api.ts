@@ -40,6 +40,7 @@ export const api = createApi({
     "SubscriptionPlans",
     "PaymentMethods",
     "SubscriptionDirectChannels",
+    "MarketingBroadcasts",
   ],
   endpoints: () => ({}),
 });

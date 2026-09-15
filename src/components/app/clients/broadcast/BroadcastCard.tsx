@@ -1,119 +1,105 @@
 import React, { memo } from "react";
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { router } from "expo-router";
 
 import { Badge, Divider, StSvg, Typography } from "@/src/components/ui";
 import { MaxLogo } from "@/src/components/shared/svg/MaxLogo";
-import { SlotterLogo } from "@/src/components/shared/svg/SlotterLogo";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
-import {
-  CHANNEL_LABELS,
-  type BroadcastChannel,
-  type BroadcastItem,
-} from "./broadcastMock";
+import type {
+  DirectChannelKind,
+  MarketingBroadcast,
+} from "@/src/store/redux/services/api-types";
+import { getBroadcastBadge, getBroadcastMetric } from "./broadcastPresentation";
 
-const NOTE_COLORS = {
-  green: "text-primary-green-600",
-  blue: "text-primary-blue-500",
-} as const;
+const CHANNEL_LABELS: Record<DirectChannelKind, string> = {
+  telegram_direct: "Telegram Direct",
+  max_direct: "Макс Direct",
+};
 
-const ChannelIcon = ({ channel }: { channel: BroadcastChannel }) => {
-  if (channel === "telegram") {
+const ChannelIcon = ({ channel }: { channel: DirectChannelKind }) => {
+  if (channel === "telegram_direct") {
     return <StSvg name="SocialTelegram" size={24} color="#37B5DB" />;
   }
-  if (channel === "max") {
-    return <MaxLogo size={24} />;
-  }
-  return <SlotterLogo size={24} />;
+  return <MaxLogo size={24} />;
 };
 
 type Props = {
-  item: BroadcastItem;
+  item: MarketingBroadcast;
 };
 
-const BroadcastCard = ({ item }: Props) => (
-  <Pressable
-    onPress={() => router.push(Routers.app.clients.broadcastEdit(item.id))}
-    className="bg-background-surface rounded-base p-4 active:opacity-70"
-  >
-    <View className="flex-row items-center gap-2">
-      <ChannelIcon channel={item.channel} />
-      <Typography weight="medium" className="text-body flex-1">
-        {CHANNEL_LABELS[item.channel]}
-      </Typography>
-      {item.headerBadge ? (
-        <Badge
-          size="sm"
-          title={item.headerBadge.title}
-          variant={item.headerBadge.variant}
-          icon={
-            item.headerBadge.variant === "completed" ? (
-              <StSvg
-                name="Done_round"
-                size={16}
-                color={colors.primary.green[700]}
-              />
-            ) : (
-              <StSvg
-                name="Time_fill"
-                size={16}
-                color={colors.accent.orange[500]}
-              />
-            )
-          }
-        />
-      ) : item.headerDate ? (
-        <Typography className="text-caption text-neutral-400">
-          {item.headerDate}
-        </Typography>
-      ) : null}
-    </View>
+const BroadcastCard = ({ item }: Props) => {
+  const badge = getBroadcastBadge(item);
 
-    <Typography weight="semibold" className="text-body mt-3">
-      {item.title}
-    </Typography>
-    <Typography
-      weight="regular"
-      className="text-caption text-neutral-500 mt-1"
-      numberOfLines={1}
+  return (
+    <Pressable
+      onPress={() => router.push(Routers.app.clients.broadcastDetail(item.id))}
+      className="bg-background-surface rounded-base p-4 active:opacity-70"
     >
-      {item.message}
-    </Typography>
-
-    <Divider className="my-3" />
-
-    <View className="flex-row items-center gap-2">
-      <View className="flex-row items-center min-h-[24px]">
-        {item.stat.audience && (
-          <StSvg name="Group_light" size={24} color={colors.neutral[400]} />
+      <View className="flex-row items-center gap-2">
+        <ChannelIcon channel={item.channel_kind} />
+        <Typography weight="medium" className="text-body flex-1">
+          {CHANNEL_LABELS[item.channel_kind]}
+        </Typography>
+        {item.status === "preparing" ? (
+          <ActivityIndicator size="small" color={colors.neutral[400]} />
+        ) : (
+          badge && (
+            <Badge
+              size="sm"
+              title={badge.title}
+              variant={badge.variant}
+              icon={
+                badge.variant === "completed" ? (
+                  <StSvg
+                    name="Done_round"
+                    size={16}
+                    color={colors.primary.green[700]}
+                  />
+                ) : (
+                  <StSvg
+                    name="Time_fill"
+                    size={16}
+                    color={colors.accent.orange[500]}
+                  />
+                )
+              }
+            />
+          )
         )}
-        <Typography className="text-caption text-neutral-500">
-          {item.stat.label}: {item.stat.value}
-        </Typography>
       </View>
 
-      {item.stat.note && (
-        <Typography
-          weight="medium"
-          className={`text-caption ${
-            item.stat.noteColor
-              ? NOTE_COLORS[item.stat.noteColor]
-              : "text-neutral-900"
-          }`}
-        >
-          {item.stat.note}
-        </Typography>
-      )}
-      <View className="flex-1 items-end">
-        <StSvg
-          name="Expand_right_light"
-          size={20}
-          color={colors.neutral[300]}
-        />
+      <Typography weight="semibold" className="text-body mt-3">
+        {item.name}
+      </Typography>
+      <Typography
+        weight="regular"
+        className="text-caption text-neutral-500 mt-1"
+        numberOfLines={1}
+      >
+        {item.body}
+      </Typography>
+
+      <Divider className="my-3" />
+
+      <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center min-h-[24px]">
+          <StSvg name="Group_light" size={24} color={colors.neutral[400]} />
+          <Typography className="text-caption text-neutral-500">
+            {getBroadcastMetric(item)}
+          </Typography>
+        </View>
+
+        <View className="flex-1 items-end">
+          <StSvg
+            name="Expand_right_light"
+            size={20}
+            color={colors.neutral[300]}
+          />
+        </View>
       </View>
-    </View>
-  </Pressable>
-);
+    </Pressable>
+  );
+};
 
 export default memo(BroadcastCard);
