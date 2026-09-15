@@ -8,7 +8,7 @@ import { Typography } from "@/src/components/ui";
 export type InsightCategory =
   "analytics" | "tip" | "reminder" | "update" | "offer" | "event" | "education";
 
-export const CARD_WIDTH = 110;
+export const CARD_WIDTH = 115;
 export const CARD_HEIGHT = 125;
 
 type Props = {
@@ -50,7 +50,7 @@ const InsightCard = ({ title, imageSource, onPress }: Props) => {
       <View className="absolute top-0 left-0 right-0 p-3">
         <Typography
           weight="semibold"
-          className="text-[14px] leading-5 text-neutral-0"
+          className="text-caption leading-4 tracking-tight text-neutral-0"
           numberOfLines={4}
         >
           {title}
