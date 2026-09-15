@@ -114,23 +114,25 @@ const ToolbarTop = ({
             )}
 
             <View className="flex-1 items-center justify-center">
-              <View
-                className="rounded-full h-[48px] px-4 items-center justify-center bg-background-surface max-w-[100%]"
-                style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
-              >
-                {typeof title === "string" ? (
-                  <Typography
-                    weight="semibold"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    className="text-[17px] leading-[22px]"
-                  >
-                    {title}
-                  </Typography>
-                ) : (
-                  title
-                )}
-              </View>
+              {!!title && (
+                <View
+                  className="rounded-full h-[48px] px-4 items-center justify-center bg-background-surface max-w-[100%]"
+                  style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
+                >
+                  {typeof title === "string" ? (
+                    <Typography
+                      weight="semibold"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      className="text-[17px] leading-[22px]"
+                    >
+                      {title}
+                    </Typography>
+                  ) : (
+                    title
+                  )}
+                </View>
+              )}
             </View>
 
             {rightButton ? (
