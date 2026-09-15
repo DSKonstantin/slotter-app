@@ -12,7 +12,6 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { randomUUID } from "expo-crypto";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -61,6 +60,9 @@ const CHANNEL_KIND_BY_VALUE: Record<string, DirectChannelKind> = {
 };
 
 const AUDIENCE_DEBOUNCE_MS = 400;
+
+const randomUUID = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 const FIELD_ERROR_MAP: Record<string, keyof BroadcastCreateFormValues> = {
   name: "name",
