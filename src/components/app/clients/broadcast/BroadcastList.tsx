@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import debounce from "lodash/debounce";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { useToolbarSearch } from "@/src/components/shared/layout/toolbarContext";
@@ -59,6 +59,8 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
   ).current;
 
+  const hasNavigatedToCreateRef = useRef(false);
+
   const { searchMode } = useToolbarSearch({
     placeholder: "Название или текст",
     onChange: (value) => debouncedSetSearch(value),
@@ -114,6 +116,47 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
     [],
   );
 
+  const navigateToCreate = useCallback(() => {
+    router.push(Routers.app.broadcast.create);
+  }, []);
+
+  const willRedirectToCreate =
+    !isLoading &&
+    !isFetching &&
+    !gateLoading &&
+    !isError &&
+    filter === "all" &&
+    !debouncedSearch &&
+    items.length === 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoading || isFetching || gateLoading || isError) return;
+      if (filter !== "all" || debouncedSearch) return;
+      if (items.length > 0) return;
+
+      if (hasNavigatedToCreateRef.current) {
+        if (router.canGoBack()) router.back();
+        return;
+      }
+
+      guard(() => {
+        hasNavigatedToCreateRef.current = true;
+        navigateToCreate();
+      });
+    }, [
+      isLoading,
+      isFetching,
+      gateLoading,
+      isError,
+      filter,
+      debouncedSearch,
+      items.length,
+      guard,
+      navigateToCreate,
+    ]),
+  );
+
   if (isError && !data) {
     return (
       <ErrorScreen
@@ -121,6 +164,17 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
         isLoading={isFetching}
         onRetry={onRefresh}
       />
+    );
+  }
+
+  if (willRedirectToCreate) {
+    return (
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ marginTop: topInset }}
+      >
+        <ActivityIndicator />
+      </View>
     );
   }
 
@@ -137,8 +191,14 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
         onEndReached={handleEndReached}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
+        maintainVisibleContentPosition={{ disabled: true }}
+        progressViewOffset={Platform.select({ android: topInset })}
+        contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+        contentOffset={
+          Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+        }
         contentContainerStyle={{
-          paddingTop: topInset,
+          paddingTop: Platform.OS === "ios" ? 0 : topInset,
           paddingBottom: bottomInset + 120,
           paddingHorizontal: SCREEN_PADDING,
         }}
@@ -170,9 +230,7 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
           title="Создать новую рассылку"
           variant="accent"
           disabled={gateLoading}
-          onPress={() =>
-            guard(() => router.push(Routers.app.clients.broadcastCreate))
-          }
+          onPress={() => guard(navigateToCreate)}
           rightIcon={
             <StSvg name="Add_round_fill" size={24} color={colors.neutral[0]} />
           }

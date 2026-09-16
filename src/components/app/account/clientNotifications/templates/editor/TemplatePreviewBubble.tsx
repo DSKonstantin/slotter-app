@@ -26,9 +26,9 @@ const TemplatePreviewBubble = ({
   const time = useMemo(() => format(new Date(), "HH:mm"), []);
 
   return (
-    <View className="flex-row items-end gap-2">
-      <View className="bg-primary-blue-500 rounded-full w-[24px] h-[24px] items-center justify-center">
-        <StSvg name="SocialTelegram" size={18} color={colors.neutral[0]} />
+    <View className="flex-row items-end gap-1">
+      <View className="bg-neutral-100 rounded-full w-[28px] h-[28px] items-center justify-center">
+        <StSvg name="Arrow_drop_up" size={24} color={colors.neutral[900]} />
       </View>
 
       <View className="flex-1 rounded-2xl rounded-bl-sm bg-background px-3 py-2">
@@ -45,11 +45,7 @@ const TemplatePreviewBubble = ({
           <Typography className="text-caption text-neutral-400">
             {time}
           </Typography>
-          <StSvg
-            name="Done_all_round"
-            size={14}
-            color={colors.primary.blue[500]}
-          />
+          <StSvg name="Done_all_round" size={14} color={colors.neutral[400]} />
         </View>
       </View>
     </View>

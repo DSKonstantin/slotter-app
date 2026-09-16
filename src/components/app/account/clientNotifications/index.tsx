@@ -243,9 +243,7 @@ const ClientNotifications = () => {
                   )
                 }
               />
-              <BroadcastEntryCard
-                route={Routers.app.account.clientNotifications.broadcast}
-              />
+              <BroadcastEntryCard />
             </View>
 
             <Card

@@ -162,7 +162,11 @@ export interface GetChatMessagesResponse {
 
 export type ResourceChannelEvent =
   | { type: "chat_room.created"; payload: ChatRoom }
-  | { type: "notification.created"; payload: unknown };
+  | { type: "notification.created"; payload: unknown }
+  | {
+      event: "direct_channel_activated";
+      kind: "telegram_direct" | "max_direct";
+    };
 
 export type RoomChannelEvent =
   | { type: "message.created"; payload: ChatMessage }

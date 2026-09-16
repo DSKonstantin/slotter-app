@@ -38,6 +38,7 @@ type CalendarDatePickerProps = {
   startAdornment?: ReactNode;
   userId?: number;
   onNonWorkingDaySuccess?: (date: string) => void;
+  fieldClassName?: string;
 };
 
 export const CalendarDatePicker = ({
@@ -54,6 +55,7 @@ export const CalendarDatePicker = ({
   ref,
   userId,
   onNonWorkingDaySuccess,
+  fieldClassName,
 }: CalendarDatePickerProps) => {
   const today = formatApiDate(new Date());
   const [open, setOpen] = useState(false);
@@ -171,6 +173,7 @@ export const CalendarDatePicker = ({
         value={displayValue}
         placeholder={placeholder}
         onPress={() => !disabled && setOpen(true)}
+        fieldClassName={fieldClassName}
       />
 
       <StModal

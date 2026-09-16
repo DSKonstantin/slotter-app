@@ -36,6 +36,7 @@ import CreateExpenseModal from "./createExpenseModal";
 import EditExpenseModal from "./editExpenseModal";
 import ExpenseCategoriesList from "./ExpenseCategoriesList";
 import FinancesSkeleton from "./FinancesSkeleton";
+import ReferralEarnCard from "./ReferralEarnCard";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { useToday } from "@/src/hooks/useToday";
@@ -147,6 +148,8 @@ const FinancesScreen = () => {
                 />
               }
             >
+              <ReferralEarnCard />
+
               <IncomeCard
                 label={`Доходы за ${MONTH_NAMES[currentMonth - 1]}`}
                 totalIncome={

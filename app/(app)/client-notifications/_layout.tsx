@@ -7,7 +7,6 @@ export default function ClientNotificationsLayout() {
       <Stack.Screen name="statistics" />
       <Stack.Screen name="types" />
       <Stack.Screen name="[kind]" />
-      <Stack.Screen name="broadcast" />
     </Stack>
   );
 }

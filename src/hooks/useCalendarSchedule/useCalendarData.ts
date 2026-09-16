@@ -39,7 +39,7 @@ export const useCalendarData = (current: Date) => {
           params: {
             date_from: dateRange.date_from,
             date_to: dateRange.date_to,
-            status: ["pending", "confirmed"],
+            status: ["requested", "pending", "confirmed"],
           },
         }
       : skipToken,

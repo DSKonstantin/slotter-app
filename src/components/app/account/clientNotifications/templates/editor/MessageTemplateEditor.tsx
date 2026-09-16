@@ -235,7 +235,7 @@ const MessageTemplateEditor = ({
               <Button
                 title="Сбросить к стандартному шаблону"
                 variant="clear"
-                textClassName="text-accent-red-500"
+                textClassName="text-neutral-900"
                 onPress={handleResetPress}
                 loading={isResetting}
                 disabled={isResetting}

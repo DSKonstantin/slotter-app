@@ -131,11 +131,13 @@ export const Routers = {
       root: "/(app)/(tabs)/clients",
       create: "/(app)/(tabs)/clients/create" as const,
       statistics: "/(app)/(tabs)/clients/statistics" as const,
-      broadcast: "/(app)/(tabs)/clients/broadcast" as const,
-      broadcastCreate: "/(app)/(tabs)/clients/broadcast/create" as const,
-      broadcastDetail: (id: string | number) =>
+    },
+    broadcast: {
+      root: "/(app)/broadcast" as const,
+      create: "/(app)/broadcast/create" as const,
+      detail: (id: string | number) =>
         ({
-          pathname: "/(app)/(tabs)/clients/broadcast/[id]",
+          pathname: "/(app)/broadcast/[id]",
           params: { id: String(id) },
         }) as const,
     },
@@ -206,7 +208,6 @@ export const Routers = {
         root: "/(app)/client-notifications" as const,
         statistics: "/(app)/client-notifications/statistics" as const,
         types: "/(app)/client-notifications/types" as const,
-        broadcast: "/(app)/client-notifications/broadcast" as const,
         detail: (kind: string) =>
           ({
             pathname: "/(app)/client-notifications/[kind]",

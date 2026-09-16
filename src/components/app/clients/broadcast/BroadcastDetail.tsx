@@ -2,16 +2,24 @@ import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   RefreshControl,
   ScrollView,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
-import { Badge, Button, FloatingFooter, Typography } from "@/src/components/ui";
+import {
+  Badge,
+  Button,
+  FloatingFooter,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { getApiErrorMessage } from "@/src/utils/apiError";
@@ -20,6 +28,7 @@ import {
   useGetMarketingBroadcastQuery,
 } from "@/src/store/redux/services/api/marketingBroadcastsApi";
 import {
+  BADGE_ICON_COLOR,
   getBroadcastBadge,
   getStopReasonLabel,
   isBroadcastCancellable,
@@ -44,9 +53,9 @@ type Props = { broadcastId: number };
 const BroadcastDetailContent = ({
   broadcastId,
   topInset,
-  bottomInset,
-}: Props & { topInset: number; bottomInset: number }) => {
+}: Props & { topInset: number }) => {
   const auth = useRequiredAuth();
+  const insets = useSafeAreaInsets();
 
   const { data, isLoading, isError, isFetching, refetch } =
     useGetMarketingBroadcastQuery(
@@ -103,6 +112,7 @@ const BroadcastDetailContent = ({
         title="Не удалось загрузить рассылку"
         isLoading={isFetching}
         onRetry={refetch}
+        withTabBar={false}
       />
     );
   }
@@ -119,18 +129,37 @@ const BroadcastDetailContent = ({
     <>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
+        contentOffset={
+          Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+        }
         contentContainerStyle={{
-          paddingTop: topInset,
-          paddingBottom: bottomInset + 120,
+          paddingTop: Platform.OS === "ios" ? 0 : topInset,
+          paddingBottom: insets.bottom + 120,
         }}
         className="px-screen"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            progressViewOffset={Platform.select({ android: topInset })}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
         }
       >
         <View className="flex-row items-center gap-2 mb-3">
           {badge && (
-            <Badge size="sm" title={badge.title} variant={badge.variant} />
+            <Badge
+              size="sm"
+              title={badge.title}
+              variant={badge.variant}
+              icon={
+                <StSvg
+                  name={badge.icon}
+                  size={16}
+                  color={BADGE_ICON_COLOR[badge.variant]}
+                />
+              }
+            />
           )}
         </View>
 
@@ -185,7 +214,7 @@ const BroadcastDetailContent = ({
       </ScrollView>
 
       {isBroadcastCancellable(broadcast.status) && (
-        <FloatingFooter offset={bottomInset + 8}>
+        <FloatingFooter offset={insets.bottom + 8}>
           <Button
             title="Остановить неотправленное"
             variant="clear"
@@ -201,12 +230,8 @@ const BroadcastDetailContent = ({
 
 const BroadcastDetail = ({ broadcastId }: { broadcastId: number }) => (
   <ScreenWithToolbar title="Рассылка">
-    {({ topInset, bottomInset }) => (
-      <BroadcastDetailContent
-        broadcastId={broadcastId}
-        topInset={topInset}
-        bottomInset={bottomInset}
-      />
+    {({ topInset }) => (
+      <BroadcastDetailContent broadcastId={broadcastId} topInset={topInset} />
     )}
   </ScreenWithToolbar>
 );

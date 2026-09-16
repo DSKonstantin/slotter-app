@@ -39,20 +39,6 @@ const PeriodModal = ({
   const [calendarVisible, setCalendarVisible] = useState(false);
   const { start, end, onDayPress, reset, setRange } = useCalendarRange();
 
-  useEffect(() => {
-    if (!visible) {
-      setCalendarVisible(false);
-      reset();
-    } else if (selectedPeriod.value === CUSTOM_PERIOD_VALUE) {
-      setCalendarVisible(true);
-      setRange(
-        selectedPeriod.date_from && selectedPeriod.date_to
-          ? { from: selectedPeriod.date_from, to: selectedPeriod.date_to }
-          : null,
-      );
-    }
-  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleSelectPeriod = (period: Period) => {
     setCalendarVisible(false);
     reset();
@@ -71,6 +57,20 @@ const PeriodModal = ({
     });
     onClose();
   };
+
+  useEffect(() => {
+    if (!visible) {
+      setCalendarVisible(false);
+      reset();
+    } else if (selectedPeriod.value === CUSTOM_PERIOD_VALUE) {
+      setCalendarVisible(true);
+      setRange(
+        selectedPeriod.date_from && selectedPeriod.date_to
+          ? { from: selectedPeriod.date_from, to: selectedPeriod.date_to }
+          : null,
+      );
+    }
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <StModal

@@ -13,6 +13,7 @@ import {
 type Props = {
   value: DateRange | undefined;
   onChange: (value: DateRange | undefined) => void;
+  enableYearPicker?: boolean;
 };
 
 const formatInput = (apiDate: string | null | undefined) =>
@@ -22,7 +23,11 @@ const Adornment = ({ children }: { children: string }) => (
   <Typography className="text-body text-neutral-500">{children}</Typography>
 );
 
-export const DateRangeFilter = ({ value, onChange }: Props) => {
+export const DateRangeFilter = ({
+  value,
+  onChange,
+  enableYearPicker,
+}: Props) => {
   const [active, setActive] = useState<"from" | "to">("from");
 
   const { start, end } = toRangeEndpoints(value);
@@ -39,6 +44,7 @@ export const DateRangeFilter = ({ value, onChange }: Props) => {
       start={start}
       end={end}
       initialMonth={initialMonth}
+      enableYearPicker={enableYearPicker}
       onDayPress={handleDayPress}
       header={
         <View className="mb-2 flex-row gap-2">

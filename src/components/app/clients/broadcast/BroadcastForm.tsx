@@ -123,6 +123,7 @@ const BroadcastForm = () => {
   const {
     control,
     handleSubmit,
+    reset,
     setValue,
     setError,
     formState: { isDirty, isValid },
@@ -194,7 +195,8 @@ const BroadcastForm = () => {
         toast.success(
           data.isScheduled ? "Рассылка запланирована" : "Рассылка запущена",
         );
-        router.back();
+        reset(data);
+        setTimeout(() => router.back(), 0);
       })
       .catch((e: unknown) => {
         guardDirectChannelError(e, (err) => {
@@ -314,6 +316,7 @@ const BroadcastForm = () => {
                                 color={colors.neutral[500]}
                               />
                             }
+                            fieldClassName="bg-background-card"
                           />
                         </View>
                         <View className="flex-1">

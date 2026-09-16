@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 
 import { Badge, Divider, StSvg, Typography } from "@/src/components/ui";
@@ -10,7 +10,11 @@ import type {
   DirectChannelKind,
   MarketingBroadcast,
 } from "@/src/store/redux/services/api-types";
-import { getBroadcastBadge, getBroadcastMetric } from "./broadcastPresentation";
+import {
+  BADGE_ICON_COLOR,
+  getBroadcastBadge,
+  getBroadcastMetric,
+} from "./broadcastPresentation";
 
 const CHANNEL_LABELS: Record<DirectChannelKind, string> = {
   telegram_direct: "Telegram Direct",
@@ -30,10 +34,13 @@ type Props = {
 
 const BroadcastCard = ({ item }: Props) => {
   const badge = getBroadcastBadge(item);
+  const metric = getBroadcastMetric(item);
 
   return (
     <Pressable
-      onPress={() => router.push(Routers.app.clients.broadcastDetail(item.id))}
+      onPress={() =>
+        router.push(Routers.app.broadcast.detail(item.id))
+      }
       className="bg-background-surface rounded-base p-4 active:opacity-70"
     >
       <View className="flex-row items-center gap-2">
@@ -41,31 +48,19 @@ const BroadcastCard = ({ item }: Props) => {
         <Typography weight="medium" className="text-body flex-1">
           {CHANNEL_LABELS[item.channel_kind]}
         </Typography>
-        {item.status === "preparing" ? (
-          <ActivityIndicator size="small" color={colors.neutral[400]} />
-        ) : (
-          badge && (
-            <Badge
-              size="sm"
-              title={badge.title}
-              variant={badge.variant}
-              icon={
-                badge.variant === "completed" ? (
-                  <StSvg
-                    name="Done_round"
-                    size={16}
-                    color={colors.primary.green[700]}
-                  />
-                ) : (
-                  <StSvg
-                    name="Time_fill"
-                    size={16}
-                    color={colors.accent.orange[500]}
-                  />
-                )
-              }
-            />
-          )
+        {badge && (
+          <Badge
+            size="sm"
+            title={badge.title}
+            variant={badge.variant}
+            icon={
+              <StSvg
+                name={badge.icon}
+                size={16}
+                color={BADGE_ICON_COLOR[badge.variant]}
+              />
+            }
+          />
         )}
       </View>
 
@@ -83,10 +78,33 @@ const BroadcastCard = ({ item }: Props) => {
       <Divider className="my-3" />
 
       <View className="flex-row items-center gap-2">
-        <View className="flex-row items-center min-h-[24px]">
-          <StSvg name="Group_light" size={24} color={colors.neutral[400]} />
+        <View className="flex-row items-center gap-1 min-h-[24px]">
+          {metric.icon && (
+            <StSvg name="Group_light" size={24} color={colors.neutral[400]} />
+          )}
           <Typography className="text-caption text-neutral-500">
-            {getBroadcastMetric(item)}
+            {metric.label}{" "}
+            <Typography
+              weight="medium"
+              className="text-caption text-neutral-900"
+            >
+              {metric.value}
+            </Typography>
+            {metric.suffix && (
+              <>
+                {"  "}
+                <Typography
+                  weight="medium"
+                  className={`text-caption ${
+                    metric.suffix.color === "green"
+                      ? "text-primary-green-700"
+                      : "text-primary-blue-500"
+                  }`}
+                >
+                  {metric.suffix.text}
+                </Typography>
+              </>
+            )}
           </Typography>
         </View>
 

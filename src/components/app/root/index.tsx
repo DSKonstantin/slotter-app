@@ -148,7 +148,7 @@ const Home = () => {
       </ScrollView>
 
       <View
-        className="flex-1"
+        className="flex-1 bg-background-surface"
         onLayout={(e: LayoutChangeEvent) =>
           setContainerHeight(e.nativeEvent.layout.height)
         }

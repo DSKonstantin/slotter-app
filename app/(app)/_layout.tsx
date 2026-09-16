@@ -18,6 +18,7 @@ export default function AppLayout() {
         />
         <Stack.Screen name="client/[id]" />
         <Stack.Screen name="client-notifications" />
+        <Stack.Screen name="broadcast" />
         <Stack.Screen name="slot/[id]" />
         <Stack.Screen name="day-schedule" />
         <Stack.Screen name="create-slot-flow" />

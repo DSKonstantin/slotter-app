@@ -17,7 +17,7 @@ type InfiniteFlashListProps<TItem> = Omit<
   onEndReached?: () => void;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
-  refreshTintColor?: string;
+  progressViewOffset?: number;
   showDefaultFooterLoader?: boolean;
 };
 
@@ -29,7 +29,7 @@ export function InfiniteFlashList<TItem>({
   onEndReached,
   isFetchingNextPage = false,
   hasNextPage = true,
-  refreshTintColor = "blue",
+  progressViewOffset,
   showDefaultFooterLoader = true,
   ListFooterComponent,
   ...rest
@@ -59,7 +59,7 @@ export function InfiniteFlashList<TItem>({
       refreshControl={
         onRefresh ? (
           <RefreshControl
-            tintColor={refreshTintColor}
+            progressViewOffset={progressViewOffset}
             refreshing={isRefreshing}
             onRefresh={onRefresh}
           />

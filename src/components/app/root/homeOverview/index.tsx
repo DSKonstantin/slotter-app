@@ -108,7 +108,7 @@ const HomeOverview = ({
 }: Props) => {
   const bottomSheetRef = useRef<React.ComponentRef<typeof BottomSheet>>(null);
 
-  const glowOpacity = useSharedValue(0);
+  const glowOpacity = useSharedValue(1);
   const today = useToday();
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
@@ -168,10 +168,11 @@ const HomeOverview = ({
 
       <BottomSheet
         ref={bottomSheetRef}
-        index={COLLAPSED_INDEX}
+        index={EXPANDED_INDEX}
         snapPoints={snapPoints}
         topInset={EXPANDED_TOP_INSET}
         animationConfigs={SPRING_CONFIG}
+        animateOnMount={false}
         enableDynamicSizing={false}
         handleComponent={Handle}
         backgroundStyle={{

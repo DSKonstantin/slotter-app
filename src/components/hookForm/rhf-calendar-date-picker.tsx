@@ -14,6 +14,7 @@ type RhfCalendarDatePickerProps = {
   startAdornment?: ReactNode;
   userId?: number;
   onNonWorkingDaySuccess?: (date: string) => void;
+  fieldClassName?: string;
 };
 
 export function RhfCalendarDatePicker({
@@ -27,6 +28,7 @@ export function RhfCalendarDatePicker({
   startAdornment,
   userId,
   onNonWorkingDaySuccess,
+  fieldClassName,
 }: RhfCalendarDatePickerProps) {
   const { control } = useFormContext();
   const {
@@ -50,6 +52,7 @@ export function RhfCalendarDatePicker({
       startAdornment={startAdornment}
       userId={userId}
       onNonWorkingDaySuccess={onNonWorkingDaySuccess}
+      fieldClassName={fieldClassName}
     />
   );
 }

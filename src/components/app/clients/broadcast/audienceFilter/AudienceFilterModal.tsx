@@ -208,6 +208,7 @@ export const AudienceFilterModal = ({
           <DateRangeFilter
             value={filters.birthDate}
             onChange={(v) => setField("birthDate", v)}
+            enableYearPicker
           />
         )}
 
