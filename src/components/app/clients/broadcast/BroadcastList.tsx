@@ -23,6 +23,7 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { useGetMarketingBroadcastsPaginatedInfiniteQuery } from "@/src/store/redux/services/api/marketingBroadcastsApi";
 import type { MarketingBroadcast } from "@/src/store/redux/services/api-types";
 import BroadcastCard from "./BroadcastCard";
+import BroadcastListSkeleton from "./BroadcastListSkeleton";
 import { useBroadcastGate } from "./useBroadcastGate";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -157,6 +158,10 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
     ]),
   );
 
+  if (isLoading) {
+    return <BroadcastListSkeleton topInset={topInset} />;
+  }
+
   if (isError && !data) {
     return (
       <ErrorScreen
@@ -217,11 +222,9 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
           )
         }
         ListEmptyComponent={
-          isLoading ? null : (
-            <Typography className="text-body text-neutral-400 text-center mt-10">
-              Рассылок пока нет
-            </Typography>
-          )
+          <Typography className="text-body text-neutral-400 text-center mt-10">
+            Рассылок пока нет
+          </Typography>
         }
       />
 

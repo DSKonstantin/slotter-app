@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import ContentLoader, { Rect } from "react-content-loader/native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -113,11 +114,19 @@ const ClientNotifications = () => {
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
 
-  const { data: templatesData, refetch: refetchTemplates } =
-    useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
+  const {
+    data: templatesData,
+    isLoading: isTemplatesLoading,
+    refetch: refetchTemplates,
+  } = useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
-  const { data: settingsData, refetch: refetchSettings } =
-    useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+  const {
+    data: settingsData,
+    isLoading: isSettingsLoading,
+    refetch: refetchSettings,
+  } = useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
+
+  const isNotificationTypesLoading = isTemplatesLoading || isSettingsLoading;
 
   const {
     data: directPlansData,
@@ -249,9 +258,19 @@ const ClientNotifications = () => {
             <Card
               title="Виды уведомлений"
               subtitle={
-                notificationTemplatesSummary.total > 0
-                  ? `Активно: ${notificationTemplatesSummary.enabled} / ${notificationTemplatesSummary.total}`
-                  : undefined
+                isNotificationTypesLoading ? (
+                  <ContentLoader
+                    speed={1.2}
+                    width={90}
+                    height={18}
+                    backgroundColor={colors.neutral[100]}
+                    foregroundColor="#F5F5FA"
+                  >
+                    <Rect x={0} y={2} rx={7} ry={7} width={90} height={14} />
+                  </ContentLoader>
+                ) : notificationTemplatesSummary.total > 0 ? (
+                  `Активно: ${notificationTemplatesSummary.enabled} / ${notificationTemplatesSummary.total}`
+                ) : undefined
               }
               subtitleProps={{
                 style: {

@@ -165,7 +165,8 @@ export const chatRoomsApi = api.injectEndpoints({
           }
 
           resourceSub.on("message", (event) => {
-            if (event.type !== "chat_room.created") return;
+            if (!("type" in event) || event.type !== "chat_room.created")
+              return;
 
             updateCachedData((draft) => {
               const existing = removeRoomFromPages(draft, event.payload.id);
