@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
+import type {
+  WebViewErrorEvent,
+  WebViewHttpErrorEvent,
+} from "react-native-webview/lib/WebViewTypes";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import RetryInline from "@/src/components/shared/retryInline";
 import { colors } from "@/src/styles/colors";
@@ -17,6 +21,13 @@ const WebViewScreen = ({ url, title }: Props) => {
   const [reloadKey, setReloadKey] = useState(0);
 
   const { bottom } = useSafeAreaInsets();
+
+  // Reset stale error/loading state left over from a previous url when the
+  // screen instance is reused for a new navigation instead of remounting.
+  useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+  }, [url]);
 
   const handleRetry = () => {
     setHasError(false);
@@ -46,11 +57,13 @@ const WebViewScreen = ({ url, title }: Props) => {
                 source={{ uri: url }}
                 style={{ flex: 1 }}
                 onLoadEnd={() => setIsLoading(false)}
-                onError={() => {
+                onError={(e: WebViewErrorEvent) => {
+                  console.warn("[WebView] onError", url, e.nativeEvent);
                   setIsLoading(false);
                   setHasError(true);
                 }}
-                onHttpError={() => {
+                onHttpError={(e: WebViewHttpErrorEvent) => {
+                  console.warn("[WebView] onHttpError", url, e.nativeEvent);
                   setIsLoading(false);
                   setHasError(true);
                 }}

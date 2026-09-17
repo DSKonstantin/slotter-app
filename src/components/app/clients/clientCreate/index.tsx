@@ -50,10 +50,11 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 
 type ClientCreateProps = {
+  initialName?: string;
   onCreated?: (userCustomer: UserCustomer) => void;
 };
 
-const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
+const ClientCreate = ({ initialName, onCreated }: ClientCreateProps = {}) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [createTagVisible, setCreateTagVisible] = useState(false);
 
@@ -76,7 +77,12 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
 
   const methods = useForm({
     resolver: yupResolver(ClientCreateSchema),
-    defaultValues: { name: "", phone: "", comment: "", customer_tag: null },
+    defaultValues: {
+      name: initialName ?? "",
+      phone: "",
+      comment: "",
+      customer_tag: null,
+    },
   });
 
   const {

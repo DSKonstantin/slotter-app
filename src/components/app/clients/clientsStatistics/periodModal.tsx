@@ -72,6 +72,10 @@ const PeriodModal = ({
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const activeValue = calendarVisible
+    ? CUSTOM_PERIOD_VALUE
+    : selectedPeriod.value;
+
   return (
     <StModal
       visible={visible}
@@ -89,7 +93,7 @@ const PeriodModal = ({
           <React.Fragment key={period.value}>
             <Item
               title={period.label}
-              active={selectedPeriod.value === period.value}
+              active={activeValue === period.value}
               className="border-transparent rounded-none min-h-[24px] p-0"
               onPress={() => handleSelectPeriod(period)}
             />
@@ -99,7 +103,7 @@ const PeriodModal = ({
         <Divider className="my-2" />
         <Item
           title="Выбрать другой период..."
-          active={selectedPeriod.value === CUSTOM_PERIOD_VALUE}
+          active={activeValue === CUSTOM_PERIOD_VALUE}
           className="border-transparent rounded-none min-h-[24px] p-0"
           onPress={() => setCalendarVisible(true)}
         />

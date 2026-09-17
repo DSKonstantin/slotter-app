@@ -118,7 +118,11 @@ export const Routers = {
           pathname: "/(app)/create-slot-flow/create",
         }) as const,
     },
-    createClient: "/(app)/create-client" as const,
+    createClient: (params?: { name?: string }) =>
+      ({
+        pathname: "/(app)/create-client",
+        params: params ?? {},
+      }) as const,
     chat: {
       index: "/(app)/(tabs)/chat" as const,
       room: (id: string | number) =>

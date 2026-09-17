@@ -91,7 +91,7 @@ const CustomerSelectField = ({ showCreateButton = true }: Props) => {
         </View>
         {showCreateButton && (
           <IconButton
-            onPress={() => router.push(Routers.app.createClient)}
+            onPress={() => router.push(Routers.app.createClient())}
             icon={
               <StSvg name="Add_round" size={24} color={colors.neutral[900]} />
             }

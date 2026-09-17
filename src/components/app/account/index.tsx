@@ -62,11 +62,18 @@ const AccountScreen = () => {
 
   if (!auth) return null;
 
-  const handleUpgrade = () => {
+  const handleOpenPersonalAccount = () => {
     runOnNextForeground(() =>
       getSubscriptionMembership({ userId: auth.userId }),
     );
     openPersonalAccount();
+  };
+
+  const handleUpgrade = () => {
+    runOnNextForeground(() =>
+      getSubscriptionMembership({ userId: auth.userId }),
+    );
+    openPersonalAccount("/upgrade");
   };
 
   const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
@@ -175,7 +182,7 @@ const AccountScreen = () => {
                       />
                     }
                     buttonClassName="rounded-full h-[62px]"
-                    onPress={handleUpgrade}
+                    onPress={handleOpenPersonalAccount}
                   />
                 ) : (
                   <Button

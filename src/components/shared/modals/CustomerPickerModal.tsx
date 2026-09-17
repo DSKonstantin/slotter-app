@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import debounce from "lodash/debounce";
+import { router } from "expo-router";
 import { KeyboardEvents } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
@@ -21,13 +22,17 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import {
   Avatar,
   HighlightText,
+  IconButton,
   Input,
   StModal,
   StSvg,
   Typography,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
+import { Routers } from "@/src/constants/routers";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { clearCreatedCustomer } from "@/src/store/redux/slices/slotDraftSlice";
 import { useGetUserCustomersPaginatedInfiniteQuery } from "@/src/store/redux/services/api/userCustomersApi";
 import RetryInline from "@/src/components/shared/retryInline";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -113,6 +118,8 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
   ).current;
 
   const auth = useRequiredAuth();
+  const dispatch = useAppDispatch();
+  const createdCustomer = useAppSelector((s) => s.slotDraft.createdCustomer);
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
 
@@ -164,6 +171,18 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
     [onSelect, handleClose],
   );
 
+  const handleCreateNew = useCallback(() => {
+    const name = search.trim();
+    handleClose();
+    router.push(Routers.app.createClient(name ? { name } : undefined));
+  }, [search, handleClose]);
+
+  useEffect(() => {
+    if (!createdCustomer) return;
+    handleSelect({ id: createdCustomer.id, name: createdCustomer.name });
+    dispatch(clearCreatedCustomer());
+  }, [createdCustomer, handleSelect, dispatch]);
+
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
     fetchNextPage();
@@ -196,39 +215,49 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
           <Typography weight="semibold" className="text-display text-center">
             Выбрать клиента
           </Typography>
-          <Input
-            value={search}
-            onChangeText={(value) => {
-              setSearch(value);
-              debouncedSetSearch(value);
-            }}
-            placeholder="Поиск по имени или телефону"
-            hideErrorText
-            startAdornment={
-              <StSvg name="Search" size={24} color={colors.neutral[500]} />
-            }
-            endAdornment={
-              search !== debouncedSearch ||
-              (!!debouncedSearch && isFetching) ? (
-                <ActivityIndicator color={colors.neutral[400]} />
-              ) : search.length > 0 ? (
-                <Pressable
-                  className="active:opacity-70"
-                  onPress={() => {
-                    setSearch("");
-                    debouncedSetSearch.cancel();
-                    setDebouncedSearch("");
-                  }}
-                >
-                  <StSvg
-                    name="close_ring_fill_light"
-                    size={20}
-                    color={colors.neutral[400]}
-                  />
-                </Pressable>
-              ) : undefined
-            }
-          />
+          <View className="flex-row items-end gap-2">
+            <View className="flex-1">
+              <Input
+                value={search}
+                onChangeText={(value) => {
+                  setSearch(value);
+                  debouncedSetSearch(value);
+                }}
+                placeholder="Поиск по имени или телефону"
+                hideErrorText
+                startAdornment={
+                  <StSvg name="Search" size={24} color={colors.neutral[500]} />
+                }
+                endAdornment={
+                  search !== debouncedSearch ||
+                  (!!debouncedSearch && isFetching) ? (
+                    <ActivityIndicator color={colors.neutral[400]} />
+                  ) : search.length > 0 ? (
+                    <Pressable
+                      className="active:opacity-70"
+                      onPress={() => {
+                        setSearch("");
+                        debouncedSetSearch.cancel();
+                        setDebouncedSearch("");
+                      }}
+                    >
+                      <StSvg
+                        name="close_ring_fill_light"
+                        size={20}
+                        color={colors.neutral[400]}
+                      />
+                    </Pressable>
+                  ) : undefined
+                }
+              />
+            </View>
+            <IconButton
+              onPress={handleCreateNew}
+              icon={
+                <StSvg name="Add_round" size={24} color={colors.neutral[900]} />
+              }
+            />
+          </View>
         </View>
       }
       horizontalPadding={false}
