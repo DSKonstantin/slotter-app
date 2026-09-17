@@ -24,7 +24,6 @@ import { useGetMarketingBroadcastsPaginatedInfiniteQuery } from "@/src/store/red
 import type { MarketingBroadcast } from "@/src/store/redux/services/api-types";
 import BroadcastCard from "./BroadcastCard";
 import BroadcastListSkeleton from "./BroadcastListSkeleton";
-import { useBroadcastGate } from "./useBroadcastGate";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -53,8 +52,6 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
   const auth = useRequiredAuth();
   const [filter, setFilter] = useState<BroadcastFilter>("all");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  const { guard, isLoading: gateLoading, modal } = useBroadcastGate();
 
   const debouncedSetSearch = useRef(
     debounce((value: string) => setDebouncedSearch(value), SEARCH_DEBOUNCE_MS),
@@ -124,7 +121,6 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
   const willRedirectToCreate =
     !isLoading &&
     !isFetching &&
-    !gateLoading &&
     !isError &&
     filter === "all" &&
     !debouncedSearch &&
@@ -132,7 +128,7 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (isLoading || isFetching || gateLoading || isError) return;
+      if (isLoading || isFetching || isError) return;
       if (filter !== "all" || debouncedSearch) return;
       if (items.length > 0) return;
 
@@ -141,19 +137,15 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
         return;
       }
 
-      guard(() => {
-        hasNavigatedToCreateRef.current = true;
-        navigateToCreate();
-      });
+      hasNavigatedToCreateRef.current = true;
+      navigateToCreate();
     }, [
       isLoading,
       isFetching,
-      gateLoading,
       isError,
       filter,
       debouncedSearch,
       items.length,
-      guard,
       navigateToCreate,
     ]),
   );
@@ -232,15 +224,12 @@ const BroadcastContent = ({ topInset, bottomInset }: ContentProps) => {
         <Button
           title="Создать новую рассылку"
           variant="accent"
-          disabled={gateLoading}
-          onPress={() => guard(navigateToCreate)}
+          onPress={navigateToCreate}
           rightIcon={
             <StSvg name="Add_round_fill" size={24} color={colors.neutral[0]} />
           }
         />
       </FloatingFooter>
-
-      {modal}
     </>
   );
 };

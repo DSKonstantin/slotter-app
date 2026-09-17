@@ -28,7 +28,6 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -91,7 +90,6 @@ const SlotCreate: React.FC = () => {
       ),
       comment: "",
       paymentMethod: "cash",
-      sendNotification: true,
     },
   });
 
@@ -206,7 +204,7 @@ const SlotCreate: React.FC = () => {
             break_after_minutes: values.breakAfterMinutes,
             payment_method: values.paymentMethod,
             comment: values.comment,
-            send_notification: values.sendNotification,
+            send_notification: true,
           },
         }).unwrap();
         dispatch(clearSlotDraft());
@@ -462,19 +460,6 @@ const SlotCreate: React.FC = () => {
                       ))}
                     </View>
                   </View>
-
-                  <Card
-                    title="Отправить уведомление"
-                    className="mt-5"
-                    left={
-                      <StSvg
-                        name="Bell"
-                        size={24}
-                        color={colors.neutral[500]}
-                      />
-                    }
-                    right={<RHFSwitch name="sendNotification" />}
-                  />
 
                   <View className="mt-5 gap-3">
                     <Button

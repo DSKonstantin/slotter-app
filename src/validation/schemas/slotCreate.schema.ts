@@ -24,7 +24,6 @@ export const SlotCreateSchema = Yup.object({
   breakAfterMinutes: Yup.number().min(0).max(240).required(),
   comment: Yup.string(),
   paymentMethod: Yup.string().oneOf(["cash", "sbp", "online_bank"]).required(),
-  sendNotification: Yup.boolean().required(),
 });
 
 export type SlotCreateFormValues = Yup.InferType<typeof SlotCreateSchema>;

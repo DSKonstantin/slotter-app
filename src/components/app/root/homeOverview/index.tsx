@@ -7,6 +7,7 @@ import React, {
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -125,6 +126,7 @@ const HomeOverview = ({
   const handleChange = useCallback(
     (nextIndex: number) => {
       const expanded = nextIndex === EXPANDED_INDEX;
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       glowOpacity.value = withTiming(expanded ? 1 : 0, {
         duration: GLOW_FADE_DURATION,
       });

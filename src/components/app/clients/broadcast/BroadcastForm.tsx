@@ -92,7 +92,7 @@ const BroadcastForm = () => {
 
   const insets = useSafeAreaInsets();
   const auth = useRequiredAuth();
-  const { channels } = useClientNotificationsConnected();
+  const { channels, connected } = useClientNotificationsConnected();
   const {
     channelModalVisible,
     setChannelModalVisible,
@@ -390,8 +390,14 @@ const BroadcastForm = () => {
                   <Button
                     title={submitTitle}
                     variant="accent"
-                    disabled={!isValid || isCreating}
-                    onPress={handleSubmit(onSubmit)}
+                    disabled={isCreating || (connected && !isValid)}
+                    onPress={() => {
+                      if (!connected) {
+                        setChannelModalVisible(true);
+                        return;
+                      }
+                      handleSubmit(onSubmit)();
+                    }}
                   />
                 </View>
               </View>

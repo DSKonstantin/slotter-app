@@ -15,6 +15,7 @@ import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useHasUnreadChat } from "@/src/hooks/useHasUnreadChat";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
+import ChatTabBarIcon from "@/src/components/navigation/tabBar/ChatTabBarIcon";
 
 type Tab = (typeof TABS)[number];
 
@@ -53,15 +54,16 @@ const TabItem = memo(
           />
         )}
         <View className="relative">
-          <StSvg
-            name={tab.icon as string}
-            size={compact ? 24 : 32}
-            color={isActive ? colors.neutral[900] : colors.neutral[500]}
-          />
-          {showDot && (
-            <View
-              className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-              style={{ backgroundColor: colors.accent.red[500] }}
+          {showDot ? (
+            <ChatTabBarIcon
+              size={compact ? 24 : 32}
+              color={isActive ? colors.neutral[900] : colors.neutral[500]}
+            />
+          ) : (
+            <StSvg
+              name={tab.icon as string}
+              size={compact ? 24 : 32}
+              color={isActive ? colors.neutral[900] : colors.neutral[500]}
             />
           )}
         </View>
@@ -99,13 +101,12 @@ const StTabBar: React.FC = () => {
 
   const handleTabPress = useCallback(
     (key: string, isActive: boolean, isAtRoot: boolean) => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       if (!isInTabs) {
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         router.replace(getTabHref(key));
         return;
       }
       if (isActive && isAtRoot) return;
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.navigate(getTabHref(key));
     },
     [isInTabs],

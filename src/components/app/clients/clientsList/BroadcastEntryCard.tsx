@@ -2,7 +2,6 @@ import React from "react";
 import { router } from "expo-router";
 
 import { Routers } from "@/src/constants/routers";
-import { useBroadcastGate } from "@/src/components/app/clients/broadcast/useBroadcastGate";
 import ClientsHeaderCard from "./ClientsHeaderCard";
 
 type Props = {
@@ -10,18 +9,14 @@ type Props = {
 };
 
 const BroadcastEntryCard = ({ disabled }: Props) => {
-  const { guard, isLoading, modal } = useBroadcastGate();
-
   return (
-    <>
-      <ClientsHeaderCard
-        iconName="Message_alt_fill"
-        label="Рассылка"
-        disabled={disabled || isLoading}
-        onPress={() => guard(() => router.push(Routers.app.broadcast.root))}
-      />
-      {modal}
-    </>
+    <ClientsHeaderCard
+      iconName="Message_alt_fill"
+      label="Рассылка"
+      badge="New"
+      disabled={disabled}
+      onPress={() => router.push(Routers.app.broadcast.root)}
+    />
   );
 };
 

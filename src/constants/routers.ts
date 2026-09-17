@@ -146,7 +146,7 @@ export const Routers = {
       root: "/(app)/(tabs)/schedule" as const,
     },
     history: {
-      root: "/(app)/(tabs)/history" as const,
+      root: "/(app)/history" as const,
     },
     finances: {
       root: "/(app)/(tabs)/finances",

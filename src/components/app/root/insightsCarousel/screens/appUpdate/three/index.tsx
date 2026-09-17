@@ -1,28 +1,20 @@
 import React from "react";
-import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
-  StoryHeading,
   StoryScreenLayout,
   StoryIllustration,
-  StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
 const AppUpdateThree = () => {
-  return (
-    <StoryScreenLayout paddingTop={68}>
-      <View className="px-screen">
-        <StoryHeading
-          title={
-            <>
-              Прилипание времени <StoryInlineIcon name="Time_fill" />
-              {"\n"}и создание пустого слота
-            </>
-          }
-          subtitle="Заполняйте график плотнее — и оставляйте себе время на паузы"
-        />
-      </View>
+  const { bottom } = useSafeAreaInsets();
 
+  return (
+    <StoryScreenLayout
+      paddingTop={68}
+      className="pb-12"
+      style={{ paddingBottom: bottom }}
+    >
       <StoryIllustration
         source={require("@/assets/images/history/app_update/three.webp")}
       />

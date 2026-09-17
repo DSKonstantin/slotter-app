@@ -19,14 +19,6 @@ type Insight = {
 };
 
 const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
-  // {
-  //   id: "app_update",
-  //   category: "update",
-  //   title: "Slotter стал проще и гибче",
-  //   imageSource: require("@/assets/images/history/carousel/5.png"),
-  //   stories: MOCK_NOTIFICATION_STORIES["app_update"],
-  //   onPress: () => onStoryPress("app_update"),
-  // },
   {
     id: "education_payments",
     category: "education",
@@ -34,6 +26,14 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     imageSource: require("@/assets/images/history/carousel/1.webp"),
     stories: MOCK_NOTIFICATION_STORIES["education_payments"],
     onPress: () => onStoryPress("education_payments"),
+  },
+  {
+    id: "app_update",
+    category: "update",
+    title: "Slotter стал проще и гибче",
+    imageSource: require("@/assets/images/history/carousel/5.png"),
+    stories: MOCK_NOTIFICATION_STORIES["app_update"],
+    onPress: () => onStoryPress("app_update"),
   },
   {
     id: "fill_profile",

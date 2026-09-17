@@ -1,28 +1,20 @@
 import React from "react";
-import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
-  StoryHeading,
   StoryScreenLayout,
   StoryIllustration,
-  StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
 const AppUpdateFour = () => {
-  return (
-    <StoryScreenLayout paddingTop={68}>
-      <View className="px-screen">
-        <StoryHeading
-          title={
-            <>
-              Настраивайте ваши <StoryInlineIcon name="Send_fill" />
-              {"\n"}рассылки проще
-            </>
-          }
-          subtitle="Точнее аудитория, безопаснее отправка, гибче время запуска"
-        />
-      </View>
+  const { bottom } = useSafeAreaInsets();
 
+  return (
+    <StoryScreenLayout
+      paddingTop={68}
+      className="pb-12"
+      style={{ paddingBottom: bottom }}
+    >
       <StoryIllustration
         source={require("@/assets/images/history/app_update/four.webp")}
       />

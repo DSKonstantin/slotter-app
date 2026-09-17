@@ -12,7 +12,7 @@ type Props = {
 
 export const ResendCodeButton: React.FC<Props> = ({
   seconds = 30,
-  label = "Отправить код повторно",
+  label = "Позвонить повторно",
   onResend,
   onCallPress,
 }) => {
