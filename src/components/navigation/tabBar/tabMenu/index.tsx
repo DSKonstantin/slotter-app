@@ -10,7 +10,7 @@ import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
+import { Badge, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -23,6 +23,7 @@ type MenuItem = {
   icon: string;
   route?: string;
   disabled?: boolean;
+  badge?: string;
 };
 
 const stripRouteGroups = (route: string) => route.replace(/\/\([^)]+\)/g, "");
@@ -57,6 +58,7 @@ const MENU_ITEMS: MenuItem[] = [
     label: "Уведомление клиентам",
     icon: "Message_alt_fill",
     route: Routers.app.account.clientNotifications.root,
+    badge: "New",
   },
 ];
 
@@ -170,6 +172,15 @@ const TabMenu = () => {
                   >
                     {item.label}
                   </Typography>
+
+                  {item.badge && (
+                    <Badge
+                      title={item.badge}
+                      variant="accent"
+                      size="sm"
+                      className="self-center"
+                    />
+                  )}
                 </Pressable>
               );
             })}

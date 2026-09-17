@@ -8,6 +8,7 @@ import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
+import { RhfBreakAfterPicker } from "@/src/components/hookForm/rhf-break-after-picker";
 import { RhfWorkingDayTimePickerField } from "@/src/components/hookForm/rhf-working-day-time-picker-field";
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
@@ -38,7 +39,12 @@ import {
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import CustomerSelectField from "@/src/components/shared/fields/customerSelectField";
 import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
-import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
+import {
+  getApiErrorMessage,
+  getApiFieldError,
+  getBreakAfterIntersectionHint,
+  isQuotaExceeded,
+} from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
@@ -48,6 +54,7 @@ import { PAYMENT_OPTIONS } from "@/src/constants/payment";
 const SlotCreate: React.FC = () => {
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
+  const [breakAfterHint, setBreakAfterHint] = useState<string | undefined>();
 
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
@@ -61,6 +68,7 @@ const SlotCreate: React.FC = () => {
         name: s.name,
         duration: s.duration,
         priceCents: s.price_cents,
+        breakAfterMinutes: s.break_after_minutes ?? 0,
       })),
     [draft.services],
   );
@@ -75,6 +83,12 @@ const SlotCreate: React.FC = () => {
       duration:
         initialServices.reduce((sum, s) => sum + s.duration, 0) +
         draft.additionalServices.reduce((sum, s) => sum + s.duration, 0),
+      // Доп. услуги перерыв не дают (§8.5) — берём максимум только по
+      // основным.
+      breakAfterMinutes: initialServices.reduce(
+        (max, s) => Math.max(max, s.breakAfterMinutes),
+        0,
+      ),
       comment: "",
       paymentMethod: "cash",
       sendNotification: true,
@@ -131,6 +145,14 @@ const SlotCreate: React.FC = () => {
         next.reduce((sum, s) => sum + s.duration, 0) +
           draft.additionalServices.reduce((sum, s) => sum + s.duration, 0),
       );
+      // Only re-derive from the remaining services if the master hasn't
+      // manually picked a break — don't clobber a deliberate choice.
+      if (!methods.formState.dirtyFields.breakAfterMinutes) {
+        setValue(
+          "breakAfterMinutes",
+          next.reduce((max, s) => Math.max(max, s.breakAfterMinutes ?? 0), 0),
+        );
+      }
     },
     [fields.length, remove, methods, setValue, draft.additionalServices],
   );
@@ -145,6 +167,8 @@ const SlotCreate: React.FC = () => {
   const onSubmit = useCallback(
     async (values: SlotCreateFormValues) => {
       if (!auth) return;
+
+      setBreakAfterHint(undefined);
 
       if (!values.customerId) {
         const confirmed = await new Promise<boolean>((resolve) =>
@@ -179,6 +203,7 @@ const SlotCreate: React.FC = () => {
             }),
             customer_id: values.customerId,
             duration: values.duration,
+            break_after_minutes: values.breakAfterMinutes,
             payment_method: values.paymentMethod,
             comment: values.comment,
             send_notification: values.sendNotification,
@@ -190,8 +215,12 @@ const SlotCreate: React.FC = () => {
         router.dismissAll();
         router.replace(Routers.app.calendar.root(values.date));
       } catch (error) {
+        const breakError = getApiFieldError(error, "break_after_minutes");
         if (isQuotaExceeded(error)) {
           setSlotLimitVisible(true);
+        } else if (breakError) {
+          methods.setError("breakAfterMinutes", { message: breakError });
+          setBreakAfterHint(getBreakAfterIntersectionHint(error));
         } else {
           toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
         }
@@ -346,7 +375,7 @@ const SlotCreate: React.FC = () => {
 
                   <CustomerSelectField />
 
-                  <View className="flex-row gap-3 mt-5">
+                  <View className="flex-row gap-2 mt-5">
                     <View className="flex-1">
                       <RhfCalendarDatePicker
                         name="date"
@@ -377,13 +406,29 @@ const SlotCreate: React.FC = () => {
                     </View>
                   </View>
 
-                  <View className="mt-1">
-                    <RhfDurationPicker
-                      name="duration"
-                      label="Изменить продолжительность (мин)"
-                      placeholder="Выберите длительность"
-                    />
+                  <View className="flex-row mt-1 gap-2">
+                    <View className="flex-1">
+                      <RhfDurationPicker
+                        name="duration"
+                        label="Продолжительность"
+                        placeholder="Выберите длительность"
+                      />
+                    </View>
+
+                    <View className="flex-1">
+                      <RhfBreakAfterPicker
+                        name="breakAfterMinutes"
+                        label="Перерыв после записи"
+                        placeholder="Без перерыва"
+                      />
+                    </View>
                   </View>
+
+                  {breakAfterHint && (
+                    <Typography className="text-caption text-neutral-500 mt-1">
+                      {breakAfterHint}
+                    </Typography>
+                  )}
 
                   <View className="mt-1">
                     <RhfTextField

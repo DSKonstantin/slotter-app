@@ -144,7 +144,7 @@ const EditService = ({ serviceId, categoryId }: EditServiceProps) => {
       description: service.description ?? "",
       isAvailableOnline: service.is_available_online ?? false,
       isActive: service.is_active ?? true,
-      breakAfter: 0,
+      breakAfter: service.break_after_minutes ?? 0,
       additionalServices: (service.additional_services ?? []).map(
         (additionalService) => ({
           serviceId: additionalService.id,

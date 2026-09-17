@@ -36,10 +36,13 @@ export const createExistingCalendarDay = (
   isSelected: false,
   startAt: formatTimeFromISO(workingDay.start_at),
   endAt: formatTimeFromISO(workingDay.end_at),
-  breaks: (workingDay.working_day_breaks ?? []).map((item) => ({
-    start: formatTimeFromISO(item.start_at),
-    end: formatTimeFromISO(item.end_at),
-  })),
+  breaks: (workingDay.working_day_breaks ?? [])
+    .filter((item) => (item.kind ?? "main") === "main")
+    .map((item) => ({
+      start: formatTimeFromISO(item.start_at),
+      end: formatTimeFromISO(item.end_at),
+      name: item.name ?? undefined,
+    })),
 });
 
 export const buildFormValues = (
@@ -66,7 +69,11 @@ export const buildFormValues = (
 export const cloneBreaks = (
   breaks: CalendarScheduleBreak[] = [],
 ): CalendarScheduleBreak[] =>
-  breaks.map((item) => ({ start: item.start, end: item.end }));
+  breaks.map((item) => ({
+    start: item.start,
+    end: item.end,
+    name: item.name,
+  }));
 
 export const createDraftFromDay = (
   day?: Pick<CalendarScheduleDayValues, "startAt" | "endAt" | "breaks">,
@@ -83,7 +90,9 @@ export const areSameBreaks = (
   left.length === right.length &&
   left.every(
     (item, index) =>
-      item.start === right[index]?.start && item.end === right[index]?.end,
+      item.start === right[index]?.start &&
+      item.end === right[index]?.end &&
+      item.name === right[index]?.name,
   );
 
 export const areSameCalendarDays = (

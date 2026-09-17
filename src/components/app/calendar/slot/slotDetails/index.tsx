@@ -43,6 +43,7 @@ import { isHiddenCustomer } from "@/src/utils/customer";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
 import ClientNotificationNotice from "@/src/components/app/calendar/slot/ClientNotificationNotice";
 import {
+  formatBreakAfter,
   formatDayMonth,
   formatDuration,
   formatTimeString,
@@ -54,7 +55,11 @@ import {
 } from "@/src/utils/price/formatPrice";
 import EditableCommentRow from "./EditableCommentRow";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { getApiErrorMessage } from "@/src/utils/apiError";
+import {
+  getApiErrorMessage,
+  getApiFieldError,
+  getBreakAfterIntersectionHint,
+} from "@/src/utils/apiError";
 
 import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
@@ -62,12 +67,14 @@ import EditableRow from "./EditableRow";
 import EditableDurationRow from "./EditableDurationRow";
 import StatusModal from "./StatusModal";
 import PaymentMethodModal from "./PaymentMethodModal";
+import BreakAfterModal from "@/src/components/shared/modals/BreakAfterModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
 import { PAYMENT_METHOD_LABELS } from "@/src/constants/payment";
 
-type EditingField = "duration" | "price" | "comment" | "status" | null;
+type EditingField =
+  "duration" | "breakAfter" | "price" | "comment" | "status" | null;
 
 interface Props {
   slotId: string;
@@ -79,6 +86,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [actionsVisible, setActionsVisible] = useState(false);
   const [actionsMenuMounted, setActionsMenuMounted] = useState(false);
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
+  const [breakAfterVisible, setBreakAfterVisible] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
@@ -182,7 +190,13 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
         toast.success("Сохранено");
         options?.onSuccess?.();
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+        const breakError = getApiFieldError(error, "break_after_minutes");
+        if (breakError) {
+          const hint = getBreakAfterIntersectionHint(error);
+          toast.error([breakError, hint].filter(Boolean).join(" "));
+        } else {
+          toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+        }
       } finally {
         isSavingRef.current = false;
         if (options?.field) setEditingField(null);
@@ -568,6 +582,36 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     }}
                   />
 
+                  <InfoRow
+                    label="Перерыв после записи"
+                    right={
+                      <Pressable
+                        onPress={
+                          derived!.canEdit
+                            ? () => setBreakAfterVisible(true)
+                            : undefined
+                        }
+                        disabled={!derived!.canEdit}
+                        hitSlop={8}
+                        className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                      >
+                        <Typography
+                          weight="regular"
+                          className="text-body text-neutral-900 flex-shrink text-right"
+                        >
+                          {formatBreakAfter(slot.break_after_minutes)}
+                        </Typography>
+                        {derived!.canEdit && (
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
+                          />
+                        )}
+                      </Pressable>
+                    }
+                  />
+
                   <EditableRow
                     label="Стоимость"
                     displayValue={
@@ -708,6 +752,20 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 }
                 onComingSoon={() =>
                   schedulePaymentAction(() => setComingSoonVisible(true))
+                }
+              />
+              <BreakAfterModal
+                visible={breakAfterVisible}
+                currentMinutes={slot.break_after_minutes}
+                onClose={() => setBreakAfterVisible(false)}
+                onSelect={(minutes) =>
+                  void handleUpdate(
+                    { break_after_minutes: minutes },
+                    {
+                      field: "breakAfter",
+                      onSuccess: () => setBreakAfterVisible(false),
+                    },
+                  )
                 }
               />
               <ComingSoonModal

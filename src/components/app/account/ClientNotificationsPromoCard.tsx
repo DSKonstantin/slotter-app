@@ -32,7 +32,7 @@ const ClientNotificationsPromoCard = () => (
 
       <View className="flex-row items-center gap-2">
         <Badge title="-70% неявок" variant="info" size="sm" />
-        <StSvg name="External" size={24} color={colors.neutral[500]} />
+        <StSvg name="Expand_right" size={20} color={colors.neutral[500]} />
       </View>
     </View>
 

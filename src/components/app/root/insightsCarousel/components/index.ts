@@ -4,6 +4,7 @@ export { StoryHeading } from "./StoryHeading";
 export { StoryScreenLayout } from "./StoryScreenLayout";
 export { StoryPill } from "./StoryPill";
 export { StoryPhotoScrimHeading } from "./StoryPhotoScrimHeading";
+export { StoryTopScrimHeading } from "./StoryTopScrimHeading";
 export { StoryInlineIcon } from "./StoryInlineIcon";
 export { StoryIllustration } from "./StoryIllustration";
 export { StorySwipeArrow } from "./StorySwipeArrow";

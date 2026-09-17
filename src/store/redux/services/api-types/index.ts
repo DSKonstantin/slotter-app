@@ -93,6 +93,7 @@ export type {
 export type {
   WorkingDay,
   WorkingDayBreak,
+  WorkingDayBreakKind,
   WorkingDayBreaksAttributesPayload,
   CreateWorkingDayPayload,
   BulkCreateWorkingDayItem,

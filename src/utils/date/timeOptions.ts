@@ -30,3 +30,11 @@ export const FULL_DAY_MINUTE_OPTIONS = buildMinuteOptions({
   end: 1439,
   step: 5,
 });
+
+/** "Break after appointment" choices — the backend accepts any multiple of
+ * 5 from 0 to 240 (not just a curated subset), so offer the full range. */
+export const BREAK_AFTER_MINUTE_OPTIONS = buildMinuteOptions({
+  start: 0,
+  end: 240,
+  step: 5,
+});

@@ -72,6 +72,9 @@ export const formatDuration = (totalMinutes: number): string => {
   return `${h} ч ${String(m).padStart(2, "0")} мин`;
 };
 
+export const formatBreakAfter = (minutes: number): string =>
+  minutes === 0 ? "Нет" : formatDuration(minutes);
+
 export const formatCountdown = (totalSeconds: number) => {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;

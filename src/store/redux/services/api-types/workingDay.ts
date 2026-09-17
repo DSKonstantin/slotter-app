@@ -1,8 +1,13 @@
+export type WorkingDayBreakKind = "main" | "occupied" | "appointment";
+
 export interface WorkingDayBreak {
   id: number;
   working_day_id: number;
   start_at: string;
   end_at: string;
+  kind: WorkingDayBreakKind | null;
+  name: string | null;
+  appointment_id: number | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -23,6 +28,7 @@ export type WorkingDayBreaksAttributesPayload = {
   id?: number;
   start_at?: string;
   end_at?: string;
+  name?: string;
   _destroy?: boolean;
 };
 
@@ -38,7 +44,7 @@ export type BulkCreateWorkingDayItem = {
   day: string;
   start_at: string;
   end_at: string;
-  working_day_breaks?: { start_at: string; end_at: string }[];
+  working_day_breaks?: { start_at: string; end_at: string; name?: string }[];
 };
 
 export type BulkCreateWorkingDaysPayload = {
@@ -57,11 +63,15 @@ export type UpdateWorkingDayPayload = Partial<{
 export type CreateWorkingDayBreakPayload = {
   start_at: string;
   end_at: string;
+  kind?: Exclude<WorkingDayBreakKind, "appointment">;
+  name?: string;
 };
 
 export type UpdateWorkingDayBreakPayload = Partial<{
   start_at: string;
   end_at: string;
+  name: string;
+  kind: Exclude<WorkingDayBreakKind, "appointment">;
 }>;
 
 export type WorkingDaysResponse = Record<string, WorkingDay | null>;

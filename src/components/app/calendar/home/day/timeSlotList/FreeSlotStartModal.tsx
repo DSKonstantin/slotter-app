@@ -9,6 +9,9 @@ import React, {
 import { View } from "react-native";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { buildMinuteOptions } from "@/src/utils/date/timeOptions";
+import { formatMinutes } from "@/src/utils/date/formatTime";
+import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useCreateWorkingDayBreakMutation } from "@/src/store/redux/services/api/workingDaysApi";
 import {
   StModal,
   Typography,
@@ -31,6 +34,7 @@ type Tab = "booking" | "block";
 type FreeSlotStartModalProps = {
   visible: boolean;
   range: FreeSlotRange | null;
+  workingDayId?: number;
   onClose: () => void;
   /** «Новая запись» tab — hands back the picked start minute for navigation. */
   onNext?: (start: number) => void;
@@ -55,6 +59,7 @@ const clockAdornment = (
 const FreeSlotStartModal = ({
   visible,
   range,
+  workingDayId,
   onClose,
   onNext,
 }: FreeSlotStartModalProps) => {
@@ -69,6 +74,9 @@ const FreeSlotStartModal = ({
   // The «Новая запись» wheel is uncontrolled after mount — remount it (via
   // key) on a fresh open so it re-derives its scroll position from state.
   const [openKey, setOpenKey] = useState(0);
+
+  const [createWorkingDayBreak, { isLoading: isBlocking }] =
+    useCreateWorkingDayBreakMutation();
 
   // Shared by both tabs — the same 1-hour window from the tapped point.
   const bookingOptions = useMemo(() => {
@@ -142,16 +150,32 @@ const FreeSlotStartModal = ({
     onClose();
   }, [effectiveBookingStart, onClose, onNext]);
 
-  const handleBlockConfirm = useCallback(() => {
-    // TODO(backend): create a WorkingDayBreak with start_at = blockStart,
-    // end_at = blockEnd and persist `comment` once the endpoint exists.
-    // Mocked for now.
-    void comment;
-    void blockStart;
-    void blockEnd;
-    toast.success("Время занято");
-    onClose();
-  }, [blockEnd, blockStart, comment, onClose]);
+  const handleBlockConfirm = useCallback(async () => {
+    if (blockStart == null || blockEnd == null || !workingDayId) return;
+
+    try {
+      await createWorkingDayBreak({
+        workingDayId,
+        data: {
+          start_at: formatMinutes(blockStart),
+          end_at: formatMinutes(blockEnd),
+          kind: "occupied",
+          ...(comment && { name: comment }),
+        },
+      }).unwrap();
+      toast.success("Время занято");
+      onClose();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось занять время"));
+    }
+  }, [
+    blockEnd,
+    blockStart,
+    comment,
+    createWorkingDayBreak,
+    onClose,
+    workingDayId,
+  ]);
 
   const hasBookingOptions = bookingOptions.length > 0;
   // Need at least one start with an end after it (gap wider than one step).
@@ -259,7 +283,8 @@ const FreeSlotStartModal = ({
           <Button
             title="Занять время"
             onPress={handleBlockConfirm}
-            disabled={!canBlock}
+            disabled={!canBlock || isBlocking}
+            loading={isBlocking}
             buttonClassName="mt-2"
           />
         </View>

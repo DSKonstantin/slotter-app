@@ -1,6 +1,8 @@
 import {
   getApiErrorCode,
   getApiErrorMessage,
+  getApiFieldError,
+  getBreakAfterIntersectionHint,
   isAuthError,
   isQuotaExceeded,
 } from "@/src/utils/apiError/index";
@@ -109,5 +111,114 @@ describe("getApiErrorMessage", () => {
 
   it("returns the fallback when errors/error are both absent", () => {
     expect(getApiErrorMessage({ data: {} }, "fallback")).toBe("fallback");
+  });
+});
+
+describe("getApiFieldError", () => {
+  it("returns the capitalized message for the requested field", () => {
+    expect(
+      getApiFieldError(
+        {
+          data: {
+            errors: {
+              break_after_minutes: [
+                "перерыв после записи пересекается с другой записью",
+              ],
+            },
+          },
+        },
+        "break_after_minutes",
+      ),
+    ).toBe("Перерыв после записи пересекается с другой записью");
+  });
+
+  it("joins multiple messages for the same field", () => {
+    expect(
+      getApiFieldError(
+        { data: { errors: { name: ["слишком длинное", "неверный формат"] } } },
+        "name",
+      ),
+    ).toBe("Слишком длинное, неверный формат");
+  });
+
+  it("returns undefined when that specific field has no error, even if others do", () => {
+    expect(
+      getApiFieldError(
+        { data: { errors: { date: ["рабочий день не найден"] } } },
+        "break_after_minutes",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when errors is a flat array (no field keys)", () => {
+    expect(
+      getApiFieldError(
+        { data: { errors: ["неверный телефон"] } },
+        "break_after_minutes",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when errors is absent or the error isn't API-shaped", () => {
+    expect(
+      getApiFieldError({ data: {} }, "break_after_minutes"),
+    ).toBeUndefined();
+    expect(getApiFieldError(null, "break_after_minutes")).toBeUndefined();
+    expect(
+      getApiFieldError(new Error("boom"), "break_after_minutes"),
+    ).toBeUndefined();
+  });
+
+  it("falls back to undefined when the only message is a non-Cyrillic technical leak", () => {
+    expect(
+      getApiFieldError(
+        { data: { errors: { break_after_minutes: ["Translation missing"] } } },
+        "break_after_minutes",
+      ),
+    ).toBeUndefined();
+  });
+});
+
+describe("getBreakAfterIntersectionHint", () => {
+  it("returns the hint when break_after_minutes overlaps another appointment", () => {
+    expect(
+      getBreakAfterIntersectionHint({
+        data: {
+          errors: {
+            break_after_minutes: [
+              "перерыв после записи пересекается с другой записью",
+            ],
+          },
+        },
+      }),
+    ).toBe(
+      "Уменьшите перерыв, чтобы он заканчивался до начала следующей записи, выберите «Без перерыва» (0) или другое время записи",
+    );
+  });
+
+  it("returns undefined for a different break_after_minutes error", () => {
+    expect(
+      getBreakAfterIntersectionHint({
+        data: { errors: { break_after_minutes: ["должно быть кратно 5"] } },
+      }),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when break_after_minutes has no error, even if other fields do", () => {
+    expect(
+      getBreakAfterIntersectionHint({
+        data: { errors: { date: ["рабочий день не найден"] } },
+      }),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when errors is a flat array or absent", () => {
+    expect(
+      getBreakAfterIntersectionHint({
+        data: { errors: ["перерыв после записи пересекается с другой записью"] },
+      }),
+    ).toBeUndefined();
+    expect(getBreakAfterIntersectionHint({ data: {} })).toBeUndefined();
+    expect(getBreakAfterIntersectionHint(null)).toBeUndefined();
   });
 });

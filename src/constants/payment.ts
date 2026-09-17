@@ -6,8 +6,7 @@ export const PAYMENT_OPTIONS: {
   comingSoon?: boolean;
 }[] = [
   { key: "cash", label: "Наличные" },
-  { key: "sbp", label: "СБП" },
-  { key: "online_bank", label: "Онлайн-банк", comingSoon: true },
+  { key: "sbp", label: "Безналичные" },
 ];
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

@@ -3,13 +3,9 @@ import { Pressable, View } from "react-native";
 import { useController, useFormContext } from "react-hook-form";
 
 import { StSvg, Typography } from "@/src/components/ui";
-import { TimeWheelPickerModal } from "@/src/components/ui/pickers/TimeWheelPickerModal";
 import { colors } from "@/src/styles/colors";
-import { FULL_DAY_MINUTE_OPTIONS } from "@/src/utils/date/timeOptions";
-import {
-  BREAK_AFTER_MODAL_DESCRIPTION,
-  formatBreakAfter,
-} from "@/src/constants/serviceBreakAfter";
+import { formatBreakAfter } from "@/src/utils/date/formatTime";
+import BreakAfterModal from "@/src/components/shared/modals/BreakAfterModal";
 
 const BreakAfterField = () => {
   const { control } = useFormContext();
@@ -21,7 +17,7 @@ const BreakAfterField = () => {
 
   const current = typeof value === "number" ? value : 0;
 
-  const handleConfirm = (minutes: number) => {
+  const handleSelect = (minutes: number) => {
     onChange(minutes);
     setVisible(false);
   };
@@ -49,20 +45,15 @@ const BreakAfterField = () => {
           weight="regular"
           className="text-caption text-neutral-500 mt-2"
         >
-          Настраивается для каждой услуги отдельно и добавляется к длительности
-          записи автоматически
+          Добавится к новым записям с этой услугой
         </Typography>
       </Pressable>
 
-      <TimeWheelPickerModal
+      <BreakAfterModal
         visible={visible}
-        options={FULL_DAY_MINUTE_OPTIONS}
-        value={current}
-        loop
-        title="Перерыв после записи"
-        description={BREAK_AFTER_MODAL_DESCRIPTION}
-        onConfirm={handleConfirm}
+        currentMinutes={current}
         onClose={() => setVisible(false)}
+        onSelect={handleSelect}
       />
     </>
   );

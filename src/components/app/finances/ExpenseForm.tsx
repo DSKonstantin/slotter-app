@@ -68,6 +68,16 @@ const ExpenseForm = ({
       />
 
       <View className="gap-2">
+        <Button
+          title={submitTitle}
+          onPress={onSubmit}
+          loading={isLoading}
+          disabled={isLoading}
+          buttonClassName="flex-1"
+          rightIcon={
+            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+          }
+        />
         {onDelete && (
           <Button
             title="Удалить"
@@ -81,16 +91,6 @@ const ExpenseForm = ({
             }
           />
         )}
-        <Button
-          title={submitTitle}
-          onPress={onSubmit}
-          loading={isLoading}
-          disabled={isLoading}
-          buttonClassName="flex-1"
-          rightIcon={
-            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-          }
-        />
       </View>
     </View>
   </FormProvider>

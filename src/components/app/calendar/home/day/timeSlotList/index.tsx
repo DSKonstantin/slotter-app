@@ -35,12 +35,14 @@ import {
   createSegments,
   getSegmentHeight,
   getSlotMinHeight,
+  isMergeableSlot,
   slotOccupiesTime,
 } from "./segmentBuilder";
 import CurrentTimeIndicator from "@/src/components/app/calendar/home/day/timeSlotList/CurrentTimeIndicator";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useNow } from "@/src/hooks/useNow";
 import { useToday } from "@/src/hooks/useToday";
+import { useModalAction } from "@/src/hooks/useModalAction";
 
 type TimeSlotListProps = {
   appointments: Appointment[];
@@ -144,6 +146,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const segments = segmentsResult.segments;
   const effectiveStart = segmentsResult.effectiveStart;
 
+  const appointmentsById = useMemo(
+    () => new Map(appointments.map((a) => [a.id, a])),
+    [appointments],
+  );
+
   const scrollKey = useMemo(() => {
     return JSON.stringify([
       date,
@@ -192,18 +199,22 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const handleInactiveDayClose = useCallback(() => {
     setInactiveDayRange(null);
   }, []);
+  const {
+    scheduleAction: scheduleInactiveDayAction,
+    onModalHide: onInactiveDayModalHide,
+  } = useModalAction(handleInactiveDayClose);
 
   const handleInactiveDaySuccess = useCallback(() => {
     if (inactiveDayRange) {
-      router.push(
-        Routers.app.createSlotFlow.selectService({
-          date: date ?? undefined,
-          time: formatTime(inactiveDayRange.start),
-        }),
-      );
-      setInactiveDayRange(null);
+      // Same choice a tap on an already-active day gets («Новая запись» /
+      // «Занять время»), not a hard jump straight into "Новая запись".
+      // InactiveDayModal is still mid-close-animation here — opening
+      // FreeSlotStartModal right away races the native modal transition
+      // (nothing renders/responds to taps). Defer it until InactiveDayModal
+      // has actually finished hiding.
+      scheduleInactiveDayAction(() => setFreeSlotRange(inactiveDayRange));
     }
-  }, [inactiveDayRange, date]);
+  }, [inactiveDayRange, scheduleInactiveDayAction]);
 
   const handleCloseFreeSlotModal = useCallback(() => {
     setFreeSlotRange(null);
@@ -319,26 +330,72 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                 style={{ gap: SLOT_GAP, paddingTop: SLOT_GAP }}
               >
                 {content.kind === "break" ? (
-                  <BreakBlock
-                    breakItem={content.breakItem}
-                    workingDayId={workingDayId}
-                  />
+                  (() => {
+                    // Falls through here only when the break's own slot
+                    // wasn't mergeable (cancelled — see isMergeableSlot) or
+                    // the segment held more than one slot. Cancelled slots
+                    // shouldn't have a break in real data at all (backend
+                    // deletes it on cancel); guard anyway rather than show
+                    // a stray strip if that ever happens.
+                    const owner =
+                      content.breakItem.kind === "appointment" &&
+                      content.breakItem.appointment_id != null
+                        ? appointmentsById.get(content.breakItem.appointment_id)
+                        : undefined;
+                    const showBreak = !owner || isMergeableSlot(owner);
+
+                    return (
+                      <>
+                        {showBreak && (
+                          <BreakBlock
+                            breakItem={content.breakItem}
+                            workingDayId={workingDayId}
+                          />
+                        )}
+                        {content.nonOccupyingSlots?.map((slot) => (
+                          <SlotCard
+                            key={slot.id}
+                            slot={slot}
+                            onPress={() => handleSlotPress(slot)}
+                            highlighted={slot.id === highlightSlotId}
+                            isExpanded={slot.id === expandedSlotId}
+                            onToggleExpand={() => handleToggleExpand(slot.id)}
+                            containerStyle={{
+                              minHeight: getSlotMinHeight(slot),
+                            }}
+                          />
+                        ))}
+                      </>
+                    );
+                  })()
                 ) : (
                   <>
-                    {content.slots.map((slot) => (
-                      <SlotCard
-                        key={slot.id}
-                        slot={slot}
-                        onPress={() => handleSlotPress(slot)}
-                        highlighted={slot.id === highlightSlotId}
-                        isExpanded={slot.id === expandedSlotId}
-                        onToggleExpand={() => handleToggleExpand(slot.id)}
-                        containerStyle={{
-                          ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
-                          minHeight: getSlotMinHeight(slot),
-                        }}
-                      />
-                    ))}
+                    {content.slots.map((slot) => {
+                      const extendedEndTime =
+                        content.appointmentBreak?.appointment_id === slot.id
+                          ? content.appointmentBreak.end_at
+                          : undefined;
+                      const totalDuration = extendedEndTime
+                        ? parseTime(extendedEndTime) -
+                          parseTime(slot.start_time)
+                        : slot.duration;
+
+                      return (
+                        <SlotCard
+                          key={slot.id}
+                          slot={slot}
+                          onPress={() => handleSlotPress(slot)}
+                          highlighted={slot.id === highlightSlotId}
+                          isExpanded={slot.id === expandedSlotId}
+                          onToggleExpand={() => handleToggleExpand(slot.id)}
+                          extendedEndTime={extendedEndTime}
+                          containerStyle={{
+                            ...(slotOccupiesTime(slot) ? { flex: 1 } : null),
+                            minHeight: getSlotMinHeight(slot, totalDuration),
+                          }}
+                        />
+                      );
+                    })}
                     {content.filteredBlock && <FilteredSlotBlock />}
                     {content.showFreeSlotBlock && (
                       <FreeSlotPressable
@@ -359,6 +416,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
         key={freeSlotRange?.start}
         visible={!!freeSlotRange}
         range={freeSlotRange}
+        workingDayId={workingDayId}
         onClose={handleCloseFreeSlotModal}
         onNext={handleFreeSlotNext}
       />
@@ -372,6 +430,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
         visible={inactiveDayRange !== null}
         onClose={handleInactiveDayClose}
         onSuccess={handleInactiveDaySuccess}
+        onModalHide={onInactiveDayModalHide}
         workingDayId={workingDayId}
         userId={userId}
         date={date}

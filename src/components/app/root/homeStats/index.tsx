@@ -15,11 +15,10 @@ import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { colors } from "@/src/styles/colors";
 
 import StatsIllustration from "./StatsIllustration";
-import { useWorkloadStats } from "./useWorkloadStats";
 
 const ILLUSTRATION_BLEED = 30;
 
-type StatTab = "clients" | "finances" | "workload";
+type StatTab = "clients" | "finances";
 
 type StatBlockProps = {
   label: string;
@@ -53,7 +52,6 @@ const StatBlock = ({ label, value, tagTitle, tagVariant }: StatBlockProps) => (
 const OPTIONS = [
   { label: "Клиенты", value: "clients" },
   { label: "Финансы", value: "finances" },
-  { label: "Загрузка", value: "workload" },
 ];
 
 const HomeStats = () => {
@@ -70,7 +68,7 @@ const HomeStats = () => {
       : skipToken,
   );
   const { data: financesData } = useGetFinancesSummaryQuery(
-    auth
+    auth && tab === "finances"
       ? {
           userId: auth.userId,
           month: today.getMonth() + 1,
@@ -78,8 +76,6 @@ const HomeStats = () => {
         }
       : skipToken,
   );
-  const { averageLoadPercent, deltaPercent } = useWorkloadStats();
-
   const totalClients = customersData?.pagination.total_count ?? 0;
   const newClients = customersStatsData?.new_clients.count ?? 0;
   const incomeCents = financesData?.income_cents ?? 0;
@@ -95,35 +91,20 @@ const HomeStats = () => {
               newClients > 0 ? `+${newClients} новых в этом месяце` : undefined,
             tagVariant: "mint",
           }
-        : tab === "finances"
-          ? {
-              label: "Доход",
-              value: formatRublesFromCents(incomeCents),
-              tagTitle:
-                growthPercent != null && incomeCents > 0
-                  ? `${growthPercent > 0 ? "+" : ""}${growthPercent}% к прошлому месяцу`
-                  : undefined,
-              tagVariant:
-                growthPercent != null && growthPercent >= 0 ? "mint" : "error",
-            }
-          : {
-              label: "Средняя загрузка",
-              value: `${averageLoadPercent}%`,
-              tagTitle: `${deltaPercent > 0 ? "+" : ""}${deltaPercent}% к прошлому месяцу`,
-              tagVariant: deltaPercent >= 0 ? "mint" : "error",
-            },
-    [
-      tab,
-      totalClients,
-      newClients,
-      incomeCents,
-      growthPercent,
-      averageLoadPercent,
-      deltaPercent,
-    ],
+        : {
+            label: "Доход",
+            value: formatRublesFromCents(incomeCents),
+            tagTitle:
+              growthPercent != null && incomeCents > 0
+                ? `${growthPercent > 0 ? "+" : ""}${growthPercent}% к прошлому месяцу`
+                : undefined,
+            tagVariant:
+              growthPercent != null && growthPercent >= 0 ? "mint" : "error",
+          },
+    [tab, totalClients, newClients, incomeCents, growthPercent],
   );
 
-  const hasData = tab === "workload" || totalClients > 0 || incomeCents > 0;
+  const hasData = totalClients > 0 || incomeCents > 0;
   if (!hasData) return null;
 
   return (

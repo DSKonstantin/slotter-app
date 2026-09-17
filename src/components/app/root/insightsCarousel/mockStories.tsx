@@ -20,6 +20,10 @@ import NotificationOne from "@/src/components/app/root/insightsCarousel/screens/
 import NotificationTwo from "@/src/components/app/root/insightsCarousel/screens/notification/two";
 import NotificationThree from "@/src/components/app/root/insightsCarousel/screens/notification/three";
 import NotificationFour from "@/src/components/app/root/insightsCarousel/screens/notification/four";
+import AppUpdateOne from "@/src/components/app/root/insightsCarousel/screens/appUpdate/one";
+import AppUpdateTwo from "@/src/components/app/root/insightsCarousel/screens/appUpdate/two";
+import AppUpdateThree from "@/src/components/app/root/insightsCarousel/screens/appUpdate/three";
+import AppUpdateFour from "@/src/components/app/root/insightsCarousel/screens/appUpdate/four";
 
 export { INSIGHT_CATEGORY_CONFIG } from "./config";
 export type { InsightCategoryConfig } from "./config";
@@ -112,9 +116,29 @@ const NOTIFICATION_STORIES: Story[] = [
   },
 ];
 
+const APP_UPDATE_STORIES: Story[] = [
+  {
+    id: "1",
+    customScreen: <AppUpdateOne />,
+  },
+  {
+    id: "2",
+    customScreen: <AppUpdateTwo />,
+  },
+  {
+    id: "3",
+    customScreen: <AppUpdateThree />,
+  },
+  {
+    id: "4",
+    customScreen: <AppUpdateFour />,
+  },
+];
+
 export const MOCK_NOTIFICATION_STORIES: Record<string, Story[]> = {
   education_payments: TRAINING_STORIES,
   fill_profile: FILL_PROFILE_STORIES,
   finances: FINANCES_STORIES,
   notification: NOTIFICATION_STORIES,
+  app_update: APP_UPDATE_STORIES,
 };

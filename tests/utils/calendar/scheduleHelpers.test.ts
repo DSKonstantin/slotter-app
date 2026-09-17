@@ -47,6 +47,9 @@ describe("createExistingCalendarDay", () => {
           working_day_id: 1,
           start_at: "2026-07-05T12:00:00.000Z",
           end_at: "2026-07-05T13:00:00.000Z",
+          kind: "main",
+          name: null,
+          appointment_id: null,
         },
       ],
     });
@@ -68,6 +71,64 @@ describe("createExistingCalendarDay", () => {
     expect(createExistingCalendarDay("2026-07-05", workingDay).breaks).toEqual(
       [],
     );
+  });
+
+  it("excludes occupied and appointment breaks — only main breaks are copyable", () => {
+    const workingDay = buildWorkingDay({
+      working_day_breaks: [
+        {
+          id: 1,
+          working_day_id: 1,
+          start_at: "2026-07-05T12:00:00.000Z",
+          end_at: "2026-07-05T13:00:00.000Z",
+          kind: "main",
+          name: null,
+          appointment_id: null,
+        },
+        {
+          id: 2,
+          working_day_id: 1,
+          start_at: "2026-07-05T15:00:00.000Z",
+          end_at: "2026-07-05T16:00:00.000Z",
+          kind: "occupied",
+          name: "Личное время",
+          appointment_id: null,
+        },
+        {
+          id: 3,
+          working_day_id: 1,
+          start_at: "2026-07-05T17:00:00.000Z",
+          end_at: "2026-07-05T17:30:00.000Z",
+          kind: "appointment",
+          name: null,
+          appointment_id: 42,
+        },
+      ],
+    });
+
+    expect(createExistingCalendarDay("2026-07-05", workingDay).breaks).toEqual([
+      { start: "12:00", end: "13:00" },
+    ]);
+  });
+
+  it("treats a null kind as main (legacy compatibility)", () => {
+    const workingDay = buildWorkingDay({
+      working_day_breaks: [
+        {
+          id: 1,
+          working_day_id: 1,
+          start_at: "2026-07-05T12:00:00.000Z",
+          end_at: "2026-07-05T13:00:00.000Z",
+          kind: null,
+          name: null,
+          appointment_id: null,
+        },
+      ],
+    });
+
+    expect(createExistingCalendarDay("2026-07-05", workingDay).breaks).toEqual([
+      { start: "12:00", end: "13:00" },
+    ]);
   });
 
   it("carries is_active: false through to isActive", () => {

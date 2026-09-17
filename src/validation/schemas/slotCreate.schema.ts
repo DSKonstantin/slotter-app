@@ -5,6 +5,10 @@ export const ServiceItemSchema = Yup.object({
   name: Yup.string().required(),
   duration: Yup.number().required(),
   priceCents: Yup.number().required(),
+  /** The service's own default "break after appointment" — used to derive
+   * the form's breakAfterMinutes default (the largest across all selected
+   * services), not sent to the API directly. */
+  breakAfterMinutes: Yup.number().default(0),
 });
 
 export const SlotCreateSchema = Yup.object({
@@ -17,6 +21,7 @@ export const SlotCreateSchema = Yup.object({
     .typeError("Укажите длительность")
     .min(0, "Минимальная длительность — 0 минут")
     .required("Укажите длительность"),
+  breakAfterMinutes: Yup.number().min(0).max(240).required(),
   comment: Yup.string(),
   paymentMethod: Yup.string().oneOf(["cash", "sbp", "online_bank"]).required(),
   sendNotification: Yup.boolean().required(),

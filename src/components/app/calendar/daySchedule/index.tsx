@@ -53,11 +53,18 @@ const DayScheduleEdit = ({
   bottomInset,
   refetchWorkingDay,
 }: DayScheduleEditProps) => {
-  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
-    id: b.id,
-    start: formatTimeFromISO(b.start_at),
-    end: formatTimeFromISO(b.end_at),
-  }));
+  // Only "main" (schedule) breaks are editable here — "occupied" and
+  // "appointment" breaks are tied to a specific day/appointment and are
+  // edited from the calendar directly (EditBreakModal / the appointment's
+  // own "break after" field), never through this whole-day form.
+  const breaks = (workingDay.working_day_breaks ?? [])
+    .filter((b) => (b.kind ?? "main") === "main")
+    .map((b) => ({
+      id: b.id,
+      start: formatTimeFromISO(b.start_at),
+      end: formatTimeFromISO(b.end_at),
+      name: b.name ?? "",
+    }));
 
   const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
   const prevIsActiveRef = useRef(workingDay.is_active);
@@ -109,6 +116,7 @@ const DayScheduleEdit = ({
               id: b.id,
               start_at: b.start,
               end_at: b.end,
+              ...(b.name && { name: b.name }),
             })),
             ...initialBreakIds.current
               .filter((id) => !data.breaks?.some((b) => b.id === id))

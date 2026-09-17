@@ -62,6 +62,42 @@ export const getApiErrorCode = (e: unknown): string | null => {
   return typeof code === "string" ? code : null;
 };
 
+/** Message for one specific field's 422 errors (e.g. "break_after_minutes"),
+ * for showing under that field instead of/alongside a generic toast.
+ * Returns undefined when the response carries no error for that field. */
+export const getApiFieldError = (
+  e: unknown,
+  field: string,
+): string | undefined => {
+  if (!isApiError(e)) return undefined;
+  const { errors } = e.data;
+  if (!errors || Array.isArray(errors)) return undefined;
+
+  const messages = errors[field]?.filter(isValidMessage);
+  return messages && messages.length > 0
+    ? capitalize(messages.join(", "))
+    : undefined;
+};
+
+const BREAK_AFTER_INTERSECTION_HINT =
+  "Уменьшите перерыв, чтобы он заканчивался до начала следующей записи, выберите «Без перерыва» (0) или другое время записи";
+
+/** Extra hint for break_after_minutes when the 422 is specifically an
+ * overlap with another appointment (§8.2/§9.3.4) — undefined for any
+ * other break_after_minutes error. */
+export const getBreakAfterIntersectionHint = (
+  e: unknown,
+): string | undefined => {
+  if (!isApiError(e)) return undefined;
+  const { errors } = e.data;
+  if (!errors || Array.isArray(errors)) return undefined;
+
+  const intersects = errors.break_after_minutes?.some((m) =>
+    m.includes("пересека"),
+  );
+  return intersects ? BREAK_AFTER_INTERSECTION_HINT : undefined;
+};
+
 export const getApiErrorMessage = (e: unknown, fallback: string): string => {
   if (!isApiError(e)) return fallback;
   const { error, errors } = e.data;

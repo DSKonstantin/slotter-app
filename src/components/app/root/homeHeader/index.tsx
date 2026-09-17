@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { Pressable, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
+import * as WebBrowser from "expo-web-browser";
 import { Avatar, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 import { colors } from "@/src/styles/colors";
@@ -39,27 +40,31 @@ const HomeHeader = () => {
     router.push(Routers.app.history.root);
   }, []);
 
+  const handleOpenLink = useCallback(() => {
+    if (!profileUrl) return;
+    void WebBrowser.openBrowserAsync(profileUrl);
+  }, [profileUrl]);
+
   return (
     <View className="flex-row items-center justify-between px-screen py-2.5">
-      <Pressable
-        onPress={handleOpenProfile}
-        className="flex-1 flex-row items-center gap-3 mr-3 active:opacity-70"
-      >
-        <Avatar
-          uri={user?.avatar_url ?? undefined}
-          blurhash={user?.avatar_blurhash}
-          name={fullName}
-          size="md"
-        />
+      <View className="flex-1 flex-row items-center gap-3 mr-3">
+        <Pressable onPress={handleOpenProfile} className="active:opacity-70">
+          <Avatar
+            uri={user?.avatar_url ?? undefined}
+            blurhash={user?.avatar_blurhash}
+            name={fullName}
+            size="md"
+          />
+        </Pressable>
 
-        <View className="flex-1">
+        <Pressable
+          onPress={() => setProfileActionsVisible(true)}
+          className="flex-1 active:opacity-70"
+        >
           <Typography weight="semibold" className="text-body" numberOfLines={1}>
             {fullName}
           </Typography>
-          <Pressable
-            onPress={() => setProfileActionsVisible(true)}
-            className="flex-row items-center gap-1 active:opacity-70"
-          >
+          <View className="flex-row items-center gap-1">
             <Typography
               className="text-caption text-neutral-500 shrink"
               numberOfLines={1}
@@ -67,13 +72,19 @@ const HomeHeader = () => {
               {profileLink ?? "-"}
             </Typography>
             {profileLink && (
-              <View style={{ transform: [{ rotate: "90deg" }] }}>
-                <StSvg name="Out_light" size={18} color={colors.neutral[500]} />
-              </View>
+              <Pressable onPress={handleOpenLink} hitSlop={8}>
+                <View style={{ transform: [{ rotate: "90deg" }] }}>
+                  <StSvg
+                    name="Out_light"
+                    size={18}
+                    color={colors.neutral[500]}
+                  />
+                </View>
+              </Pressable>
             )}
-          </Pressable>
-        </View>
-      </Pressable>
+          </View>
+        </Pressable>
+      </View>
 
       <View className="flex-row items-center gap-2">
         <IconButton

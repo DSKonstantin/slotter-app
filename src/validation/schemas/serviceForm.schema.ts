@@ -13,7 +13,7 @@ export const serviceFormSchema = Yup.object({
   categoryId: Yup.number().required("Выберите категорию"),
   isAvailableOnline: Yup.boolean().required(),
   isActive: Yup.boolean().required(),
-  breakAfter: Yup.number().min(0).default(0),
+  breakAfter: Yup.number().min(0).max(240).default(0),
   additionalServices: Yup.array()
     .of(Yup.object({ serviceId: Yup.number().required() }))
     .default([]),

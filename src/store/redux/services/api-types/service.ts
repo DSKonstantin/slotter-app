@@ -43,6 +43,7 @@ export interface Service {
   is_additional: boolean;
   is_available_online: boolean;
   position: number;
+  break_after_minutes: number;
 
   main_photo_url?: string | null;
   main_photo_blurhash?: string | null;
@@ -69,6 +70,7 @@ export type CreateServicePayload = {
   service_category_id?: number | null;
   additional_service_ids?: number[];
   position?: number;
+  break_after_minutes?: number;
   main_photo?: { uri: string; name: string; type: string };
   additional_photos?: { uri: string; name: string; type: string }[];
 };
@@ -83,6 +85,7 @@ export type UpdateServicePayload = Partial<{
   service_category_id: number | null;
   additional_service_ids: number[];
   position: number;
+  break_after_minutes: number;
   main_photo: { uri: string; name: string; type: string };
   additional_photos: { uri: string; name: string; type: string }[];
 }>;

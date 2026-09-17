@@ -99,6 +99,7 @@ const buildBreakSchema = ({
         if (!day?.breaks) return true;
         return !overlapsOther(ctx.parent as BreakItem, day.breaks);
       }),
+    name: Yup.string().max(100, "Не длиннее 100 символов").optional(),
   });
 
 export const breakSchema = buildBreakSchema();

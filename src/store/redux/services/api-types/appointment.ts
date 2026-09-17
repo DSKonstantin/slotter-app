@@ -44,6 +44,7 @@ export interface Appointment {
   comment: string | null;
   cancel_reason: string | null;
   send_notification: boolean;
+  break_after_minutes: number;
   public_token?: string;
   date: string;
   customer: AppointmentCustomer;
@@ -103,6 +104,7 @@ export type CreateAppointmentPayload = {
   payment_method?: PaymentMethod;
   comment?: string;
   send_notification?: boolean;
+  break_after_minutes?: number;
 };
 
 export type UpdateAppointmentPayload = Partial<{
@@ -113,6 +115,7 @@ export type UpdateAppointmentPayload = Partial<{
   price_cents: number;
   payment_method: PaymentMethod;
   send_notification: boolean;
+  break_after_minutes: number;
 }>;
 
 export type ReschedulePayload = {
