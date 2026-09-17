@@ -30,6 +30,13 @@ import SpecialistHomeAssistant from "@/src/components/app/root/homeOverview/spec
 // import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
 const EXPANDED_TOP_INSET = 16;
+// Matches the `marginTop` set on Home's carousel/stats ScrollView (root/index.tsx).
+const CAROUSEL_TOP_OFFSET = 8;
+// Matches that ScrollView's `contentContainerStyle.paddingBottom` (root/index.tsx).
+const CONTENT_BOTTOM_PADDING = 8;
+// Visual gap left below InsightsCarousel when the sheet is fully raised,
+// matching the `pt-[16px]` gap already baked into the stats wrapper.
+const CAROUSEL_BOTTOM_GAP = 16;
 const SPRING_CONFIG = { damping: 30, stiffness: 250, overshootClamping: true };
 const GLOW_RAISE = 8;
 const GLOW_HEIGHT = 25 + GLOW_RAISE;
@@ -97,6 +104,7 @@ const Handle = () => {
 type Props = {
   ref?: React.Ref<HomeOverviewHandle>;
   statsHeight: number;
+  carouselHeight: number;
   containerHeight: number;
   onExpandedChange?: (expanded: boolean) => void;
 };
@@ -104,6 +112,7 @@ type Props = {
 const HomeOverview = ({
   ref,
   statsHeight,
+  carouselHeight,
   containerHeight,
   onExpandedChange,
 }: Props) => {
@@ -115,13 +124,40 @@ const HomeOverview = ({
     opacity: glowOpacity.value,
   }));
 
+  const { collapsedHeight, expandedHeight } = useMemo(() => {
+    // The sheet must never rise above the bottom edge of InsightsCarousel,
+    // regardless of snap index — it may only ever cover HomeStats.
+    const maxHeight = Math.max(
+      containerHeight -
+        CAROUSEL_TOP_OFFSET -
+        carouselHeight -
+        CAROUSEL_BOTTOM_GAP,
+      0,
+    );
+
+    return {
+      collapsedHeight: Math.max(
+        containerHeight -
+          CAROUSEL_TOP_OFFSET -
+          carouselHeight -
+          statsHeight -
+          CONTENT_BOTTOM_PADDING,
+        0,
+      ),
+      expandedHeight: Math.min(
+        Math.max(containerHeight - EXPANDED_TOP_INSET, 0),
+        maxHeight,
+      ),
+    };
+  }, [containerHeight, statsHeight, carouselHeight]);
+
   const snapPoints = useMemo(
-    () => [
-      Math.max(containerHeight - statsHeight, 0),
-      Math.max(containerHeight - EXPANDED_TOP_INSET, 0),
-    ],
-    [containerHeight, statsHeight],
+    () => [collapsedHeight, expandedHeight],
+    [collapsedHeight, expandedHeight],
   );
+
+  // The glow sits just above the sheet's current top edge when expanded.
+  const glowTop = containerHeight - expandedHeight - GLOW_RAISE;
 
   const handleChange = useCallback(
     (nextIndex: number) => {
@@ -156,10 +192,7 @@ const HomeOverview = ({
       <Animated.View
         pointerEvents="none"
         className="absolute left-0 right-0"
-        style={[
-          { top: EXPANDED_TOP_INSET - GLOW_RAISE, height: GLOW_HEIGHT },
-          glowStyle,
-        ]}
+        style={[{ top: glowTop, height: GLOW_HEIGHT }, glowStyle]}
       >
         <LinearGradient
           colors={GLOW_COLORS}

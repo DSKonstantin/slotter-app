@@ -33,6 +33,7 @@ import InsightsCarousel from "@/src/components/app/root/insightsCarousel";
 
 const Home = () => {
   const [statsHeight, setStatsHeight] = useState(0);
+  const [carouselHeight, setCarouselHeight] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
   const homeOverviewRef = useRef<HomeOverviewHandle>(null);
   const auth = useRequiredAuth();
@@ -131,39 +132,46 @@ const Home = () => {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <HomeHeader />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{
-          flexGrow: 0,
-          marginTop: 8,
-        }}
-        contentContainerStyle={{
-          paddingBottom: 8,
-        }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <InsightsCarousel />
-      </ScrollView>
-
       <View
         className="flex-1"
         onLayout={(e: LayoutChangeEvent) =>
           setContainerHeight(e.nativeEvent.layout.height)
         }
       >
-        <View
-          className="px-screen gap-3 pt-[16px] pb-[8px]"
-          onLayout={(e: LayoutChangeEvent) =>
-            setStatsHeight(e.nativeEvent.layout.height)
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{
+            flexGrow: 0,
+            marginTop: 8,
+          }}
+          contentContainerStyle={{
+            paddingBottom: 8,
+          }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <HomeStats />
-        </View>
+          <View
+            onLayout={(e: LayoutChangeEvent) =>
+              setCarouselHeight(e.nativeEvent.layout.height)
+            }
+          >
+            <InsightsCarousel />
+          </View>
+          <View
+            className="px-screen gap-3 pt-[16px] pb-[8px]"
+            onLayout={(e: LayoutChangeEvent) =>
+              setStatsHeight(e.nativeEvent.layout.height)
+            }
+          >
+            <HomeStats />
+          </View>
+        </ScrollView>
+
         <HomeOverview
           ref={homeOverviewRef}
           statsHeight={statsHeight}
+          carouselHeight={carouselHeight}
           containerHeight={containerHeight}
         />
       </View>
