@@ -39,6 +39,7 @@ export type {
   AppointmentStatus,
   AppointmentCustomer,
   AppointmentService,
+  CustomerNotificationState,
   PaymentMethod,
   GetAppointmentsParams,
   GetAppointmentsResponse,

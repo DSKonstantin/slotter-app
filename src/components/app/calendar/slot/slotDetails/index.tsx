@@ -70,6 +70,7 @@ import PaymentMethodModal from "./PaymentMethodModal";
 import BreakAfterModal from "@/src/components/shared/modals/BreakAfterModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 
 import { PAYMENT_METHOD_LABELS } from "@/src/constants/payment";
 
@@ -94,6 +95,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
   const [editingField, setEditingField] = useState<EditingField>(null);
 
   const isSavingRef = useRef(false);
+  const notificationRetryCountRef = useRef(0);
 
   const auth = useRequiredAuth();
   const { scheduleAction, onModalHide } = useModalAction(() =>
@@ -222,6 +224,22 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       price: String(centsToRubles(slot.price_cents ?? 0)),
     });
   }, [methods, slot]);
+
+  useEffect(() => {
+    if (
+      slot?.customer_notification_state !== "sending" ||
+      notificationRetryCountRef.current >= 2
+    ) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      notificationRetryCountRef.current += 1;
+      safeRefetch(refetch);
+    }, 45000);
+
+    return () => clearTimeout(timer);
+  }, [slot?.customer_notification_state, refetch]);
 
   return (
     <FormProvider {...methods}>
@@ -425,7 +443,10 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     />
                   )}
 
-                  {slot.status === "pending" && <ClientNotificationNotice />}
+                  <ClientNotificationNotice
+                    state={slot.customer_notification_state}
+                    hasCustomer={!!slot.customer}
+                  />
                 </View>
 
                 <View className="mx-screen gap-2 mt-5 bg-background-surface rounded-base p-5">

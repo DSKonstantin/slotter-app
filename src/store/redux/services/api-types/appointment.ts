@@ -10,6 +10,13 @@ export type AppointmentStatus =
 
 export type PaymentMethod = "cash" | "sbp" | "online_bank";
 
+/** State of the "you're booked" message sent to the customer when the
+ * appointment was created — only present on `GET /appointments/:id`, not
+ * on the calendar list endpoints. `null` also covers an over-quota
+ * appointment on a non-Pro plan, whose other details are hidden too. */
+export type CustomerNotificationState =
+  "not_requested" | "not_sent" | "sending" | "delivered" | "failed";
+
 export interface AppointmentCustomer {
   id: number | null;
   name: string;
@@ -47,6 +54,9 @@ export interface Appointment {
   break_after_minutes: number;
   public_token?: string;
   date: string;
+  /** Only set on `GET /appointments/:id` — absent from the calendar list
+   * endpoints. */
+  customer_notification_state?: CustomerNotificationState | null;
   customer: AppointmentCustomer;
   services: AppointmentService[];
   additional_services: AppointmentService[];
@@ -60,8 +70,7 @@ export type GetAppointmentsParams = {
 };
 
 export type GetAppointmentsResponse =
-  | Appointment[]
-  | Record<string, Appointment[]>;
+  Appointment[] | Record<string, Appointment[]>;
 
 export interface UpcomingAppointmentCustomer {
   id: number;
