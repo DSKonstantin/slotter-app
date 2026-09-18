@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import ContentLoader, { Rect } from "react-content-loader/native";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { SegmentedControl, Tag, Typography } from "@/src/components/ui";
@@ -25,15 +26,34 @@ type StatBlockProps = {
   value: string | number;
   tagTitle?: string;
   tagVariant?: "mint" | "error";
+  isLoading?: boolean;
 };
 
-const StatBlock = ({ label, value, tagTitle, tagVariant }: StatBlockProps) => (
+const StatBlock = ({
+  label,
+  value,
+  tagTitle,
+  tagVariant,
+  isLoading,
+}: StatBlockProps) => (
   <>
-    <View className="flex-1 justify-center">
+    <View className="flex-1 justify-center gap-1">
       <Typography className="text-body text-neutral-900">{label}</Typography>
-      <Typography weight="bold" className="text-4xl text-neutral-900">
-        {value}
-      </Typography>
+      {isLoading ? (
+        <ContentLoader
+          speed={1.2}
+          width={96}
+          height={34}
+          backgroundColor="rgba(255,255,255,0.35)"
+          foregroundColor="rgba(255,255,255,0.65)"
+        >
+          <Rect x={0} y={0} rx={8} ry={8} width={96} height={34} />
+        </ContentLoader>
+      ) : (
+        <Typography weight="bold" className="text-4xl text-neutral-900">
+          {value}
+        </Typography>
+      )}
     </View>
 
     <Tag
@@ -59,23 +79,25 @@ const HomeStats = () => {
   const auth = useRequiredAuth();
   const today = useToday();
 
-  const { data: customersData } = useGetUserCustomersQuery(
-    auth ? { userId: auth.userId, per_count: 1 } : skipToken,
-  );
+  const { data: customersData, isLoading: isCustomersLoading } =
+    useGetUserCustomersQuery(
+      auth ? { userId: auth.userId, per_count: 1 } : skipToken,
+    );
   const { data: customersStatsData } = useGetUserCustomersStatisticsQuery(
     auth
       ? { userId: auth.userId, params: { period: "current_month" } }
       : skipToken,
   );
-  const { data: financesData } = useGetFinancesSummaryQuery(
-    auth && tab === "finances"
-      ? {
-          userId: auth.userId,
-          month: today.getMonth() + 1,
-          year: today.getFullYear(),
-        }
-      : skipToken,
-  );
+  const { data: financesData, isLoading: isFinancesLoading } =
+    useGetFinancesSummaryQuery(
+      auth && tab === "finances"
+        ? {
+            userId: auth.userId,
+            month: today.getMonth() + 1,
+            year: today.getFullYear(),
+          }
+        : skipToken,
+    );
   const totalClients = customersData?.pagination.total_count ?? 0;
   const newClients = customersStatsData?.new_clients.count ?? 0;
   const incomeCents = financesData?.income_cents ?? 0;
@@ -90,6 +112,7 @@ const HomeStats = () => {
             tagTitle:
               newClients > 0 ? `+${newClients} новых в этом месяце` : undefined,
             tagVariant: "mint",
+            isLoading: isCustomersLoading,
           }
         : {
             label: "Доход",
@@ -100,12 +123,18 @@ const HomeStats = () => {
                 : undefined,
             tagVariant:
               growthPercent != null && growthPercent >= 0 ? "mint" : "error",
+            isLoading: isFinancesLoading,
           },
-    [tab, totalClients, newClients, incomeCents, growthPercent],
+    [
+      tab,
+      totalClients,
+      newClients,
+      incomeCents,
+      growthPercent,
+      isCustomersLoading,
+      isFinancesLoading,
+    ],
   );
-
-  const hasData = totalClients > 0 || incomeCents > 0;
-  if (!hasData) return null;
 
   return (
     <View className="rounded-base overflow-hidden min-h-[192px]">

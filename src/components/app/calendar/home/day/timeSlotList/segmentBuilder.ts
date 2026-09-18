@@ -355,10 +355,17 @@ export const getSegmentHeight = (segment: Segment) => {
 
   if (content.kind === "break") {
     const nonOccupyingHeight = content.nonOccupyingSlots
-      ? content.nonOccupyingSlots.reduce(
-          (h, slot) => h + SLOT_GAP + getSlotMinHeight(slot),
-          0,
-        )
+      ? content.nonOccupyingSlots.reduce((h, slot) => {
+          // The slot owning this break (a zero-duration appointment) merges
+          // the break into its own card instead of showing a separate strip
+          // — see the "break" render branch in timeSlotList/index.tsx — so
+          // its reserved height must account for the merged duration too.
+          const totalDuration =
+            slot.id === content.breakItem.appointment_id
+              ? parseTime(content.breakItem.end_at) - parseTime(slot.start_time)
+              : slot.duration;
+          return h + SLOT_GAP + getSlotMinHeight(slot, totalDuration);
+        }, 0)
       : 0;
     return Math.max(baseGridHeight, SHORT_SLOT_MIN_HEIGHT + nonOccupyingHeight);
   }

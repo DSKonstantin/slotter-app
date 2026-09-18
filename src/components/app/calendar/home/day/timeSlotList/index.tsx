@@ -35,7 +35,6 @@ import {
   createSegments,
   getSegmentHeight,
   getSlotMinHeight,
-  isMergeableSlot,
   slotOccupiesTime,
 } from "./segmentBuilder";
 import CurrentTimeIndicator from "@/src/components/app/calendar/home/day/timeSlotList/CurrentTimeIndicator";
@@ -145,11 +144,6 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   );
   const segments = segmentsResult.segments;
   const effectiveStart = segmentsResult.effectiveStart;
-
-  const appointmentsById = useMemo(
-    () => new Map(appointments.map((a) => [a.id, a])),
-    [appointments],
-  );
 
   const scrollKey = useMemo(() => {
     return JSON.stringify([
@@ -331,40 +325,50 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
               >
                 {content.kind === "break" ? (
                   (() => {
-                    // Falls through here only when the break's own slot
-                    // wasn't mergeable (cancelled — see isMergeableSlot) or
-                    // the segment held more than one slot. Cancelled slots
-                    // shouldn't have a break in real data at all (backend
-                    // deletes it on cancel); guard anyway rather than show
-                    // a stray strip if that ever happens.
-                    const owner =
-                      content.breakItem.kind === "appointment" &&
-                      content.breakItem.appointment_id != null
-                        ? appointmentsById.get(content.breakItem.appointment_id)
-                        : undefined;
-                    const showBreak = !owner || isMergeableSlot(owner);
+                    // Break-after-appointment breaks never get their own
+                    // strip — the time is always folded into the owning
+                    // appointment's own card instead (extendedEndTime
+                    // below), the same way the "slots" branch merges it.
+                    const isAppointmentBreak =
+                      content.breakItem.kind === "appointment";
 
                     return (
                       <>
-                        {showBreak && (
+                        {!isAppointmentBreak && (
                           <BreakBlock
                             breakItem={content.breakItem}
                             workingDayId={workingDayId}
                           />
                         )}
-                        {content.nonOccupyingSlots?.map((slot) => (
-                          <SlotCard
-                            key={slot.id}
-                            slot={slot}
-                            onPress={() => handleSlotPress(slot)}
-                            highlighted={slot.id === highlightSlotId}
-                            isExpanded={slot.id === expandedSlotId}
-                            onToggleExpand={() => handleToggleExpand(slot.id)}
-                            containerStyle={{
-                              minHeight: getSlotMinHeight(slot),
-                            }}
-                          />
-                        ))}
+                        {content.nonOccupyingSlots?.map((slot) => {
+                          const extendedEndTime =
+                            isAppointmentBreak &&
+                            slot.id === content.breakItem.appointment_id
+                              ? content.breakItem.end_at
+                              : undefined;
+                          const totalDuration = extendedEndTime
+                            ? parseTime(extendedEndTime) -
+                              parseTime(slot.start_time)
+                            : slot.duration;
+
+                          return (
+                            <SlotCard
+                              key={slot.id}
+                              slot={slot}
+                              onPress={() => handleSlotPress(slot)}
+                              highlighted={slot.id === highlightSlotId}
+                              isExpanded={slot.id === expandedSlotId}
+                              onToggleExpand={() => handleToggleExpand(slot.id)}
+                              extendedEndTime={extendedEndTime}
+                              containerStyle={{
+                                minHeight: getSlotMinHeight(
+                                  slot,
+                                  totalDuration,
+                                ),
+                              }}
+                            />
+                          );
+                        })}
                       </>
                     );
                   })()

@@ -339,6 +339,42 @@ describe("createSegments", () => {
         ),
       ).toBe(true);
     });
+
+    it("keeps a zero-duration appointment's own card in nonOccupyingSlots when its break can't merge", () => {
+      // A zero-duration appointment has start === end, so it never gets its
+      // own "slots" segment to merge from — its break's window becomes the
+      // segment instead, and the appointment itself must still show up
+      // there (as a nonOccupyingSlot) so the UI has a card to render
+      // instead of silently dropping it.
+      const appt = buildAppointment({
+        id: 9,
+        start_time: "11:00",
+        duration: 0,
+        status: "confirmed",
+      });
+      const brk = buildBreak({
+        kind: "appointment",
+        appointment_id: 9,
+        start_at: "11:00",
+        end_at: "11:15",
+      });
+      const { segments } = createSegments(
+        "10:00",
+        "12:00",
+        [brk],
+        [appt],
+        ALL_VISIBLE,
+      );
+
+      const breakSegment = segments.find(
+        (s) => s.content.kind === "break" && s.content.breakItem === brk,
+      );
+      expect(breakSegment).toBeDefined();
+      expect(
+        breakSegment!.content.kind === "break" &&
+          breakSegment!.content.nonOccupyingSlots,
+      ).toEqual([appt]);
+    });
   });
 
   describe("a break overlapping an existing appointment", () => {

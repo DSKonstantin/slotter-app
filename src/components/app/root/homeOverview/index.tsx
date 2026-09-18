@@ -174,7 +174,7 @@ const HomeOverview = ({
   const timeChip = `Сегодня • ${formatShortDayName(today)} • ${formatDayMonth(
     formatApiDate(today),
   )}`;
-  const isReady = statsHeight > 0 && containerHeight > 0;
+  const isReady = statsHeight > 0 && carouselHeight > 0 && containerHeight > 0;
 
   useImperativeHandle(ref, () => ({
     collapse: () => {

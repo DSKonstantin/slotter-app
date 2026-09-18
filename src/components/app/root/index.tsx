@@ -24,6 +24,10 @@ import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notific
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { safeRefetch } from "@/src/utils/safeRefetch";
 
+const onLayoutHeight =
+  (setHeight: (height: number) => void) => (e: LayoutChangeEvent) =>
+    setHeight(e.nativeEvent.layout.height);
+
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview, {
   HomeOverviewHandle,
@@ -62,7 +66,7 @@ const Home = () => {
   );
 
   const { refetch: refetchNotifications } = useGetNotificationsQuery(
-    auth ? { per_count: 50, is_read: false } : skipToken,
+    auth ? { per_count: 1, is_read: false } : skipToken,
   );
 
   const { shouldFetchQuota, refetch: refetchQuota } = useSubscriptionQuota();
@@ -132,12 +136,7 @@ const Home = () => {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <HomeHeader />
-      <View
-        className="flex-1"
-        onLayout={(e: LayoutChangeEvent) =>
-          setContainerHeight(e.nativeEvent.layout.height)
-        }
-      >
+      <View className="flex-1" onLayout={onLayoutHeight(setContainerHeight)}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           style={{
@@ -151,18 +150,12 @@ const Home = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <View
-            onLayout={(e: LayoutChangeEvent) =>
-              setCarouselHeight(e.nativeEvent.layout.height)
-            }
-          >
+          <View onLayout={onLayoutHeight(setCarouselHeight)}>
             <InsightsCarousel />
           </View>
           <View
             className="px-screen gap-3 pt-[16px] pb-[8px]"
-            onLayout={(e: LayoutChangeEvent) =>
-              setStatsHeight(e.nativeEvent.layout.height)
-            }
+            onLayout={onLayoutHeight(setStatsHeight)}
           >
             <HomeStats />
           </View>

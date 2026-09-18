@@ -20,27 +20,6 @@ const BreakBlock: React.FC<Props> = ({ breakItem, workingDayId }) => {
   const isShort = endMin - startMin <= 30;
   const timeLabel = `${formatTime(startMin)} - ${formatTime(endMin)}`;
 
-  if (kind === "appointment") {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.7}
-        disabled={!breakItem.appointment_id}
-        className="flex-1 rounded-base bg-neutral-100 overflow-hidden px-3 py-1.5 flex-row items-center justify-between"
-        onPress={() =>
-          breakItem.appointment_id &&
-          router.push(Routers.app.slot(breakItem.appointment_id))
-        }
-      >
-        <Typography className="text-caption text-neutral-500" numberOfLines={1}>
-          {breakItem.name ?? "Перерыв после записи"}
-        </Typography>
-        <Typography className="text-caption text-neutral-500" numberOfLines={1}>
-          {timeLabel}
-        </Typography>
-      </TouchableOpacity>
-    );
-  }
-
   // "main" breaks are part of the recurring day schedule — edited together
   // with the rest of it (overlap checks against other breaks, the 3-break
   // cap) in the day-schedule form, not standalone here. EditBreakModal has

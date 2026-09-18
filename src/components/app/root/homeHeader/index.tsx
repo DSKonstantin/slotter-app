@@ -19,7 +19,7 @@ const HomeHeader = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const { data: notificationsData } = useGetNotificationsQuery(
-    auth ? { per_count: 50, is_read: false } : skipToken,
+    auth ? { per_count: 1, is_read: false } : skipToken,
   );
   const unreadCount = notificationsData?.unread_count ?? 0;
   const fullName = [user?.first_name, user?.last_name]
