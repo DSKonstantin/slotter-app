@@ -13,6 +13,7 @@ type BaseFieldProps = {
   error?: FieldError;
   hint?: ReactNode;
   success?: boolean;
+  active?: boolean;
   disabled?: boolean;
   size?: FieldSize;
   multiline?: boolean;
@@ -37,6 +38,7 @@ export function BaseField({
   error,
   hint,
   success,
+  active,
   disabled,
   size = "md",
   multiline,
@@ -68,7 +70,9 @@ export function BaseField({
     ? colors.accent.red[500]
     : success
       ? colors.primary.green[700]
-      : undefined;
+      : active
+        ? colors.primary.blue[500]
+        : undefined;
 
   return (
     <View ref={ref} collapsable={false} className="flex-grow">

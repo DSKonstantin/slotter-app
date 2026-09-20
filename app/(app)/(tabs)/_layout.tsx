@@ -11,7 +11,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="account" options={{ href: null }} />
       <Tabs.Screen name="finances" options={{ href: null }} />
       <Tabs.Screen name="services" options={{ href: null }} />
-      <Tabs.Screen name="history" options={{ href: null }} />
       <Tabs.Screen name="schedule" options={{ href: null }} />
     </Tabs>
   );

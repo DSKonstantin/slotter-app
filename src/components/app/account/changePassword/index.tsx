@@ -6,7 +6,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, StSvg } from "@/src/components/ui";
+import { StSvg } from "@/src/components/ui";
+import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -21,12 +22,12 @@ import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import EyeToggle from "@/src/components/shared/EyeToggle";
 
 const ChangePassword = () => {
-  const auth = useRequiredAuth();
-  const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
-
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const auth = useRequiredAuth();
+  const [updateCredentials, { isLoading }] = useUpdateCredentialsMutation();
 
   const methods = useForm<ChangePasswordFormValues>({
     resolver: yupResolver(changePasswordSchema),
@@ -125,20 +126,12 @@ const ChangePassword = () => {
               </View>
             </KeyboardAwareScrollView>
 
-            <View
-              className="px-screen"
-              style={{ paddingBottom: bottomInset + 8 }}
-            >
-              <Button
-                title="Сохранить"
-                onPress={methods.handleSubmit(onSubmit)}
-                loading={isLoading}
-                disabled={isLoading}
-                rightIcon={
-                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-                }
-              />
-            </View>
+            <FormSaveFooter
+              title="Сохранить"
+              bottomInset={bottomInset}
+              loading={isLoading}
+              onPress={methods.handleSubmit(onSubmit)}
+            />
           </>
         )}
       </ScreenWithToolbar>

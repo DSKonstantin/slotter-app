@@ -44,11 +44,11 @@ type FormValues = {
 };
 
 const PersonalInformation = () => {
-  const auth = useRequiredAuth();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
   const [avatarRemoved, setAvatarRemoved] = useState(false);
 
+  const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
   const [updateUser, { isLoading }] = useUpdateUserMutation();
@@ -195,7 +195,10 @@ const PersonalInformation = () => {
                         />
                       </ImagePickerTrigger>
                     )}
-                    <View className="absolute -bottom-1 -right-1 bg-background-surface rounded-full p-1.5">
+                    <View
+                      pointerEvents="none"
+                      className="absolute -bottom-1 -right-1 bg-background-surface rounded-full p-1.5"
+                    >
                       <StSvg
                         name="Edit_fill"
                         size={16}
@@ -231,15 +234,21 @@ const PersonalInformation = () => {
               className="px-screen gap-4"
               style={{ paddingBottom: bottomInset + 8 }}
             >
-              <Button
-                title="Сохранить изменения"
-                onPress={methods.handleSubmit(onSubmit)}
-                rightIcon={
-                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-                }
-                loading={isLoading}
-                disabled={isLoading}
-              />
+              {(methods.formState.isDirty || avatarRemoved) && (
+                <Button
+                  title="Сохранить изменения"
+                  onPress={methods.handleSubmit(onSubmit)}
+                  rightIcon={
+                    <StSvg
+                      name="Save_fill"
+                      size={24}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                  loading={isLoading}
+                  disabled={isLoading}
+                />
+              )}
               <Button
                 title="Удалить профиль"
                 variant="clear"

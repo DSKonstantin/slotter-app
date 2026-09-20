@@ -140,13 +140,13 @@ export interface ChatMessageReply {
   id: number;
   body: string | null;
   created_at: string;
-  owner: ChatMessageReplyOwner;
+  owner: ChatMessageReplyOwner | null;
 }
 
 export interface ChatMessage {
   id: number;
   body: string | null;
-  owner: ChatRoomInterlocutor;
+  owner: ChatRoomInterlocutor | null;
   chat_room_id: number;
   images: ChatMessageImage[];
   chat_widget: ChatWidget | null;
@@ -162,7 +162,11 @@ export interface GetChatMessagesResponse {
 
 export type ResourceChannelEvent =
   | { type: "chat_room.created"; payload: ChatRoom }
-  | { type: "notification.created"; payload: unknown };
+  | { type: "notification.created"; payload: unknown }
+  | {
+      event: "direct_channel_activated";
+      kind: "telegram_direct" | "max_direct";
+    };
 
 export type RoomChannelEvent =
   | { type: "message.created"; payload: ChatMessage }

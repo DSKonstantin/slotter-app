@@ -1,4 +1,5 @@
 import type React from "react";
+import type { Href } from "expo-router";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import type { NotificationKind } from "@/src/store/redux/services/api-types";
@@ -13,7 +14,7 @@ export type NotificationBadgeConfig = {
 
 type KindConfig = {
   badge: NotificationBadgeConfig;
-  detailRoute?: string;
+  detailRoute?: Href;
   /** Open the external subscription/upgrade web page on tap instead of the
    * usual subject-based navigation — for the "money" kinds where the user
    * needs to fix a payment. */
@@ -38,20 +39,30 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
   },
   appointment_cancelled: {
     badge: { icon: "Close_round_fill", color: colors.accent.red[500] },
+    detailRoute: Routers.app.account.clientNotifications.detail(
+      "appointment_cancelled",
+    ),
   },
   appointment_rescheduled: {
     badge: { icon: "Time_fill", color: colors.accent.yellow[700] },
-    detailRoute: Routers.app.account.clientNotifications.reschedule,
+    detailRoute: Routers.app.account.clientNotifications.detail(
+      "appointment_rescheduled",
+    ),
   },
   appointment_reminder: {
     badge: { icon: "Time_fill", color: colors.primary.blue[500] },
-    detailRoute: Routers.app.account.clientNotifications.reminder,
+    detailRoute: Routers.app.account.clientNotifications.detail(
+      "appointment_reminder",
+    ),
   },
   appointment_requested: {
     badge: { icon: "Add_round_fill", color: colors.primary.blue[500] },
   },
   appointment_request_accepted: {
     badge: { icon: "Check_fill", color: colors.primary.green[500] },
+    detailRoute: Routers.app.account.clientNotifications.detail(
+      "appointment_request_accepted",
+    ),
   },
   appointment_customer_accepted: {
     badge: { icon: "Check_fill", color: colors.primary.green[500] },
@@ -69,6 +80,8 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
   },
   rebook_suggestion: {
     badge: { icon: "Star_fill", color: colors.accent.yellow[700] },
+    detailRoute:
+      Routers.app.account.clientNotifications.detail("rebook_suggestion"),
   },
   rebook_after_cancel: {
     badge: { icon: "Refresh_2_light", color: colors.primary.blue[500] },
@@ -108,9 +121,12 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
     detailRoute: Routers.app.account.clientNotifications.root,
     avatarFallback: SlotterLogo,
   },
+  customer_delivery_failed: {
+    badge: { icon: "Message_alt_fill", color: colors.accent.red[500] },
+  },
 };
 
 export const DEFAULT_NOTIFICATION_BADGE: NotificationBadgeConfig = {
-  icon: "Clock_fill",
+  icon: "Time_fill",
   color: colors.neutral[400],
 };

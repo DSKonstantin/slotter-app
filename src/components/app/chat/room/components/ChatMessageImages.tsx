@@ -17,8 +17,10 @@ const ChatMessageImages = ({
 
   const items = useMemo<ImageItem[]>(() => {
     if (!currentMessage) return [];
-    const files = currentMessage.images?.filter((f) =>
-      f.content_type.startsWith("image/"),
+    const files = currentMessage.images?.filter(
+      (f) =>
+        typeof f.content_type === "string" &&
+        f.content_type.startsWith("image/"),
     );
     if (files?.length) {
       return files.map((f) => ({

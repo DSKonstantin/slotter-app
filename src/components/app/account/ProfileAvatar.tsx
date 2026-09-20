@@ -57,7 +57,7 @@ const ProfileAvatar = () => {
         </View>
 
         <View className="gap-1">
-          <View className="flex-row gap-1 items-center">
+          <View className="flex-row gap-1 items-center justify-center">
             <Typography weight="semibold" className="text-display text-center">
               {[user?.first_name, user?.last_name].filter(Boolean).join(" ")}
             </Typography>

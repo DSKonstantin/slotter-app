@@ -1,7 +1,7 @@
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack, useRouter } from "expo-router";
@@ -12,7 +12,6 @@ import {
   Inter_700Bold,
   Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
-import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { StatusBar } from "expo-status-bar";
 import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
 import { useFonts } from "expo-font";
@@ -43,7 +42,16 @@ import { Routers } from "@/src/constants/routers";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { handleKindNavigation } from "@/src/utils/notificationNavigation";
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+const FONTS = {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
+};
 
 function InitialLayout() {
   const router = useRouter();
@@ -87,21 +95,17 @@ function InitialLayout() {
     isError: isAuthError,
     retry: retryAuth,
   } = useAuth();
-  const colorScheme = useColorScheme();
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
-    IcoMoon: require("@/assets/icomoon/icomoon.ttf"),
-  });
+  const [fontsLoaded] = useFonts(FONTS);
+
+  const isReady =
+    fontsLoaded && !isLoading && (appVersionReady || appVersionError);
+  const wasReadyRef = useRef(false);
+  if (isReady) wasReadyRef.current = true;
+  const showApp = isReady || wasReadyRef.current;
 
   useEffect(() => {
-    if (fontsLoaded && !isLoading && (appVersionReady || appVersionError)) {
-      SplashScreen.hideAsync();
-    }
-  }, [isLoading, fontsLoaded, appVersionReady, appVersionError]);
+    if (showApp) SplashScreen.hideAsync().catch(() => {});
+  }, [showApp]);
 
   useEffect(() => {
     if (authStatus === "authenticated" && authUser) {
@@ -111,66 +115,60 @@ function InitialLayout() {
     }
   }, [authUser, authStatus]);
 
-  if (!fontsLoaded || isLoading) {
+  if (!showApp) {
     return null;
   }
 
   if (appVersionError || isAuthError) {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <NoInternetScreen
-            onRetry={appVersionError ? retry : retryAuth}
-            isRetrying={appVersionError ? isVersionLoading : isLoading}
-          />
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <NoInternetScreen
+        onRetry={appVersionError ? retry : retryAuth}
+        isRetrying={appVersionError ? isVersionLoading : isLoading}
+      />
     );
   }
 
-  if (!appVersionReady) {
-    return null;
-  }
+  return (
+    <>
+      <Stack>
+        <Stack.Protected guard={isAuthenticated && isOnboardingComplete}>
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={isAuthenticated}>
+          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={!isAuthenticated}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Screen
+          name="(password-reset)"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="webview" options={{ headerShown: false }} />
+      </Stack>
+      <Toasts overrideDarkMode={true} />
+      <StatusBar style="auto" />
+      {appVersionReady && <AppUpdateModal />}
+    </>
+  );
+}
 
+export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <Sentry.GlobalErrorBoundary fallback={CrashFallback}>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}
-          >
+          <ThemeProvider value={DefaultTheme}>
             <KeyboardProvider>
               <AutocompleteDropdownContextProvider>
                 <BottomSheetModalProvider>
-                  <Stack>
-                    <Stack.Protected
-                      guard={isAuthenticated && isOnboardingComplete}
-                    >
-                      <Stack.Screen
-                        name="(app)"
-                        options={{ headerShown: false }}
-                      />
-                    </Stack.Protected>
-                    <Stack.Protected guard={isAuthenticated}>
-                      <Stack.Screen
-                        name="(onboarding)"
-                        options={{ headerShown: false }}
-                      />
-                    </Stack.Protected>
-                    <Stack.Protected guard={!isAuthenticated}>
-                      <Stack.Screen
-                        name="(auth)"
-                        options={{ headerShown: false }}
-                      />
-                    </Stack.Protected>
-                    <Stack.Screen
-                      name="(password-reset)"
-                      options={{ headerShown: false }}
-                    />
-                  </Stack>
-                  <Toasts overrideDarkMode={true} />
-                  <StatusBar style="auto" />
-                  {appVersionReady && <AppUpdateModal />}
+                  <Provider store={store}>
+                    <PersistGate loading={null} persistor={persistor}>
+                      <AuthProvider>
+                        <InitialLayout />
+                      </AuthProvider>
+                    </PersistGate>
+                  </Provider>
                 </BottomSheetModalProvider>
               </AutocompleteDropdownContextProvider>
             </KeyboardProvider>
@@ -178,17 +176,5 @@ function InitialLayout() {
         </Sentry.GlobalErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
-  );
-}
-
-export default Sentry.wrap(function RootLayout() {
-  return (
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <AuthProvider>
-          <InitialLayout />
-        </AuthProvider>
-      </PersistGate>
-    </Provider>
   );
 });

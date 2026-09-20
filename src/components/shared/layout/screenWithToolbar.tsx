@@ -12,8 +12,7 @@ import {
 import { Href } from "expo-router";
 
 export type RightButtonProp =
-  | ReactNode
-  | ((toolbar: ToolbarContextValue | null) => ReactNode);
+  ReactNode | ((toolbar: ToolbarContextValue | null) => ReactNode);
 
 type ScreenWithToolbarProps = {
   title: string | React.ReactNode;
@@ -21,8 +20,7 @@ type ScreenWithToolbarProps = {
   fallbackHref?: Href;
   showBack?: boolean;
   children:
-    | ReactNode
-    | ((ctx: { topInset: number; bottomInset: number }) => ReactNode);
+    ReactNode | ((ctx: { topInset: number; bottomInset: number }) => ReactNode);
   className?: string;
   style?: StyleProp<ViewStyle>;
 };

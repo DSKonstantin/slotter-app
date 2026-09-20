@@ -42,25 +42,26 @@ export default function ChatRoomsScreen() {
 
   const user = useAppSelector((s) => s.auth.user);
 
-  const handleShareLink = useCallback(async () => {
-    if (!user?.nickname) return;
-    const url = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${user.nickname}`;
-    await Share.share({ url, message: url });
-  }, [user?.nickname]);
-
-  const rooms = useMemo(
-    () =>
-      (data?.pages.flatMap((p) => p.rooms) ?? []).filter(
-        (r) => r.interlocutor != null,
-      ),
-    [data],
-  );
+  const rooms = useMemo(() => {
+    const seen = new Set<number>();
+    return (data?.pages.flatMap((p) => p.rooms) ?? []).filter((r) => {
+      if (r.interlocutor == null || seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    });
+  }, [data]);
 
   const isRoomsEmpty = useMemo(() => rooms.length === 0, [rooms.length]);
   const iosInsetTrickEnabled = useMemo(
     () => Platform.OS === "ios" && !isRoomsEmpty,
     [isRoomsEmpty],
   );
+
+  const handleShareLink = useCallback(async () => {
+    if (!user?.nickname) return;
+    const url = `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${user.nickname}`;
+    await Share.share({ url, message: url });
+  }, [user?.nickname]);
 
   const handleEndReached = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;

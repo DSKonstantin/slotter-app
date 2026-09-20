@@ -8,6 +8,7 @@ import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
+import { RhfBreakAfterPicker } from "@/src/components/hookForm/rhf-break-after-picker";
 import { RhfWorkingDayTimePickerField } from "@/src/components/hookForm/rhf-working-day-time-picker-field";
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
@@ -27,7 +28,6 @@ import {
   Typography,
 } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
-import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -38,7 +38,12 @@ import {
 import { useCreateAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import CustomerSelectField from "@/src/components/shared/fields/customerSelectField";
 import { setHighlightSlotId } from "@/src/store/redux/slices/calendarSlice";
-import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
+import {
+  getApiErrorMessage,
+  getApiFieldError,
+  getBreakAfterIntersectionHint,
+  isQuotaExceeded,
+} from "@/src/utils/apiError";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
@@ -46,10 +51,11 @@ import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { PAYMENT_OPTIONS } from "@/src/constants/payment";
 
 const SlotCreate: React.FC = () => {
-  const auth = useRequiredAuth();
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
+  const [breakAfterHint, setBreakAfterHint] = useState<string | undefined>();
 
+  const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.slotDraft);
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
@@ -61,6 +67,7 @@ const SlotCreate: React.FC = () => {
         name: s.name,
         duration: s.duration,
         priceCents: s.price_cents,
+        breakAfterMinutes: s.break_after_minutes ?? 0,
       })),
     [draft.services],
   );
@@ -75,9 +82,14 @@ const SlotCreate: React.FC = () => {
       duration:
         initialServices.reduce((sum, s) => sum + s.duration, 0) +
         draft.additionalServices.reduce((sum, s) => sum + s.duration, 0),
+      // Доп. услуги перерыв не дают (§8.5) — берём максимум только по
+      // основным.
+      breakAfterMinutes: initialServices.reduce(
+        (max, s) => Math.max(max, s.breakAfterMinutes),
+        0,
+      ),
       comment: "",
       paymentMethod: "cash",
-      sendNotification: true,
     },
   });
 
@@ -131,6 +143,14 @@ const SlotCreate: React.FC = () => {
         next.reduce((sum, s) => sum + s.duration, 0) +
           draft.additionalServices.reduce((sum, s) => sum + s.duration, 0),
       );
+      // Only re-derive from the remaining services if the master hasn't
+      // manually picked a break — don't clobber a deliberate choice.
+      if (!methods.formState.dirtyFields.breakAfterMinutes) {
+        setValue(
+          "breakAfterMinutes",
+          next.reduce((max, s) => Math.max(max, s.breakAfterMinutes ?? 0), 0),
+        );
+      }
     },
     [fields.length, remove, methods, setValue, draft.additionalServices],
   );
@@ -146,17 +166,25 @@ const SlotCreate: React.FC = () => {
     async (values: SlotCreateFormValues) => {
       if (!auth) return;
 
+      setBreakAfterHint(undefined);
+
       if (!values.customerId) {
-        await new Promise<void>((resolve, reject) =>
+        const confirmed = await new Promise<boolean>((resolve) =>
           Alert.alert(
             "Продолжить без выбранного клиента",
             "Уведомление о записи не будет отправлено. Клиента можно добавить позже.",
             [
-              { text: "Вернуться назад", style: "cancel", onPress: reject },
-              { text: "Подтвердить", onPress: () => resolve() },
+              {
+                text: "Вернуться назад",
+                style: "cancel",
+                onPress: () => resolve(false),
+              },
+              { text: "Подтвердить", onPress: () => resolve(true) },
             ],
+            { cancelable: true, onDismiss: () => resolve(false) },
           ),
         );
+        if (!confirmed) return;
       }
 
       try {
@@ -173,9 +201,10 @@ const SlotCreate: React.FC = () => {
             }),
             customer_id: values.customerId,
             duration: values.duration,
+            break_after_minutes: values.breakAfterMinutes,
             payment_method: values.paymentMethod,
             comment: values.comment,
-            send_notification: values.sendNotification,
+            send_notification: true,
           },
         }).unwrap();
         dispatch(clearSlotDraft());
@@ -184,8 +213,12 @@ const SlotCreate: React.FC = () => {
         router.dismissAll();
         router.replace(Routers.app.calendar.root(values.date));
       } catch (error) {
+        const breakError = getApiFieldError(error, "break_after_minutes");
         if (isQuotaExceeded(error)) {
           setSlotLimitVisible(true);
+        } else if (breakError) {
+          methods.setError("breakAfterMinutes", { message: breakError });
+          setBreakAfterHint(getBreakAfterIntersectionHint(error));
         } else {
           toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
         }
@@ -340,7 +373,7 @@ const SlotCreate: React.FC = () => {
 
                   <CustomerSelectField />
 
-                  <View className="flex-row gap-3 mt-5">
+                  <View className="flex-row gap-2 mt-5">
                     <View className="flex-1">
                       <RhfCalendarDatePicker
                         name="date"
@@ -371,13 +404,29 @@ const SlotCreate: React.FC = () => {
                     </View>
                   </View>
 
-                  <View className="mt-1">
-                    <RhfDurationPicker
-                      name="duration"
-                      label="Изменить продолжительность (мин)"
-                      placeholder="Выберите длительность"
-                    />
+                  <View className="flex-row mt-1 gap-2">
+                    <View className="flex-1">
+                      <RhfDurationPicker
+                        name="duration"
+                        label="Продолжительность"
+                        placeholder="Выберите длительность"
+                      />
+                    </View>
+
+                    <View className="flex-1">
+                      <RhfBreakAfterPicker
+                        name="breakAfterMinutes"
+                        label="Перерыв после записи"
+                        placeholder="Без перерыва"
+                      />
+                    </View>
                   </View>
+
+                  {breakAfterHint && (
+                    <Typography className="text-caption text-neutral-500 mt-1">
+                      {breakAfterHint}
+                    </Typography>
+                  )}
 
                   <View className="mt-1">
                     <RhfTextField
@@ -411,19 +460,6 @@ const SlotCreate: React.FC = () => {
                       ))}
                     </View>
                   </View>
-
-                  <Card
-                    title="Отправить уведомление"
-                    className="mt-5"
-                    left={
-                      <StSvg
-                        name="Bell"
-                        size={24}
-                        color={colors.neutral[500]}
-                      />
-                    }
-                    right={<RHFSwitch name="sendNotification" />}
-                  />
 
                   <View className="mt-5 gap-3">
                     <Button

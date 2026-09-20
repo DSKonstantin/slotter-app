@@ -8,8 +8,9 @@ import {
 import { BlurView } from "expo-blur";
 import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
 
-import { IconButton, StSvg, Typography } from "@/src/components/ui";
+import { Badge, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -22,6 +23,7 @@ type MenuItem = {
   icon: string;
   route?: string;
   disabled?: boolean;
+  badge?: string;
 };
 
 const stripRouteGroups = (route: string) => route.replace(/\/\([^)]+\)/g, "");
@@ -52,7 +54,12 @@ const MENU_ITEMS: MenuItem[] = [
     icon: "User_circle",
     route: Routers.app.account.root,
   },
-  { label: "Акции", icon: "Percent", disabled: true },
+  {
+    label: "Уведомление клиентам",
+    icon: "Message_alt_fill",
+    route: Routers.app.account.clientNotifications.root,
+    badge: "New",
+  },
 ];
 
 const TabMenu = () => {
@@ -67,8 +74,14 @@ const TabMenu = () => {
     dispatch(setTabMenuOpen(false));
   }, [dispatch]);
 
+  const handleCloseButtonPress = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    handleClose();
+  }, [handleClose]);
+
   const handleNavigate = useCallback(
     (route?: string, isActive?: boolean, isAtRoot?: boolean) => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       handleClose();
       if (!route) return;
       if (!isActive) {
@@ -115,7 +128,7 @@ const TabMenu = () => {
       />
       <View className="flex-row items-end gap-2">
         <View className="flex-1">
-          <Pressable
+          <View
             className="bg-white rounded-[30px] py-2.5"
             style={{
               shadowColor: "#000",
@@ -153,16 +166,25 @@ const TabMenu = () => {
                   />
                   <Typography
                     weight={isActive ? "semibold" : "medium"}
-                    className={`text-body ${
+                    className={`flex-1  text-body ${
                       item.disabled ? "text-neutral-300" : "text-neutral-900"
                     }`}
                   >
                     {item.label}
                   </Typography>
+
+                  {item.badge && (
+                    <Badge
+                      title={item.badge}
+                      variant="accent"
+                      size="sm"
+                      className="self-center"
+                    />
+                  )}
                 </Pressable>
               );
             })}
-          </Pressable>
+          </View>
         </View>
 
         <IconButton
@@ -174,7 +196,7 @@ const TabMenu = () => {
               color={colors.neutral[900]}
             />
           }
-          onPress={handleClose}
+          onPress={handleCloseButtonPress}
         />
       </View>
     </BlurView>

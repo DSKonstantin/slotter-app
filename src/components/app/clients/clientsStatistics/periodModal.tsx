@@ -1,20 +1,9 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View } from "react-native";
-import { Calendar } from "react-native-calendars";
-import {
-  formatApiDate,
-  formatDayMonthLong,
-  formatDayMonthYearLong,
-} from "@/src/utils/date/formatDate";
-import {
-  Button,
-  Divider,
-  Item,
-  StModal,
-  Typography,
-} from "@/src/components/ui";
-import { colors } from "@/src/styles/colors";
-import { pickerCalendarTheme } from "@/src/styles/calendarTheme";
+import { formatDayMonthRange } from "@/src/utils/date/formatDate";
+import { Divider, Item, StModal, Typography } from "@/src/components/ui";
+import { RangeCalendar } from "@/src/components/ui/pickers/RangeCalendar";
+import { useCalendarRange } from "@/src/hooks/useCalendarRange";
 
 export const PERIODS = [
   { label: "Сегодня", value: "today" },
@@ -24,39 +13,6 @@ export const PERIODS = [
 ] as const;
 
 export const CUSTOM_PERIOD_VALUE = "custom" as const;
-
-const today = formatApiDate(new Date());
-
-function buildRangeMarks(start: string | null, end: string | null) {
-  const marks: Record<string, object> = {};
-  if (!start) return marks;
-
-  marks[start] = { selected: true, selectedColor: colors.primary.blue[500] };
-
-  if (!end || end === start) return marks;
-
-  let current = formatApiDate(new Date(new Date(start).getTime() + 86400000));
-  while (current < end) {
-    if (current === today) {
-      marks[current] = {
-        selected: true,
-        selectedColor: colors.primary.blue[100],
-        selectedTextColor: colors.primary.blue[500],
-      };
-    } else {
-      marks[current] = {
-        selected: true,
-        selectedColor: colors.primary.blue[100],
-        selectedTextColor: colors.neutral[900],
-      };
-    }
-    current = formatApiDate(new Date(new Date(current).getTime() + 86400000));
-  }
-
-  marks[end] = { selected: true, selectedColor: colors.primary.blue[500] };
-
-  return marks;
-}
 
 export type Period =
   | (typeof PERIODS)[number]
@@ -81,87 +37,63 @@ const PeriodModal = ({
   onSelectPeriod,
 }: Props) => {
   const [calendarVisible, setCalendarVisible] = useState(false);
-  const [rangeStart, setRangeStart] = useState<string | null>(null);
-  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
-
-  const markedDates = useMemo(
-    () => buildRangeMarks(rangeStart, rangeEnd),
-    [rangeStart, rangeEnd],
-  );
-
-  useEffect(() => {
-    if (!visible) {
-      setCalendarVisible(false);
-      setRangeStart(null);
-      setRangeEnd(null);
-    } else if (selectedPeriod.value === CUSTOM_PERIOD_VALUE) {
-      setCalendarVisible(true);
-      setRangeStart(selectedPeriod.date_from ?? null);
-      setRangeEnd(selectedPeriod.date_to ?? null);
-    }
-  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { start, end, onDayPress, reset, setRange } = useCalendarRange();
 
   const handleSelectPeriod = (period: Period) => {
     setCalendarVisible(false);
-    setRangeStart(null);
-    setRangeEnd(null);
+    reset();
     onSelectPeriod(period);
   };
 
-  const handleDayPress = (dateString: string) => {
-    if (rangeEnd && dateString === rangeEnd) {
-      setRangeEnd(null);
-      return;
-    }
-
-    if (rangeStart && dateString === rangeStart) {
-      setRangeStart(null);
-      setRangeEnd(null);
-      return;
-    }
-
-    if (!rangeStart || rangeEnd) {
-      setRangeStart(dateString);
-      setRangeEnd(null);
-      return;
-    }
-
-    const [start, end] =
-      dateString < rangeStart
-        ? [dateString, rangeStart]
-        : [rangeStart, dateString];
-    setRangeStart(start);
-    setRangeEnd(end);
-  };
-
   const handleApply = () => {
-    if (!rangeStart) return;
-    const start = rangeStart;
-    const end = rangeEnd ?? rangeStart;
-    const label =
-      start === end
-        ? formatDayMonthYearLong(new Date(start))
-        : `${formatDayMonthLong(new Date(start))} — ${formatDayMonthYearLong(new Date(end))}`;
+    if (!start) return;
+    const rangeEnd = end ?? start;
+    const label = formatDayMonthRange(new Date(start), new Date(rangeEnd));
     onSelectPeriod({
       label,
       value: CUSTOM_PERIOD_VALUE,
       date_from: start,
-      date_to: end,
+      date_to: rangeEnd,
     });
     onClose();
   };
 
+  useEffect(() => {
+    if (!visible) {
+      setCalendarVisible(false);
+      reset();
+    } else if (selectedPeriod.value === CUSTOM_PERIOD_VALUE) {
+      setCalendarVisible(true);
+      setRange(
+        selectedPeriod.date_from && selectedPeriod.date_to
+          ? { from: selectedPeriod.date_from, to: selectedPeriod.date_to }
+          : null,
+      );
+    }
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activeValue = calendarVisible
+    ? CUSTOM_PERIOD_VALUE
+    : selectedPeriod.value;
+
   return (
-    <StModal visible={visible} onClose={onClose}>
-      <Typography weight="semibold" className="text-display text-center">
-        Выберите период
-      </Typography>
+    <StModal
+      visible={visible}
+      onClose={onClose}
+      scrollable={calendarVisible}
+      fullHeight={calendarVisible}
+      header={
+        <Typography weight="semibold" className="text-display text-center">
+          Выберите период
+        </Typography>
+      }
+    >
       <View className="gap-2 mt-6 bg-background-surface p-4 rounded-base">
         {PERIODS.map((period, index) => (
           <React.Fragment key={period.value}>
             <Item
               title={period.label}
-              active={selectedPeriod.value === period.value}
+              active={activeValue === period.value}
               className="border-transparent rounded-none min-h-[24px] p-0"
               onPress={() => handleSelectPeriod(period)}
             />
@@ -171,29 +103,20 @@ const PeriodModal = ({
         <Divider className="my-2" />
         <Item
           title="Выбрать другой период..."
-          active={selectedPeriod.value === CUSTOM_PERIOD_VALUE}
+          active={activeValue === CUSTOM_PERIOD_VALUE}
           className="border-transparent rounded-none min-h-[24px] p-0"
           onPress={() => setCalendarVisible(true)}
         />
-
-        {calendarVisible && (
-          <View style={{ minHeight: 340 }}>
-            <Calendar
-              current={rangeStart ?? formatApiDate(new Date())}
-              onDayPress={(day) => handleDayPress(day.dateString)}
-              markedDates={markedDates}
-              hideExtraDays
-              theme={pickerCalendarTheme}
-            />
-            <Button
-              title="Применить"
-              disabled={!rangeStart}
-              onPress={handleApply}
-              buttonClassName="mt-3 w-full"
-            />
-          </View>
-        )}
       </View>
+
+      {calendarVisible && (
+        <RangeCalendar
+          start={start}
+          end={end}
+          onDayPress={onDayPress}
+          onApply={handleApply}
+        />
+      )}
     </StModal>
   );
 };

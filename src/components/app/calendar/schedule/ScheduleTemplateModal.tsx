@@ -119,7 +119,6 @@ export const ScheduleTemplateModal = ({ visible, onClose, onApply }: Props) => {
         <StModal
           visible={visible}
           onClose={onClose}
-          fullHeight
           scrollable
           scrollRef={setScrollRef}
           contentRef={contentRef}

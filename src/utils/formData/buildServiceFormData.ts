@@ -5,6 +5,7 @@ type ServiceFormValues = {
   description: string;
   isAvailableOnline: boolean;
   isActive: boolean;
+  breakAfter?: number;
   additionalServices?: { serviceId: number }[];
 };
 
@@ -19,6 +20,10 @@ export function buildServiceFormData(values: ServiceFormValues): FormData {
     String(values.isAvailableOnline),
   );
   formData.append("service[is_active]", String(values.isActive));
+  formData.append(
+    "service[break_after_minutes]",
+    String(values.breakAfter ?? 0),
+  );
 
   const ids = values.additionalServices?.map((s) => s.serviceId) ?? [];
   if (!ids.length) {

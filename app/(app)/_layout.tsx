@@ -1,12 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import { Stack, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import StTabBar from "@/src/components/navigation/tabBar";
 import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
+import { useShowTabBar } from "@/src/hooks/useShowTabBar";
 
 export default function AppLayout() {
-  const segments = useSegments() as string[];
-  const showTabBar = segments[1] !== "chat" && segments[1] !== "payment";
+  const showTabBar = useShowTabBar();
 
   return (
     <View style={{ flex: 1 }}>
@@ -17,6 +17,9 @@ export default function AppLayout() {
           options={{ presentation: "card", animation: "slide_from_right" }}
         />
         <Stack.Screen name="client/[id]" />
+        <Stack.Screen name="client-notifications" />
+        <Stack.Screen name="broadcast" />
+        <Stack.Screen name="history" />
         <Stack.Screen name="slot/[id]" />
         <Stack.Screen name="day-schedule" />
         <Stack.Screen name="create-slot-flow" />

@@ -29,7 +29,13 @@ import type {
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
-import { Avatar, Button, StSvg, Typography } from "@/src/components/ui";
+import {
+  Avatar,
+  Button,
+  IconButton,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
@@ -219,7 +225,7 @@ const HistoryScreen = () => {
 
   return (
     <ScreenWithToolbar
-      showBack={false}
+      fallbackHref={Routers.app.root}
       title={
         <View className="items-center justify-center">
           <Typography
@@ -239,12 +245,16 @@ const HistoryScreen = () => {
           )}
         </View>
       }
+
       rightButton={
-        <Button
-          title="Прочитать все"
-          variant="secondary"
-          buttonClassName="h-[48px] px-4 rounded-full"
-          textClassName="text-[13px]"
+        <IconButton
+          icon={
+            <StSvg
+              name="Done_all_alt_round"
+              size={24}
+              color={colors.neutral[900]}
+            />
+          }
           loading={isMarkingAll}
           disabled={isMarkingAll || unreadCount === 0}
           onPress={handleMarkAllRead}

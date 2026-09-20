@@ -5,7 +5,13 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  AppState,
+  Pressable,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";
@@ -76,6 +82,9 @@ export default function ChatRoom({ roomId }: Props) {
   const [inputBarHeight, setInputBarHeight] = useState(0);
   const loadingMoreRef = useRef(false);
   const lastMarkedIncomingIdRef = useRef<ChatIMessage["_id"] | null>(null);
+  const appActiveRef = useRef(AppState.currentState === "active");
+  const isNearBottomRef = useRef(true);
+  const markReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { bottom: bottomInsetArea } = useSafeAreaInsets();
 
   const { currentUser, resourceType } = useAppSelector(
@@ -106,11 +115,17 @@ export default function ChatRoom({ roomId }: Props) {
 
   const messages = chatData?.messages ?? EMPTY_MESSAGES;
   const hasMore = chatData?.hasMore ?? false;
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
   const [createMessage] = useCreateChatMessageMutation();
   const [createAppointment] = useCreateAppointmentMutation();
   const [cancelAppointment] = useCancelAppointmentMutation();
   const [customerAcceptAppointment] = useCustomerAcceptAppointmentMutation();
+
+  const retryPayloadsRef = useRef<
+    Map<string, Parameters<typeof createMessage>[0]>
+  >(new Map());
 
   const userName = useMemo(
     () =>
@@ -120,6 +135,23 @@ export default function ChatRoom({ roomId }: Props) {
             .join(" ") || String(currentUser.id)
         : "",
     [currentUser],
+  );
+
+  const sendMessage = useCallback(
+    (arg: Parameters<typeof createMessage>[0]) => {
+      retryPayloadsRef.current.set(String(arg.optimistic._id), arg);
+      createMessage(arg);
+    },
+    [createMessage],
+  );
+
+  const handleRetryMessage = useCallback(
+    (message: ChatIMessage) => {
+      const arg = retryPayloadsRef.current.get(String(message._id));
+      if (!arg) return;
+      sendMessage(arg);
+    },
+    [sendMessage],
   );
 
   const handleOpenInterlocutor = useCallback(() => {
@@ -176,17 +208,21 @@ export default function ChatRoom({ roomId }: Props) {
       const msg = newMessages[0];
       if (!msg || !currentUser) return;
 
+      const body = msg.text?.trim() ?? "";
+      if (!body) return;
+
       const formData = new FormData();
-      if (msg.text) formData.append("body", msg.text.trim());
+      formData.append("body", body);
       if (replyingTo && typeof replyingTo._id === "number") {
         formData.append("reply_to_id", String(replyingTo._id));
       }
 
-      createMessage({
+      sendMessage({
         chatRoomId: id,
         data: formData,
         optimistic: {
           ...msg,
+          text: body,
           _id: `temp_${Date.now()}`,
           createdAt: Date.now(),
           pending: true,
@@ -201,7 +237,7 @@ export default function ChatRoom({ roomId }: Props) {
         setInputBarHeight(0);
       }
     },
-    [id, currentUser, createMessage, replyingTo, makeUser],
+    [id, currentUser, sendMessage, replyingTo, makeUser],
   );
 
   const handleAttach = useCallback(
@@ -243,7 +279,7 @@ export default function ChatRoom({ roomId }: Props) {
         } as unknown as Blob);
       }
 
-      createMessage({
+      sendMessage({
         chatRoomId: id,
         data: formData,
         optimistic: {
@@ -258,14 +294,14 @@ export default function ChatRoom({ roomId }: Props) {
         },
       });
     },
-    [id, currentUser, createMessage, makeUser],
+    [id, currentUser, sendMessage, makeUser],
   );
 
   const handleAttachWidget = useCallback(
     (service: Service) => {
       if (!currentUser) return;
 
-      createMessage({
+      sendMessage({
         chatRoomId: id,
         data: {
           chat_widget: {
@@ -301,7 +337,7 @@ export default function ChatRoom({ roomId }: Props) {
         },
       });
     },
-    [id, currentUser, createMessage, makeUser],
+    [id, currentUser, sendMessage, makeUser],
   );
 
   const handleProposeAppointment = useCallback(
@@ -527,10 +563,18 @@ export default function ChatRoom({ roomId }: Props) {
         }
       }
       return (
-        <ChatBubble {...(props as React.ComponentProps<typeof ChatBubble>)} />
+        <ChatBubble
+          {...(props as React.ComponentProps<typeof ChatBubble>)}
+          onRetryFailed={handleRetryMessage}
+        />
       );
     },
-    [currentGiftedId, interlocutor, handleAcceptAppointment],
+    [
+      currentGiftedId,
+      interlocutor,
+      handleAcceptAppointment,
+      handleRetryMessage,
+    ],
   );
   const renderChatEmpty = useCallback(
     () =>
@@ -547,25 +591,62 @@ export default function ChatRoom({ roomId }: Props) {
     [isLoading],
   );
 
+  const markReadIfVisible = useCallback(() => {
+    if (!id || !currentGiftedId) return;
+    if (!appActiveRef.current || !isNearBottomRef.current) return;
+
+    const latestIncoming = messagesRef.current.find(
+      (m) => m.user._id !== currentGiftedId,
+    );
+    if (!latestIncoming) return;
+    if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
+
+    lastMarkedIncomingIdRef.current = latestIncoming._id;
+    markRoomRead({ chatRoomId: id });
+  }, [id, currentGiftedId, markRoomRead]);
+
+  const scheduleMarkRead = useCallback(() => {
+    if (markReadTimerRef.current) clearTimeout(markReadTimerRef.current);
+    markReadTimerRef.current = setTimeout(markReadIfVisible, 600);
+  }, [markReadIfVisible]);
+
+  const handleListScroll = useCallback(
+    (event: { contentOffset?: { y?: number } }) => {
+      const y = event?.contentOffset?.y ?? 0;
+      const nearBottom = y < 120;
+      const becameNearBottom = nearBottom && !isNearBottomRef.current;
+      isNearBottomRef.current = nearBottom;
+      if (becameNearBottom) scheduleMarkRead();
+    },
+    [scheduleMarkRead],
+  );
+
   useEffect(() => {
     if (!id) return;
     lastMarkedIncomingIdRef.current = null;
+    isNearBottomRef.current = true;
     markRoomRead({ chatRoomId: id });
   }, [id, markRoomRead]);
 
   useEffect(() => {
-    if (!id || !currentGiftedId || messages.length === 0) return;
+    const sub = AppState.addEventListener("change", (state) => {
+      appActiveRef.current = state === "active";
+      if (state === "active") scheduleMarkRead();
+    });
+    return () => sub.remove();
+  }, [scheduleMarkRead]);
 
-    const latestIncoming = messages.find((m) => m.user._id !== currentGiftedId);
-    if (!latestIncoming) return;
-    if (lastMarkedIncomingIdRef.current === latestIncoming._id) return;
+  useEffect(() => {
+    if (messages.length === 0) return;
+    scheduleMarkRead();
+  }, [messages, scheduleMarkRead]);
 
-    const wasUninitialized = lastMarkedIncomingIdRef.current === null;
-    lastMarkedIncomingIdRef.current = latestIncoming._id;
-    if (wasUninitialized) return;
-
-    markRoomRead({ chatRoomId: id });
-  }, [currentGiftedId, id, markRoomRead, messages]);
+  useEffect(
+    () => () => {
+      if (markReadTimerRef.current) clearTimeout(markReadTimerRef.current);
+    },
+    [],
+  );
 
   return (
     <>
@@ -662,6 +743,8 @@ export default function ChatRoom({ roomId }: Props) {
                   },
                   onEndReached: handleLoadEarlier,
                   onEndReachedThreshold: 0.2,
+                  onScroll: handleListScroll,
+                  scrollEventThrottle: 100,
                 }}
               />
             )}

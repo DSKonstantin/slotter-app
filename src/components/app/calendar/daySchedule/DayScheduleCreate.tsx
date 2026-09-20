@@ -60,6 +60,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
               working_day_breaks_attributes: data.breaks.map((b) => ({
                 start_at: b.start,
                 end_at: b.end,
+                ...(b.name && { name: b.name }),
               })),
             }),
         },
@@ -85,7 +86,7 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
                   paddingBottom: bottomInset + 82,
                 }}
               >
-                <DayScheduleForm />
+                <DayScheduleForm lockScheduleWhenInactive={false} />
               </ScrollView>
             </SafeAreaView>
             <FloatingFooter offset={bottomInset + 8}>

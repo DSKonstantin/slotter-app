@@ -43,6 +43,7 @@ export interface User {
   is_personal_data_consent_enabled: boolean;
   personal_data_consent_text: string | null;
   is_marketing_consent_enabled: boolean;
+  rebook_days_count: number;
   personal_data_consent_template?: string;
   gallery_photos: GalleryPhoto[];
   subscription_membership?: SubscriptionMembership;
@@ -129,16 +130,11 @@ export interface TelegramSessionAuthorizedResponse {
 
 export interface TelegramSessionOtherResponse {
   status:
-    | "pending"
-    | "awaiting_contact"
-    | "consumed"
-    | "expired"
-    | "deactivated";
+    "pending" | "awaiting_contact" | "consumed" | "expired" | "deactivated";
 }
 
 export type TelegramSessionResponse =
-  | TelegramSessionAuthorizedResponse
-  | TelegramSessionOtherResponse;
+  TelegramSessionAuthorizedResponse | TelegramSessionOtherResponse;
 
 export interface MeResponse {
   status: "authorized" | "unauthorized";

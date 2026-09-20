@@ -3,6 +3,7 @@ import { ru } from "date-fns/locale";
 
 export const formatApiDate = (date: Date) => format(date, "yyyy-MM-dd");
 export const formatSlotDate = (date: Date) => format(date, "dd-MM-yyyy");
+export const formatNumericDate = (date: Date) => format(date, "dd.MM.yyyy");
 
 export const formatMonthYear = (date: Date) =>
   format(date, "LLLL yyyy", { locale: ru });
@@ -23,6 +24,29 @@ export const formatDayMonthLong = (date: Date) =>
 
 export const formatDayMonthYearLong = (date: Date) =>
   format(date, "d MMMM yyyy", { locale: ru });
+
+export const formatDayMonthRange = (
+  from: Date,
+  to: Date,
+  { year = true, dash = "—" }: { year?: boolean; dash?: string } = {},
+) => {
+  const end = year ? formatDayMonthYearLong(to) : formatDayMonthLong(to);
+  if (from.getTime() === to.getTime()) return end;
+  return `${formatDayMonthLong(from)} ${dash} ${end}`;
+};
+
+export const formatShortDateRange = (
+  from: Date,
+  to: Date,
+  { dash = "–" }: { dash?: string } = {},
+) => {
+  const currentYear = new Date().getFullYear();
+  const showYear =
+    from.getFullYear() !== currentYear || to.getFullYear() !== currentYear;
+  const fmt = (date: Date) => format(date, showYear ? "dd.MM.yy" : "dd.MM");
+  if (from.getTime() === to.getTime()) return fmt(to);
+  return `${fmt(from)} ${dash} ${fmt(to)}`;
+};
 
 export const formatMessageTime = (isoDate: string): string => {
   const date = new Date(isoDate);

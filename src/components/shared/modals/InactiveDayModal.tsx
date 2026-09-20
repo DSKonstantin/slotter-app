@@ -12,6 +12,7 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onModalHide?: () => void;
   workingDayId?: number;
   userId?: number;
   date?: string;
@@ -21,6 +22,7 @@ const InactiveDayModal = ({
   visible,
   onClose,
   onSuccess,
+  onModalHide,
   workingDayId,
   userId,
   date,
@@ -48,6 +50,7 @@ const InactiveDayModal = ({
     <StModal
       visible={visible}
       onClose={onClose}
+      onModalHide={onModalHide}
       footer={
         <View className="gap-2">
           <Button

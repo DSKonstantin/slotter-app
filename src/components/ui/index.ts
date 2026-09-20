@@ -3,6 +3,7 @@ export { Input } from "./fields/Input";
 export { Autocomplete } from "./fields/Autocomplete";
 export { CalendarDatePicker } from "./fields/CalendarDatePicker";
 export { DropDown } from "./fields/DropDown";
+export { PressableField } from "./fields/PressableField";
 export { Tabs } from "./Tabs";
 export { Checkbox } from "./Checkbox";
 export { Radio } from "./Radio";

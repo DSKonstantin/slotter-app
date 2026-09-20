@@ -102,10 +102,10 @@ export function useToolbarContext() {
 }
 
 export function useToolbarSearch(config: SearchConfig) {
-  const { registerSearch, unregisterSearch, searchMode } = useToolbarContext();
-
   const configRef = useRef(config);
   configRef.current = config;
+
+  const { registerSearch, unregisterSearch, searchMode } = useToolbarContext();
 
   useEffect(() => {
     registerSearch(configRef.current);

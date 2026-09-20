@@ -2,6 +2,13 @@ import { format, parseISO, getHours, getMinutes } from "date-fns";
 
 export const combineDayTime = (day: string, time: string) => `${day}T${time}`;
 
+export const combineDateAndMinutesToIso = (date: string, minutes: number) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return new Date(year, month - 1, day, hours, mins).toISOString();
+};
+
 export const formatTimeString = (time: string) => {
   if (!time) return "";
   const isoMatch = time.match(/T(\d{2}):(\d{2})/);
@@ -47,6 +54,13 @@ export const parseTime = (time?: string | number | null) => {
 export const parseTimeMinutes = (value: unknown): number | null =>
   typeof value === "string" && value ? parseTime(value) : null;
 
+export const END_OF_DAY_MINUTES = 1440;
+
+export const parseEndOfDayMinutes = (time?: string | null): number => {
+  const minutes = parseTime(time);
+  return minutes === 0 && time ? END_OF_DAY_MINUTES : minutes;
+};
+
 export const formatMinutes = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
@@ -57,6 +71,9 @@ export const formatDuration = (totalMinutes: number): string => {
   if (m === 0) return `${h} ч`;
   return `${h} ч ${String(m).padStart(2, "0")} мин`;
 };
+
+export const formatBreakAfter = (minutes: number): string =>
+  minutes === 0 ? "Нет" : formatDuration(minutes);
 
 export const formatCountdown = (totalSeconds: number) => {
   const m = Math.floor(totalSeconds / 60);

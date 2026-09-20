@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { useFormState } from "react-hook-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Button, Item, StSvg } from "@/src/components/ui";
@@ -25,6 +26,8 @@ const AdditionalServicesForm = ({
   loadingDelete,
   insets,
 }: AdditionalServiceFormBodyProps) => {
+  const { isDirty } = useFormState();
+
   return (
     <>
       <KeyboardAwareScrollView
@@ -65,15 +68,17 @@ const AdditionalServicesForm = ({
           paddingBottom: insets.bottomInset,
         }}
       >
-        <Button
-          title={isEdit ? "Сохранить" : "Создать"}
-          disabled={loadingDelete || loading}
-          loading={loading}
-          onPress={onSubmit}
-          rightIcon={
-            <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
-          }
-        />
+        {(!isEdit || isDirty) && (
+          <Button
+            title={isEdit ? "Сохранить" : "Создать"}
+            disabled={loadingDelete || loading}
+            loading={loading}
+            onPress={onSubmit}
+            rightIcon={
+              <StSvg name="Check_fill" size={24} color={colors.neutral[0]} />
+            }
+          />
+        )}
         {isEdit && onDelete && (
           <Button
             title="Удалить услугу"

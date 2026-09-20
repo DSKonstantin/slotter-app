@@ -4,7 +4,11 @@ import { useAppDispatch } from "@/src/store/redux/store";
 import { setCreatedCustomer } from "@/src/store/redux/slices/slotDraftSlice";
 import type { UserCustomer } from "@/src/store/redux/services/api-types";
 
-const SlotClientCreate: React.FC = () => {
+type Props = {
+  initialName?: string;
+};
+
+const SlotClientCreate: React.FC<Props> = ({ initialName }) => {
   const dispatch = useAppDispatch();
 
   const handleCreated = useCallback(
@@ -19,7 +23,7 @@ const SlotClientCreate: React.FC = () => {
     [dispatch],
   );
 
-  return <ClientCreate onCreated={handleCreated} />;
+  return <ClientCreate initialName={initialName} onCreated={handleCreated} />;
 };
 
 export default SlotClientCreate;

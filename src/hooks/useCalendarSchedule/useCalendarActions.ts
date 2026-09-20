@@ -84,6 +84,7 @@ export const useCalendarActions = ({
             working_day_breaks: day.breaks.map((item) => ({
               start_at: item.start,
               end_at: item.end,
+              ...(item.name && { name: item.name }),
             })),
           }),
         }));

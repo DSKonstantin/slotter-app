@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import { useNavigation } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
@@ -9,9 +9,10 @@ type Options = {
   message?: string;
   cancelText?: string;
   confirmText?: string;
+  onConfirm?: () => void;
 };
 
-const DEFAULTS: Required<Options> = {
+const DEFAULTS: Required<Omit<Options, "onConfirm">> = {
   title: "Отменить заполнение?",
   message: "Введённые данные будут потеряны",
   cancelText: "Остаться",
@@ -20,7 +21,8 @@ const DEFAULTS: Required<Options> = {
 
 export function useFormNavigationGuard(isDirty: boolean, options?: Options) {
   const navigation = useNavigation();
-  const { title, message, cancelText, confirmText } = {
+  const [isLeaving, setIsLeaving] = useState(false);
+  const { title, message, cancelText, confirmText, onConfirm } = {
     ...DEFAULTS,
     ...options,
   };
@@ -32,12 +34,19 @@ export function useFormNavigationGuard(isDirty: boolean, options?: Options) {
         {
           text: confirmText,
           style: "destructive",
-          onPress: () => navigation.dispatch(data.action),
+          onPress: () => {
+            if (!onConfirm) {
+              navigation.dispatch(data.action);
+              return;
+            }
+            setIsLeaving(true);
+            setTimeout(onConfirm, 0);
+          },
         },
       ]);
     },
-    [navigation, title, message, cancelText, confirmText],
+    [navigation, title, message, cancelText, confirmText, onConfirm],
   );
 
-  usePreventRemove(isDirty, onPreventRemove);
+  usePreventRemove(isDirty && !isLeaving, onPreventRemove);
 }

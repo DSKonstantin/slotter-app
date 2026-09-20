@@ -34,6 +34,23 @@ export const QUOTA_HIDDEN_STATUS_CONFIG: Omit<
   statusLineClass: "bg-neutral-500",
 };
 
+/** Предстоящие/идущие записи — то, что реально занимает день.
+ *  Исключены терминальные: completed, missed, cancelled. */
+export const ACTIVE_APPOINTMENT_STATUSES = [
+  "requested",
+  "pending",
+  "confirmed",
+  "arrived",
+  "delayed",
+] as const satisfies readonly AppointmentStatus[];
+
+const ACTIVE_STATUS_SET = new Set<AppointmentStatus>(
+  ACTIVE_APPOINTMENT_STATUSES,
+);
+
+export const isActiveAppointmentStatus = (status: AppointmentStatus): boolean =>
+  ACTIVE_STATUS_SET.has(status);
+
 export const APPOINTMENT_STATUS_CONFIG: Record<
   AppointmentStatus,
   AppointmentStatusConfig
@@ -53,9 +70,6 @@ export const APPOINTMENT_STATUS_CONFIG: Record<
     defaultActive: true,
     variant: "pending",
     statusLineClass: "bg-accent-yellow-500",
-    icon: (
-      <StSvg name="Expand_right" size={16} color={colors.accent.orange[500]} />
-    ),
   },
   confirmed: {
     status: "confirmed",

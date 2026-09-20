@@ -1,5 +1,10 @@
 export const Routers = {
   root: "/",
+  webview: (url: string, title?: string) =>
+    ({
+      pathname: "/webview",
+      params: { url, ...(title && { title }) },
+    }) as const,
   resetPassword: {
     root: "/(password-reset)",
     verify: "/(password-reset)/verify",
@@ -113,7 +118,11 @@ export const Routers = {
           pathname: "/(app)/create-slot-flow/create",
         }) as const,
     },
-    createClient: "/(app)/create-client" as const,
+    createClient: (params?: { name?: string }) =>
+      ({
+        pathname: "/(app)/create-client",
+        params: params ?? {},
+      }) as const,
     chat: {
       index: "/(app)/(tabs)/chat" as const,
       room: (id: string | number) =>
@@ -127,12 +136,21 @@ export const Routers = {
       create: "/(app)/(tabs)/clients/create" as const,
       statistics: "/(app)/(tabs)/clients/statistics" as const,
     },
+    broadcast: {
+      root: "/(app)/broadcast" as const,
+      create: "/(app)/broadcast/create" as const,
+      detail: (id: string | number) =>
+        ({
+          pathname: "/(app)/broadcast/[id]",
+          params: { id: String(id) },
+        }) as const,
+    },
 
     schedule: {
       root: "/(app)/(tabs)/schedule" as const,
     },
     history: {
-      root: "/(app)/(tabs)/history" as const,
+      root: "/(app)/history" as const,
     },
     finances: {
       root: "/(app)/(tabs)/finances",
@@ -191,14 +209,19 @@ export const Routers = {
       },
       gallery: "/(app)/(tabs)/account/gallery" as const,
       clientNotifications: {
-        root: "/(app)/(tabs)/account/client-notifications" as const,
-        statistics:
-          "/(app)/(tabs)/account/client-notifications/statistics" as const,
-        types: "/(app)/(tabs)/account/client-notifications/types" as const,
-        reminder:
-          "/(app)/(tabs)/account/client-notifications/reminder" as const,
-        reschedule:
-          "/(app)/(tabs)/account/client-notifications/reschedule" as const,
+        root: "/(app)/client-notifications" as const,
+        statistics: "/(app)/client-notifications/statistics" as const,
+        types: "/(app)/client-notifications/types" as const,
+        detail: (kind: string) =>
+          ({
+            pathname: "/(app)/client-notifications/[kind]",
+            params: { kind },
+          }) as const,
+        editor: (kind: string) =>
+          ({
+            pathname: "/(app)/client-notifications/[kind]/editor",
+            params: { kind },
+          }) as const,
       },
       support: "/(app)/(tabs)/account/support" as const,
     },

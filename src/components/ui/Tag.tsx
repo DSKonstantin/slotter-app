@@ -1,14 +1,9 @@
 import { View, Text, Pressable, StyleProp, ViewStyle } from "react-native";
 import { ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 
 type TagVariant =
-  | "info"
-  | "accent"
-  | "success"
-  | "warning"
-  | "default"
-  | "mint"
-  | "error";
+  "info" | "accent" | "success" | "warning" | "default" | "mint" | "error";
 
 type TagSize = "sm" | "md";
 
@@ -35,7 +30,13 @@ export function Tag({
   return (
     <Container
       onPress={onPress as never}
-      className={`${styles.base} ${onPress ? styles.pressable : ""} ${styles.sizes[size]} ${styles.variants[variant]}${containerClassName ? ` ${containerClassName}` : ""}`}
+      className={twMerge(
+        styles.base,
+        onPress ? styles.pressable : "",
+        styles.sizes[size],
+        styles.variants[variant],
+        containerClassName,
+      )}
       style={containerStyle}
     >
       <Text

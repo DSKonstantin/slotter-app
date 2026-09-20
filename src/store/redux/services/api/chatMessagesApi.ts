@@ -69,8 +69,11 @@ const chatMessagesApi = api.injectEndpoints({
                 : null;
 
             if (data.type === "message.created") {
-              const ownerId = `${data.payload.owner.type.toLowerCase()}_${data.payload.owner.id}`;
-              if (ownerId === currentId) return;
+              const owner = data.payload.owner;
+              const ownerId = owner
+                ? `${owner.type.toLowerCase()}_${owner.id}`
+                : null;
+              if (ownerId && ownerId === currentId) return;
 
               updateCachedData((draft) => {
                 const msg = toIMessage(data.payload);
@@ -135,19 +138,24 @@ const chatMessagesApi = api.injectEndpoints({
         { chatRoomId, optimistic },
         { dispatch, queryFulfilled },
       ) {
-        const patches = [
-          dispatch(
-            chatMessagesApi.util.updateQueryData(
-              "getChatMessages",
-              { chatRoomId },
-              (draft) => {
-                if (!draft.messages.some((m) => m._id === optimistic._id)) {
-                  draft.messages.unshift(optimistic);
-                }
-              },
-            ),
+        dispatch(
+          chatMessagesApi.util.updateQueryData(
+            "getChatMessages",
+            { chatRoomId },
+            (draft) => {
+              const existing = draft.messages.find(
+                (m) => m._id === optimistic._id,
+              );
+              if (existing) {
+                existing.pending = true;
+                existing.failed = false;
+                existing.sent = false;
+              } else {
+                draft.messages.unshift({ ...optimistic, pending: true });
+              }
+            },
           ),
-        ];
+        );
 
         try {
           const { data: result } = await queryFulfilled;
@@ -169,23 +177,40 @@ const chatMessagesApi = api.injectEndpoints({
               const room = removeRoomFromPages(draft, chatRoomId);
               if (!room) return;
               room.last_activity_at = result.created_at;
-              room.last_message = {
-                id: result.id,
-                body: result.body,
-                created_at: result.created_at,
-                owner: {
-                  id: result.owner.id,
-                  type: result.owner.type,
-                  name: result.owner.name,
-                  avatar_url: result.owner.avatar_url,
-                  avatar_blurhash: result.owner.avatar_blurhash,
-                },
-              };
+              if (result.owner) {
+                room.last_message = {
+                  id: result.id,
+                  body: result.body,
+                  created_at: result.created_at,
+                  owner: {
+                    id: result.owner.id,
+                    type: result.owner.type,
+                    name: result.owner.name,
+                    avatar_url: result.owner.avatar_url,
+                    avatar_blurhash: result.owner.avatar_blurhash,
+                  },
+                };
+              }
               draft.pages[0]?.rooms.unshift(room);
             }),
           );
         } catch {
-          patches.forEach((p) => p.undo());
+          dispatch(
+            chatMessagesApi.util.updateQueryData(
+              "getChatMessages",
+              { chatRoomId },
+              (draft) => {
+                const msg = draft.messages.find(
+                  (m) => m._id === optimistic._id,
+                );
+                if (msg) {
+                  msg.pending = false;
+                  msg.sent = false;
+                  msg.failed = true;
+                }
+              },
+            ),
+          );
         }
       },
     }),

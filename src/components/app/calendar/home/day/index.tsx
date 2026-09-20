@@ -12,6 +12,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
@@ -43,6 +44,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const scrollY = useSharedValue(0);
   const headerTranslateY = useSharedValue(0);
   const headerHeightShared = useSharedValue(0);
+  const contentOpacity = useSharedValue(1);
   const auth = useRequiredAuth();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const router = useRouter();
@@ -68,6 +70,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const {
     data: appointmentsData,
     isLoading: isAppointmentsLoading,
+    isFetching: isAppointmentsFetching,
     isError: isAppointmentsError,
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery(
@@ -122,6 +125,56 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     [workingDaysData, monthAppointmentsData],
   );
 
+  const hasError = useMemo(
+    () => isDayError || isAppointmentsError,
+    [isDayError, isAppointmentsError],
+  );
+
+  const isLoading = useMemo(
+    () => isDayLoading || isAppointmentsLoading,
+    [isDayLoading, isAppointmentsLoading],
+  );
+
+  const isEmpty = useMemo(
+    () => !isLoading && !selectedWorkingDay && appointments.length === 0,
+    [isLoading, selectedWorkingDay, appointments.length],
+  );
+
+  // The appointments query silently refetches on every focus (see the
+  // useFocusEffect below) without flipping the top-level isLoading/skeleton
+  // gate — so a list that actually changed while the screen was away used
+  // to swap in with no warning. This surfaces that background refetch.
+  const isBackgroundRefreshing = isAppointmentsFetching && !isLoading;
+
+  const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const maxScrollY = Math.max(
+        event.contentSize.height - event.layoutMeasurement.height,
+        0,
+      );
+      const y = Math.min(Math.max(event.contentOffset.y, 0), maxScrollY);
+      const diff = y - scrollY.value;
+
+      const next = headerTranslateY.value - diff;
+      headerTranslateY.value = Math.min(
+        0,
+        Math.max(-headerHeightShared.value, next),
+      );
+
+      scrollY.value = y;
+    },
+  });
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: headerTranslateY.value }],
+  }));
+
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
   const handleSelectDate = useCallback(
     (date: Date) => {
       router.setParams({ date: format(date, "yyyy-MM-dd") });
@@ -142,23 +195,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     const today = format(new Date(), "yyyy-MM-dd");
     router.setParams({ date: today });
   }, [router]);
-
-  const hasError = useMemo(
-    () => isDayError || isAppointmentsError,
-    [isDayError, isAppointmentsError],
-  );
-
-  const isLoading = useMemo(
-    () => isDayLoading || isAppointmentsLoading,
-    [isDayLoading, isAppointmentsLoading],
-  );
-
-  const isEmpty = useMemo(
-    () => !isLoading && !selectedWorkingDay && appointments.length === 0,
-    [isLoading, selectedWorkingDay, appointments.length],
-  );
-
-  const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
 
   const refetchAll = useCallback(async () => {
     await Promise.all([
@@ -260,28 +296,15 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     headerHeightShared.value = headerHeight;
   }, [headerHeight, headerHeightShared]);
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      const maxScrollY = Math.max(
-        event.contentSize.height - event.layoutMeasurement.height,
-        0,
-      );
-      const y = Math.min(Math.max(event.contentOffset.y, 0), maxScrollY);
-      const diff = y - scrollY.value;
-
-      const next = headerTranslateY.value - diff;
-      headerTranslateY.value = Math.min(
-        0,
-        Math.max(-headerHeightShared.value, next),
-      );
-
-      scrollY.value = y;
-    },
-  });
-
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
+  useEffect(() => {
+    // Dims the list while appointments silently refetch in the background
+    // (e.g. on refocus) so a list that actually changed while the screen
+    // was away crossfades in instead of snapping to the new data with no
+    // warning — see the useFocusEffect above and isBackgroundRefreshing.
+    contentOpacity.value = withTiming(isBackgroundRefreshing ? 0.4 : 1, {
+      duration: 180,
+    });
+  }, [isBackgroundRefreshing, contentOpacity]);
 
   if (!auth) return null;
 
@@ -306,6 +329,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
 
         <Animated.ScrollView
           ref={scrollViewRef}
+          style={contentAnimatedStyle}
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}

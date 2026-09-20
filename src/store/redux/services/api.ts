@@ -34,11 +34,13 @@ export const api = createApi({
     "ChatMessages",
     "Notifications",
     "NotificationSettings",
+    "NotificationTemplates",
     "UserLinks",
     "SubscriptionMembership",
     "SubscriptionPlans",
     "PaymentMethods",
     "SubscriptionDirectChannels",
+    "MarketingBroadcasts",
   ],
   endpoints: () => ({}),
 });

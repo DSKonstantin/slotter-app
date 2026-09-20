@@ -1,4 +1,5 @@
 import { api } from "../api";
+import type { AppointmentStepMinutes } from "@/src/utils/schedule/appointmentStepToMinutes";
 import type {
   Appointment,
   GetAppointmentsParams,
@@ -67,7 +68,7 @@ const appointmentsApi = api.injectEndpoints({
       {
         userId: number;
         date: string;
-        step?: 5 | 10 | 15 | 30 | 60;
+        step?: AppointmentStepMinutes;
         service_id?: number;
         appointment_id?: number;
       }
@@ -96,7 +97,7 @@ const appointmentsApi = api.injectEndpoints({
         method: "POST",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: ["Appointments", "WorkingDays"],
     }),
 
     updateAppointment: builder.mutation<
@@ -108,7 +109,7 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: ["Appointments", "WorkingDays"],
       onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;
@@ -170,7 +171,7 @@ const appointmentsApi = api.injectEndpoints({
         url: `/appointments/${id}/mark_missed`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: ["Appointments", "WorkingDays"],
       onQueryStarted: pessimisticAppointment((id) => id),
     }),
 
@@ -192,7 +193,7 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body ?? {} },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: ["Appointments", "WorkingDays"],
       onQueryStarted: pessimisticAppointment(({ id }) => id),
     }),
 
@@ -205,7 +206,7 @@ const appointmentsApi = api.injectEndpoints({
         method: "PATCH",
         data: { appointment: body },
       }),
-      invalidatesTags: ["Appointments"],
+      invalidatesTags: ["Appointments", "WorkingDays"],
       onQueryStarted: pessimisticAppointment(({ id }) => id),
     }),
 

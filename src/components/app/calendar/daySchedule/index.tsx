@@ -24,6 +24,7 @@ import { getApiErrorMessage } from "@/src/utils/apiError";
 import { formatTimeFromISO } from "@/src/utils/date/formatTime";
 import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Button, Divider, FloatingFooter, StSvg } from "@/src/components/ui";
@@ -52,11 +53,18 @@ const DayScheduleEdit = ({
   bottomInset,
   refetchWorkingDay,
 }: DayScheduleEditProps) => {
-  const breaks = (workingDay.working_day_breaks ?? []).map((b) => ({
-    id: b.id,
-    start: formatTimeFromISO(b.start_at),
-    end: formatTimeFromISO(b.end_at),
-  }));
+  // Only "main" (schedule) breaks are editable here — "occupied" and
+  // "appointment" breaks are tied to a specific day/appointment and are
+  // edited from the calendar directly (EditBreakModal / the appointment's
+  // own "break after" field), never through this whole-day form.
+  const breaks = (workingDay.working_day_breaks ?? [])
+    .filter((b) => (b.kind ?? "main") === "main")
+    .map((b) => ({
+      id: b.id,
+      start: formatTimeFromISO(b.start_at),
+      end: formatTimeFromISO(b.end_at),
+      name: b.name ?? "",
+    }));
 
   const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
   const prevIsActiveRef = useRef(workingDay.is_active);
@@ -83,8 +91,47 @@ const DayScheduleEdit = ({
     },
   });
 
-  const { handleSubmit, control } = methods;
+  const {
+    handleSubmit,
+    control,
+    formState: { isDirty },
+  } = methods;
   const isActive = useWatch({ control, name: "isActive" });
+
+  useFormNavigationGuard(isDirty);
+
+  const submitSchedule = async (
+    data: DayScheduleFormValues,
+  ): Promise<boolean> => {
+    try {
+      await updateWorkingDay({
+        userId,
+        id: workingDay.id,
+        data: {
+          start_at: data.startAt,
+          end_at: data.endAt,
+          is_active: data.isActive,
+          working_day_breaks_attributes: [
+            ...(data.breaks ?? []).map((b) => ({
+              id: b.id,
+              start_at: b.start,
+              end_at: b.end,
+              ...(b.name && { name: b.name }),
+            })),
+            ...initialBreakIds.current
+              .filter((id) => !data.breaks?.some((b) => b.id === id))
+              .map((id) => ({ id, _destroy: true as const })),
+          ],
+        },
+      }).unwrap();
+      methods.reset(data);
+      router.back();
+      return true;
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
+      return false;
+    }
+  };
 
   useEffect(() => {
     const prev = prevIsActiveRef.current;
@@ -103,28 +150,11 @@ const DayScheduleEdit = ({
           {
             text: "Сохранить",
             onPress: async () => {
-              try {
-                await updateWorkingDay({
-                  userId,
-                  id: workingDay.id,
-                  data: {
-                    is_active: false,
-                    start_at: workingDay.start_at,
-                    end_at: workingDay.end_at,
-                    working_day_breaks_attributes: (
-                      workingDay.working_day_breaks ?? []
-                    ).map((b) => ({
-                      id: b.id,
-                      start_at: b.start_at,
-                      end_at: b.end_at,
-                    })),
-                  },
-                }).unwrap();
-                router.back();
-              } catch (e) {
-                toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
-                methods.setValue("isActive", true);
-              }
+              const ok = await submitSchedule({
+                ...methods.getValues(),
+                isActive: false,
+              });
+              if (!ok) methods.setValue("isActive", true);
             },
           },
         ],
@@ -133,32 +163,7 @@ const DayScheduleEdit = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
-  const onSubmit = async (data: DayScheduleFormValues) => {
-    try {
-      await updateWorkingDay({
-        userId,
-        id: workingDay.id,
-        data: {
-          start_at: data.startAt,
-          end_at: data.endAt,
-          is_active: data.isActive,
-          working_day_breaks_attributes: [
-            ...(data.breaks ?? []).map((b) => ({
-              id: b.id,
-              start_at: b.start,
-              end_at: b.end,
-            })),
-            ...initialBreakIds.current
-              .filter((id) => !data.breaks?.some((b) => b.id === id))
-              .map((id) => ({ id, _destroy: true as const })),
-          ],
-        },
-      }).unwrap();
-      router.back();
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Ошибка сохранения"));
-    }
-  };
+  const onSubmit = (data: DayScheduleFormValues) => submitSchedule(data);
 
   return (
     <FormProvider {...methods}>
@@ -171,7 +176,7 @@ const DayScheduleEdit = ({
           }
           contentContainerStyle={{
             paddingTop: Platform.OS === "ios" ? 0 : topInset,
-            paddingBottom: bottomInset + 82,
+            paddingBottom: bottomInset + (isDirty ? 82 : 8),
           }}
           refreshControl={
             <RefreshControl
@@ -191,17 +196,19 @@ const DayScheduleEdit = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-      <FloatingFooter offset={bottomInset + 8}>
-        <Button
-          title="Сохранить изменения"
-          loading={isLoading}
-          disabled={isLoading}
-          rightIcon={
-            <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-          }
-          onPress={handleSubmit(onSubmit)}
-        />
-      </FloatingFooter>
+      {isDirty && (
+        <FloatingFooter offset={bottomInset + 8}>
+          <Button
+            title="Сохранить изменения"
+            loading={isLoading}
+            disabled={isLoading}
+            rightIcon={
+              <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
+            }
+            onPress={handleSubmit(onSubmit)}
+          />
+        </FloatingFooter>
+      )}
     </FormProvider>
   );
 };

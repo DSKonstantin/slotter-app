@@ -83,6 +83,7 @@ const NonWorkingDayPanel = ({
               working_day_breaks_attributes: data.breaks.map((b) => ({
                 start_at: b.start,
                 end_at: b.end,
+                ...(b.name && { name: b.name }),
               })),
             }),
           },

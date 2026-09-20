@@ -139,12 +139,16 @@ const GalleryItem = memo(function GalleryItem({
 });
 
 const Gallery = () => {
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
+    null,
+  );
+  const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
+
   const auth = useRequiredAuth();
   const { userId } = auth!;
   const { pickFromCamera, pickFromGallery, pickFromFiles } = useImagePicker();
-  const [menuVisible, setMenuVisible] = useState(false);
-  const closeMenu = useCallback(() => setMenuVisible(false), []);
-  const { scheduleAction, onModalHide } = useModalAction(closeMenu);
 
   const {
     data: galleryResponse,
@@ -163,17 +167,14 @@ const Gallery = () => {
   const [deleteGalleryPhoto] = useDeleteGalleryPhotoMutation();
   const [reorderGalleryPhotos] = useReorderGalleryPhotosMutation();
 
-  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[] | null>(
-    null,
-  );
-  const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
-
   const photos = useMemo(
     () =>
       (galleryResponse?.gallery_photos ?? EMPTY_GALLERY_PHOTOS).map(toUiPhoto),
     [galleryResponse?.gallery_photos],
   );
+
+  const closeMenu = useCallback(() => setMenuVisible(false), []);
+  const { scheduleAction, onModalHide } = useModalAction(closeMenu);
 
   const isEditMode = selectedIds !== null;
   const viewerIndex =

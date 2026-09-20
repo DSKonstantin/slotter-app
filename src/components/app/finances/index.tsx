@@ -36,12 +36,10 @@ import CreateExpenseModal from "./createExpenseModal";
 import EditExpenseModal from "./editExpenseModal";
 import ExpenseCategoriesList from "./ExpenseCategoriesList";
 import FinancesSkeleton from "./FinancesSkeleton";
+import ReferralEarnCard from "./ReferralEarnCard";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-
-const now = new Date();
-const CURRENT_MONTH = now.getMonth() + 1;
-const CURRENT_YEAR = now.getFullYear();
+import { useToday } from "@/src/hooks/useToday";
 
 const FinancesScreen = () => {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -50,6 +48,10 @@ const FinancesScreen = () => {
   );
   const auth = useRequiredAuth();
 
+  const today = useToday();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
   const {
     data: summary,
     isLoading: isSummaryLoading,
@@ -57,7 +59,7 @@ const FinancesScreen = () => {
     refetch: refetchSummary,
   } = useGetFinancesSummaryQuery(
     auth
-      ? { userId: auth.userId, month: CURRENT_MONTH, year: CURRENT_YEAR }
+      ? { userId: auth.userId, month: currentMonth, year: currentYear }
       : skipToken,
   );
 
@@ -146,8 +148,10 @@ const FinancesScreen = () => {
                 />
               }
             >
+              <ReferralEarnCard />
+
               <IncomeCard
-                label={`Доходы за ${MONTH_NAMES[CURRENT_MONTH - 1]}`}
+                label={`Доходы за ${MONTH_NAMES[currentMonth - 1]}`}
                 totalIncome={
                   summary ? formatRublesFromCents(summary.income_cents) : "—"
                 }

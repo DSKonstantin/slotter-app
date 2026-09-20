@@ -1,0 +1,25 @@
+import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import {
+  StoryScreenLayout,
+  StoryIllustration,
+} from "@/src/components/app/root/insightsCarousel/components";
+
+const AppUpdateFour = () => {
+  const { bottom } = useSafeAreaInsets();
+
+  return (
+    <StoryScreenLayout
+      paddingTop={68}
+      className="pb-12"
+      style={{ paddingBottom: bottom }}
+    >
+      <StoryIllustration
+        source={require("@/assets/images/history/app_update/four.webp")}
+      />
+    </StoryScreenLayout>
+  );
+};
+
+export default AppUpdateFour;

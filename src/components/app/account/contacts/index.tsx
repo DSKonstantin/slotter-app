@@ -8,8 +8,9 @@ import {
 } from "@/src/validation/schemas/accountLinks.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, Divider, IconButton, StSvg } from "@/src/components/ui";
+import { Button, IconButton, StSvg } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
+import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
 import { AddressField } from "@/src/components/shared/addressField";
 import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
@@ -36,7 +37,7 @@ const Contacts = () => {
   const auth = useRequiredAuth();
   const user = useAppSelector((s) => s.auth.user);
 
-  const [updateUser] = useUpdateUserMutation();
+  const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation();
 
   const {
     data: userLinks = [],
@@ -53,7 +54,7 @@ const Contacts = () => {
   const [deleteUserLink, { isLoading: isDeleting }] =
     useDeleteUserLinkMutation();
 
-  const isSaving = isCreating || isUpdating || isDeleting;
+  const isSaving = isCreating || isUpdating || isDeleting || isUpdatingUser;
 
   const methods = useForm<AccountLinksFormValues>({
     resolver: yupResolver(AccountLinksSchema),
@@ -70,8 +71,9 @@ const Contacts = () => {
   });
 
   const dirtyLinks = methods.formState.dirtyFields.links ?? [];
+  const isDirty = methods.formState.isDirty;
 
-  useFormNavigationGuard(methods.formState.isDirty);
+  useFormNavigationGuard(isDirty);
 
   const handleRefresh = async () => {
     try {
@@ -145,6 +147,7 @@ const Contacts = () => {
 
   useEffect(() => {
     if (!userLinks.length) return;
+    if (isDirty) return;
 
     methods.reset({
       ...methods.getValues(),
@@ -154,7 +157,7 @@ const Contacts = () => {
         url: link.link,
       })),
     });
-  }, [methods, userLinks]);
+  }, [methods, userLinks, isDirty]);
 
   if (!auth) return null;
 
@@ -264,24 +267,11 @@ const Contacts = () => {
                 </View>
               </KeyboardAwareScrollView>
 
-              <View
-                className="px-screen"
-                style={{ paddingBottom: bottomInset + 8 }}
-              >
-                <Button
-                  title="Сохранить изменения"
-                  loading={isSaving}
-                  disabled={isSaving}
-                  onPress={methods.handleSubmit(onSubmit)}
-                  rightIcon={
-                    <StSvg
-                      name="Save_fill"
-                      size={24}
-                      color={colors.neutral[0]}
-                    />
-                  }
-                />
-              </View>
+              <FormSaveFooter
+                bottomInset={bottomInset}
+                loading={isSaving}
+                onPress={methods.handleSubmit(onSubmit)}
+              />
             </>
           );
         }}

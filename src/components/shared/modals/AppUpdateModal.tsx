@@ -16,8 +16,9 @@ const UPDATE_BUTTON_GLOW = [
 ].join(", ");
 
 const AppUpdateModal: React.FC = () => {
-  const { updateStatus, storeUrl } = useAppSelector((s) => s.appVersion);
   const [dismissed, setDismissed] = useState(false);
+
+  const { updateStatus, storeUrl } = useAppSelector((s) => s.appVersion);
 
   const isForced = updateStatus === "red";
   const visible =

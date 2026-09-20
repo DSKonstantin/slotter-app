@@ -36,7 +36,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import RetryInline from "@/src/components/shared/retryInline";
-import { formatDuration } from "@/src/utils/date/formatTime";
+import { formatBreakAfter, formatDuration } from "@/src/utils/date/formatTime";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
 const VIEW_OPTIONS = [
@@ -59,7 +59,11 @@ const ServiceRow: React.FC<ServiceRowProps> = ({
 }) => (
   <Card
     title={service.name}
-    subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
+    subtitle={`${formatDuration(service.duration)}${
+      service.break_after_minutes > 0
+        ? ` +${formatBreakAfter(service.break_after_minutes)}`
+        : ""
+    } | ${formatRublesFromCents(service.price_cents)}`}
     active={isSelected}
     onPress={() => onPress(service)}
     right={

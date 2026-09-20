@@ -10,8 +10,9 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { Button, Item, StSvg, Typography } from "@/src/components/ui";
+import { Item, StSvg, Typography } from "@/src/components/ui";
 import RHFSwitch from "@/src/components/hookForm/rhf-switch";
+import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -125,20 +126,11 @@ const ProfileSettings = () => {
               </View>
             </KeyboardAwareScrollView>
 
-            <View
-              className="px-screen"
-              style={{ paddingBottom: bottomInset + 8 }}
-            >
-              <Button
-                title="Сохранить изменения"
-                onPress={methods.handleSubmit(onSubmit)}
-                rightIcon={
-                  <StSvg name="Save_fill" size={24} color={colors.neutral[0]} />
-                }
-                loading={isLoading}
-                disabled={isLoading}
-              />
-            </View>
+            <FormSaveFooter
+              bottomInset={bottomInset}
+              loading={isLoading}
+              onPress={methods.handleSubmit(onSubmit)}
+            />
           </>
         )}
       </ScreenWithToolbar>

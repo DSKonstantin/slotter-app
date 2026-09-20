@@ -7,10 +7,6 @@ import { differenceInDays, parseISO } from "date-fns";
 import { Routers } from "@/src/constants/routers";
 import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notificationsApi";
 import { useAppSelector } from "@/src/store/redux/store";
-import type {
-  Notification,
-  AppointmentNotificationSubject,
-} from "@/src/store/redux/services/api-types";
 import { formatApiDate, formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { pluralize } from "@/src/utils/text/pluralize";
 import usePersistentStorage from "@/src/hooks/usePersistentStorage";
@@ -18,53 +14,12 @@ import { useSubscriptionQuota } from "@/src/hooks/useSubscriptionQuota";
 import { colors } from "@/src/styles/colors";
 
 import BannerCard from "./BannerCard";
-import type { BannerVariant } from "./BannerCard";
+import { NOTIFICATION_BANNERS } from "./bannerConfig";
 
 const SUBSCRIPTION_EXPIRY_DAYS = 7;
 const QUOTA_WARNING_THRESHOLD = 3;
 
 const MAX_BANNERS = 3;
-
-type NotificationBannerConfig = {
-  key: string;
-  variant: BannerVariant;
-  iconName: string;
-  match: (n: Notification, today: string) => boolean;
-  buildTitle: (count: number) => string;
-  actionLabel: string;
-};
-
-const NOTIFICATION_BANNERS: NotificationBannerConfig[] = [
-  {
-    key: "pending",
-    variant: "info",
-    iconName: "Time_fill",
-    match: (n) => n.kind === "appointment_requested",
-    buildTitle: (count) =>
-      `${count} ${pluralize(count, ["неподтверждённая запись", "неподтверждённые записи", "неподтверждённых записей"])}`,
-    actionLabel: "Перейти",
-  },
-  {
-    key: "reschedule",
-    variant: "action",
-    iconName: "Time_icon",
-    match: (n) => n.kind === "appointment_reschedule_requested",
-    buildTitle: (count) =>
-      count === 1 ? "Запрос на перенос записи" : `${count} запроса на перенос`,
-    actionLabel: "Ответить",
-  },
-  {
-    key: "cancelledToday",
-    variant: "alert",
-    iconName: "Close_round_fill",
-    match: (n, today) =>
-      n.kind === "appointment_cancelled" &&
-      (n.subject as AppointmentNotificationSubject | null)?.date === today,
-    buildTitle: (count) =>
-      count === 1 ? "Отмена на сегодня" : `${count} отмены на сегодня`,
-    actionLabel: "Открыть",
-  },
-];
 
 const NotificationBanners = () => {
   const ispe = useAppSelector((s) => s.appVersion.ispe);
@@ -92,9 +47,7 @@ const NotificationBanners = () => {
   }, [data]);
 
   const subscriptionBanner = useMemo(():
-    | { status: "ended" }
-    | { status: "expiring"; days: number }
-    | null => {
+    { status: "ended" } | { status: "expiring"; days: number } | null => {
     if (membership?.plan !== "pro") return null;
 
     if (!membership.pro_access && membership.period_starts_at !== null) {
@@ -147,7 +100,7 @@ const NotificationBanners = () => {
     return null;
 
   return (
-    <View className="gap-2 px-screen">
+    <View className="gap-2">
       {showQuotaBanner && (
         <BannerCard
           variant={quotaRemaining <= 0 ? "error" : "alert"}

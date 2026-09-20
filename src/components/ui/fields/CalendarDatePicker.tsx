@@ -1,16 +1,16 @@
 import React, { ReactNode, Ref, useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { FieldError } from "react-hook-form";
 import { Calendar } from "react-native-calendars";
-import { format } from "date-fns";
 
-import { BaseField } from "@/src/components/ui/fields/BaseField";
+import { PressableField } from "@/src/components/ui/fields/PressableField";
 import { StModal } from "@/src/components/ui/StModal";
 import { IconButton } from "@/src/components/ui/IconButton";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { Typography } from "@/src/components/ui/Typography";
 import { colors } from "@/src/styles/colors";
 import { pickerCalendarTheme } from "@/src/styles/calendarTheme";
+import { formatApiDate } from "@/src/utils/date/formatDate";
 import {
   useWorkingDaysCalendar,
   type WorkingDayStatus,
@@ -38,6 +38,7 @@ type CalendarDatePickerProps = {
   startAdornment?: ReactNode;
   userId?: number;
   onNonWorkingDaySuccess?: (date: string) => void;
+  fieldClassName?: string;
 };
 
 export const CalendarDatePicker = ({
@@ -54,8 +55,9 @@ export const CalendarDatePicker = ({
   ref,
   userId,
   onNonWorkingDaySuccess,
+  fieldClassName,
 }: CalendarDatePickerProps) => {
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = formatApiDate(new Date());
   const [open, setOpen] = useState(false);
   const [nonWorkingDay, setNonWorkingDay] = useState<NonWorkingDayInfo | null>(
     null,
@@ -159,102 +161,88 @@ export const CalendarDatePicker = ({
     : null;
 
   return (
-    <BaseField
-      ref={ref}
-      label={label}
-      error={error}
-      hideErrorText={hideErrorText}
-      disabled={disabled}
-      startAdornment={startAdornment}
-      endAdornment={endAdornment}
-      renderControl={() => (
-        <>
-          <Pressable
-            className="flex-1 justify-center"
-            disabled={disabled}
-            onPress={() => !disabled && setOpen(true)}
+    <>
+      <PressableField
+        ref={ref}
+        label={label}
+        error={error}
+        hideErrorText={hideErrorText}
+        disabled={disabled}
+        startAdornment={startAdornment}
+        endAdornment={endAdornment}
+        value={displayValue}
+        placeholder={placeholder}
+        onPress={() => !disabled && setOpen(true)}
+        fieldClassName={fieldClassName}
+      />
+
+      <StModal
+        visible={open}
+        onClose={handleClose}
+        horizontalPadding={false}
+        keyboardAware={!!nonWorkingDay}
+      >
+        <View className="flex-row items-center px-screen pb-2 gap-2">
+          {nonWorkingDay && (
+            <IconButton
+              size="sm"
+              icon={
+                <StSvg
+                  name="Expand_left"
+                  size={24}
+                  color={colors.neutral[900]}
+                />
+              }
+              onPress={() => setNonWorkingDay(null)}
+            />
+          )}
+          <Typography
+            weight="semibold"
+            className="text-[20px] text-neutral-900 text-center flex-1"
           >
-            <Text
-              className="font-inter-regular text-[16px] px-4"
-              style={{
-                color: displayValue ? colors.neutral[900] : colors.neutral[300],
+            {nonWorkingDay ? "Нерабочий день" : "Выберите дату"}
+          </Typography>
+          {nonWorkingDay && <View className="w-[36px]" />}
+        </View>
+
+        <View className="px-screen">
+          {nonWorkingDay && userId ? (
+            <NonWorkingDayPanel
+              date={nonWorkingDay.date}
+              status={nonWorkingDay.status}
+              workingDayId={nonWorkingDay.workingDayId}
+              userId={userId}
+              onSuccess={handleNonWorkingDaySuccess}
+            />
+          ) : isLoading ? (
+            <View className="items-center py-6">
+              <ActivityIndicator color={colors.neutral[400]} />
+            </View>
+          ) : isError ? (
+            <View className="py-6">
+              <RetryInline
+                text="Не удалось загрузить рабочие дни"
+                onRetry={refetch}
+                layout="column"
+              />
+            </View>
+          ) : (
+            <Calendar
+              current={visibleMonth ?? value ?? today}
+              onDayPress={(day) => handleDayPress(day.dateString)}
+              onMonthChange={(month) => {
+                setVisibleMonth(month.dateString);
+                onMonthChange(month);
               }}
-            >
-              {displayValue ?? placeholder}
-            </Text>
-          </Pressable>
-
-          <StModal
-            visible={open}
-            onClose={handleClose}
-            horizontalPadding={false}
-            keyboardAware={!!nonWorkingDay}
-          >
-            <View className="flex-row items-center px-screen pb-2 gap-2">
-              {nonWorkingDay && (
-                <IconButton
-                  size="sm"
-                  icon={
-                    <StSvg
-                      name="Expand_left"
-                      size={24}
-                      color={colors.neutral[900]}
-                    />
-                  }
-                  onPress={() => setNonWorkingDay(null)}
-                />
-              )}
-              <Typography
-                weight="semibold"
-                className="text-[20px] text-neutral-900 text-center flex-1"
-              >
-                {nonWorkingDay ? "Нерабочий день" : "Выберите дату"}
-              </Typography>
-              {nonWorkingDay && <View className="w-[36px]" />}
-            </View>
-
-            <View className="px-screen">
-              {nonWorkingDay && userId ? (
-                <NonWorkingDayPanel
-                  date={nonWorkingDay.date}
-                  status={nonWorkingDay.status}
-                  workingDayId={nonWorkingDay.workingDayId}
-                  userId={userId}
-                  onSuccess={handleNonWorkingDaySuccess}
-                />
-              ) : isLoading ? (
-                <View className="items-center py-6">
-                  <ActivityIndicator color={colors.neutral[400]} />
-                </View>
-              ) : isError ? (
-                <View className="py-6">
-                  <RetryInline
-                    text="Не удалось загрузить рабочие дни"
-                    onRetry={refetch}
-                    layout="column"
-                  />
-                </View>
-              ) : (
-                <Calendar
-                  current={visibleMonth ?? value ?? today}
-                  onDayPress={(day) => handleDayPress(day.dateString)}
-                  onMonthChange={(month) => {
-                    setVisibleMonth(month.dateString);
-                    onMonthChange(month);
-                  }}
-                  markedDates={computedMarkedDates}
-                  markingType={
-                    onNonWorkingDaySuccess && userId ? "custom" : "dot"
-                  }
-                  disableAllTouchEventsForDisabledDays={!onNonWorkingDaySuccess}
-                  hideExtraDays
-                  theme={pickerCalendarTheme}
-                />
-              )}
-            </View>
-          </StModal>
-        </>
-      )}
-    />
+              markedDates={computedMarkedDates}
+              markingType={onNonWorkingDaySuccess && userId ? "custom" : "dot"}
+              disableAllTouchEventsForDisabledDays={!onNonWorkingDaySuccess}
+              hideExtraDays
+              theme={pickerCalendarTheme}
+            />
+          )}
+        </View>
+      </StModal>
+    </>
   );
 };

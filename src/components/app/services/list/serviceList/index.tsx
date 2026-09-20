@@ -31,7 +31,7 @@ import { ServiceListSkeleton } from "@/src/components/app/services/list/listSkel
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import { formatDuration } from "@/src/utils/date/formatTime";
+import { formatBreakAfter, formatDuration } from "@/src/utils/date/formatTime";
 
 type FlatCategoryItem = {
   _id: string;
@@ -292,7 +292,11 @@ const ServiceList = ({
           <Card
             title={service.name}
             titleProps={{ numberOfLines: 1, ellipsizeMode: "tail" }}
-            subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
+            subtitle={`${formatDuration(service.duration)}${
+              service.break_after_minutes > 0
+                ? ` +${formatBreakAfter(service.break_after_minutes)}`
+                : ""
+            } | ${formatRublesFromCents(service.price_cents)}`}
             titleAccessory={
               isHidden ? <Tag title="Скрыто" size="sm" /> : undefined
             }
@@ -343,7 +347,11 @@ const ServiceList = ({
         <Card
           title={service.name}
           titleProps={{ numberOfLines: 1, ellipsizeMode: "tail" }}
-          subtitle={`${formatDuration(service.duration)} | ${formatRublesFromCents(service.price_cents)}`}
+          subtitle={`${formatDuration(service.duration)}${
+            service.break_after_minutes > 0
+              ? ` +${formatBreakAfter(service.break_after_minutes)}`
+              : ""
+          } | ${formatRublesFromCents(service.price_cents)}`}
           titleAccessory={
             isHidden ? <Tag title="Скрыто" size="sm" /> : undefined
           }

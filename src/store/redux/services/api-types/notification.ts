@@ -24,12 +24,11 @@ export type NotificationKind =
   | "direct_channel_grace"
   | "direct_channel_expired"
   | "reactivation_profile_1"
-  | "direct_channel_disconnected";
+  | "direct_channel_disconnected"
+  | "customer_delivery_failed";
 
 export type NotificationCancelVariant =
-  | "with_reason"
-  | "without_reason"
-  | "by_customer";
+  "with_reason" | "without_reason" | "by_customer";
 
 export interface NotificationPayload {
   old_date?: string;
@@ -85,8 +84,7 @@ export interface ChatNotificationSubject {
 }
 
 export type NotificationSubject =
-  | AppointmentNotificationSubject
-  | ChatNotificationSubject;
+  AppointmentNotificationSubject | ChatNotificationSubject;
 
 export interface Notification {
   id: number;
@@ -167,4 +165,79 @@ export interface GetNotificationStatsParams {
   userId: number;
   from: string;
   to: string;
+}
+
+export type NotificationTemplateKind = Extract<
+  NotificationKind,
+  | "appointment_request_accepted"
+  | "appointment_reminder"
+  | "appointment_rescheduled"
+  | "appointment_cancelled"
+  | "rebook_suggestion"
+>;
+
+export type NotificationTemplateStage = "booking" | "before" | "retention";
+
+export type TemplateChannel = "auto" | "telegram_direct" | "max_direct";
+
+export interface NotificationTemplateRow {
+  kind: NotificationTemplateKind;
+  title: string;
+  switch_title: string;
+  description: string;
+  stage: NotificationTemplateStage;
+  enabled: boolean;
+  is_custom: boolean;
+  channel: TemplateChannel | null;
+  body: string | null;
+  preview: string;
+}
+
+export interface TemplateVariable {
+  key: string;
+  title: string;
+  example: string;
+}
+
+export interface NotificationTemplate {
+  id: number;
+  kind: NotificationTemplateKind;
+  channel: TemplateChannel;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetNotificationTemplatesResponse {
+  notification_templates: NotificationTemplateRow[];
+  rebook_days_options: number[];
+}
+
+export interface GetNotificationTemplateVariablesResponse {
+  notification_template_variables: TemplateVariable[];
+}
+
+export interface SaveNotificationTemplatePayload {
+  userId: number;
+  kind: NotificationTemplateKind;
+  channel: TemplateChannel;
+  body: string;
+}
+
+export interface SaveNotificationTemplateResponse {
+  notification_template: NotificationTemplate;
+}
+
+export interface PreviewNotificationTemplatePayload {
+  userId: number;
+  kind: NotificationTemplateKind;
+  body: string;
+}
+
+export interface PreviewNotificationTemplateResponse {
+  preview: { text: string; length: number };
+}
+
+export interface ResetNotificationTemplateResponse {
+  notification_template: NotificationTemplateRow;
 }

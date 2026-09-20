@@ -41,7 +41,9 @@ import CustomerPickerModal from "@/src/components/shared/modals/CustomerPickerMo
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import { isHiddenCustomer } from "@/src/utils/customer";
 import SlotActions from "@/src/components/app/calendar/slot/slotActions";
+import ClientNotificationNotice from "@/src/components/app/calendar/slot/ClientNotificationNotice";
 import {
+  formatBreakAfter,
   formatDayMonth,
   formatDuration,
   formatTimeString,
@@ -53,7 +55,11 @@ import {
 } from "@/src/utils/price/formatPrice";
 import EditableCommentRow from "./EditableCommentRow";
 import { toast } from "@backpackapp-io/react-native-toast";
-import { getApiErrorMessage } from "@/src/utils/apiError";
+import {
+  getApiErrorMessage,
+  getApiFieldError,
+  getBreakAfterIntersectionHint,
+} from "@/src/utils/apiError";
 
 import { EDITABLE_STATUSES, STATUS_CONFIG } from "./constants";
 import InfoRow from "./InfoRow";
@@ -61,28 +67,37 @@ import EditableRow from "./EditableRow";
 import EditableDurationRow from "./EditableDurationRow";
 import StatusModal from "./StatusModal";
 import PaymentMethodModal from "./PaymentMethodModal";
+import BreakAfterModal from "@/src/components/shared/modals/BreakAfterModal";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
+import { safeRefetch } from "@/src/utils/safeRefetch";
 
 import { PAYMENT_METHOD_LABELS } from "@/src/constants/payment";
 
-type EditingField = "duration" | "price" | "comment" | "status" | null;
+type EditingField =
+  "duration" | "breakAfter" | "price" | "comment" | "status" | null;
 
 interface Props {
   slotId: string;
 }
 
 const SlotDetails: React.FC<Props> = ({ slotId }) => {
-  const auth = useRequiredAuth();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
   const [actionsVisible, setActionsVisible] = useState(false);
   const [actionsMenuMounted, setActionsMenuMounted] = useState(false);
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
+  const [breakAfterVisible, setBreakAfterVisible] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
+  const [editingField, setEditingField] = useState<EditingField>(null);
+
+  const isSavingRef = useRef(false);
+  const notificationRetryCountRef = useRef(0);
+
+  const auth = useRequiredAuth();
   const { scheduleAction, onModalHide } = useModalAction(() =>
     setActionsVisible(false),
   );
@@ -90,8 +105,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     scheduleAction: schedulePaymentAction,
     onModalHide: onPaymentModalHide,
   } = useModalAction(() => setPaymentMethodVisible(false));
-  const [editingField, setEditingField] = useState<EditingField>(null);
-  const isSavingRef = useRef(false);
 
   const {
     data: slot,
@@ -131,46 +144,6 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
 
   const id = Number(slotId);
 
-  const handleUpdate = useCallback(
-    async (
-      body: Parameters<typeof updateAppointment>[0]["body"],
-      options?: { onSuccess?: () => void; field?: EditingField },
-    ) => {
-      if (!slot || isSavingRef.current) return;
-      isSavingRef.current = true;
-      if (options?.field) setEditingField(options.field);
-      const fullBody = {
-        duration: slot.duration,
-        ...(slot.price_cents != null && { price_cents: slot.price_cents }),
-        ...(slot.payment_method != null && {
-          payment_method: slot.payment_method,
-        }),
-        ...body,
-      };
-
-      try {
-        await updateAppointment({ id, body: fullBody }).unwrap();
-        toast.success("Сохранено");
-        options?.onSuccess?.();
-      } catch (error) {
-        toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
-      } finally {
-        isSavingRef.current = false;
-        if (options?.field) setEditingField(null);
-      }
-    },
-    [slot, updateAppointment, id],
-  );
-
-  const handleSaveComment = useCallback(
-    () =>
-      handleUpdate(
-        { comment: methods.getValues("comment") },
-        { field: "comment" },
-      ),
-    [handleUpdate, methods],
-  );
-
   const derived = useMemo(() => {
     if (!slot) return null;
     return {
@@ -197,6 +170,52 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     };
   }, [slot]);
 
+  const handleUpdate = useCallback(
+    async (
+      body: Parameters<typeof updateAppointment>[0]["body"],
+      options?: { onSuccess?: () => void; field?: EditingField },
+    ) => {
+      if (!slot || isSavingRef.current) return;
+      isSavingRef.current = true;
+      if (options?.field) setEditingField(options.field);
+      const fullBody = {
+        duration: slot.duration,
+        ...(slot.price_cents != null && { price_cents: slot.price_cents }),
+        ...(slot.payment_method != null && {
+          payment_method: slot.payment_method,
+        }),
+        ...body,
+      };
+
+      try {
+        await updateAppointment({ id, body: fullBody }).unwrap();
+        toast.success("Сохранено");
+        options?.onSuccess?.();
+      } catch (error) {
+        const breakError = getApiFieldError(error, "break_after_minutes");
+        if (breakError) {
+          const hint = getBreakAfterIntersectionHint(error);
+          toast.error([breakError, hint].filter(Boolean).join(" "));
+        } else {
+          toast.error(getApiErrorMessage(error, "Не удалось сохранить"));
+        }
+      } finally {
+        isSavingRef.current = false;
+        if (options?.field) setEditingField(null);
+      }
+    },
+    [slot, updateAppointment, id],
+  );
+
+  const handleSaveComment = useCallback(
+    () =>
+      handleUpdate(
+        { comment: methods.getValues("comment") },
+        { field: "comment" },
+      ),
+    [handleUpdate, methods],
+  );
+
   useEffect(() => {
     if (!slot) return;
     methods.reset({
@@ -205,6 +224,22 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
       price: String(centsToRubles(slot.price_cents ?? 0)),
     });
   }, [methods, slot]);
+
+  useEffect(() => {
+    if (
+      slot?.customer_notification_state !== "sending" ||
+      notificationRetryCountRef.current >= 2
+    ) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      notificationRetryCountRef.current += 1;
+      safeRefetch(refetch);
+    }, 45000);
+
+    return () => clearTimeout(timer);
+  }, [slot?.customer_notification_state, refetch]);
 
   return (
     <FormProvider {...methods}>
@@ -407,6 +442,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                       }
                     />
                   )}
+
+                  <ClientNotificationNotice
+                    state={slot.customer_notification_state}
+                    hasCustomer={!!slot.customer}
+                  />
                 </View>
 
                 <View className="mx-screen gap-2 mt-5 bg-background-surface rounded-base p-5">
@@ -563,6 +603,36 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     }}
                   />
 
+                  <InfoRow
+                    label="Перерыв после записи"
+                    right={
+                      <Pressable
+                        onPress={
+                          derived!.canEdit
+                            ? () => setBreakAfterVisible(true)
+                            : undefined
+                        }
+                        disabled={!derived!.canEdit}
+                        hitSlop={8}
+                        className="flex-row items-center gap-1 flex-1 justify-end active:opacity-70"
+                      >
+                        <Typography
+                          weight="regular"
+                          className="text-body text-neutral-900 flex-shrink text-right"
+                        >
+                          {formatBreakAfter(slot.break_after_minutes)}
+                        </Typography>
+                        {derived!.canEdit && (
+                          <StSvg
+                            name="Edit_light"
+                            size={20}
+                            color={colors.neutral[500]}
+                          />
+                        )}
+                      </Pressable>
+                    }
+                  />
+
                   <EditableRow
                     label="Стоимость"
                     displayValue={
@@ -703,6 +773,20 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                 }
                 onComingSoon={() =>
                   schedulePaymentAction(() => setComingSoonVisible(true))
+                }
+              />
+              <BreakAfterModal
+                visible={breakAfterVisible}
+                currentMinutes={slot.break_after_minutes}
+                onClose={() => setBreakAfterVisible(false)}
+                onSelect={(minutes) =>
+                  void handleUpdate(
+                    { break_after_minutes: minutes },
+                    {
+                      field: "breakAfter",
+                      onSuccess: () => setBreakAfterVisible(false),
+                    },
+                  )
                 }
               />
               <ComingSoonModal

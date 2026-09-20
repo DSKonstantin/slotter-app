@@ -11,7 +11,7 @@ import { Badge, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import { formatTimeString } from "@/src/utils/date/formatTime";
+import { formatTimeString, parseTime } from "@/src/utils/date/formatTime";
 import {
   APPOINTMENT_STATUS_CONFIG,
   QUOTA_HIDDEN_STATUS_CONFIG,
@@ -25,9 +25,13 @@ interface SlotCardProps {
   highlighted?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  /** The slot's own "break after appointment" end time — folded straight
+   * into the displayed time range (13:00-13:45 becomes 13:00-14:00)
+   * instead of showing the break as a separate line. */
+  extendedEndTime?: string;
 }
 
-const getSlotCardInfo = (slot: Appointment) => {
+const getSlotCardInfo = (slot: Appointment, extendedEndTime?: string) => {
   const isQuotaHidden = isHiddenCustomer(slot.customer);
   const serviceNames = slot.services.map((service) => service.name).join(", ");
   const additionalServicesCount = slot.additional_services?.length ?? 0;
@@ -41,7 +45,7 @@ const getSlotCardInfo = (slot: Appointment) => {
         : "",
     clientName: isQuotaHidden ? "" : (slot.customer?.name ?? ""),
     hasComment: !isQuotaHidden && Boolean(slot.comment?.trim()),
-    timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(slot.end_time)}`,
+    timeString: `${formatTimeString(slot.start_time)} - ${formatTimeString(extendedEndTime ?? slot.end_time)}`,
     price: formatRublesFromCents(slot.price_cents ?? 0),
   };
 };
@@ -53,8 +57,9 @@ const SlotCard = ({
   highlighted = false,
   isExpanded: controlledExpanded,
   onToggleExpand,
+  extendedEndTime,
 }: SlotCardProps) => {
-  const slotInfo = getSlotCardInfo(slot);
+  const slotInfo = getSlotCardInfo(slot, extendedEndTime);
   const statusConfig = slotInfo.isQuotaHidden
     ? QUOTA_HIDDEN_STATUS_CONFIG
     : (APPOINTMENT_STATUS_CONFIG[slot.status] ?? null);
@@ -197,7 +202,15 @@ const SlotCard = ({
     </Pressable>
   );
 
-  const isCompactSlot = slot.duration <= 30 || slot.status === "cancelled";
+  // The 30-min compact threshold should account for a merged break-after
+  // too — a 10-min slot + 5-min break (15 total) still fits the compact
+  // chip fine, but a 10-min slot + 90-min break stretches the segment well
+  // past what a chip needs, leaving it floating in a tall empty box.
+  // Cancelled slots never merge, so they stay compact regardless.
+  const totalDuration = extendedEndTime
+    ? parseTime(extendedEndTime) - parseTime(slot.start_time)
+    : slot.duration;
+  const isCompactSlot = slot.status === "cancelled" || totalDuration <= 30;
 
   if (isCompactSlot) {
     return (

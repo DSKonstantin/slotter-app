@@ -1,5 +1,6 @@
 import { api } from "../api";
 import { asArray } from "@/src/utils/asArray";
+import { notificationTemplatesApi } from "./notificationTemplatesApi";
 import type {
   GetNotificationsParams,
   GetNotificationsResponse,
@@ -126,10 +127,24 @@ let notificationsApi = api.injectEndpoints({
             },
           ),
         );
+        const templatesPatch = customer
+          ? dispatch(
+              notificationTemplatesApi.util.updateQueryData(
+                "getNotificationTemplates",
+                userId,
+                (draft) => {
+                  draft.notification_templates.forEach((row) => {
+                    if (row.kind in customer) row.enabled = customer[row.kind]!;
+                  });
+                },
+              ),
+            )
+          : undefined;
         try {
           await queryFulfilled;
         } catch {
           patch.undo();
+          templatesPatch?.undo();
         }
       },
     }),

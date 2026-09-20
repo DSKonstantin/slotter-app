@@ -13,6 +13,7 @@ type RHFSelectFieldProps = {
   items: readonly SelectItem[];
   endAdornment?: ReactNode;
   onEndAdornmentPress?: () => void;
+  inline?: boolean;
 };
 
 export function RHFSelect({
@@ -24,6 +25,7 @@ export function RHFSelect({
   disabled,
   endAdornment,
   onEndAdornmentPress,
+  inline,
 }: RHFSelectFieldProps) {
   const { control } = useFormContext();
   const {
@@ -45,6 +47,7 @@ export function RHFSelect({
       error={error}
       endAdornment={endAdornment}
       onEndAdornmentPress={onEndAdornmentPress}
+      inline={inline}
     />
   );
 }

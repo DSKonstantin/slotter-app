@@ -50,10 +50,11 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 
 type ClientCreateProps = {
+  initialName?: string;
   onCreated?: (userCustomer: UserCustomer) => void;
 };
 
-const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
+const ClientCreate = ({ initialName, onCreated }: ClientCreateProps = {}) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [createTagVisible, setCreateTagVisible] = useState(false);
 
@@ -61,6 +62,7 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
   const scrollFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const didSetDefaultTagRef = useRef(false);
 
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
@@ -75,7 +77,12 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
 
   const methods = useForm({
     resolver: yupResolver(ClientCreateSchema),
-    defaultValues: { name: "", phone: "", comment: "", customer_tag: null },
+    defaultValues: {
+      name: initialName ?? "",
+      phone: "",
+      comment: "",
+      customer_tag: null,
+    },
   });
 
   const {
@@ -91,14 +98,6 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     () => tagsData?.customer_tags ?? [],
     [tagsData?.customer_tags],
   );
-
-  const didSetDefaultTagRef = useRef(false);
-  useEffect(() => {
-    if (didSetDefaultTagRef.current || tags.length === 0) return;
-    didSetDefaultTagRef.current = true;
-    const defaultTag = tags.find((tag) => tag.name === "Новые");
-    if (defaultTag) setValue("customer_tag", defaultTag);
-  }, [tags, setValue]);
 
   const onSubmit = useCallback(
     async (values: ClientCreateFormValues) => {
@@ -152,6 +151,13 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
     },
     [setValue],
   );
+
+  useEffect(() => {
+    if (didSetDefaultTagRef.current || tags.length === 0) return;
+    didSetDefaultTagRef.current = true;
+    const defaultTag = tags.find((tag) => tag.name === "Новые");
+    if (defaultTag) setValue("customer_tag", defaultTag);
+  }, [tags, setValue]);
 
   useEffect(() => {
     if (!selectedTag?.id || tags.length === 0) return;
@@ -219,7 +225,6 @@ const ClientCreate = ({ onCreated }: ClientCreateProps = {}) => {
                         <RhfTextField
                           label="Телефон"
                           name="phone"
-                          maxLength={16}
                           hideErrorText
                           placeholder="+7 (___) ___-__-__"
                           keyboardType="phone-pad"
