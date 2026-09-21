@@ -35,6 +35,8 @@ export const notificationTemplatesApi = api.injectEndpoints({
         method: "GET",
         params: { kind },
       }),
+      // Справочник не зависит от мастера и не меняется без релиза бэка — держим в кэше на всю сессию.
+      keepUnusedDataFor: 24 * 60 * 60,
     }),
 
     saveNotificationTemplate: builder.mutation<

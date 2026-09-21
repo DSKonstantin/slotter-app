@@ -35,6 +35,7 @@ type MessageTemplateEditorProps = {
   isSaving?: boolean;
   bypassGuard?: boolean;
   serverError?: string | null;
+  serverErrorText?: string | null;
   onSave: (text: string) => void;
   onReset?: () => void;
   isResetting?: boolean;
@@ -49,6 +50,7 @@ const MessageTemplateEditor = ({
   isSaving = false,
   bypassGuard = false,
   serverError,
+  serverErrorText,
   onSave,
   onReset,
   isResetting = false,
@@ -71,7 +73,8 @@ const MessageTemplateEditor = ({
     () => validateBody(text, allowedKeys),
     [text, allowedKeys],
   );
-  const error = text.trim() ? (localError ?? serverError ?? null) : null;
+  const activeServerError = text === serverErrorText ? serverError : null;
+  const error = text.trim() ? (localError ?? activeServerError ?? null) : null;
   const canSave = isDirty && !localError && !isSaving;
   const previewText = text.trim() ? text : fallbackPreview;
 

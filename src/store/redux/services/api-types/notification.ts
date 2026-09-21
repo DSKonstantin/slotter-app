@@ -9,6 +9,7 @@ export type NotificationKind =
   | "appointment_rescheduled"
   | "appointment_reminder"
   | "appointment_requested"
+  | "appointment_request_sent"
   | "appointment_request_accepted"
   | "appointment_customer_accepted"
   | "appointment_customer_declined"
@@ -169,7 +170,8 @@ export interface GetNotificationStatsParams {
 
 export type NotificationTemplateKind = Extract<
   NotificationKind,
-  | "appointment_request_accepted"
+  | "appointment_booked"
+  | "appointment_request_sent"
   | "appointment_reminder"
   | "appointment_rescheduled"
   | "appointment_cancelled"
