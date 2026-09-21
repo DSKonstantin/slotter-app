@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Platform,
   Pressable,
@@ -37,6 +37,9 @@ const NotificationTypes = () => {
   const { data, isLoading, isError, isFetching, refetch } =
     useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
+  const refetchAll = useCallback(() => safeRefetch(refetch), [refetch]);
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
+
   const rows = useMemo(() => data?.notification_templates ?? [], [data]);
 
   const sections = useMemo<Section[]>(
@@ -48,8 +51,6 @@ const NotificationTypes = () => {
       })).filter((section) => section.rows.length > 0),
     [rows],
   );
-
-  const { refreshing, onRefresh } = useRefresh(() => safeRefetch(refetch));
 
   return (
     <ScreenWithToolbar title="Виды уведомлений">
