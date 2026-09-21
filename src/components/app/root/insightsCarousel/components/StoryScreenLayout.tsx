@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type Props = {
   children: React.ReactNode;
   paddingTop?: number;
+  paddingBottom?: number;
   className?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -11,10 +12,11 @@ type Props = {
 export const StoryScreenLayout = ({
   children,
   paddingTop,
+  paddingBottom,
   className,
   style,
 }: Props) => {
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
 
   return (
     <View
@@ -22,6 +24,8 @@ export const StoryScreenLayout = ({
       style={[
         {
           paddingTop: paddingTop !== undefined ? paddingTop + top : undefined,
+          paddingBottom:
+            paddingBottom !== undefined ? paddingBottom + bottom : undefined,
         },
         style,
       ]}

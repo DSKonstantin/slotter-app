@@ -25,7 +25,7 @@ import { useGetNotificationTemplatesQuery } from "@/src/store/redux/services/api
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { NotificationTemplateKind } from "@/src/store/redux/services/api-types";
-import RebookDaysModal from "./RebookDaysModal";
+import RebookDaysPickerModal from "./RebookDaysPickerModal";
 
 type ToggleRowProps = {
   title: string;
@@ -64,7 +64,6 @@ const NotificationDetailScreen = ({ kind }: Props) => {
   const [updateUser] = useUpdateUserMutation();
 
   const row = data?.notification_templates.find((r) => r.kind === kind);
-  const rebookDaysOptions = data?.rebook_days_options ?? [];
 
   const handleToggle = useCallback(() => {
     if (!auth || !row) return;
@@ -92,7 +91,7 @@ const NotificationDetailScreen = ({ kind }: Props) => {
       });
   }, [auth, user, updateUser]);
 
-  const handleSelectDays = useCallback(
+  const handleRebookDaysConfirm = useCallback(
     (days: number) => {
       if (!auth) return;
       setDaysModalVisible(false);
@@ -255,13 +254,14 @@ const NotificationDetailScreen = ({ kind }: Props) => {
         )}
       </ScreenWithToolbar>
 
-      <RebookDaysModal
-        visible={daysModalVisible}
-        options={rebookDaysOptions}
-        current={user?.rebook_days_count}
-        onClose={() => setDaysModalVisible(false)}
-        onSelect={handleSelectDays}
-      />
+      {user && (
+        <RebookDaysPickerModal
+          visible={daysModalVisible}
+          value={user.rebook_days_count}
+          onConfirm={handleRebookDaysConfirm}
+          onClose={() => setDaysModalVisible(false)}
+        />
+      )}
     </>
   );
 };

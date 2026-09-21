@@ -73,7 +73,7 @@ const AccountScreen = () => {
     runOnNextForeground(() =>
       getSubscriptionMembership({ userId: auth.userId }),
     );
-    openPersonalAccount("/upgrade");
+    openPersonalAccount("/upgrade/checkout");
   };
 
   const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [

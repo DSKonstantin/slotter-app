@@ -42,7 +42,9 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
   const { data: templatesData, isLoading: isRowLoading } =
     useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
   const { data: variablesData, isLoading: isVariablesLoading } =
-    useGetNotificationTemplateVariablesQuery(kind);
+    useGetNotificationTemplateVariablesQuery(kind, {
+      refetchOnMountOrArgChange: true,
+    });
   const [saveTemplate, { isLoading: isSaving }] =
     useSaveNotificationTemplateMutation();
   const [previewTemplate, { isLoading: isPreviewing }] =

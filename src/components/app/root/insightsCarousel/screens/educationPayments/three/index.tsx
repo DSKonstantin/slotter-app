@@ -11,23 +11,9 @@ import {
 
 const EducationPaymentsThree = () => {
   return (
-    <StoryScreenLayout paddingTop={68}>
-      <View className="gap-4">
-        <View className="pl-screen">
-          <StoryAppTabsBar tabs={STORY_APP_TABS.slice(1)} activeIndex={0} />
-        </View>
-        <View className="px-screen">
-          <StoryHeading
-            title={
-              "Настрой рабочие часы. Клиенты сами найдут время и запишутся"
-            }
-            subtitle="Выбираешь дни и часы вручную, копируешь прошлый месяц или применяешь шаблон"
-          />
-        </View>
-      </View>
-
+    <StoryScreenLayout paddingTop={40}>
       <StoryIllustration
-        source={require("@/assets/images/history/training/three.webp")}
+        source={require("@/assets/images/history/training/three.png")}
       />
     </StoryScreenLayout>
   );

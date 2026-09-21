@@ -31,7 +31,7 @@ const getMockInsights = (onStoryPress: (id: string) => void): Insight[] => [
     id: "app_update",
     category: "update",
     title: "Slotter стал проще и гибче",
-    imageSource: require("@/assets/images/history/carousel/5.png"),
+    imageSource: require("@/assets/images/history/carousel/5.webp"),
     stories: MOCK_NOTIFICATION_STORIES["app_update"],
     onPress: () => onStoryPress("app_update"),
   },

@@ -212,7 +212,6 @@ export interface NotificationTemplate {
 
 export interface GetNotificationTemplatesResponse {
   notification_templates: NotificationTemplateRow[];
-  rebook_days_options: number[];
 }
 
 export interface GetNotificationTemplateVariablesResponse {

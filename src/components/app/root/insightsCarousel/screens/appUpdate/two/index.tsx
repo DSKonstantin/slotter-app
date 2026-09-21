@@ -1,5 +1,4 @@
 import React from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   StoryScreenLayout,
@@ -7,14 +6,8 @@ import {
 } from "@/src/components/app/root/insightsCarousel/components";
 
 const AppUpdateTwo = () => {
-  const { bottom } = useSafeAreaInsets();
-
   return (
-    <StoryScreenLayout
-      paddingTop={68}
-      className="pb-12"
-      style={{ paddingBottom: bottom }}
-    >
+    <StoryScreenLayout paddingTop={60} paddingBottom={8}>
       <StoryIllustration
         source={require("@/assets/images/history/app_update/two.webp")}
       />
