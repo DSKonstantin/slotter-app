@@ -3,11 +3,13 @@ import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { router, useSegments, type Href } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import {
   Typography,
   StSvg,
   IconButton,
   FadeOverlay,
+  GlassSurface,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { COMPACT_BREAKPOINT, TABS } from "@/src/constants/tabs";
@@ -16,6 +18,8 @@ import { useHasUnreadChat } from "@/src/hooks/useHasUnreadChat";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 import ChatTabBarIcon from "@/src/components/navigation/tabBar/ChatTabBarIcon";
+
+const hasGlassEffect = isLiquidGlassAvailable();
 
 type Tab = (typeof TABS)[number];
 
@@ -50,7 +54,7 @@ const TabItem = memo(
       >
         {isActive && (
           <View
-            className={`absolute inset-y-0 rounded-full bg-neutral-100 ${extendActive ? "-inset-x-1" : "inset-x-0"}`}
+            className={`absolute inset-y-0 rounded-full ${!hasGlassEffect ? "bg-neutral-100" : "bg-neutral-100/50"}  ${extendActive ? "-inset-x-1" : "inset-x-0"}`}
           />
         )}
         <View className="relative">
@@ -135,26 +139,30 @@ const StTabBar: React.FC = () => {
         style={{ height: tabBarHeight }}
       >
         <View
-          className="flex-1 bg-background-surface rounded-full
-          flex-row items-center justify-between overflow-hidden border-[3px]
-         border-background-surface mr-1.5"
+          className="flex-1 rounded-full overflow-hidden mr-1.5 px-[3px]"
           style={styles.topShadow}
         >
-          {TABS.map((tab) => {
-            const isActive = activeRoute === tab.key;
-            return (
-              <TabItem
-                key={tab.key}
-                tab={tab}
-                isActive={isActive}
-                isAtRoot={isActive ? isActiveTabAtRoot : true}
-                extendActive={tab.key === "calendar"}
-                compact={compact}
-                showDot={tab.key === "chat" && hasUnreadChat}
-                onPress={handleTabPress}
-              />
-            );
-          })}
+          <GlassSurface
+            style={StyleSheet.absoluteFill}
+            fallbackClassName="bg-background-surface"
+          />
+          <View className="flex-1 flex-row items-center justify-between">
+            {TABS.map((tab) => {
+              const isActive = activeRoute === tab.key;
+              return (
+                <TabItem
+                  key={tab.key}
+                  tab={tab}
+                  isActive={isActive}
+                  isAtRoot={isActive ? isActiveTabAtRoot : true}
+                  extendActive={tab.key === "calendar"}
+                  compact={compact}
+                  showDot={tab.key === "chat" && hasUnreadChat}
+                  onPress={handleTabPress}
+                />
+              );
+            })}
+          </View>
         </View>
         <IconButton
           size={compact ? "lg" : "xxl"}
@@ -163,6 +171,7 @@ const StTabBar: React.FC = () => {
           onPress={handleMenuPress}
           buttonClassName={isMenuOpen ? "opacity-0" : undefined}
           disabled={isMenuOpen}
+          glass
         />
       </View>
     </View>

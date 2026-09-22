@@ -23,7 +23,7 @@ export { PaginationDots } from "./PaginationDots";
 export { BottomSheetHandle } from "./BottomSheetHandle";
 export { SegmentedControl } from "./segmentedControl";
 export { FadeOverlay } from "./FadeOverlay";
-// export { GlassSurface } from "./GlassSurface";
+export { GlassSurface } from "./GlassSurface";
 export { HatchPattern } from "./HatchPattern";
 export { FloatingFooter } from "./FloatingFooter";
 export { StImage } from "./StImage";
