@@ -58,11 +58,11 @@ export const NOTIFICATION_KIND_CONFIG: Record<NotificationKind, KindConfig> = {
   appointment_requested: {
     badge: { icon: "Add_round_fill", color: colors.primary.blue[500] },
   },
+  appointment_request_sent: {
+    badge: { icon: "Add_round_fill", color: colors.primary.blue[500] },
+  },
   appointment_request_accepted: {
     badge: { icon: "Check_fill", color: colors.primary.green[500] },
-    detailRoute: Routers.app.account.clientNotifications.detail(
-      "appointment_request_accepted",
-    ),
   },
   appointment_customer_accepted: {
     badge: { icon: "Check_fill", color: colors.primary.green[500] },

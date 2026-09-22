@@ -22,16 +22,12 @@ import { useRefresh } from "@/src/hooks/useRefresh";
 import { useRefetchOnForeground } from "@/src/hooks/useRefetchOnForeground";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
 import { safeRefetch } from "@/src/utils/safeRefetch";
-import { useGetNotificationSettingsQuery } from "@/src/store/redux/services/api/notificationsApi";
 import { useGetNotificationTemplatesQuery } from "@/src/store/redux/services/api/notificationTemplatesApi";
 import {
   useGetSubscriptionDirectPlansQuery,
   useGetSubscriptionDirectChannelsQuery,
 } from "@/src/store/redux/services/api/subscriptionDirectApi";
-import type {
-  DirectChannelKind,
-  NotificationKind,
-} from "@/src/store/redux/services/api-types";
+import type { DirectChannelKind } from "@/src/store/redux/services/api-types";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
 import { getDirectChannelRowStatus } from "./directChannelRowStatus";
 import { Button, Card, Divider, StSvg, Typography } from "@/src/components/ui";
@@ -121,14 +117,6 @@ const ClientNotifications = () => {
   } = useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
   const {
-    data: settingsData,
-    isLoading: isSettingsLoading,
-    refetch: refetchSettings,
-  } = useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
-
-  const isNotificationTypesLoading = isTemplatesLoading || isSettingsLoading;
-
-  const {
     data: directPlansData,
     isLoading: isDirectPlansLoading,
     isFetching: isDirectPlansFetching,
@@ -154,16 +142,11 @@ const ClientNotifications = () => {
 
   const notificationTemplatesSummary = useMemo(() => {
     const rows = asArray(templatesData?.notification_templates);
-    const templateKinds = new Set<NotificationKind>(rows.map((r) => r.kind));
-    const otherItems = asArray(settingsData?.customer)
-      .flatMap((group) => asArray(group.items))
-      .filter((item) => !templateKinds.has(item.kind));
-
-    const enabled =
-      rows.filter((r) => r.enabled).length +
-      otherItems.filter((item) => item.enabled).length;
-    return { enabled, total: rows.length + otherItems.length };
-  }, [templatesData, settingsData]);
+    return {
+      enabled: rows.filter((r) => r.enabled).length,
+      total: rows.length,
+    };
+  }, [templatesData]);
 
   const directChannelRows = useMemo(() => {
     const activePlans = asArray(directPlansData).filter((p) => p.is_active);
@@ -192,16 +175,10 @@ const ClientNotifications = () => {
   const refetchAll = useCallback(async () => {
     await Promise.all([
       safeRefetch(refetchTemplates),
-      safeRefetch(refetchSettings),
       safeRefetch(refetchDirectPlans),
       safeRefetch(refetchDirectChannels),
     ]);
-  }, [
-    refetchTemplates,
-    refetchSettings,
-    refetchDirectPlans,
-    refetchDirectChannels,
-  ]);
+  }, [refetchTemplates, refetchDirectPlans, refetchDirectChannels]);
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
 
@@ -258,7 +235,7 @@ const ClientNotifications = () => {
             <Card
               title="Виды уведомлений"
               subtitle={
-                isNotificationTypesLoading ? (
+                isTemplatesLoading ? (
                   <ContentLoader
                     speed={1.2}
                     width={90}

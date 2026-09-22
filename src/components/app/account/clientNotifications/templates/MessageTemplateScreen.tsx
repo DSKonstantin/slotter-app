@@ -28,6 +28,7 @@ type MessageTemplateScreenProps = {
 
 const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [serverErrorText, setServerErrorText] = useState<string | null>(null);
   const [bypassGuard, setBypassGuard] = useState(false);
 
   const auth = useRequiredAuth();
@@ -41,7 +42,9 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
   const { data: templatesData, isLoading: isRowLoading } =
     useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
   const { data: variablesData, isLoading: isVariablesLoading } =
-    useGetNotificationTemplateVariablesQuery(kind);
+    useGetNotificationTemplateVariablesQuery(kind, {
+      refetchOnMountOrArgChange: true,
+    });
   const [saveTemplate, { isLoading: isSaving }] =
     useSaveNotificationTemplateMutation();
   const [previewTemplate, { isLoading: isPreviewing }] =
@@ -58,6 +61,7 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
     (text: string) => {
       if (!auth || !row) return;
       setServerError(null);
+      setServerErrorText(null);
       previewTemplate({ userId: auth.userId, kind, body: text })
         .unwrap()
         .then(() =>
@@ -74,11 +78,12 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
           router.back();
         })
         .catch((e: unknown) => {
-          guardDirectChannelError(e, (err) =>
+          guardDirectChannelError(e, (err) => {
             setServerError(
               getApiErrorMessage(err, "Не удалось сохранить шаблон"),
-            ),
-          );
+            );
+            setServerErrorText(text);
+          });
         });
     },
     [auth, row, kind, previewTemplate, saveTemplate, guardDirectChannelError],
@@ -126,6 +131,7 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
         isSaving={isSaving || isPreviewing}
         bypassGuard={bypassGuard}
         serverError={serverError}
+        serverErrorText={serverErrorText}
         onSave={handleSave}
         onReset={row.is_custom ? handleReset : undefined}
         isResetting={isResetting}

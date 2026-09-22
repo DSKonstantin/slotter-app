@@ -10,16 +10,13 @@ import EducationPaymentsSix from "@/src/components/app/root/insightsCarousel/scr
 import FillProfileOne from "@/src/components/app/root/insightsCarousel/screens/fillProfile/one";
 import FillProfileTwo from "@/src/components/app/root/insightsCarousel/screens/fillProfile/two";
 import FillProfileThree from "@/src/components/app/root/insightsCarousel/screens/fillProfile/three";
-import FillProfileFour from "@/src/components/app/root/insightsCarousel/screens/fillProfile/four";
 import FinancesOne from "@/src/components/app/root/insightsCarousel/screens/finances/one";
 import FinancesTwo from "@/src/components/app/root/insightsCarousel/screens/finances/two";
 import FinancesThree from "@/src/components/app/root/insightsCarousel/screens/finances/three";
 import FinancesFour from "@/src/components/app/root/insightsCarousel/screens/finances/four";
-import FinancesFive from "@/src/components/app/root/insightsCarousel/screens/finances/five";
 import NotificationOne from "@/src/components/app/root/insightsCarousel/screens/notification/one";
 import NotificationTwo from "@/src/components/app/root/insightsCarousel/screens/notification/two";
 import NotificationThree from "@/src/components/app/root/insightsCarousel/screens/notification/three";
-import NotificationFour from "@/src/components/app/root/insightsCarousel/screens/notification/four";
 import AppUpdateOne from "@/src/components/app/root/insightsCarousel/screens/appUpdate/one";
 import AppUpdateTwo from "@/src/components/app/root/insightsCarousel/screens/appUpdate/two";
 import AppUpdateThree from "@/src/components/app/root/insightsCarousel/screens/appUpdate/three";
@@ -68,10 +65,6 @@ const FILL_PROFILE_STORIES: Story[] = [
     id: "3",
     customScreen: <FillProfileThree />,
   },
-  {
-    id: "4",
-    customScreen: <FillProfileFour />,
-  },
 ];
 
 const FINANCES_STORIES: Story[] = [
@@ -91,10 +84,6 @@ const FINANCES_STORIES: Story[] = [
     id: "4",
     customScreen: <FinancesFour />,
   },
-  {
-    id: "5",
-    customScreen: <FinancesFive />,
-  },
 ];
 
 const NOTIFICATION_STORIES: Story[] = [
@@ -109,10 +98,6 @@ const NOTIFICATION_STORIES: Story[] = [
   {
     id: "3",
     customScreen: <NotificationThree />,
-  },
-  {
-    id: "4",
-    customScreen: <NotificationFour />,
   },
 ];
 

@@ -1,30 +1,15 @@
 import React from "react";
-import { View } from "react-native";
 
 import {
-  StoryHeading,
   StoryScreenLayout,
   StoryIllustration,
-  StoryInlineIcon,
 } from "@/src/components/app/root/insightsCarousel/components";
 
 const FinancesTwo = () => {
   return (
-    <StoryScreenLayout paddingTop={68}>
-      <View className="px-screen">
-        <StoryHeading
-          title={
-            <>
-              Ты знаешь сколько <StoryInlineIcon name="Money_fill" /> заработал
-              за прошлый месяц?
-            </>
-          }
-          subtitle="Большинство мастеров отвечают примерно. Финансы покажут точно."
-        />
-      </View>
-
+    <StoryScreenLayout paddingTop={60} paddingBottom={8}>
       <StoryIllustration
-        source={require("@/assets/images/history/finances/two.webp")}
+        source={require("@/assets/images/history/finances/two.png")}
       />
     </StoryScreenLayout>
   );

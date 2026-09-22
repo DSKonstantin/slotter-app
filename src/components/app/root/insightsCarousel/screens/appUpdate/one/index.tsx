@@ -1,30 +1,16 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import { Image } from "expo-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  StoryIllustration,
+  StoryScreenLayout,
+} from "@/src/components/app/root/insightsCarousel/components";
 
 const AppUpdateOne = () => {
-  const { top, bottom } = useSafeAreaInsets();
-
   return (
-    <View className="flex-1">
-      <Image
+    <StoryScreenLayout paddingBottom={8}>
+      <StoryIllustration
         source={require("@/assets/images/history/app_update/one.webp")}
-        style={StyleSheet.absoluteFillObject}
-        contentFit="cover"
       />
-
-      <View
-        className="flex-1 px-4"
-        style={{ paddingTop: top + 68, paddingBottom: bottom + 16 }}
-      >
-        <Image
-          source={require("@/assets/images/history/app_update/one-front.webp")}
-          style={{ flex: 1, width: "100%" }}
-          contentFit="contain"
-        />
-      </View>
-    </View>
+    </StoryScreenLayout>
   );
 };
 

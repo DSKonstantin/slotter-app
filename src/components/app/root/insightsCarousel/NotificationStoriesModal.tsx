@@ -320,8 +320,9 @@ const NotificationStoriesModal = ({
                 pointerEvents="box-none"
               >
                 <View
-                  className="px-screen gap-4 items-end"
+                  className="flex-row px-screen gap-4 items-center"
                   style={{ paddingTop: top + 8 }}
+
                 >
                   <View className="flex-1 flex-row gap-1">
                     {activeGroup.stories.map((_, idx) => (
@@ -335,9 +336,9 @@ const NotificationStoriesModal = ({
                         }}
                         className="flex-1 active:opacity-70"
                       >
-                        <View className="h-1.5 bg-neutral-300 rounded-full overflow-hidden">
+                        <View className="h-1.5 bg-neutral-0 rounded-full overflow-hidden">
                           {idx <= storyIndex && (
-                            <View className="h-full bg-neutral-0" />
+                            <View className="h-full bg-primary-green-500" />
                           )}
                         </View>
                       </Pressable>

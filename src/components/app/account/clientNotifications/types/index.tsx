@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo } from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   RefreshControl,
@@ -9,44 +8,27 @@ import {
 } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import RetryInline from "@/src/components/shared/retryInline";
-import { Divider, Item, StSvg, Switch, Typography } from "@/src/components/ui";
+import { Divider, StSvg, Typography } from "@/src/components/ui";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { safeRefetch } from "@/src/utils/safeRefetch";
-import {
-  useGetNotificationSettingsQuery,
-  useUpdateNotificationSettingsMutation,
-} from "@/src/store/redux/services/api/notificationsApi";
 import { useGetNotificationTemplatesQuery } from "@/src/store/redux/services/api/notificationTemplatesApi";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
-import { getApiErrorMessage } from "@/src/utils/apiError";
-import { asArray } from "@/src/utils/asArray";
-import type {
-  NotificationKind,
-  NotificationSetting,
-  NotificationTemplateRow,
-} from "@/src/store/redux/services/api-types";
+import type { NotificationTemplateRow } from "@/src/store/redux/services/api-types";
 import {
   STAGE_ORDER,
   STAGE_TITLES,
 } from "@/src/components/app/account/clientNotifications/stageTitles";
-
-const KNOWN_STAGES = new Set<string>(STAGE_ORDER);
-
-type SectionEntry =
-  | { type: "template"; row: NotificationTemplateRow }
-  | { type: "other"; item: NotificationSetting };
+import NotificationTypesSkeleton from "./NotificationTypesSkeleton";
 
 type Section = {
   key: string;
   title: string;
-  entries: SectionEntry[];
+  rows: NotificationTemplateRow[];
 };
 
 const NotificationTypes = () => {
@@ -55,79 +37,28 @@ const NotificationTypes = () => {
   const { data, isLoading, isError, isFetching, refetch } =
     useGetNotificationTemplatesQuery(auth ? auth.userId : skipToken);
 
-  const {
-    data: settingsData,
-    isError: isSettingsError,
-    isFetching: isSettingsFetching,
-    refetch: refetchSettings,
-  } = useGetNotificationSettingsQuery(auth ? auth.userId : skipToken);
-
-  const [updateSettings] = useUpdateNotificationSettingsMutation();
+  const refetchAll = useCallback(() => safeRefetch(refetch), [refetch]);
+  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   const rows = useMemo(() => data?.notification_templates ?? [], [data]);
 
-  const sections = useMemo<Section[]>(() => {
-    const templateKinds = new Set<NotificationKind>(rows.map((r) => r.kind));
-    const settingsGroups = asArray(settingsData?.customer);
-
-    const known = STAGE_ORDER.map((stage) => {
-      const settingsGroup = settingsGroups.find((g) => g.stage === stage);
-      const otherItems = asArray(settingsGroup?.items).filter(
-        (item) => !templateKinds.has(item.kind),
-      );
-      const entries: SectionEntry[] = [
-        ...rows
-          .filter((row) => row.stage === stage)
-          .map((row): SectionEntry => ({ type: "template", row })),
-        ...otherItems.map((item): SectionEntry => ({ type: "other", item })),
-      ];
-      return { key: stage, title: STAGE_TITLES[stage], entries };
-    });
-
-    const extra = settingsGroups
-      .filter((g) => !KNOWN_STAGES.has(g.stage))
-      .map((g): Section => ({
-        key: g.stage,
-        title: g.title,
-        entries: asArray(g.items)
-          .filter((item) => !templateKinds.has(item.kind))
-          .map((item): SectionEntry => ({ type: "other", item })),
-      }));
-
-    return [...known, ...extra].filter((s) => s.entries.length > 0);
-  }, [rows, settingsData]);
-
-  const handleToggleOther = useCallback(
-    (kind: NotificationKind, currentEnabled: boolean) => {
-      if (!auth) return;
-      updateSettings({
-        userId: auth.userId,
-        customer: { [kind]: !currentEnabled },
-      })
-        .unwrap()
-        .catch((e: unknown) => {
-          toast.error(getApiErrorMessage(e, "Не удалось сохранить настройки"));
-        });
-    },
-    [auth, updateSettings],
+  const sections = useMemo<Section[]>(
+    () =>
+      STAGE_ORDER.map((stage) => ({
+        key: stage,
+        title: STAGE_TITLES[stage],
+        rows: rows.filter((row) => row.stage === stage),
+      })).filter((section) => section.rows.length > 0),
+    [rows],
   );
-
-  const refetchAll = useCallback(async () => {
-    await Promise.all([safeRefetch(refetch), safeRefetch(refetchSettings)]);
-  }, [refetch, refetchSettings]);
-
-  const { refreshing, onRefresh } = useRefresh(refetchAll);
 
   return (
     <ScreenWithToolbar title="Виды уведомлений">
       {({ topInset, bottomInset }) => {
         if (isLoading) {
           return (
-            <View
-              className="flex-1 items-center justify-center"
-              style={{ marginTop: topInset }}
-            >
-              <ActivityIndicator />
+            <View className="px-screen" style={{ marginTop: topInset }}>
+              <NotificationTypesSkeleton />
             </View>
           );
         }
@@ -170,74 +101,41 @@ const NotificationTypes = () => {
                 </Typography>
 
                 <View className="bg-background-surface rounded-base overflow-hidden">
-                  {section.entries.map((entry, ii) => (
-                    <React.Fragment
-                      key={
-                        entry.type === "template"
-                          ? entry.row.kind
-                          : entry.item.kind
-                      }
-                    >
+                  {section.rows.map((row, ii) => (
+                    <React.Fragment key={row.kind}>
                       {ii > 0 && <Divider className="mx-4" />}
-                      {entry.type === "template" ? (
-                        <Pressable
-                          className="flex-row items-center justify-between px-4 py-3 active:opacity-70"
-                          onPress={() =>
-                            router.push(
-                              Routers.app.account.clientNotifications.detail(
-                                entry.row.kind,
-                              ),
-                            )
-                          }
-                        >
-                          <View>
-                            <Typography weight="medium" className="text-body">
-                              {entry.row.title}
-                            </Typography>
-                            <Typography
-                              weight="regular"
-                              className={`text-caption ${entry.row.enabled ? "text-primary-green-600" : "text-neutral-400"}`}
-                            >
-                              {entry.row.enabled ? "Включено" : "Выключено"}
-                            </Typography>
-                          </View>
-                          <StSvg
-                            name="Expand_right_light"
-                            size={24}
-                            color={colors.neutral[900]}
-                          />
-                        </Pressable>
-                      ) : (
-                        <Item
-                          title={entry.item.title}
-                          className="border-0"
-                          right={
-                            <Switch
-                              value={entry.item.enabled}
-                              onChange={() =>
-                                handleToggleOther(
-                                  entry.item.kind,
-                                  entry.item.enabled,
-                                )
-                              }
-                            />
-                          }
+                      <Pressable
+                        className="flex-row items-center justify-between px-4 py-3 active:opacity-70"
+                        onPress={() =>
+                          router.push(
+                            Routers.app.account.clientNotifications.detail(
+                              row.kind,
+                            ),
+                          )
+                        }
+                      >
+                        <View>
+                          <Typography weight="medium" className="text-body">
+                            {row.title}
+                          </Typography>
+                          <Typography
+                            weight="regular"
+                            className={`text-caption ${row.enabled ? "text-primary-green-600" : "text-neutral-400"}`}
+                          >
+                            {row.enabled ? "Включено" : "Выключено"}
+                          </Typography>
+                        </View>
+                        <StSvg
+                          name="Expand_right_light"
+                          size={24}
+                          color={colors.neutral[900]}
                         />
-                      )}
+                      </Pressable>
                     </React.Fragment>
                   ))}
                 </View>
               </View>
             ))}
-
-            {isSettingsError && !settingsData && (
-              <RetryInline
-                text="Не удалось загрузить остальные виды"
-                onRetry={refetchSettings}
-                isLoading={isSettingsFetching}
-                className="mb-5"
-              />
-            )}
           </ScrollView>
         );
       }}
