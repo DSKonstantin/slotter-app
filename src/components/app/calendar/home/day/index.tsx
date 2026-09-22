@@ -227,7 +227,15 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           onRetry={handleRetry}
         />
       );
-    if (showSkeleton) return <TimeSlotListSkeleton bottomInset={bottomInset} />;
+    if (showSkeleton)
+      return (
+        <TimeSlotListSkeleton
+          bottomInset={bottomInset}
+          startAt={selectedWorkingDay?.start_at}
+          endAt={selectedWorkingDay?.end_at}
+          breaks={selectedWorkingDay?.working_day_breaks}
+        />
+      );
     if (isEmpty)
       return (
         <EmptyStateScreen
