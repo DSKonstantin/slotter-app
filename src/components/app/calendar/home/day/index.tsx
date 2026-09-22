@@ -68,6 +68,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const {
     data: appointmentsData,
     isLoading: isAppointmentsLoading,
+    isFetching: isAppointmentsFetching,
     isError: isAppointmentsError,
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery(
@@ -193,6 +194,8 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
 
   const { refreshing, onRefresh } = useRefresh(refetchAll);
 
+  const showSkeleton = isLoading || (isAppointmentsFetching && !refreshing);
+
   const handleRetry = useCallback(async () => {
     setIsRetrying(true);
     try {
@@ -224,7 +227,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           onRetry={handleRetry}
         />
       );
-    if (isLoading) return <TimeSlotListSkeleton bottomInset={bottomInset} />;
+    if (showSkeleton) return <TimeSlotListSkeleton bottomInset={bottomInset} />;
     if (isEmpty)
       return (
         <EmptyStateScreen
@@ -253,7 +256,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     hasError,
     isRetrying,
     handleRetry,
-    isLoading,
+    showSkeleton,
     bottomInset,
     isEmpty,
     handleEmptyPress,

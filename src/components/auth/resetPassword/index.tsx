@@ -136,6 +136,7 @@ const ResetPasswordPhone = () => {
       <AuthScreenLayout
         header={<AuthHeader />}
         avoidKeyboard
+        stickyFooter
         footer={
           <AuthFooter
             primary={{

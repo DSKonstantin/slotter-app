@@ -115,6 +115,8 @@ const Login = () => {
               }
               placeholder="••••••••"
               secureTextEntry={!showPassword}
+              textContentType="password"
+              autoComplete="current-password"
               endAdornment={
                 <EyeToggle
                   visible={showPassword}

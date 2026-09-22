@@ -57,6 +57,7 @@ const ResetPasswordNew = () => {
       <AuthScreenLayout
         header={<AuthHeader />}
         avoidKeyboard
+        stickyFooter
         footer={
           <AuthFooter
             primary={{
@@ -84,6 +85,8 @@ const ResetPasswordNew = () => {
               placeholder="Минимум 8 символов"
               hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
               secureTextEntry={!showPassword}
+              textContentType="newPassword"
+              autoComplete="new-password"
               endAdornment={
                 <EyeToggle
                   visible={showPassword}
@@ -96,6 +99,8 @@ const ResetPasswordNew = () => {
               label="Подтвердите пароль"
               placeholder="••••••••"
               secureTextEntry={!showConfirm}
+              textContentType="newPassword"
+              autoComplete="new-password"
               endAdornment={
                 <EyeToggle
                   visible={showConfirm}

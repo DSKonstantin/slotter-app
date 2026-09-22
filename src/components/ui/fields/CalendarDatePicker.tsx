@@ -173,6 +173,7 @@ export const CalendarDatePicker = ({
         value={displayValue}
         placeholder={placeholder}
         onPress={() => !disabled && setOpen(true)}
+        onEndAdornmentPress={disabled ? undefined : () => setOpen(true)}
         fieldClassName={fieldClassName}
       />
 

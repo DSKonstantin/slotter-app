@@ -18,11 +18,7 @@ import NonWorkingDayStage from "./NonWorkingDayStage";
 
 type Mode = "menu" | "service" | "appointment";
 type AppointmentStage =
-  | "service"
-  | "additional-service"
-  | "date"
-  | "slot"
-  | "non-working-day";
+  "service" | "additional-service" | "date" | "slot" | "non-working-day";
 
 type NonWorkingDayInfo = {
   date: string;
@@ -290,7 +286,11 @@ const AttachSheet = ({
   }, [visible]);
 
   return (
-    <StModal visible={visible} onClose={onClose}>
+    <StModal
+      visible={visible}
+      onClose={onClose}
+      keyboardAware={stage === "non-working-day"}
+    >
       <View className="flex-row items-center mb-2 gap-2">
         <IconButton
           size="sm"
