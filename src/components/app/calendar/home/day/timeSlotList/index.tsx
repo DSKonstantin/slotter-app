@@ -144,6 +144,10 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   );
   const segments = segmentsResult.segments;
   const effectiveStart = segmentsResult.effectiveStart;
+  // Segments are contiguous and span exactly [effectiveStart, effectiveEnd)
+  // — the last one's own end is the day's real end, non-hour-aligned end
+  // times (e.g. 18:05) included.
+  const effectiveEnd = segments[segments.length - 1]?.segEnd ?? effectiveStart;
 
   const scrollKey = useMemo(() => {
     return JSON.stringify([
@@ -293,6 +297,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
         )}
         {segments.map((segment, segIndex) => {
           const { segStart, segEnd, content } = segment;
+          const isFirst = segIndex === 0;
           const isLast = segIndex === segments.length - 1;
 
           const segHeight = getSegmentHeight(segment);
@@ -308,6 +313,9 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                 segStart={segStart}
                 segEnd={segEnd}
                 content={content}
+                effectiveStart={effectiveStart}
+                effectiveEnd={effectiveEnd}
+                isFirst={isFirst}
                 isLast={isLast}
               />
               <View className="relative w-[50px]">
@@ -315,6 +323,9 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                   segStart={segStart}
                   segEnd={segEnd}
                   gridHeight={gridHeight}
+                  effectiveStart={effectiveStart}
+                  effectiveEnd={effectiveEnd}
+                  isFirst={isFirst}
                   isLast={isLast}
                 />
               </View>
