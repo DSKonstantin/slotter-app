@@ -12,7 +12,6 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 
 import TimeSlotList from "@/src/components/app/calendar/home/day/timeSlotList";
@@ -44,7 +43,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const scrollY = useSharedValue(0);
   const headerTranslateY = useSharedValue(0);
   const headerHeightShared = useSharedValue(0);
-  const contentOpacity = useSharedValue(1);
   const auth = useRequiredAuth();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
   const router = useRouter();
@@ -70,7 +68,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const {
     data: appointmentsData,
     isLoading: isAppointmentsLoading,
-    isFetching: isAppointmentsFetching,
     isError: isAppointmentsError,
     refetch: refetchAppointments,
   } = useGetAppointmentsQuery(
@@ -140,12 +137,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     [isLoading, selectedWorkingDay, appointments.length],
   );
 
-  // The appointments query silently refetches on every focus (see the
-  // useFocusEffect below) without flipping the top-level isLoading/skeleton
-  // gate — so a list that actually changed while the screen was away used
-  // to swap in with no warning. This surfaces that background refetch.
-  const isBackgroundRefreshing = isAppointmentsFetching && !isLoading;
-
   const iosInsetTrickEnabled = Platform.OS === "ios" && !isEmpty && !hasError;
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -169,10 +160,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
 
   const headerAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: headerTranslateY.value }],
-  }));
-
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
   }));
 
   const handleSelectDate = useCallback(
@@ -296,16 +283,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     headerHeightShared.value = headerHeight;
   }, [headerHeight, headerHeightShared]);
 
-  useEffect(() => {
-    // Dims the list while appointments silently refetch in the background
-    // (e.g. on refocus) so a list that actually changed while the screen
-    // was away crossfades in instead of snapping to the new data with no
-    // warning — see the useFocusEffect above and isBackgroundRefreshing.
-    contentOpacity.value = withTiming(isBackgroundRefreshing ? 0.4 : 1, {
-      duration: 180,
-    });
-  }, [isBackgroundRefreshing, contentOpacity]);
-
   if (!auth) return null;
 
   return (
@@ -329,7 +306,6 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
 
         <Animated.ScrollView
           ref={scrollViewRef}
-          style={contentAnimatedStyle}
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}

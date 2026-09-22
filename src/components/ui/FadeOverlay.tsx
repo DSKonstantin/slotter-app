@@ -4,14 +4,14 @@ import { LinearGradient } from "expo-linear-gradient";
 type Props = {
   position: "top" | "bottom";
   height: number;
+  color?: string;
 };
 
 const BASE_COLOR = "#F2F2F6";
-const TRANSPARENT_COLOR = "rgba(242, 242, 246, 0)";
 
-const FadeOverlay = ({ position, height }: Props) => (
+const FadeOverlay = ({ position, height, color = BASE_COLOR }: Props) => (
   <LinearGradient
-    colors={[BASE_COLOR, TRANSPARENT_COLOR]}
+    colors={[color, `${color}00`]}
     start={{ x: 0, y: position === "top" ? 0 : 1 }}
     end={{ x: 0, y: position === "top" ? 1 : 0 }}
     style={{

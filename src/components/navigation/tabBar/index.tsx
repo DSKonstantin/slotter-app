@@ -61,21 +61,20 @@ const TabItem = memo(
           {showDot ? (
             <ChatTabBarIcon
               size={compact ? 24 : 32}
-              color={isActive ? colors.neutral[900] : colors.neutral[500]}
+              color={colors.neutral[800]}
             />
           ) : (
             <StSvg
               name={tab.icon as string}
               size={compact ? 24 : 32}
-              color={isActive ? colors.neutral[900] : colors.neutral[500]}
+              color={colors.neutral[800]}
             />
           )}
         </View>
 
         <Typography
           weight="semibold"
-          className="text-[10px] leading-none text-center"
-          style={isActive ? styles.labelActive : styles.labelInactive}
+          className="text-[10px] leading-none text-center text-neutral-800"
         >
           {tab.label}
         </Typography>
@@ -189,8 +188,6 @@ const styles = StyleSheet.create({
   topShadow: {
     boxShadow: "0px -4px 12px rgba(0, 0, 0, 0.08)",
   },
-  labelActive: { color: colors.neutral[900] },
-  labelInactive: { color: colors.neutral[500] },
 });
 
 export default StTabBar;

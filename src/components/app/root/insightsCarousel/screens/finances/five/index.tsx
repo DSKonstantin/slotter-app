@@ -7,7 +7,7 @@ import {
 
 const FinancesFive = () => {
   return (
-    <StoryScreenLayout paddingBottom={8}>
+    <StoryScreenLayout paddingTop={0} paddingBottom={8}>
       <StoryIllustration
         source={require("@/assets/images/history/finances/five.png")}
       />

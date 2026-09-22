@@ -6,10 +6,9 @@ import {
 
 const NotificationTwo = () => {
   return (
-    <StoryScreenLayout paddingTop={0} paddingBottom={8}>
+    <StoryScreenLayout paddingTop={48} paddingBottom={8}>
       <StoryIllustration
         source={require("@/assets/images/history/notification/two.png")}
-        contentPosition="top"
       />
     </StoryScreenLayout>
   );

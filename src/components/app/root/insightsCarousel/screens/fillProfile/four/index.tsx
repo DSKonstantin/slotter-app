@@ -7,7 +7,7 @@ import {
 
 const FillProfileFour = () => {
   return (
-    <StoryScreenLayout paddingTop={68}>
+    <StoryScreenLayout paddingTop={0} paddingBottom={8}>
       <StoryIllustration
         source={require("@/assets/images/history/fill_profile/four.png")}
       />

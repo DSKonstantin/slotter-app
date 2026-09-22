@@ -124,7 +124,7 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
   return (
     <>
       <MessageTemplateEditor
-        initialValue={row.body ?? ""}
+        initialValue={row.body || row.default_body || ""}
         fallbackPreview={row.preview}
         variables={variables}
         senderName="Ваше имя"

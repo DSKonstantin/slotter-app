@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Pressable, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useController, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -111,6 +111,7 @@ const Booking = () => {
     user?.is_marketing_consent_enabled ?? false,
   );
   const [consentInfoVisible, setConsentInfoVisible] = useState(false);
+  const savedConsentTextRef = useRef(consentText);
 
   const methods = useForm<AccountBookingFormValues>({
     resolver: yupResolver(AccountBookingSchema),
@@ -131,27 +132,22 @@ const Booking = () => {
     }
   };
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const saveConsents = useCallback(
-    (params: { consent: boolean; text: string; marketing: boolean }) => {
+    async (params: { consent: boolean; text: string; marketing: boolean }) => {
       if (!user) return;
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-
-      debounceRef.current = setTimeout(async () => {
-        try {
-          await updateUserSilent({
-            id: user.id,
-            data: {
-              is_personal_data_consent_enabled: params.consent,
-              personal_data_consent_text: params.text || null,
-              is_marketing_consent_enabled: params.marketing,
-            },
-          }).unwrap();
-        } catch (e) {
-          toast.error(getApiErrorMessage(e, "Не удалось сохранить согласия"));
-        }
-      }, 500);
+      try {
+        await updateUserSilent({
+          id: user.id,
+          data: {
+            is_personal_data_consent_enabled: params.consent,
+            personal_data_consent_text: params.text || null,
+            is_marketing_consent_enabled: params.marketing,
+          },
+        }).unwrap();
+        savedConsentTextRef.current = params.text;
+      } catch (e) {
+        toast.error(getApiErrorMessage(e, "Не удалось сохранить согласия"));
+      }
     },
     [user, updateUserSilent],
   );
@@ -167,11 +163,40 @@ const Booking = () => {
 
   const handleConsentTextChange = (text: string) => {
     setConsentText(text);
+  };
+
+  const handleConsentTextBlur = () => {
+    if (consentText === savedConsentTextRef.current) return;
+    saveConsents({
+      consent: requiresConsent,
+      text: consentText,
+      marketing: requiresMarketingConsent,
+    });
+  };
+
+  const applyConsentText = (text: string) => {
+    setConsentText(text);
+    if (text === savedConsentTextRef.current) return;
     saveConsents({
       consent: requiresConsent,
       text,
       marketing: requiresMarketingConsent,
     });
+  };
+
+  const handleClearConsentText = () => {
+    Alert.alert(
+      "Очистить текст согласия?",
+      "Текущий текст будет удалён без возможности восстановить.",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Очистить",
+          style: "destructive",
+          onPress: () => applyConsentText(""),
+        },
+      ],
+    );
   };
 
   const handleMarketingConsentToggle = (value: boolean) => {
@@ -273,6 +298,7 @@ const Booking = () => {
                       placeholder="Стандартный текст согласия на обработку персональных данных"
                       value={consentText}
                       onChangeText={handleConsentTextChange}
+                      onBlur={handleConsentTextBlur}
                     />
                     <View className="flex-row items-center justify-between">
                       <Pressable
@@ -282,7 +308,7 @@ const Booking = () => {
                           const template =
                             user?.personal_data_consent_template ||
                             DEFAULT_CONSENT_TEXT;
-                          handleConsentTextChange(template);
+                          applyConsentText(template);
                         }}
                       >
                         <Typography
@@ -295,7 +321,7 @@ const Booking = () => {
                       <Pressable
                         disabled={isSaving}
                         className="active:opacity-70"
-                        onPress={() => handleConsentTextChange("")}
+                        onPress={handleClearConsentText}
                       >
                         <Typography
                           weight="regular"

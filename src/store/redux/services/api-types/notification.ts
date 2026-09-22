@@ -192,6 +192,7 @@ export interface NotificationTemplateRow {
   is_custom: boolean;
   channel: TemplateChannel | null;
   body: string | null;
+  default_body: string;
   preview: string;
 }
 
