@@ -22,7 +22,7 @@ import {
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
-import { COMPACT_BREAKPOINT } from "@/src/constants/tabs";
+import { COMPACT_BREAKPOINT, TAB_BAR_BOTTOM_GAP } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
@@ -126,7 +126,7 @@ const TabMenu = () => {
       tint="default"
       className="absolute inset-0 justify-end"
       style={{
-        paddingBottom: bottom,
+        paddingBottom: bottom + TAB_BAR_BOTTOM_GAP,
         paddingLeft: leftInset + SCREEN_PADDING,
         paddingRight: rightInset + SCREEN_PADDING,
       }}

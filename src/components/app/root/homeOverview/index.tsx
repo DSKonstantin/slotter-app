@@ -26,6 +26,7 @@ import { formatApiDate, formatShortDayName } from "@/src/utils/date/formatDate";
 import { formatDayMonth } from "@/src/utils/date/formatTime";
 import { useToday } from "@/src/hooks/useToday";
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
+import { TAB_BAR_BOTTOM_GAP } from "@/src/constants/tabs";
 import SpecialistHomeAssistant from "@/src/components/app/root/homeOverview/specialistHomeAssistant";
 // import NotificationBanners from "@/src/components/app/root/notificationBanners";
 
@@ -234,7 +235,7 @@ const ContentBody = ({ timeChip }: ContentBodyProps) => {
   return (
     <View
       className="px-screen gap-3 flex-1"
-      style={{ paddingBottom: tabBarHeight + bottom }}
+      style={{ paddingBottom: tabBarHeight + bottom + TAB_BAR_BOTTOM_GAP }}
     >
       <View className="flex-row items-center gap-2 justify-center">
         <StSvg name="SlotterAI" size={14} color={colors.neutral[500]} />

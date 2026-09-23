@@ -2,6 +2,7 @@ import React from "react";
 import { Image, ImageSourcePropType, View } from "react-native";
 import { Button, StSvg, Typography } from "@/src/components/ui";
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
+import { TAB_BAR_BOTTOM_GAP } from "@/src/constants/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/src/styles/colors";
 
@@ -36,7 +37,8 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
       className="flex-1"
       style={{
         paddingTop: topInset,
-        marginBottom: (withTabBar ? tabBarHeight : 0) + bottom + 8,
+        marginBottom:
+          (withTabBar ? tabBarHeight + TAB_BAR_BOTTOM_GAP : 0) + bottom + 8,
       }}
     >
       <View className="flex-1 items-center justify-center gap-4 px-screen pb-8">

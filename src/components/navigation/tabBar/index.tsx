@@ -12,7 +12,11 @@ import {
   GlassSurface,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
-import { COMPACT_BREAKPOINT, TABS } from "@/src/constants/tabs";
+import {
+  COMPACT_BREAKPOINT,
+  TABS,
+  TAB_BAR_BOTTOM_GAP,
+} from "@/src/constants/tabs";
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import { useHasUnreadChat } from "@/src/hooks/useHasUnreadChat";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
@@ -128,11 +132,14 @@ const StTabBar: React.FC = () => {
           width: width,
           paddingLeft: insets.left,
           paddingRight: insets.right,
-          paddingBottom: insets.bottom,
+          paddingBottom: insets.bottom + TAB_BAR_BOTTOM_GAP,
         },
       ]}
     >
-      <FadeOverlay position="bottom" height={tabBarHeight + insets.bottom} />
+      <FadeOverlay
+        position="bottom"
+        height={tabBarHeight + insets.bottom + TAB_BAR_BOTTOM_GAP}
+      />
       <View
         className="flex-row items-center justify-between px-screen bg-transparent"
         style={{ height: tabBarHeight }}
