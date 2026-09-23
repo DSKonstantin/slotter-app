@@ -10,6 +10,7 @@ export type DirectChannelProvisioningStatus =
   | "connecting"
   | "awaiting_auth"
   | "active"
+  | "subscription_lost"
   | "failed";
 
 export type SubscriptionDirectPlan = {
@@ -25,6 +26,8 @@ export type SubscriptionDirectChannel = {
   kind: DirectChannelKind;
   status: DirectChannelStatus;
   provisioning_status: DirectChannelProvisioningStatus;
+  is_ready_for_auth: boolean;
+  can_reconnect: boolean;
   period_ends_at: string | null;
   is_auto_renew: boolean;
   price_cents: number;
