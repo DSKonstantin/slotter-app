@@ -1,12 +1,13 @@
 import React, { useContext } from "react";
 
-import { TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
 import {
   Button,
   IconButton,
   StSvg,
   Typography,
   FadeOverlay,
+  GlassSurface,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,33 +58,39 @@ const ToolbarTop = ({
         {(toolbar?.searchMode ?? false) ? (
           <>
             <View
-              className="flex-1 flex-row items-center rounded-full h-[48px] px-4 bg-background-surface gap-2"
+              className="flex-1 rounded-full h-[48px] overflow-hidden"
               style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
             >
-              <StSvg name="Search" size={20} color={colors.neutral[500]} />
-              <TextInput
-                autoFocus
-                value={toolbar?.searchValue ?? ""}
-                onChangeText={toolbar?.handleSearchChange}
-                placeholder={toolbar?.searchPlaceholder ?? "Поиск..."}
-                placeholderTextColor={colors.neutral[400]}
-                returnKeyType="search"
-                className="flex-1 font-inter-regular text-[15px] text-neutral-900"
+              <GlassSurface
+                style={StyleSheet.absoluteFill}
+                fallbackClassName="bg-background-surface"
               />
-              {toolbar?.searchValue !== "" && (
-                <IconButton
-                  size="xs"
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  icon={
-                    <StSvg
-                      name="Close_round"
-                      size={20}
-                      color={colors.neutral[500]}
-                    />
-                  }
-                  onPress={() => toolbar?.handleSearchChange("")}
+              <View className="flex-1 flex-row items-center px-4 gap-2">
+                <StSvg name="Search" size={20} color={colors.neutral[500]} />
+                <TextInput
+                  autoFocus
+                  value={toolbar?.searchValue ?? ""}
+                  onChangeText={toolbar?.handleSearchChange}
+                  placeholder={toolbar?.searchPlaceholder ?? "Поиск..."}
+                  placeholderTextColor={colors.neutral[400]}
+                  returnKeyType="search"
+                  className="flex-1 font-inter-regular text-[15px] text-neutral-900"
                 />
-              )}
+                {toolbar?.searchValue !== "" && (
+                  <IconButton
+                    size="xs"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    icon={
+                      <StSvg
+                        name="Close_round"
+                        size={20}
+                        color={colors.neutral[500]}
+                      />
+                    }
+                    onPress={() => toolbar?.handleSearchChange("")}
+                  />
+                )}
+              </View>
             </View>
             <Button
               title="Отмена"
@@ -108,6 +115,7 @@ const ToolbarTop = ({
                   />
                 }
                 onPress={safeBack}
+                glass
               />
             ) : (
               <View className="w-[48px]" />
@@ -116,21 +124,27 @@ const ToolbarTop = ({
             <View className="flex-1 items-center justify-center">
               {!!title && (
                 <View
-                  className="rounded-full h-[48px] px-4 items-center justify-center bg-background-surface max-w-[100%]"
+                  className="rounded-full h-[48px] overflow-hidden max-w-[100%]"
                   style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)" }}
                 >
-                  {typeof title === "string" ? (
-                    <Typography
-                      weight="semibold"
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      className="text-[17px] leading-[22px]"
-                    >
-                      {title}
-                    </Typography>
-                  ) : (
-                    title
-                  )}
+                  <GlassSurface
+                    style={StyleSheet.absoluteFill}
+                    fallbackClassName="bg-background-surface"
+                  />
+                  <View className="h-[48px] px-4 items-center justify-center">
+                    {typeof title === "string" ? (
+                      <Typography
+                        weight="semibold"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        className="text-[17px] leading-[22px]"
+                      >
+                        {title}
+                      </Typography>
+                    ) : (
+                      title
+                    )}
+                  </View>
                 </View>
               )}
             </View>

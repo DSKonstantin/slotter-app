@@ -194,9 +194,9 @@ const ClientCreate = ({ initialName, onCreated }: ClientCreateProps = {}) => {
                   showsVerticalScrollIndicator={false}
                   bottomOffset={BOTTOM_OFFSET}
                   contentContainerStyle={{
+                    paddingTop: topInset,
                     paddingBottom: 16,
                   }}
-                  style={{ marginTop: topInset }}
                 >
                   <View ref={contentRef} collapsable={false}>
                     <View className="px-screen">
