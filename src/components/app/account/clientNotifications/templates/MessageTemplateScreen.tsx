@@ -139,7 +139,7 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
       <ConnectChannelModal
         visible={channelModalVisible}
         onClose={() => setChannelModalVisible(false)}
-        onConnect={() => openPersonalAccount("/notifications")}
+        onConnect={() => openPersonalAccount("/go/notifications")}
       />
     </>
   );
