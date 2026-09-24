@@ -22,7 +22,7 @@ export const handleKindNavigation = (
     : undefined;
 
   if (kindConfig?.openUpgrade) {
-    openPersonalAccount("/upgrade");
+    openPersonalAccount("/go/upgrade");
     return true;
   }
   if (kindConfig?.detailRoute) {

@@ -1,8 +1,15 @@
-import React, { ReactNode, useContext, useMemo } from "react";
+import React, {
+  ReactNode,
+  cloneElement,
+  isValidElement,
+  useContext,
+  useMemo,
+} from "react";
 import { StyleProp, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ToolbarTop from "@/src/components/navigation/toolbarTop";
-import { TOOLBAR_HEIGHT } from "@/src/constants/tabs";
+import { IconButton } from "@/src/components/ui";
+import { TOOLBAR_HEIGHT, TAB_BAR_BOTTOM_GAP } from "@/src/constants/tabs";
 import { useTabBarHeight } from "@/src/hooks/useTabBarHeight";
 import {
   ToolbarContext,
@@ -25,10 +32,20 @@ type ScreenWithToolbarProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+function withGlass(node: ReactNode): ReactNode {
+  if (isValidElement(node) && node.type === IconButton) {
+    return cloneElement(node as React.ReactElement<{ glass?: boolean }>, {
+      glass: (node.props as { glass?: boolean }).glass ?? true,
+    });
+  }
+  return node;
+}
+
 function RightButtonSlot({ rightButton }: { rightButton?: RightButtonProp }) {
   const toolbar = useContext(ToolbarContext);
-  if (typeof rightButton === "function") return <>{rightButton(toolbar)}</>;
-  return <>{rightButton}</>;
+  const node =
+    typeof rightButton === "function" ? rightButton(toolbar) : rightButton;
+  return <>{withGlass(node)}</>;
 }
 
 const ScreenWithToolbar = ({
@@ -46,7 +63,7 @@ const ScreenWithToolbar = ({
   const insets = useMemo(
     () => ({
       topInset: TOOLBAR_HEIGHT + top,
-      bottomInset: tabBarHeight + bottom,
+      bottomInset: tabBarHeight + bottom + TAB_BAR_BOTTOM_GAP,
     }),
     [top, bottom, tabBarHeight],
   );

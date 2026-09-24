@@ -1,11 +1,13 @@
 import { ReactNode } from "react";
 import {
   ActivityIndicator,
+  StyleSheet,
   TouchableOpacity,
   TouchableOpacityProps,
 } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { colors } from "@/src/styles/colors";
+import { GlassSurface } from "./GlassSurface";
 
 type IconButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
@@ -14,6 +16,7 @@ type IconButtonProps = TouchableOpacityProps & {
   size?: IconButtonSize;
   buttonClassName?: string;
   loading?: boolean;
+  glass?: boolean;
 };
 export function IconButton({
   icon,
@@ -22,6 +25,7 @@ export function IconButton({
   disabled,
   loading,
   buttonClassName,
+  glass = false,
   ...props
 }: IconButtonProps) {
   return (
@@ -31,12 +35,19 @@ export function IconButton({
       activeOpacity={0.7}
       className={twMerge(
         styles.base,
+        glass ? "overflow-hidden" : "bg-background-surface",
         styles.size[size],
         disabled && "opacity-30",
         buttonClassName,
       )}
       {...props}
     >
+      {glass && (
+        <GlassSurface
+          style={StyleSheet.absoluteFill}
+          fallbackClassName="bg-background-surface"
+        />
+      )}
       {loading ? (
         <ActivityIndicator size="small" color={colors.neutral[500]} />
       ) : (
@@ -47,7 +58,7 @@ export function IconButton({
 }
 
 const styles = {
-  base: "items-center justify-center rounded-full bg-background-surface",
+  base: "items-center justify-center rounded-full",
   size: {
     xxl: "h-[66px] w-[66px]",
     xl: "h-[62px] w-[62px]",

@@ -16,6 +16,7 @@ import { router } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
 import { identifierMask } from "@/src/utils/mask/maskPhone";
+import { unMask } from "react-native-mask-text";
 import { useAuth } from "@/src/contexts/AuthContext";
 import getRedirectPath from "@/src/utils/getOnboardingStep";
 import { Routers } from "@/src/constants/routers";
@@ -45,7 +46,7 @@ const Login = () => {
 
         const result = await loginMutation({
           email: isEmail ? data.identifier : undefined,
-          phone: isEmail ? undefined : data.identifier,
+          phone: isEmail ? undefined : `+${unMask(data.identifier)}`,
           password: data.password,
           type: UserType.USER,
         }).unwrap();
@@ -115,6 +116,8 @@ const Login = () => {
               }
               placeholder="••••••••"
               secureTextEntry={!showPassword}
+              textContentType="password"
+              autoComplete="current-password"
               endAdornment={
                 <EyeToggle
                   visible={showPassword}

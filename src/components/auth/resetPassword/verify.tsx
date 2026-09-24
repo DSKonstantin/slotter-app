@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { toast } from "@backpackapp-io/react-native-toast";
@@ -6,6 +6,7 @@ import { Typography } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
+import AuthFooter from "@/src/components/auth/layout/footer";
 import {
   useConfirmCodeMutation,
   useSendCodeMutation,
@@ -28,6 +29,8 @@ const ResetPasswordVerify = () => {
     : (params.phone ?? "");
   const codeLength = Number(params.code_length ?? "4");
   const resendAfter = Number(params.resend_after ?? "60");
+
+  const [otpValue, setOtpValue] = useState("");
 
   const dispatch = useAppDispatch();
   const [confirmCode, { isLoading: isConfirming }] = useConfirmCodeMutation();
@@ -56,6 +59,11 @@ const ResetPasswordVerify = () => {
     [phone, confirmCode, dispatch],
   );
 
+  const handleSubmitPress = useCallback(() => {
+    if (otpValue.length !== codeLength) return;
+    handleComplete(otpValue);
+  }, [otpValue, codeLength, handleComplete]);
+
   const handleResend = useCallback(async () => {
     try {
       await sendCode({
@@ -69,7 +77,21 @@ const ResetPasswordVerify = () => {
   }, [phone, sendCode]);
 
   return (
-    <AuthScreenLayout header={<AuthHeader />} avoidKeyboard>
+    <AuthScreenLayout
+      header={<AuthHeader />}
+      avoidKeyboard
+      stickyFooter
+      footer={
+        <AuthFooter
+          primary={{
+            title: "Далее",
+            loading: isConfirming,
+            disabled: otpValue.length !== codeLength || isConfirming,
+            onPress: handleSubmitPress,
+          }}
+        />
+      }
+    >
       <View className="mt-14">
         <Typography weight="semibold" className="text-display mb-2">
           Введите {codeLength} цифры
@@ -82,8 +104,7 @@ const ResetPasswordVerify = () => {
         <View className="mt-8">
           <OtpConfirm
             length={codeLength}
-            onChange={() => {}}
-            onComplete={handleComplete}
+            onChange={setOtpValue}
             onResend={handleResend}
             disabled={isSending || isConfirming}
             resendSeconds={resendAfter}

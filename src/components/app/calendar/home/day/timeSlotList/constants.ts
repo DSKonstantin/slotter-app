@@ -13,3 +13,9 @@ export const BG = colors.neutral[100];
 export const FG = "#F5F5FA";
 
 export const SKELETON_ROW_COUNT = 5;
+
+// The day's own start/end (e.g. 23:05) always gets a boundary mark now —
+// when a regular hour/half-hour mark falls within this many minutes of it,
+// drop that neighbor instead of stacking two labels/lines almost on top of
+// each other.
+export const MIN_BOUNDARY_MARK_GAP = 20;

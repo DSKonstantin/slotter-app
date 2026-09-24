@@ -2,19 +2,27 @@ import React, { useCallback, useEffect } from "react";
 import {
   BackHandler,
   Pressable,
+  StyleSheet,
   useWindowDimensions,
   View,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { router, usePathname, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 
-import { Badge, IconButton, StSvg, Typography } from "@/src/components/ui";
+import {
+  Badge,
+  GlassSurface,
+  IconButton,
+  StSvg,
+  Typography,
+} from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
-import { COMPACT_BREAKPOINT } from "@/src/constants/tabs";
+import { COMPACT_BREAKPOINT, TAB_BAR_BOTTOM_GAP } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
 
@@ -27,6 +35,8 @@ type MenuItem = {
 };
 
 const stripRouteGroups = (route: string) => route.replace(/\/\([^)]+\)/g, "");
+
+const hasGlassEffect = isLiquidGlassAvailable();
 
 const MENU_ITEMS: MenuItem[] = [
   {
@@ -116,7 +126,7 @@ const TabMenu = () => {
       tint="default"
       className="absolute inset-0 justify-end"
       style={{
-        paddingBottom: bottom + 2,
+        paddingBottom: bottom + TAB_BAR_BOTTOM_GAP,
         paddingLeft: leftInset + SCREEN_PADDING,
         paddingRight: rightInset + SCREEN_PADDING,
       }}
@@ -129,7 +139,7 @@ const TabMenu = () => {
       <View className="flex-row items-end gap-2">
         <View className="flex-1">
           <View
-            className="bg-white rounded-[30px] py-2.5"
+            className="rounded-[30px]"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -138,57 +148,74 @@ const TabMenu = () => {
               elevation: 8,
             }}
           >
-            {MENU_ITEMS.map((item) => {
-              const normalized = item.route ? stripRouteGroups(item.route) : "";
-              const isActive = !!(
-                normalized &&
-                !item.disabled &&
-                (pathname === normalized ||
-                  pathname.startsWith(`${normalized}/`))
-              );
-              const isAtRoot = pathname === normalized;
+            <View className="rounded-[30px] overflow-hidden py-2.5">
+              <GlassSurface
+                style={StyleSheet.absoluteFill}
+                fallbackClassName="bg-white"
+              />
+              {MENU_ITEMS.map((item) => {
+                const normalized = item.route
+                  ? stripRouteGroups(item.route)
+                  : "";
+                const isActive = !!(
+                  normalized &&
+                  !item.disabled &&
+                  (pathname === normalized ||
+                    pathname.startsWith(`${normalized}/`))
+                );
+                const isAtRoot = pathname === normalized;
 
-              return (
-                <Pressable
-                  key={item.label}
-                  onPress={() => handleNavigate(item.route, isActive, isAtRoot)}
-                  disabled={item.disabled}
-                  className={`flex-row items-center gap-3 mx-2.5 px-2 py-3 rounded-[22px] active:opacity-70 ${
-                    isActive ? "bg-[#F9F8F9]" : ""
-                  }`}
-                >
-                  <StSvg
-                    name={item.icon}
-                    size={24}
-                    color={
-                      item.disabled ? colors.neutral[500] : colors.neutral[900]
+                return (
+                  <Pressable
+                    key={item.label}
+                    onPress={() =>
+                      handleNavigate(item.route, isActive, isAtRoot)
                     }
-                  />
-                  <Typography
-                    weight={isActive ? "semibold" : "medium"}
-                    className={`flex-1  text-body ${
-                      item.disabled ? "text-neutral-300" : "text-neutral-900"
+                    disabled={item.disabled}
+                    className={`flex-row items-center gap-3 mx-2.5 px-2 py-3 rounded-base active:opacity-70 ${
+                      isActive
+                        ? !hasGlassEffect
+                          ? "bg-neutral-100"
+                          : "bg-neutral-100/50"
+                        : ""
                     }`}
                   >
-                    {item.label}
-                  </Typography>
-
-                  {item.badge && (
-                    <Badge
-                      title={item.badge}
-                      variant="accent"
-                      size="sm"
-                      className="self-center"
+                    <StSvg
+                      name={item.icon}
+                      size={24}
+                      color={
+                        item.disabled
+                          ? colors.neutral[500]
+                          : colors.neutral[900]
+                      }
                     />
-                  )}
-                </Pressable>
-              );
-            })}
+                    <Typography
+                      weight={isActive ? "semibold" : "medium"}
+                      className={`flex-1  text-body ${
+                        item.disabled ? "text-neutral-300" : "text-neutral-900"
+                      }`}
+                    >
+                      {item.label}
+                    </Typography>
+
+                    {item.badge && (
+                      <Badge
+                        title={item.badge}
+                        variant="accent"
+                        size="sm"
+                        className="self-center"
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
 
         <IconButton
           size={compact ? "lg" : "xxl"}
+          glass
           icon={
             <StSvg
               name="Close_round"

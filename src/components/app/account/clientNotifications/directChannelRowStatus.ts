@@ -16,7 +16,7 @@ export function getDirectChannelRowStatus(
   channel: SubscriptionDirectChannel | undefined,
   kind: DirectChannelKind,
 ): DirectChannelRowStatus {
-  const checkoutPath = `/notifications/${kind}`;
+  const checkoutPath = `/go/notifications/${kind}`;
 
   if (!channel) {
     return {
@@ -27,8 +27,22 @@ export function getDirectChannelRowStatus(
       emphasized: true,
     };
   }
+
+  if (channel.provisioning_status === "subscription_lost") {
+    return {
+      label: "Канал отключён",
+      iconName: "Alarm_fill",
+      color: colors.accent.red[500],
+      webPath: checkoutPath,
+      emphasized: true,
+    };
+  }
+
   if (channel.status === "active") {
-    if (channel.provisioning_status === "awaiting_auth") {
+    if (
+      channel.provisioning_status === "awaiting_auth" &&
+      channel.is_ready_for_auth
+    ) {
       return {
         label: "Переподключите канал",
         iconName: "Refresh_2",
@@ -60,7 +74,10 @@ export function getDirectChannelRowStatus(
       webPath: checkoutPath,
     };
   }
-  if (channel.provisioning_status === "awaiting_auth") {
+  if (
+    channel.provisioning_status === "awaiting_auth" &&
+    channel.is_ready_for_auth
+  ) {
     return {
       label: "Ожидает привязки",
       iconName: "Time_fill",
@@ -69,7 +86,7 @@ export function getDirectChannelRowStatus(
     };
   }
   return {
-    label: "Настраиваем канал…",
+    label: "Подключаем…",
     iconName: "Setting_alt_fill",
     color: colors.accent.orange[500],
     webPath: `${checkoutPath}`,

@@ -37,6 +37,8 @@ import {
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 import { useClientNotificationsConnected } from "@/src/hooks/useClientNotificationsConnected";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useAppSelector } from "@/src/store/redux/store";
 import { useDirectChannelErrorGate } from "@/src/components/app/account/clientNotifications/templates/useDirectChannelErrorGate";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import {
@@ -92,6 +94,8 @@ const BroadcastForm = () => {
 
   const insets = useSafeAreaInsets();
   const auth = useRequiredAuth();
+  const openPersonalAccount = useOpenPersonalAccount();
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const { channels, connected } = useClientNotificationsConnected();
   const {
     channelModalVisible,
@@ -415,6 +419,11 @@ const BroadcastForm = () => {
             <ConnectChannelModal
               visible={channelModalVisible}
               onClose={() => setChannelModalVisible(false)}
+              onConnect={
+                ispe
+                  ? () => openPersonalAccount("/go/notifications")
+                  : undefined
+              }
             />
           </>
         )}

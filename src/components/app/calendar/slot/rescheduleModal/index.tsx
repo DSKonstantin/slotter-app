@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -91,6 +91,13 @@ const RescheduleModal = ({
 
   const [reschedule, { isLoading }] = useRescheduleAppointmentMutation();
 
+  const handleNonWorkingDaySuccess = useCallback(
+    (date: string) => {
+      setValue("date", date);
+    },
+    [setValue],
+  );
+
   const handleSubmit = methods.handleSubmit(async (values) => {
     try {
       await reschedule({
@@ -148,6 +155,8 @@ const RescheduleModal = ({
             label="Новая дата"
             placeholder="дд.мм"
             hideErrorText={true}
+            userId={auth?.userId}
+            onNonWorkingDaySuccess={handleNonWorkingDaySuccess}
             displayFormat={(iso) => formatDayMonthLong(parseISO(iso))}
             endAdornment={
               <StSvg name="Date_today" size={24} color={colors.neutral[500]} />

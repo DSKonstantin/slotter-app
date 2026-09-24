@@ -4,12 +4,17 @@ import { Svg, Line } from "react-native-svg";
 import type { SegmentContent } from "./segmentBuilder";
 import { getSlotMinHeight, slotOccupiesTime } from "./segmentBuilder";
 import { MINUTE_HEIGHT, SLOT_GAP } from "./constants";
+import { getHalfHourMarks, getHourMarks } from "./gridMarks";
+import { markTop as markTopAt } from "./utils";
 import { colors } from "@/src/styles/colors";
 
 type Props = {
   segStart: number;
   segEnd: number;
   content: SegmentContent;
+  effectiveStart: number;
+  effectiveEnd: number;
+  isFirst: boolean;
   isLast: boolean;
 };
 
@@ -17,6 +22,9 @@ const SegmentGridMarks = memo(function SegmentGridMarks({
   segStart,
   segEnd,
   content,
+  effectiveStart,
+  effectiveEnd,
+  isFirst,
   isLast,
 }: Props) {
   const gridHeight = (segEnd - segStart) * MINUTE_HEIGHT;
@@ -32,21 +40,27 @@ const SegmentGridMarks = memo(function SegmentGridMarks({
         SLOT_GAP * nonOccupyingSlots.length
       : 0;
 
-  const markTop = (t: number) =>
-    ((t - segStart) / (segEnd - segStart)) * gridHeight;
+  const markTop = (t: number) => markTopAt(t, segStart, segEnd, gridHeight);
   const hasFreeSlotBlock =
     content.kind === "slots" && content.showFreeSlotBlock;
   const markTopFreeSlot = (t: number) =>
     hasFreeSlotBlock ? cancelledOffset + markTop(t) : markTop(t);
 
-  const hourMarks: number[] = [];
-  for (let t = Math.ceil(segStart / 60) * 60; t < segEnd; t += 60)
-    hourMarks.push(t);
-  if (isLast && segEnd % 60 === 0) hourMarks.push(segEnd);
-
-  const halfHourMarks: number[] = [];
-  for (let t = Math.floor((segStart + 30) / 60) * 60 + 30; t <= segEnd; t += 60)
-    halfHourMarks.push(t);
+  const hourMarks = getHourMarks(
+    segStart,
+    segEnd,
+    effectiveStart,
+    effectiveEnd,
+    isFirst,
+    isLast,
+  );
+  const halfHourMarks = getHalfHourMarks(
+    segStart,
+    segEnd,
+    hourMarks,
+    effectiveStart,
+    effectiveEnd,
+  );
 
   return (
     <>

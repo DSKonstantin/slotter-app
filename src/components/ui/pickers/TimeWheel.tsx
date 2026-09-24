@@ -1,9 +1,10 @@
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import WheelPicker, {
   withVirtualized,
 } from "@quidone/react-native-wheel-picker";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { colors } from "@/src/styles/colors";
 
 export const ITEM_HEIGHT = 40;
@@ -12,6 +13,7 @@ export const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 const SELECTED_TOP = (PICKER_HEIGHT - ITEM_HEIGHT) / 2;
 const FADE_HEIGHT = ITEM_HEIGHT * 2;
 const FADE_COLOR = colors.background.DEFAULT;
+const HAPTIC_THROTTLE_MS = 30;
 
 const HOUR_LOOP_REPEAT_COUNT = 15;
 const MINUTE_LOOP_REPEAT_COUNT = 7;
@@ -50,6 +52,14 @@ const WheelColumn = memo(function WheelColumn({
   value,
   onValueChanged,
 }: WheelColumnProps) {
+  const lastHapticRef = useRef(0);
+  const handleValueChanging = useCallback(() => {
+    const now = Date.now();
+    if (now - lastHapticRef.current < HAPTIC_THROTTLE_MS) return;
+    lastHapticRef.current = now;
+    void Haptics.selectionAsync();
+  }, []);
+
   if (options.length === 0) return null;
   const Picker = loop ? LoopWheelPicker : WheelPicker;
 
@@ -66,6 +76,7 @@ const WheelColumn = memo(function WheelColumn({
       }
       data={loop ? loopedData : options}
       value={value}
+      onValueChanging={handleValueChanging}
       onValueChanged={({ item }) => onValueChanged(item.value)}
     />
   );

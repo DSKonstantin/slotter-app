@@ -7,7 +7,7 @@ import {
 
 const AppUpdateThree = () => {
   return (
-    <StoryScreenLayout paddingTop={60} paddingBottom={8}>
+    <StoryScreenLayout paddingTop={48} paddingBottom={8}>
       <StoryIllustration
         source={require("@/assets/images/history/app_update/three.webp")}
       />

@@ -40,10 +40,9 @@ const renderWithStore = (
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>{children}</Provider>
   );
-  return renderHook(
-    () => useMonthCalendarData({ auth, fetchMonth: JULY, currentMonth: JULY }),
-    { wrapper },
-  );
+  return renderHook(() => useMonthCalendarData({ auth, fetchMonth: JULY }), {
+    wrapper,
+  });
 };
 
 describe("useMonthCalendarData", () => {
@@ -105,7 +104,7 @@ describe("useMonthCalendarData", () => {
     expect(result.current.calendarData.totalAppointments).toBe(1);
   });
 
-  it("treats days without an active working day as non-working, and active ones as working", async () => {
+  it("exposes the raw working-days data, marking active vs. inactive days", async () => {
     const store = buildStore();
     store.dispatch(
       upsertApiQueryData(
@@ -133,8 +132,12 @@ describe("useMonthCalendarData", () => {
     const { result } = await renderWithStore(store, { userId: 1 });
 
     await waitFor(() => expect(result.current.hasData).toBe(true));
-    expect(result.current.calendarData.nonWorkingDays.has(DAY_10)).toBe(false);
-    expect(result.current.calendarData.nonWorkingDays.has(DAY_11)).toBe(true);
+    expect(
+      result.current.calendarData.workingDaysData?.[DAY_10]?.is_active,
+    ).toBe(true);
+    expect(
+      result.current.calendarData.workingDaysData?.[DAY_11]?.is_active,
+    ).toBe(false);
   });
 
   it("handleRefresh toggles refreshing while refetching both queries", async () => {

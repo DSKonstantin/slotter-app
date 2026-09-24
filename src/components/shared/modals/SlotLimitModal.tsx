@@ -24,7 +24,7 @@ const SlotLimitModal = ({ visible, onClose }: Props) => {
     if (userId != null) {
       runOnNextForeground(() => getSubscriptionMembership({ userId }));
     }
-    await openPersonalAccount("/upgrade");
+    await openPersonalAccount("/go/upgrade");
     onClose();
   };
 

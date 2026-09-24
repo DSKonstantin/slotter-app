@@ -13,12 +13,12 @@ export const maskPhone = (value: string) => {
 };
 
 export const identifierMask = (value: string) => {
-  if (value.includes("@")) return value;
-  if (value.startsWith("+")) return value;
-  if (/^\d/.test(value)) {
-    return value.startsWith("7") ? `+${value}` : `+7${value}`;
-  }
-  return value;
+  if (value.includes("@") || /[a-zA-Zа-яА-Я]/.test(value)) return value;
+
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0) return value;
+
+  return maskPhone(digits);
 };
 
 export const formatPhoneDisplay = (value: string) => {

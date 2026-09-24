@@ -32,7 +32,7 @@ const MonthCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     hasData,
     refreshing,
     handleRefresh,
-  } = useMonthCalendarData({ auth, fetchMonth, currentMonth });
+  } = useMonthCalendarData({ auth, fetchMonth });
 
   const selectedDate = useMemo(() => parseISO(selectedDay), [selectedDay]);
 

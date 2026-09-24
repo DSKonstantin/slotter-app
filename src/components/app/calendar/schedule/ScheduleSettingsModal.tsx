@@ -266,7 +266,13 @@ export const ScheduleSettingsModal = ({
                   { paddingBottom: Math.max(bottom, 16) },
                 ]}
               >
-                <View ref={contentRef} collapsable={false}>
+                <View
+                  ref={contentRef}
+                  collapsable={false}
+                  style={{
+                    paddingBottom: bottom + 8,
+                  }}
+                >
                   {canSave ? (
                     mode === "bulk" ? (
                       <View className="mb-4">

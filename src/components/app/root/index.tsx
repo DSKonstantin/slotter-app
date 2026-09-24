@@ -24,16 +24,16 @@ import { useGetNotificationsQuery } from "@/src/store/redux/services/api/notific
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { safeRefetch } from "@/src/utils/safeRefetch";
 
-const onLayoutHeight =
-  (setHeight: (height: number) => void) => (e: LayoutChangeEvent) =>
-    setHeight(e.nativeEvent.layout.height);
-
 import HomeHeader from "@/src/components/app/root/homeHeader";
 import HomeOverview, {
   HomeOverviewHandle,
 } from "@/src/components/app/root/homeOverview";
 import HomeStats from "@/src/components/app/root/homeStats";
 import InsightsCarousel from "@/src/components/app/root/insightsCarousel";
+
+const onLayoutHeight =
+  (setHeight: (height: number) => void) => (e: LayoutChangeEvent) =>
+    setHeight(e.nativeEvent.layout.height);
 
 const Home = () => {
   const [statsHeight, setStatsHeight] = useState(0);

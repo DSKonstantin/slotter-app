@@ -11,7 +11,7 @@ import {
 
 const EducationPaymentsFive = () => {
   return (
-    <StoryScreenLayout paddingTop={68} paddingBottom={8}>
+    <StoryScreenLayout paddingTop={48}>
       <StoryIllustration
         source={require("@/assets/images/history/training/five.png")}
       />

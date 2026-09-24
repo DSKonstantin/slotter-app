@@ -3,6 +3,7 @@ import { ActivityIndicator, SectionList, View } from "react-native";
 import { Button, Card, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
+import { formatBreakAfter, formatDuration } from "@/src/utils/date/formatTime";
 import { useGetServiceCategoriesInfiniteQuery } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import RetryInline from "@/src/components/shared/retryInline";
 import type { Service } from "@/src/store/redux/services/api-types";
@@ -92,7 +93,11 @@ const ServicePicker = ({ userId, onSelect }: Props) => {
         <View className="mb-2">
           <Card
             title={item.name}
-            subtitle={`${item.duration} мин · ${formatRublesFromCents(item.price_cents)}`}
+            subtitle={`${formatDuration(item.duration)}${
+              item.break_after_minutes > 0
+                ? ` +${formatBreakAfter(item.break_after_minutes)}`
+                : ""
+            } | ${formatRublesFromCents(item.price_cents)}`}
             onPress={() => onSelect(item)}
             right={
               <StSvg

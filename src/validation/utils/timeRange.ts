@@ -43,18 +43,25 @@ const isWithinDay = (
 export const overlapsOther = (
   current: BreakItem,
   others: BreakItem[],
+  currentIndex?: number,
 ): boolean => {
   const cs = parseTimeToMinutes(current.start ?? "");
   const ce = parseTimeToMinutes(current.end ?? "");
   if (cs === null || ce === null) return false;
 
-  return others.some((other) => {
-    if (other === current) return false;
+  return others.some((other, index) => {
+    if (currentIndex != null ? index === currentIndex : other === current)
+      return false;
     const os = parseTimeToMinutes(other.start ?? "");
     const oe = parseTimeToMinutes(other.end ?? "");
     if (os === null || oe === null) return false;
     return cs < oe && ce > os;
   });
+};
+
+const getBreakIndexFromPath = (path?: string): number | undefined => {
+  const match = path?.match(/\[(\d+)\]\.(?:start|end)$/);
+  return match ? Number(match[1]) : undefined;
 };
 
 type BreakSchemaOptions = {
@@ -73,10 +80,13 @@ const buildBreakSchema = ({
       .required("Укажите время начала перерыва")
       .test("no-overlap", BREAKS_OVERLAP_MESSAGE, (_start, ctx) => {
         const day = ctx.from?.[1]?.value as
-          | { breaks?: BreakItem[] }
-          | undefined;
+          { breaks?: BreakItem[] } | undefined;
         if (!day?.breaks) return true;
-        return !overlapsOther(ctx.parent as BreakItem, day.breaks);
+        return !overlapsOther(
+          ctx.parent as BreakItem,
+          day.breaks,
+          getBreakIndexFromPath(ctx.path),
+        );
       }),
     end: withEndAfterStart(
       Yup.string().required("Укажите время окончания перерыва"),
@@ -94,10 +104,13 @@ const buildBreakSchema = ({
       })
       .test("no-overlap", BREAKS_OVERLAP_MESSAGE, (_end, ctx) => {
         const day = ctx.from?.[1]?.value as
-          | { breaks?: BreakItem[] }
-          | undefined;
+          { breaks?: BreakItem[] } | undefined;
         if (!day?.breaks) return true;
-        return !overlapsOther(ctx.parent as BreakItem, day.breaks);
+        return !overlapsOther(
+          ctx.parent as BreakItem,
+          day.breaks,
+          getBreakIndexFromPath(ctx.path),
+        );
       }),
     name: Yup.string().max(100, "Не длиннее 100 символов").optional(),
   });

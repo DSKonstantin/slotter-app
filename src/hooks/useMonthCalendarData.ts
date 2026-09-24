@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { eachDayOfInterval, endOfMonth } from "date-fns";
+import { endOfMonth } from "date-fns";
 import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useGetWorkingDaysQuery } from "@/src/store/redux/services/api/workingDaysApi";
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
@@ -10,10 +10,9 @@ import type { Appointment } from "@/src/store/redux/services/api-types";
 type Params = {
   auth: { userId: number } | null;
   fetchMonth: Date;
-  currentMonth: Date;
 };
 
-const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
+const useMonthCalendarData = ({ auth, fetchMonth }: Params) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const {
@@ -66,21 +65,6 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
     const appointmentsByDate =
       (appointmentsData as Record<string, Appointment[]> | undefined) ?? {};
 
-    const nonWorkingDays: Set<string> =
-      isWorkingDaysLoading || !workingDaysData
-        ? new Set()
-        : new Set(
-            eachDayOfInterval({
-              start: currentMonth,
-              end: endOfMonth(currentMonth),
-            })
-              .map((d) => formatApiDate(d))
-              .filter((date) => {
-                const wd = workingDaysData[date];
-                return !wd || !wd.is_active;
-              }),
-          );
-
     const progressMap = calculateProgressMap(
       workingDaysData,
       appointmentsByDate,
@@ -91,8 +75,8 @@ const useMonthCalendarData = ({ auth, fetchMonth, currentMonth }: Params) => {
       0,
     );
 
-    return { nonWorkingDays, progressMap, totalAppointments };
-  }, [workingDaysData, appointmentsData, currentMonth, isWorkingDaysLoading]);
+    return { workingDaysData, progressMap, totalAppointments };
+  }, [workingDaysData, appointmentsData]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);

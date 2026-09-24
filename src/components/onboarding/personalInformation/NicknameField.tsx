@@ -11,6 +11,7 @@ import { colors } from "@/src/styles/colors";
 import { useLazyCheckNicknameQuery } from "@/src/store/redux/services/api/usersApi";
 import { suggestNicknames } from "@/src/utils/text/suggestNickname";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { NICKNAME_PATTERN } from "@/src/validation/fields/nickname";
 
 export function NicknameField() {
   const [focused, setFocused] = useState(false);
@@ -47,11 +48,16 @@ export function NicknameField() {
 
   const nicknameError = errors.nickname;
   const loading = pending || isFetching;
+  const hasFormatError = !!value && !NICKNAME_PATTERN.test(value);
   const hasValue = (value?.length ?? 0) >= 3 && !loading;
   const isAvailable =
-    hasValue && !isError && !nicknameError && data?.available === true;
-  const isTaken = hasValue && data?.available === false;
-  const showQueryError = hasValue && isError;
+    hasValue &&
+    !hasFormatError &&
+    !isError &&
+    !nicknameError &&
+    data?.available === true;
+  const isTaken = hasValue && !hasFormatError && data?.available === false;
+  const showQueryError = hasValue && !hasFormatError && isError;
 
   const hasProfileData = !!(name && surname && profession);
   const suggestions = useMemo(
@@ -62,7 +68,7 @@ export function NicknameField() {
   const endAdornment = useMemo(() => {
     if (loading)
       return <ActivityIndicator size="small" color={colors.neutral[400]} />;
-    if (nicknameError || isTaken || showQueryError)
+    if (hasFormatError || nicknameError || isTaken || showQueryError)
       return (
         <StSvg name="Alarm_light" size={24} color={colors.accent.red[500]} />
       );
@@ -75,15 +81,23 @@ export function NicknameField() {
         />
       );
     return null;
-  }, [loading, isAvailable, isTaken, showQueryError, nicknameError]);
+  }, [
+    loading,
+    isAvailable,
+    isTaken,
+    showQueryError,
+    nicknameError,
+    hasFormatError,
+  ]);
 
   const helperText = useMemo(() => {
+    if (hasFormatError) return "Только латиница, цифры и подчёркивание";
     if (showQueryError)
       return getApiErrorMessage(queryError, "Ошибка проверки никнейма");
     if (loading) return "Проверяем доступность...";
     if (focused) return "Только латиница, цифры и подчёркивание";
     return "Уникальная ссылка на ваш профиль";
-  }, [showQueryError, loading, focused, queryError]);
+  }, [hasFormatError, showQueryError, loading, focused, queryError]);
 
   useEffect(() => {
     if (suggestionSelectedRef.current) {
@@ -91,7 +105,12 @@ export function NicknameField() {
       debouncedCheck.cancel();
       return () => debouncedCheck.cancel();
     }
-    if (!dirtyFields.nickname || !value || value.length < 3) {
+    if (
+      !dirtyFields.nickname ||
+      !value ||
+      value.length < 3 ||
+      !NICKNAME_PATTERN.test(value)
+    ) {
       debouncedCheck.cancel();
       setPending(false);
       reset();
@@ -167,7 +186,7 @@ export function NicknameField() {
           />
         ) : (
           <Typography
-            className={`text-caption ${showQueryError ? "text-accent-red-500" : "text-neutral-500"}`}
+            className={`text-caption ${hasFormatError || showQueryError ? "text-accent-red-500" : "text-neutral-500"}`}
           >
             {helperText}
           </Typography>

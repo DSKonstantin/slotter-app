@@ -8,10 +8,11 @@ import { colors } from "@/src/styles/colors";
 import { calendarTheme, calendarStyle } from "@/src/styles/calendarTheme";
 import { CircularProgressDay } from "@/src/components/app/calendar/home/month/CircularProgressDay";
 import MonthAppointmentsCountSkeleton from "@/src/components/app/calendar/home/month/MonthAppointmentsCountSkeleton";
+import type { WorkingDaysResponse } from "@/src/store/redux/services/api-types";
 
 interface MonthCalendarData {
   progressMap: Record<string, number>;
-  nonWorkingDays: Set<string>;
+  workingDaysData?: WorkingDaysResponse;
   totalAppointments: number;
   isLoading?: boolean;
 }
@@ -33,7 +34,7 @@ const MonthCalendar = ({
 }: Props) => {
   const {
     progressMap,
-    nonWorkingDays,
+    workingDaysData,
     totalAppointments: appointmentCount,
     isLoading = false,
   } = data;
@@ -113,9 +114,15 @@ const MonthCalendar = ({
     ({ date, state }: { date?: DateData; state?: string }) => {
       const isToday = state === "today";
       const isDisabled = state === "disabled";
+      // Серый — это дефолт для любой даты, для которой ещё нет
+      // подтверждённых данных (в том числе для соседнего, ещё не
+      // загруженного месяца, если ячейка отрисовалась заранее при
+      // переключении). Чёрным день красится только когда для него точно
+      // известно, что это рабочий день — так исключается вспышка
+      // чёрный → серый, не завязанная на момент обновления isLoading.
       const isNonWorking =
-        !isLoading && !isDisabled && date
-          ? nonWorkingDays.has(date.dateString)
+        !isDisabled && date
+          ? workingDaysData?.[date.dateString]?.is_active !== true
           : false;
       const progress = date ? progressMap[date.dateString] : undefined;
       const showProgress =
@@ -154,7 +161,7 @@ const MonthCalendar = ({
         </TouchableOpacity>
       );
     },
-    [handleDayPress, progressMap, nonWorkingDays, isLoading],
+    [handleDayPress, progressMap, workingDaysData, isLoading],
   );
 
   return (

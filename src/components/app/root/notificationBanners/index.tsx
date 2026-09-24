@@ -80,7 +80,7 @@ const NotificationBanners = () => {
   );
 
   const handleOpenSubscription = useCallback(
-    () => openPersonalAccount("/upgrade"),
+    () => openPersonalAccount("/go/upgrade"),
     [openPersonalAccount],
   );
 

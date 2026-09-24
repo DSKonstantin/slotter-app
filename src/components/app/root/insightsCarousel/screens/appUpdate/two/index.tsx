@@ -7,7 +7,7 @@ import {
 
 const AppUpdateTwo = () => {
   return (
-    <StoryScreenLayout paddingTop={60} paddingBottom={8}>
+    <StoryScreenLayout paddingTop={48}>
       <StoryIllustration
         source={require("@/assets/images/history/app_update/two.webp")}
       />
