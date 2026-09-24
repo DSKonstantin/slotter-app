@@ -221,11 +221,11 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     const name = slot?.customer?.name;
     Alert.alert(
       name ? `Снять ${name} со слота?` : "Снять клиента со слота?",
-      "Клиент останется в списке клиентов",
+      "Клиент будет снят с текущего слота",
       [
         { text: "Отмена", style: "cancel" },
         {
-          text: "Снять",
+          text: "Подтвердить",
           style: "destructive",
           onPress: () =>
             handleUpdate({ customer_id: null } as never, {

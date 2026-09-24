@@ -9,6 +9,7 @@ import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useAppSelector } from "@/src/store/redux/store";
 import {
   useGetNotificationTemplatesQuery,
   useGetNotificationTemplateVariablesQuery,
@@ -33,6 +34,7 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
 
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
+  const ispe = useAppSelector((state) => state.appVersion.ispe);
   const {
     channelModalVisible,
     setChannelModalVisible,
@@ -139,7 +141,9 @@ const MessageTemplateScreen = ({ kind }: MessageTemplateScreenProps) => {
       <ConnectChannelModal
         visible={channelModalVisible}
         onClose={() => setChannelModalVisible(false)}
-        onConnect={() => openPersonalAccount("/go/notifications")}
+        onConnect={
+          ispe ? () => openPersonalAccount("/go/notifications") : undefined
+        }
       />
     </>
   );
