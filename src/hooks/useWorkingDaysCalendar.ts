@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 import {
+  addMonths,
   eachDayOfInterval,
   endOfMonth,
   parseISO,
   startOfMonth,
+  subMonths,
 } from "date-fns";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { formatApiDate } from "@/src/utils/date/formatDate";
@@ -42,13 +44,20 @@ export const useWorkingDaysCalendar = (
   } = useGetWorkingDaysQuery(userId ? { userId, ...visibleMonth } : skipToken);
 
   const markedDates = useMemo(() => {
-    if (!userId || !workingDaysData) return {};
-    return eachDayOfInterval({
-      start: parseISO(visibleMonth.date_from),
-      end: parseISO(visibleMonth.date_to),
-    }).reduce<Record<string, { disabled?: boolean }>>((acc, d) => {
+    if (!userId) return {};
+    // Строим маски с запасом в ±1 месяц вокруг видимого — иначе в момент,
+    // когда свайп долистывает до соседнего месяца, для его дней ещё нет
+    // записи в markedDates и они на один кадр рендерятся дефолтным
+    // (чёрным) цветом, пока не пересчитается стейт. С запасом дни
+    // соседнего месяца заранее серые (disabled), а реальные данные
+    // подставляются только там, где они уже загружены.
+    const days = eachDayOfInterval({
+      start: startOfMonth(subMonths(parseISO(visibleMonth.date_from), 1)),
+      end: endOfMonth(addMonths(parseISO(visibleMonth.date_from), 1)),
+    });
+    return days.reduce<Record<string, { disabled?: boolean }>>((acc, d) => {
       const dateStr = formatApiDate(d);
-      const wd = workingDaysData[dateStr];
+      const wd = workingDaysData?.[dateStr];
       acc[dateStr] = wd?.is_active ? {} : { disabled: true };
       return acc;
     }, {});

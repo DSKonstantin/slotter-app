@@ -1,12 +1,12 @@
-import { ReactNode, Ref, RefCallback } from "react";
-import { View, ScrollView } from "react-native";
+import { ReactNode, Ref, RefCallback, useMemo } from "react";
+import { Animated as RNAnimated, View, ScrollView } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import {
   KeyboardAwareScrollView,
-  KeyboardStickyView,
+  useKeyboardAnimation,
 } from "react-native-keyboard-controller";
 import Animated from "react-native-reanimated";
 import {
@@ -41,11 +41,27 @@ export function AuthScreenLayout({
   contentRef,
 }: AuthScreenLayoutProps) {
   const { bottom } = useSafeAreaInsets();
+  const { height: keyboardHeight, progress: keyboardProgress } =
+    useKeyboardAnimation();
+  const { scrollY, maxScrollY, onScroll } = useCollapsibleHeaderScroll();
+
   const ScrollWrapper = avoidKeyboard
     ? KeyboardAwareScrollView
     : Animated.ScrollView;
 
-  const { scrollY, maxScrollY, onScroll } = useCollapsibleHeaderScroll();
+  const footerTranslateY = useMemo(() => {
+    const openedOffset = keyboardProgress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, bottom],
+    });
+
+    return RNAnimated.add(keyboardHeight, openedOffset).interpolate({
+      inputRange: [-1, 0],
+      outputRange: [-1, 0],
+      extrapolateLeft: "extend",
+      extrapolateRight: "clamp",
+    });
+  }, [bottom, keyboardHeight, keyboardProgress]);
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
@@ -84,12 +100,14 @@ export function AuthScreenLayout({
         </View>
       </ScrollWrapper>
       {footer && stickyFooter ? (
-        <KeyboardStickyView
-          offset={{ closed: 0, opened: bottom }}
-          style={{ paddingBottom: bottom }}
+        <RNAnimated.View
+          style={{
+            paddingBottom: bottom,
+            transform: [{ translateY: footerTranslateY }],
+          }}
         >
           <View className="px-screen pt-2 pb-[8px]">{footer}</View>
-        </KeyboardStickyView>
+        </RNAnimated.View>
       ) : footer ? (
         <View
           className="px-screen py-2 bg-background"

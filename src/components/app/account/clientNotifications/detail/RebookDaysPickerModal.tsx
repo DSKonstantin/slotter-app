@@ -1,7 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { View, useWindowDimensions } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { pluralize } from "@/src/utils/text/pluralize";
@@ -12,6 +19,7 @@ const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 const SELECTED_TOP = (PICKER_HEIGHT - ITEM_HEIGHT) / 2;
 const FADE_HEIGHT = ITEM_HEIGHT * 2;
 const FADE_COLOR = colors.background.DEFAULT;
+const HAPTIC_THROTTLE_MS = 30;
 
 const MIN_DAYS = 1;
 const MAX_DAYS = 365;
@@ -39,6 +47,7 @@ const RebookDaysPickerModal = ({
 }: RebookDaysPickerModalProps) => {
   const [draft, setDraft] = useState(value);
   const wasVisible = useRef(visible);
+  const lastHapticRef = useRef(0);
 
   useEffect(() => {
     const justOpened = visible && !wasVisible.current;
@@ -51,6 +60,13 @@ const RebookDaysPickerModal = ({
     () => Math.min(320, screenWidth - 64),
     [screenWidth],
   );
+
+  const handleValueChanging = useCallback(() => {
+    const now = Date.now();
+    if (now - lastHapticRef.current < HAPTIC_THROTTLE_MS) return;
+    lastHapticRef.current = now;
+    void Haptics.selectionAsync();
+  }, []);
 
   return (
     <StModal
@@ -93,6 +109,7 @@ const RebookDaysPickerModal = ({
           renderOverlay={null}
           data={DAY_OPTIONS}
           value={draft}
+          onValueChanging={handleValueChanging}
           onValueChanged={({ item }) => setDraft(item.value)}
         />
         <View

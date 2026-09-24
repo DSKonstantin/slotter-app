@@ -106,9 +106,17 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   onSelect: (customer: CustomerOption) => void;
+  selectedCustomer?: CustomerOption | null;
+  onRemove?: () => void;
 }
 
-const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
+const CustomerPickerModal = ({
+  visible,
+  onClose,
+  onSelect,
+  selectedCustomer,
+  onRemove,
+}: Props) => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -152,8 +160,9 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
           unique.set(uc.customer.id, toOption(uc));
       }),
     );
+    if (selectedCustomer) unique.delete(selectedCustomer.id);
     return [...unique.values()];
-  }, [data?.pages]);
+  }, [data?.pages, selectedCustomer]);
 
   const handleClose = useCallback(() => {
     onClose();
@@ -176,6 +185,10 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
     handleClose();
     router.push(Routers.app.createClient(name ? { name } : undefined));
   }, [search, handleClose]);
+
+  const handleRemove = useCallback(() => {
+    onRemove?.();
+  }, [onRemove]);
 
   useEffect(() => {
     if (!createdCustomer) return;
@@ -265,6 +278,44 @@ const CustomerPickerModal = ({ visible, onClose, onSelect }: Props) => {
       onClose={handleClose}
     >
       <View style={{ paddingBottom: keyboardHeight }}>
+        {selectedCustomer && onRemove && (
+          <View className="px-screen">
+            <View className="flex-row items-center gap-3 py-3 px-2">
+              <Avatar
+                uri={selectedCustomer.avatarUrl ?? undefined}
+                blurhash={selectedCustomer.avatarBlurhash}
+                name={selectedCustomer.name}
+                size="sm"
+              />
+              <View className="flex-1">
+                <Typography
+                  numberOfLines={2}
+                  className="font-inter-medium text-body text-neutral-900"
+                >
+                  {selectedCustomer.name}
+                </Typography>
+                {selectedCustomer.phone && (
+                  <Typography className="font-inter-regular text-caption text-neutral-500">
+                    {selectedCustomer.phone}
+                  </Typography>
+                )}
+              </View>
+              <IconButton
+                size="sm"
+                buttonClassName="bg-transparent"
+                onPress={handleRemove}
+                icon={
+                  <StSvg
+                    name="Close_round_fill_light"
+                    size={24}
+                    color={colors.neutral[500]}
+                  />
+                }
+              />
+            </View>
+            <View className="h-px bg-neutral-100" />
+          </View>
+        )}
         {isLoading ? (
           <View
             className="items-center justify-center"

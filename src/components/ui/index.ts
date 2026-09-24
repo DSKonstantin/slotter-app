@@ -29,3 +29,5 @@ export { FloatingFooter } from "./FloatingFooter";
 export { StImage } from "./StImage";
 export { PlaceholderSlotter } from "./PlaceholderSlotter";
 export { default as HighlightText } from "./HighlightText";
+export { toast } from "./toast";
+export type { ToastVariant, ToastOptions } from "./toast";

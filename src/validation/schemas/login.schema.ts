@@ -1,7 +1,8 @@
 import * as Yup from "yup";
+import { identifierField } from "@/src/validation/fields/identifier";
 
 export const loginSchema = Yup.object({
-  identifier: Yup.string().required("Введите номер телефона или email"),
+  identifier: identifierField,
   password: Yup.string().required("Введите пароль"),
 });
 

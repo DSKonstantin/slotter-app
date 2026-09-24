@@ -6,6 +6,7 @@ import { Routers } from "@/src/constants/routers";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { parseISO } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
+import { formatBreakAfter, formatDuration } from "@/src/utils/date/formatTime";
 import { RhfCalendarDatePicker } from "@/src/components/hookForm/rhf-calendar-date-picker";
 import { RhfDurationPicker } from "@/src/components/hookForm/rhf-duration-picker";
 import { RhfBreakAfterPicker } from "@/src/components/hookForm/rhf-break-after-picker";
@@ -255,7 +256,11 @@ const SlotCreate: React.FC = () => {
                           key={field.id}
                           title={field.name}
                           subtitle={[
-                            `${field.duration} мин`,
+                            `${formatDuration(field.duration)}${
+                              field.breakAfterMinutes > 0
+                                ? ` +${formatBreakAfter(field.breakAfterMinutes)}`
+                                : ""
+                            }`,
                             field.priceCents &&
                               formatRublesFromCents(field.priceCents),
                           ]

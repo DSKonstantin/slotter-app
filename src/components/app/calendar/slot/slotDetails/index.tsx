@@ -17,6 +17,7 @@ import {
   RefreshControl,
   Pressable,
   Platform,
+  Alert,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
@@ -216,6 +217,25 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
     [handleUpdate, methods],
   );
 
+  const handleRemoveCustomer = useCallback(() => {
+    const name = slot?.customer?.name;
+    Alert.alert(
+      name ? `Снять ${name} со слота?` : "Снять клиента со слота?",
+      "Клиент останется в списке клиентов",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Снять",
+          style: "destructive",
+          onPress: () =>
+            handleUpdate({ customer_id: null } as never, {
+              onSuccess: () => setCustomerPickerVisible(false),
+            }),
+        },
+      ],
+    );
+  }, [slot?.customer?.name, handleUpdate]);
+
   useEffect(() => {
     if (!slot) return;
     methods.reset({
@@ -407,7 +427,7 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     </Pressable>
                   )}
 
-                  {!customerHidden && (
+                  {!customerHidden && slot.customer && (
                     <Card
                       title="Написать"
                       titleProps={{
@@ -805,6 +825,18 @@ const SlotDetails: React.FC<Props> = ({ slotId }) => {
                     onSuccess: () => setCustomerPickerVisible(false),
                   })
                 }
+                selectedCustomer={
+                  slot.customer && slot.customer.id != null
+                    ? {
+                        id: slot.customer.id,
+                        name: slot.customer.name,
+                        phone: slot.customer.phone,
+                        avatarUrl: slot.customer.avatar_url,
+                        avatarBlurhash: slot.customer.avatar_blurhash,
+                      }
+                    : undefined
+                }
+                onRemove={slot.customer ? handleRemoveCustomer : undefined}
               />
               <RescheduleModal
                 visible={rescheduleVisible}

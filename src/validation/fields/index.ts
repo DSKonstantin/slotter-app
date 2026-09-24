@@ -1,6 +1,7 @@
 export { avatarField } from "./avatar";
 export { descriptionField } from "./description";
 export { durationField } from "./duration";
+export { identifierField } from "./identifier";
 export { nameField } from "./name";
 export { passwordField } from "./password";
 export { phoneField } from "./phone";
