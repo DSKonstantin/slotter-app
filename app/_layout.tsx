@@ -1,3 +1,4 @@
+import { useSentryUserSync } from "@/src/services/sentry";
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
@@ -32,7 +33,6 @@ import AppUpdateModal from "@/src/components/shared/modals/AppUpdateModal";
 import NoInternetScreen from "@/src/components/shared/NoInternetScreen";
 import CrashFallback from "@/src/components/shared/CrashFallback";
 import * as Sentry from "@sentry/react-native";
-import { useSentryUserSync } from "@/src/services/sentry";
 import {
   useOneSignal,
   loginOneSignal,

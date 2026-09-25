@@ -95,7 +95,12 @@
         {
           "url": "https://sentry.io/",
           "project": "slotter-app",
-          "organization": "gcode-ay"
+          "organization": "gcode-ay",
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true,
+            "includeProguardMapping": true,
+            "autoUploadProguardMapping": true
+          }
         }
       ],
       [
@@ -105,9 +110,17 @@
           "disableLocation": true
         }
       ],
-      "@sentry/react-native",
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
