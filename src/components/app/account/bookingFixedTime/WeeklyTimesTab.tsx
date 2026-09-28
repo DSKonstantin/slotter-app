@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useController } from "react-hook-form";
 import { Divider, StSvg, Tag, Typography } from "@/src/components/ui";
 import { days as WEEK_DAYS } from "@/src/constants/days";
 import { formatMinutes } from "@/src/utils/date/formatTime";
 import { colors } from "@/src/styles/colors";
 import type { BookingFixedTimeFormValues, DayId } from "./constants";
-import { EMPTY_TIMES, toggleItem } from "./utils";
+import { EMPTY_TIMES, pickOnGrid, toggleItem } from "./utils";
 import ChipGrid from "./ChipGrid";
 import ScheduleHint from "./ScheduleHint";
 import DayTimesModal from "./DayTimesModal";
@@ -20,38 +20,43 @@ type WeeklyTimesTabProps = {
 const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
   const [editingDay, setEditingDay] = useState<DayId | null>(null);
 
-  const { control, getValues, setValue } =
-    useFormContext<BookingFixedTimeFormValues>();
-  const [selectedDays, dayTimes] = useWatch({
-    control,
-    name: ["days", "dayTimes"],
-  });
+  const { field: daysField } = useController<
+    BookingFixedTimeFormValues,
+    "days"
+  >({ name: "days" });
+  const { field: dayTimesField } = useController<
+    BookingFixedTimeFormValues,
+    "dayTimes"
+  >({ name: "dayTimes" });
 
   const visibleDays = useMemo(
-    () => WEEK_DAYS.filter((day) => selectedDays.includes(day.id)),
-    [selectedDays],
+    () => WEEK_DAYS.filter((day) => daysField.value.includes(day.id)),
+    [daysField.value],
   );
+  const timesByDay = useMemo(() => {
+    const grid = new Set(gridItems.map((item) => item.value));
+    return Object.fromEntries(
+      WEEK_DAYS.map((day) => [
+        day.id,
+        pickOnGrid(dayTimesField.value[day.id] ?? EMPTY_TIMES, grid),
+      ]),
+    ) as Record<DayId, number[]>;
+  }, [gridItems, dayTimesField.value]);
   const editingDayLabel = useMemo(
     () => WEEK_DAYS.find((day) => day.id === editingDay)?.fullLabel ?? "",
     [editingDay],
   );
 
   const handleDayToggle = (day: DayId) => {
-    const next = toggleItem(selectedDays, day);
-    setValue(
-      "days",
+    const next = toggleItem(daysField.value, day);
+    daysField.onChange(
       WEEK_DAYS.map((d) => d.id).filter((id) => next.includes(id)),
-      { shouldDirty: true },
     );
   };
 
   const handleDayTimesConfirm = (times: number[]) => {
     if (editingDay === null) return;
-    setValue(
-      "dayTimes",
-      { ...getValues("dayTimes"), [editingDay]: times },
-      { shouldDirty: true },
-    );
+    dayTimesField.onChange({ ...dayTimesField.value, [editingDay]: times });
     setEditingDay(null);
   };
 
@@ -62,7 +67,7 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
       </Typography>
       <ChipGrid
         items={DAY_ITEMS}
-        selected={selectedDays}
+        selected={daysField.value}
         columns={5}
         chipClassName="rounded-small"
         onToggle={handleDayToggle}
@@ -73,7 +78,7 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
       {visibleDays.length > 0 && (
         <View className="bg-background-surface rounded-base">
           {visibleDays.map((day, index) => {
-            const times = dayTimes[day.id] ?? EMPTY_TIMES;
+            const times = timesByDay[day.id];
             return (
               <View key={day.id}>
                 {index > 0 && <Divider className="mx-4 w-auto" />}
@@ -98,7 +103,12 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
                       contentContainerClassName="gap-2"
                     >
                       {times.map((time) => (
-                        <Tag key={time} title={formatMinutes(time)} size="sm" />
+                        <Tag
+                          key={time}
+                          title={formatMinutes(time)}
+                          size="sm"
+                          containerClassName="rounded-full"
+                        />
                       ))}
                     </ScrollView>
                   )}
@@ -113,11 +123,7 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
         visible={editingDay !== null}
         title={editingDayLabel}
         items={gridItems}
-        value={
-          editingDay !== null
-            ? (dayTimes[editingDay] ?? EMPTY_TIMES)
-            : EMPTY_TIMES
-        }
+        value={editingDay !== null ? timesByDay[editingDay] : EMPTY_TIMES}
         onConfirm={handleDayTimesConfirm}
         onClose={() => setEditingDay(null)}
       />

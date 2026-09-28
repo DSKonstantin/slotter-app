@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import ChipGrid from "./ChipGrid";
+import {
+  MODAL_BACK_BUTTON_CLASS,
+  MODAL_CONFIRM_BUTTON_CLASS,
+} from "./constants";
 
 type DayTimesModalProps = {
   visible: boolean;
@@ -37,16 +41,18 @@ const DayTimesModal = ({
       onClose={onClose}
       scrollable
       headerLeft={{
-        icon: <StSvg name="Arrow_left" size={24} color={colors.neutral[900]} />,
+        icon: (
+          <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />
+        ),
         onPress: onClose,
         accessibilityLabel: "Назад",
+        buttonClassName: MODAL_BACK_BUTTON_CLASS,
       }}
       headerRight={{
-        icon: (
-          <StSvg name="Done_round" size={24} color={colors.primary.blue[500]} />
-        ),
+        icon: <StSvg name="Done_round" size={24} color={colors.neutral[0]} />,
         onPress: () => onConfirm([...draft].sort((a, b) => a - b)),
         accessibilityLabel: "Готово",
+        buttonClassName: MODAL_CONFIRM_BUTTON_CLASS,
       }}
       header={
         <Typography
@@ -64,7 +70,6 @@ const DayTimesModal = ({
         items={items}
         selected={draft}
         columns={4}
-        chipClassName="rounded-full"
         onToggle={handleToggle}
       />
     </StModal>

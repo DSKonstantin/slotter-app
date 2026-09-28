@@ -19,6 +19,10 @@ import type { TextSelection } from "../tokenText/insertToken";
 import { insertToken } from "../tokenText/insertToken";
 import { collapseTokenOnDelete } from "../tokenText/collapseTokenOnDelete";
 import { getActiveTokenTrigger } from "../tokenText/activeTokenTrigger";
+import {
+  moveInsertionOutOfToken,
+  snapSelectionToTokens,
+} from "../tokenText/snapSelectionToTokens";
 import { validateBody } from "../tokenText/validateBody";
 import VariablePicker from "./VariablePicker";
 import TemplateField from "./TemplateField";
@@ -105,15 +109,15 @@ const MessageTemplateEditor = ({
 
   const handleInsert = useCallback(
     (variable: TemplateVariable) => {
-      const { start, end } = selectionRef.current;
-      const before = text.slice(0, start);
-      const after = text.slice(end);
+      const target = snapSelectionToTokens(text, selectionRef.current);
+      const before = text.slice(0, target.start);
+      const after = text.slice(target.end);
       const leading = before && !/\s$/.test(before) ? " " : "";
       const trailing = after && !/^\s/.test(after) ? " " : "";
 
       const result = insertToken(
         text,
-        selectionRef.current,
+        target,
         `${leading}{{${variable.key}}}${trailing}`,
         MAX_LENGTH,
       );
@@ -148,13 +152,11 @@ const MessageTemplateEditor = ({
 
   const handleChangeText = useCallback(
     (newText: string) => {
-      const collapsed = collapseTokenOnDelete(text, newText);
-      if (collapsed) {
-        setText(collapsed.text);
-        applySelection(collapsed.selection);
-        return;
-      }
-      setText(newText);
+      const fixed =
+        collapseTokenOnDelete(text, newText) ??
+        moveInsertionOutOfToken(text, newText);
+      setText(fixed ? fixed.text : newText);
+      if (fixed) applySelection(fixed.selection);
     },
     [text, applySelection],
   );

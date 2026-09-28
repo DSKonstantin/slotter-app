@@ -1,6 +1,10 @@
 import { buildMinuteOptions } from "@/src/utils/date/timeOptions";
 import { formatMinutes, parseTime } from "@/src/utils/date/formatTime";
-import { MOCK_WORKING_DAY } from "./constants";
+import {
+  MOCK_WORKING_DAY,
+  type BookingFixedTimeFormValues,
+  type DayId,
+} from "./constants";
 
 const WORKING_DAY_RANGE = {
   start: parseTime(MOCK_WORKING_DAY.start),
@@ -26,3 +30,23 @@ export const toggleItem = <T>(list: T[], item: T) =>
 
 export const sortMinutes = (times: number[]) =>
   [...times].sort((a, b) => a - b);
+
+export const pickOnGrid = (times: number[], grid: Set<number>) =>
+  times.filter((t) => grid.has(t));
+
+export const normalizeValues = (
+  values: BookingFixedTimeFormValues,
+): BookingFixedTimeFormValues => {
+  const grid = new Set(buildGrid(values.interval));
+  const dayTimes = Object.fromEntries(
+    (Object.keys(values.dayTimes) as DayId[]).map((day) => [
+      day,
+      pickOnGrid(values.dayTimes[day] ?? EMPTY_TIMES, grid),
+    ]),
+  );
+  return {
+    ...values,
+    fixedTimes: pickOnGrid(values.fixedTimes, grid),
+    dayTimes,
+  };
+};

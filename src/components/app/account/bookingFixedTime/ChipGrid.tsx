@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import { Button } from "@/src/components/ui";
+import { twMerge } from "tailwind-merge";
+import { Badge } from "@/src/components/ui";
 
 const COLUMN_GAP_PERCENT = 2;
 
@@ -27,19 +28,18 @@ const ChipGrid = <T extends string | number>({
         const isSelected = selected.includes(item.value);
         const isLastInRow = (index + 1) % columns === 0;
         return (
-          <Button
+          <Badge
             key={item.value}
             title={item.label}
-            size="sm"
             variant={isSelected ? "accent" : "secondary"}
-            buttonClassName={`px-0 ${chipClassName ?? ""}`}
-            buttonProps={{
-              style: {
-                width,
-                marginRight: isLastInRow ? 0 : `${COLUMN_GAP_PERCENT}%`,
-              },
+            className={twMerge(
+              !isSelected && "bg-background-surface",
+              chipClassName,
+            )}
+            style={{
+              width,
+              marginRight: isLastInRow ? 0 : `${COLUMN_GAP_PERCENT}%`,
             }}
-            textClassName={`font-inter-regular ${isSelected ? "" : "text-neutral-900"}`}
             onPress={() => onToggle(item.value)}
           />
         );

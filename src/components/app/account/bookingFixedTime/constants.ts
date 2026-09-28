@@ -35,3 +35,8 @@ export const MOCK_DEFAULT_VALUES: BookingFixedTimeFormValues = {
     mon: [630, 750, 780, 870, 900],
   },
 };
+
+export const MODAL_BACK_BUTTON_CLASS =
+  "bg-background-surface h-11 w-11 left-4 top-2";
+export const MODAL_CONFIRM_BUTTON_CLASS =
+  "bg-primary-blue-500 h-11 w-11 right-4 top-2";

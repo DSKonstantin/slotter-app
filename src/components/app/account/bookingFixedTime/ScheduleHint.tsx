@@ -13,24 +13,18 @@ const ScheduleHint = () => (
       weight="regular"
       className="flex-1 text-caption text-neutral-500"
     >
-      По графику (
+      По графику{" "}
       <Typography
         weight="regular"
-        className="text-caption text-neutral-500 underline"
-        onPress={() =>
-          router.push(
-            Routers.app.calendar.schedule(undefined, { openTemplate: true }),
-          )
-        }
+        className="text-caption text-neutral-900 underline"
       >
-        Шаблон недели
+        (Шаблон недели)
       </Typography>
-      ): {MOCK_WORKING_DAY.start}–{MOCK_WORKING_DAY.end}. Сетка и границы дня
+      : {MOCK_WORKING_DAY.start}–{MOCK_WORKING_DAY.end}. Сетка и границы дня
       всегда берутся из{" "}
       <Typography
         weight="regular"
-        className="text-caption text-primary-blue-500 underline"
-        onPress={() => router.push(Routers.app.calendar.schedule())}
+        className="text-caption text-neutral-900 underline"
       >
         графика
       </Typography>{" "}

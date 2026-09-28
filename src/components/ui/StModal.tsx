@@ -15,6 +15,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { BottomSheetHandle } from "./BottomSheetHandle";
 import { IconButton } from "./IconButton";
 import { StSvg } from "./StSvg";
+import { twMerge } from "tailwind-merge";
 import { SCREEN_PADDING } from "@/src/constants/layout";
 import { colors } from "@/src/styles/colors";
 
@@ -22,6 +23,7 @@ export type StModalHeaderAction = {
   icon: React.ReactNode;
   onPress: () => void;
   accessibilityLabel?: string;
+  buttonClassName?: string;
 };
 
 type StModalProps = {
@@ -137,7 +139,10 @@ export const StModal = ({
         {headerLeft && (
           <IconButton
             size="sm"
-            buttonClassName="bg-transparent absolute left-3 top-1 z-10"
+            buttonClassName={twMerge(
+              "bg-transparent absolute left-3 top-1 z-10",
+              headerLeft.buttonClassName,
+            )}
             hitSlop={12}
             onPress={headerLeft.onPress}
             accessibilityLabel={headerLeft.accessibilityLabel}
@@ -159,7 +164,10 @@ export const StModal = ({
         {headerRight && (
           <IconButton
             size="sm"
-            buttonClassName="bg-transparent absolute right-3 top-1 z-10"
+            buttonClassName={twMerge(
+              "bg-transparent absolute right-3 top-1 z-10",
+              headerRight.buttonClassName,
+            )}
             hitSlop={12}
             onPress={headerRight.onPress}
             accessibilityLabel={headerRight.accessibilityLabel}

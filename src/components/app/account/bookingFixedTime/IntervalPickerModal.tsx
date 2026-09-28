@@ -3,7 +3,11 @@ import { View } from "react-native";
 import { StModal, StSvg, Typography } from "@/src/components/ui";
 import { ValueWheel } from "@/src/components/ui/pickers/ValueWheel";
 import { colors } from "@/src/styles/colors";
-import { INTERVAL_OPTIONS } from "./constants";
+import {
+  INTERVAL_OPTIONS,
+  MODAL_BACK_BUTTON_CLASS,
+  MODAL_CONFIRM_BUTTON_CLASS,
+} from "./constants";
 
 const WHEEL_DATA = INTERVAL_OPTIONS.map((value) => ({
   value,
@@ -35,16 +39,18 @@ const IntervalPickerModal = ({
       onClose={onClose}
       swipeDirection={undefined}
       headerLeft={{
-        icon: <StSvg name="Arrow_left" size={24} color={colors.neutral[900]} />,
+        icon: (
+          <StSvg name="Expand_left" size={24} color={colors.neutral[900]} />
+        ),
         onPress: onClose,
         accessibilityLabel: "Назад",
+        buttonClassName: MODAL_BACK_BUTTON_CLASS,
       }}
       headerRight={{
-        icon: (
-          <StSvg name="Done_round" size={24} color={colors.primary.blue[500]} />
-        ),
+        icon: <StSvg name="Done_round" size={24} color={colors.neutral[0]} />,
         onPress: () => onConfirm(draft),
         accessibilityLabel: "Готово",
+        buttonClassName: MODAL_CONFIRM_BUTTON_CLASS,
       }}
       header={
         <Typography

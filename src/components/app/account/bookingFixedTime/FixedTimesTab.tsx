@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useController } from "react-hook-form";
 import { Typography } from "@/src/components/ui";
 import { MOCK_WORKING_DAY, type BookingFixedTimeFormValues } from "./constants";
 import { sortMinutes, toggleItem } from "./utils";
@@ -11,13 +11,9 @@ type FixedTimesTabProps = {
 };
 
 const FixedTimesTab = ({ gridItems }: FixedTimesTabProps) => {
-  const { control, setValue } = useFormContext<BookingFixedTimeFormValues>();
-  const fixedTimes = useWatch({ control, name: "fixedTimes" });
-
-  const handleToggle = (time: number) =>
-    setValue("fixedTimes", sortMinutes(toggleItem(fixedTimes, time)), {
-      shouldDirty: true,
-    });
+  const { field } = useController<BookingFixedTimeFormValues, "fixedTimes">({
+    name: "fixedTimes",
+  });
 
   return (
     <View className="gap-2">
@@ -27,10 +23,11 @@ const FixedTimesTab = ({ gridItems }: FixedTimesTabProps) => {
       </Typography>
       <ChipGrid
         items={gridItems}
-        selected={fixedTimes}
+        selected={field.value}
         columns={4}
-        chipClassName="rounded-full"
-        onToggle={handleToggle}
+        onToggle={(time) =>
+          field.onChange(sortMinutes(toggleItem(field.value, time)))
+        }
       />
     </View>
   );

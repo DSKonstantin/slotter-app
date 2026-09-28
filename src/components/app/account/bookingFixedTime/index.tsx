@@ -1,10 +1,21 @@
 import React, { useMemo } from "react";
 import { ScrollView, View } from "react-native";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import {
+  FormProvider,
+  useController,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { router } from "expo-router";
+import { toast } from "@backpackapp-io/react-native-toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { SegmentedControl, toast } from "@/src/components/ui";
-import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
+import {
+  Button,
+  FloatingFooter,
+  SegmentedControl,
+  StSvg,
+} from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 import {
   MOCK_DEFAULT_VALUES,
@@ -12,7 +23,7 @@ import {
   type BookingFixedTimeFormValues,
   type FixedTimeMode,
 } from "./constants";
-import { buildGridItems } from "./utils";
+import { buildGridItems, normalizeValues } from "./utils";
 import IntervalField from "./IntervalField";
 import FixedTimesTab from "./FixedTimesTab";
 import WeeklyTimesTab from "./WeeklyTimesTab";
@@ -21,14 +32,16 @@ const BookingFixedTime = () => {
   const methods = useForm<BookingFixedTimeFormValues>({
     defaultValues: MOCK_DEFAULT_VALUES,
   });
-  const { control, formState, setValue, reset, handleSubmit } = methods;
-  const [mode, interval] = useWatch({ control, name: ["mode", "interval"] });
-  useFormNavigationGuard(formState.isDirty);
+  const { control, formState, reset, handleSubmit } = methods;
+  const { isDirty } = formState;
+  const { field: modeField } = useController({ control, name: "mode" });
+  const interval = useWatch({ control, name: "interval" });
+  useFormNavigationGuard(isDirty);
 
   const gridItems = useMemo(() => buildGridItems(interval), [interval]);
 
   const onSubmit = (values: BookingFixedTimeFormValues) => {
-    reset(values);
+    reset(normalizeValues(values));
     toast.success("Изменения сохранены");
     router.back();
   };
@@ -42,22 +55,20 @@ const BookingFixedTime = () => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 paddingTop: topInset,
-                paddingBottom: 16,
+                paddingBottom: bottomInset + (isDirty ? 82 : 8),
               }}
               className="px-screen"
             >
               <View className="gap-4">
                 <SegmentedControl
-                  value={mode}
+                  value={modeField.value}
                   options={MODE_OPTIONS}
                   onChange={(value) =>
-                    setValue("mode", value as FixedTimeMode, {
-                      shouldDirty: true,
-                    })
+                    modeField.onChange(value as FixedTimeMode)
                   }
                 />
                 <IntervalField />
-                {mode === "fixed" ? (
+                {modeField.value === "fixed" ? (
                   <FixedTimesTab gridItems={gridItems} />
                 ) : (
                   <WeeklyTimesTab gridItems={gridItems} />
@@ -65,10 +76,21 @@ const BookingFixedTime = () => {
               </View>
             </ScrollView>
 
-            <FormSaveFooter
-              bottomInset={bottomInset}
-              onPress={handleSubmit(onSubmit)}
-            />
+            {isDirty && (
+              <FloatingFooter offset={bottomInset + 8}>
+                <Button
+                  title="Сохранить изменения"
+                  rightIcon={
+                    <StSvg
+                      name="Save_fill"
+                      size={24}
+                      color={colors.neutral[0]}
+                    />
+                  }
+                  onPress={handleSubmit(onSubmit)}
+                />
+              </FloatingFooter>
+            )}
           </>
         )}
       </ScreenWithToolbar>
