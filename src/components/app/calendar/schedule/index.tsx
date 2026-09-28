@@ -82,7 +82,8 @@ const CalendarSchedule = ({ showBack = true }: CalendarScheduleProps) => {
           />
           <Typography
             weight="semibold"
-            className="text-body capitalize w-[125px] text-center"
+            className="text-body capitalize min-w-[125px] text-center"
+            numberOfLines={1}
           >
             {format(current, "LLLL yyyy", { locale: ru })}
           </Typography>

@@ -1,5 +1,7 @@
 import React, { ReactNode, Ref } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
 
@@ -57,18 +59,21 @@ export function PressableField({
           disabled={disabled}
           onPress={onPress}
         >
-          <Text
+          <AppText
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             className={twMerge(
               "font-inter-regular text-[16px] px-4",
               textClassName,
             )}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
             style={{
               color: value ? colors.neutral[900] : colors.neutral[300],
             }}
           >
             {value ?? placeholder}
-          </Text>
+          </AppText>
         </Pressable>
       )}
     />

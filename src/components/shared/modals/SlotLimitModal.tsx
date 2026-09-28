@@ -29,7 +29,7 @@ const SlotLimitModal = ({ visible, onClose }: Props) => {
   };
 
   return (
-    <StModal visible={visible && ispe} onClose={onClose}>
+    <StModal visible={visible && ispe} onClose={onClose} scrollable>
       <Image
         source={limitFreeImage}
         style={{ width: "100%", height: 275, borderRadius: 20 }}

@@ -23,7 +23,7 @@ const ReferralEarnCard = () => {
   return (
     <View className="bg-background-surface rounded-base p-4 overflow-hidden">
       <View className="gap-3">
-        <View className="gap-1">
+        <View className="gap-1 mr-[105px]">
           <Typography weight="medium" className="text-body text-neutral-900">
             Заработай{" "}
             <Typography

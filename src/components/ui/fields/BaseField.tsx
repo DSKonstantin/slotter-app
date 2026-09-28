@@ -1,5 +1,7 @@
 import React, { ReactNode, Ref, useRef, useCallback } from "react";
-import { Animated, View, Text, Pressable } from "react-native";
+import { Animated, View, Pressable } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 import { FieldError } from "react-hook-form";
 import { colors } from "@/src/styles/colors";
@@ -78,7 +80,12 @@ export function BaseField({
     <View ref={ref} collapsable={false} className="flex-grow">
       {(label || labelRight) && (
         <View className="flex-row justify-between items-center mb-2">
-          <Text className={styles.label}>{label}</Text>
+          <AppText
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            className={styles.label}
+          >
+            {label}
+          </AppText>
           {labelRight}
         </View>
       )}
@@ -118,9 +125,12 @@ export function BaseField({
       </Animated.View>
 
       {!hideErrorText && (
-        <Text className={error ? styles.errorText : styles.hintText}>
+        <AppText
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          className={error ? styles.errorText : styles.hintText}
+        >
           {error?.message ?? hint ?? " "}
-        </Text>
+        </AppText>
       )}
     </View>
   );

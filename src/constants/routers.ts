@@ -200,6 +200,7 @@ export const Routers = {
       booking: "/(app)/(tabs)/account/booking" as const,
       bookingConditions:
         "/(app)/(tabs)/account/booking/booking-conditions" as const,
+      bookingFixedTime: "/(app)/(tabs)/account/booking/fixed-time" as const,
       notifications: "/(app)/(tabs)/account/notifications" as const,
       security: {
         root: "/(app)/(tabs)/account/security" as const,

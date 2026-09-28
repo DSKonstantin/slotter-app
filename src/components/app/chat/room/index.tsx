@@ -14,7 +14,14 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
-import { GiftedChat, InputToolbarProps } from "react-native-gifted-chat";
+import {
+  Day,
+  GiftedChat,
+  InputToolbarProps,
+  type DayProps,
+  type LoadEarlierMessagesProps,
+} from "react-native-gifted-chat";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -68,6 +75,36 @@ type Props = { roomId: string };
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const EMPTY_MESSAGES: ChatIMessage[] = [];
+
+const renderDay = (props: DayProps) => (
+  <Day
+    {...props}
+    textProps={{ ...props.textProps, maxFontSizeMultiplier: MAX_FONT_SCALE }}
+  />
+);
+
+const renderLoadEarlier = ({
+  isLoading,
+  onPress,
+  label,
+}: LoadEarlierMessagesProps) => (
+  <Pressable
+    onPress={onPress}
+    disabled={isLoading}
+    accessibilityRole="button"
+    className="items-center my-2.5"
+  >
+    <View className="rounded-[15px] px-2.5 py-[5px] bg-[#b2b2b2] items-center justify-center">
+      {isLoading ? (
+        <ActivityIndicator color="white" size="small" className="px-5" />
+      ) : (
+        <Typography className="text-xs text-neutral-0 py-0.5">
+          {label}
+        </Typography>
+      )}
+    </View>
+  </Pressable>
+);
 
 export default function ChatRoom({ roomId }: Props) {
   const id = Number(roomId);
@@ -700,6 +737,7 @@ export default function ChatRoom({ roomId }: Props) {
                 }}
                 textInputProps={{
                   placeholder: "Сообщение...",
+                  maxFontSizeMultiplier: MAX_FONT_SCALE,
                   maxLength: undefined,
                   multiline: true,
                   numberOfLines: 5,
@@ -727,6 +765,8 @@ export default function ChatRoom({ roomId }: Props) {
                 renderAvatar={null}
                 renderMessage={renderMessage}
                 renderBubble={renderBubble}
+                renderDay={renderDay}
+                renderLoadEarlier={renderLoadEarlier}
                 renderMessageImage={renderMessageImage}
                 renderInputToolbar={renderInputToolbar}
                 renderSend={renderSend}

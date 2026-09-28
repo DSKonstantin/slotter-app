@@ -3,7 +3,8 @@ import { View, useWindowDimensions } from "react-native";
 import { Button } from "@/src/components/ui/Button";
 import { StModal } from "@/src/components/ui/StModal";
 import { Typography } from "@/src/components/ui/Typography";
-import { TimeWheel, PICKER_HEIGHT } from "./TimeWheel";
+import { TimeWheel } from "./TimeWheel";
+import { PICKER_HEIGHT } from "./WheelFrame";
 
 const TimeWheelSkeleton = memo(function TimeWheelSkeleton() {
   const { width: screenWidth } = useWindowDimensions();

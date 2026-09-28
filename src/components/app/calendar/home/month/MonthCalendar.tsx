@@ -69,7 +69,10 @@ const MonthCalendar = ({
               />
             </Pressable>
 
-            <Typography className="text-body capitalize w-[125px] text-center">
+            <Typography
+              className="text-body capitalize min-w-[125px] text-center"
+              numberOfLines={1}
+            >
               {formatMonthYear(date)}
             </Typography>
 

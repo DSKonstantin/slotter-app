@@ -5,6 +5,7 @@ export default function BookingLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="booking-conditions" />
+      <Stack.Screen name="fixed-time" />
     </Stack>
   );
 }

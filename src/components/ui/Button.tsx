@@ -1,10 +1,11 @@
 import {
   TouchableOpacityProps,
-  Text,
   TouchableOpacity,
   ActivityIndicator,
   TextProps,
 } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 
 export interface CustomBtn {
@@ -65,7 +66,8 @@ export const Button: React.FC<CustomBtn> = ({
         <>
           {leftIcon && leftIcon}
           {title && (
-            <Text
+            <AppText
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               className={twMerge(
                 styles.textBase,
                 styles.textVariants[variant],
@@ -76,7 +78,7 @@ export const Button: React.FC<CustomBtn> = ({
               {...textProps}
             >
               {title}
-            </Text>
+            </AppText>
           )}
           {rightIcon && rightIcon}
         </>

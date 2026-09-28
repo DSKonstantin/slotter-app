@@ -10,6 +10,7 @@ import type {
   ConsentKind,
 } from "@/src/store/redux/services/api-types";
 import { useAppSelector } from "@/src/store/redux/store";
+import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 
 function DownloadIcon({ color }: { color: string }) {
   return (
@@ -37,10 +38,7 @@ const KIND_FILE_PREFIX: Record<ConsentKind, string> = {
 };
 
 function formatSignedDate(iso: string) {
-  const date = new Date(iso);
-  const day = date.toLocaleDateString("ru-RU", { day: "numeric" });
-  const month = date.toLocaleDateString("ru-RU", { month: "long" });
-  return `Подписано ${day} ${month}`;
+  return `Подписано ${formatDayMonthLong(new Date(iso))}`;
 }
 
 function getLastName(fullName: string) {
@@ -132,7 +130,11 @@ function UnsignedConsentRow() {
         className="w-12 h-12 rounded-xl items-center justify-center"
         style={{ backgroundColor: colors.accent.red[100] }}
       >
-        <StSvg name="close_ring_fill" size={24} color={colors.accent.red[500]} />
+        <StSvg
+          name="close_ring_fill"
+          size={24}
+          color={colors.accent.red[500]}
+        />
       </View>
       <View className="flex-1 gap-0.5">
         <Typography weight="medium" className="text-body">
@@ -176,7 +178,11 @@ export default function ConsentsSection({
       consent,
       version: index + 1,
     }));
-    return { kind, items: withVersion.reverse(), unsigned: sorted.length === 0 };
+    return {
+      kind,
+      items: withVersion.reverse(),
+      unsigned: sorted.length === 0,
+    };
   });
 
   const lastName = customerName ? getLastName(customerName) : "";

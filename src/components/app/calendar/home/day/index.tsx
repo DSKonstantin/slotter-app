@@ -245,6 +245,11 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
           buttonTitle="Настроить день"
           buttonIcon="Edit_fill"
           onPress={handleEmptyPress}
+          secondaryButton={
+            isToday(selectedDay)
+              ? undefined
+              : { title: "Сегодня", onPress: handlePressToday }
+          }
         />
       );
     return (
@@ -268,6 +273,7 @@ const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
     bottomInset,
     isEmpty,
     handleEmptyPress,
+    handlePressToday,
     appointments,
     selectedWorkingDay?.working_day_breaks,
     selectedWorkingDay?.id,

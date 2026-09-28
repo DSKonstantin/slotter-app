@@ -176,6 +176,13 @@ describe("getActiveTokenTrigger", () => {
     expect(getActiveTokenTrigger(text, 18)).toBeNull();
   });
 
+  it("курсор внутри закрытого токена — триггера нет", () => {
+    const text = "Hi {{CLIENT_NAME}} bye";
+    expect(getActiveTokenTrigger(text, 5)).toBeNull();
+    expect(getActiveTokenTrigger(text, 10)).toBeNull();
+    expect(getActiveTokenTrigger(text, 16)).toBeNull();
+  });
+
   it("пробел внутри скобок ломает триггер", () => {
     expect(getActiveTokenTrigger("Hi {{cli ent", 12)).toBeNull();
   });

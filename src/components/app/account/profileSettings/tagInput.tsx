@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { useController, useFormContext } from "react-hook-form";
-import { Tag, StSvg } from "@/src/components/ui";
+import { Tag, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 
 type RHFTagInputProps = {
@@ -40,9 +41,9 @@ const RHFTagInput = ({
   return (
     <View className="gap-2">
       {label ? (
-        <Text className="font-inter-medium text-caption text-neutral-500">
+        <Typography className="text-caption text-neutral-500">
           {label}
-        </Text>
+        </Typography>
       ) : null}
 
       {tags.length > 0 && (
@@ -67,6 +68,7 @@ const RHFTagInput = ({
 
       <View className="flex-row items-center gap-2">
         <TextInput
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           value={inputValue}
           onChangeText={setInputValue}
           onSubmitEditing={handleAdd}

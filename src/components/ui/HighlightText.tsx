@@ -1,5 +1,7 @@
 import React from "react";
-import { Text, type TextProps } from "react-native";
+import { type TextProps } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { colors } from "@/src/styles/colors";
 
 type Props = TextProps & {
@@ -9,7 +11,12 @@ type Props = TextProps & {
 };
 
 const HighlightText = ({ text, highlight, ...textProps }: Props) => {
-  if (!text) return <Text {...textProps}>{text}</Text>;
+  if (!text)
+    return (
+      <AppText maxFontSizeMultiplier={MAX_FONT_SCALE} {...textProps}>
+        {text}
+      </AppText>
+    );
 
   const trimmed = highlight?.trim() ?? "";
   const index = trimmed
@@ -17,17 +24,24 @@ const HighlightText = ({ text, highlight, ...textProps }: Props) => {
     : -1;
 
   if (index === -1) {
-    return <Text {...textProps}>{text}</Text>;
+    return (
+      <AppText maxFontSizeMultiplier={MAX_FONT_SCALE} {...textProps}>
+        {text}
+      </AppText>
+    );
   }
 
   return (
-    <Text {...textProps}>
+    <AppText maxFontSizeMultiplier={MAX_FONT_SCALE} {...textProps}>
       {text.slice(0, index)}
-      <Text style={{ color: colors.primary.blue[500] }}>
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        style={{ color: colors.primary.blue[500] }}
+      >
         {text.slice(index, index + trimmed.length)}
-      </Text>
+      </AppText>
       {text.slice(index + trimmed.length)}
-    </Text>
+    </AppText>
   );
 };
 

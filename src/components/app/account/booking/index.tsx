@@ -19,6 +19,7 @@ import {
   StSvg,
   Switch,
   Typography,
+  Card,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
@@ -54,16 +55,16 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
 
   return (
     <>
-      <Item
+      <Card
         title="Шаг записи"
-        className="border-0"
+        subtitle="Интервал между доступными временами"
         right={
-          <View className="flex-row items-center gap-1">
+          <>
             <Typography className="text-neutral-500 text-body">
               {formatStep(field.value)}
             </Typography>
             <StSvg name="Expand_right" size={20} color={colors.neutral[400]} />
-          </View>
+          </>
         }
         onPress={() => setModalVisible(true)}
       />
@@ -222,17 +223,35 @@ const Booking = () => {
             className="px-screen"
           >
             <View className="gap-4">
-              <View className="bg-background-surface rounded-base">
+              <View className="gap-2">
                 <BookingStepField
                   onSelect={() => methods.handleSubmit(onSubmit)()}
                 />
-                <View className="px-4">
-                  <Divider />
-                </View>
-
-                <Item
+                <Card
+                  title="Фиксированное время"
+                  subtitle="Если заданы конкретные времена — клиенту показываются только они"
+                  right={
+                    <>
+                      <Typography className="text-body text-primary-green-700">
+                        Вкл
+                      </Typography>
+                      <StSvg
+                        name="Expand_right"
+                        size={20}
+                        color={colors.neutral[400]}
+                      />
+                    </>
+                  }
+                  onPress={() =>
+                    router.push(Routers.app.account.bookingFixedTime)
+                  }
+                />
+                <Card
                   title="Условия записи"
-                  className="border-0"
+                  subtitle="Опиши конкретные правила: сроки отмены, что происходит при опоздании, болезни и т.п."
+                  onPress={() =>
+                    router.push(Routers.app.account.bookingConditions)
+                  }
                   right={
                     <StSvg
                       name="Expand_right"
@@ -240,11 +259,10 @@ const Booking = () => {
                       color={colors.neutral[400]}
                     />
                   }
-                  onPress={() =>
-                    router.push(Routers.app.account.bookingConditions)
-                  }
                 />
               </View>
+
+              <Divider />
 
               <View className="bg-background-surface rounded-base p-4 gap-3">
                 <View className="flex-row items-start  gap-3">

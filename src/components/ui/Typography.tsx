@@ -1,11 +1,8 @@
-import { Text as RNText, TextProps as RNTextProps } from "react-native";
+import type { TextProps as RNTextProps } from "react-native";
+import { AppText } from "./AppText";
 
 export type TextWeight =
-  | "regular"
-  | "medium"
-  | "semibold"
-  | "bold"
-  | "extrabold";
+  "regular" | "medium" | "semibold" | "bold" | "extrabold";
 
 type TextProps = {
   weight?: TextWeight;
@@ -19,12 +16,12 @@ export function Typography({
   ...props
 }: TextProps) {
   return (
-    <RNText
+    <AppText
       className={className ? `${styles[weight]} ${className}` : styles[weight]}
       {...props}
     >
       {children}
-    </RNText>
+    </AppText>
   );
 }
 

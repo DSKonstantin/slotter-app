@@ -1,5 +1,7 @@
 import React, { memo } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 
 type SegmentProps = {
@@ -29,7 +31,8 @@ const Segment = ({
         className,
       )}
     >
-      <Text
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         className={twMerge(
           "font-inter-medium text-caption",
           isActive ? "text-neutral-0" : "text-neutral-700",
@@ -38,7 +41,7 @@ const Segment = ({
         )}
       >
         {label}
-      </Text>
+      </AppText>
     </TouchableOpacity>
   );
 };

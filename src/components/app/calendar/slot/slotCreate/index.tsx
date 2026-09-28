@@ -409,11 +409,11 @@ const SlotCreate: React.FC = () => {
                     </View>
                   </View>
 
-                  <View className="flex-row mt-1 gap-2">
+                  <View className="flex-row items-end mt-1 gap-2">
                     <View className="flex-1">
                       <RhfDurationPicker
                         name="duration"
-                        label="Продолжительность"
+                        label="Длительность"
                         placeholder="Выберите длительность"
                       />
                     </View>

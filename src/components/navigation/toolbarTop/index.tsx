@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 
 import { StyleSheet, TextInput, View } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import {
   Button,
   IconButton,
@@ -68,6 +69,7 @@ const ToolbarTop = ({
               <View className="flex-1 flex-row items-center px-4 gap-2">
                 <StSvg name="Search" size={20} color={colors.neutral[500]} />
                 <TextInput
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
                   autoFocus
                   value={toolbar?.searchValue ?? ""}
                   onChangeText={toolbar?.handleSearchChange}

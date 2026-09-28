@@ -1,5 +1,6 @@
 import React from "react";
 import { Platform, TextInput, TextInputProps } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { Controller, FieldError, useFormContext } from "react-hook-form";
 import { colors } from "@/src/styles/colors";
 
@@ -20,6 +21,7 @@ const EditableRowInput = ({
 }: EditableRowInputProps) => {
   return (
     <TextInput
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
       {...props}
       value={props.value ?? ""}
       editable={!disabled && (props.editable ?? true)}

@@ -1,11 +1,7 @@
 import { ReactNode } from "react";
-import {
-  TouchableOpacity,
-  View,
-  Text,
-  ViewStyle,
-  TextStyle,
-} from "react-native";
+import { TouchableOpacity, View, ViewStyle, TextStyle } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 
 type BadgeVariant =
@@ -69,9 +65,14 @@ export function Badge({
 
   const content = (
     <>
-      <Text className={textClass} style={textStyle} numberOfLines={1}>
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        className={textClass}
+        style={textStyle}
+        numberOfLines={1}
+      >
         {title}
-      </Text>
+      </AppText>
       {icon && (
         <View
           className={twMerge(

@@ -52,6 +52,7 @@ const InsightCard = ({ title, imageSource, onPress }: Props) => {
           weight="semibold"
           className="text-caption leading-4 tracking-tight text-neutral-0"
           numberOfLines={4}
+          maxFontSizeMultiplier={1}
         >
           {title}
         </Typography>

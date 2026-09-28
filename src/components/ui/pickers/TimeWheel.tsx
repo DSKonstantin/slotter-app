@@ -1,19 +1,16 @@
-import React, { memo, useCallback, useMemo, useRef, useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import WheelPicker, {
   withVirtualized,
 } from "@quidone/react-native-wheel-picker";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
-import { colors } from "@/src/styles/colors";
-
-export const ITEM_HEIGHT = 40;
-export const VISIBLE_ITEMS = 5;
-export const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
-const SELECTED_TOP = (PICKER_HEIGHT - ITEM_HEIGHT) / 2;
-const FADE_HEIGHT = ITEM_HEIGHT * 2;
-const FADE_COLOR = colors.background.DEFAULT;
-const HAPTIC_THROTTLE_MS = 30;
+import { renderWheelPickerItem } from "./WheelPickerItem";
+import {
+  ITEM_HEIGHT,
+  PICKER_HEIGHT,
+  VISIBLE_ITEMS,
+  WheelFrame,
+  useWheelHaptics,
+} from "./WheelFrame";
 
 const HOUR_LOOP_REPEAT_COUNT = 15;
 const MINUTE_LOOP_REPEAT_COUNT = 7;
@@ -52,13 +49,7 @@ const WheelColumn = memo(function WheelColumn({
   value,
   onValueChanged,
 }: WheelColumnProps) {
-  const lastHapticRef = useRef(0);
-  const handleValueChanging = useCallback(() => {
-    const now = Date.now();
-    if (now - lastHapticRef.current < HAPTIC_THROTTLE_MS) return;
-    lastHapticRef.current = now;
-    void Haptics.selectionAsync();
-  }, []);
+  const handleValueChanging = useWheelHaptics();
 
   if (options.length === 0) return null;
   const Picker = loop ? LoopWheelPicker : WheelPicker;
@@ -69,6 +60,7 @@ const WheelColumn = memo(function WheelColumn({
       itemHeight={ITEM_HEIGHT}
       visibleItemCount={VISIBLE_ITEMS}
       renderOverlay={null}
+      renderItem={renderWheelPickerItem}
       itemTextStyle={
         align === "right"
           ? { textAlign: "right", paddingRight: 20 }
@@ -211,15 +203,7 @@ export const TimeWheel = memo(function TimeWheel({
   );
 
   return (
-    <View
-      style={{ height: PICKER_HEIGHT, width: pickerWidth, alignSelf: "center" }}
-      className="mb-4"
-    >
-      <View
-        pointerEvents="none"
-        className="absolute left-0 right-0 rounded-base bg-neutral-100/70"
-        style={{ top: SELECTED_TOP, height: ITEM_HEIGHT }}
-      />
+    <WheelFrame width={pickerWidth} className="mb-4">
       <View
         style={{ height: PICKER_HEIGHT }}
         className="flex-row overflow-hidden items-center"
@@ -241,36 +225,6 @@ export const TimeWheel = memo(function TimeWheel({
           onValueChanged={handleMinuteWheelChange}
         />
       </View>
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: FADE_HEIGHT,
-        }}
-      >
-        <LinearGradient
-          colors={[FADE_COLOR, `${FADE_COLOR}00`]}
-          style={{ flex: 1 }}
-        />
-      </View>
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: FADE_HEIGHT,
-        }}
-      >
-        <LinearGradient
-          colors={[`${FADE_COLOR}00`, FADE_COLOR]}
-          style={{ flex: 1 }}
-        />
-      </View>
-    </View>
+    </WheelFrame>
   );
 });

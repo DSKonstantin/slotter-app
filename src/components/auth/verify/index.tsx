@@ -267,7 +267,7 @@ const Verify = () => {
               <View className="flex-row items-center gap-3">
                 <RhfCheckbox name="agreedToTerms" />
                 <Typography className="text-caption text-neutral-700 flex-1">
-                  Я даю ООО «Slotter» согласие на обработку{" "}
+                  Я даю ООО «Slotter» согласие на{" "}
                   <Typography
                     className="text-caption text-black underline"
                     onPress={() =>

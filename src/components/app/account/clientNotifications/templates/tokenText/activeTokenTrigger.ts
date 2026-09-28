@@ -10,6 +10,7 @@ export function getActiveTokenTrigger(
 
   const query = uptoCursor.slice(start + 2);
   if (query.includes("}}") || !/^\w*$/.test(query)) return null;
+  if (/^\w*}}/.test(text.slice(cursor))) return null;
 
   return { start, query };
 }

@@ -1,4 +1,6 @@
-import { View, Text, Pressable, StyleProp, ViewStyle } from "react-native";
+import { View, Pressable, StyleProp, ViewStyle } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -39,13 +41,14 @@ export function Tag({
       )}
       style={containerStyle}
     >
-      <Text
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         className={`${styles.text.base} ${styles.text.sizes[size]} ${styles.text.variants[variant]}`}
         numberOfLines={1}
         ellipsizeMode="tail"
       >
         {title}
-      </Text>
+      </AppText>
       {icon && (
         <View className={`${styles.icon.base} ${styles.icon.sizes[size]}`}>
           {icon}

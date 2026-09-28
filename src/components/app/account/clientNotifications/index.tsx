@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ScrollView,
   Share,
+  useWindowDimensions,
   View,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
@@ -109,6 +110,7 @@ const ClientNotifications = () => {
   const ispe = useAppSelector((state) => state.appVersion.ispe);
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
+  const { fontScale } = useWindowDimensions();
 
   const {
     data: templatesData,
@@ -386,7 +388,7 @@ const ClientNotifications = () => {
             <View className="bg-background-surface p-4 rounded-base">
               <View className="flex-row gap-2 items-center">
                 <SlotterLogo size={32} />
-                <View>
+                <View className="flex-1">
                   <Typography className="text-body">
                     Slotter - трекер услуг и мастеров
                   </Typography>
@@ -413,7 +415,10 @@ const ClientNotifications = () => {
                         size={20}
                         color={colors.neutral[900]}
                       />
-                      <Typography weight="regular" className="text-caption">
+                      <Typography
+                        weight="regular"
+                        className="text-caption flex-1"
+                      >
                         {text}
                       </Typography>
                     </View>
@@ -430,7 +435,10 @@ const ClientNotifications = () => {
                         size={20}
                         color={colors.neutral[900]}
                       />
-                      <Typography weight="regular" className="text-caption">
+                      <Typography
+                        weight="regular"
+                        className="text-caption flex-1"
+                      >
                         {text}
                       </Typography>
                     </View>
@@ -455,7 +463,7 @@ const ClientNotifications = () => {
               />
             </View>
 
-            <View className="my-2 flex-row gap-2">
+            <View className={`my-2 gap-2 ${fontScale > 1 ? "" : "flex-row"}`}>
               {TELEGRAM_BOTS.map(({ title, icon, url }) => (
                 <Card
                   key={title}

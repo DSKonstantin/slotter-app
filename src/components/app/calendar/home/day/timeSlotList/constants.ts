@@ -1,10 +1,17 @@
+import { PixelRatio } from "react-native";
 import { colors } from "@/src/styles/colors";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
+
+const FONT_SCALE = Math.min(
+  Math.max(PixelRatio.getFontScale(), 1),
+  MAX_FONT_SCALE,
+);
 
 export const HOUR_HEIGHT = 80;
 export const MINUTE_HEIGHT = HOUR_HEIGHT / 60;
 export const SLOT_GAP = 2;
-export const SHORT_SLOT_MIN_HEIGHT = 36;
-export const LONG_SLOT_MIN_HEIGHT = 76;
+export const SHORT_SLOT_MIN_HEIGHT = Math.round(36 * FONT_SCALE);
+export const LONG_SLOT_MIN_HEIGHT = Math.round(76 * FONT_SCALE);
 export const LEFT_COL = 50;
 export const RIGHT_GAP = 10;
 
