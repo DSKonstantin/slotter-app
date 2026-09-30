@@ -1,4 +1,4 @@
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import type { ConfirmCodeAuthorizedResponse } from "@/src/store/redux/services/api-types";
 
 export const notifyReferralResult = (

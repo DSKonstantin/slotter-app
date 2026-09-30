@@ -22,7 +22,7 @@ import { useLazyGetMeQuery } from "@/src/store/redux/services/api/authApi";
 import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import ProfileAvatar from "@/src/components/app/account/ProfileAvatar";
 import { useAppSelector } from "@/src/store/redux/store";
 import { SlotterCardsIcon } from "@/src/components/shared/svg/SlotterCardsIcon";

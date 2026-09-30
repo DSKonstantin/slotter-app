@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useLocalSearchParams } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { AuthScreenLayout } from "@/src/components/auth/layout";

@@ -7,18 +7,22 @@ import {
   useWatch,
 } from "react-hook-form";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
   Button,
+  Card,
   FloatingFooter,
   SegmentedControl,
   StSvg,
 } from "@/src/components/ui";
+import RHFSwitch from "@/src/components/hookForm/rhf-switch";
 import { colors } from "@/src/styles/colors";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
+import { useAppDispatch } from "@/src/store/redux/store";
+import { setBookingFixedTime } from "@/src/store/redux/slices/bookingFixedTimeSlice";
 import {
-  MOCK_DEFAULT_VALUES,
   MODE_OPTIONS,
   type BookingFixedTimeFormValues,
   type FixedTimeMode,
@@ -29,19 +33,24 @@ import FixedTimesTab from "./FixedTimesTab";
 import WeeklyTimesTab from "./WeeklyTimesTab";
 
 const BookingFixedTime = () => {
+  const dispatch = useAppDispatch();
+  const settings = useBookingFixedTime();
   const methods = useForm<BookingFixedTimeFormValues>({
-    defaultValues: MOCK_DEFAULT_VALUES,
+    defaultValues: settings,
   });
   const { control, formState, reset, handleSubmit } = methods;
   const { isDirty } = formState;
   const { field: modeField } = useController({ control, name: "mode" });
   const interval = useWatch({ control, name: "interval" });
+  const enabled = useWatch({ control, name: "enabled" });
   useFormNavigationGuard(isDirty);
 
   const gridItems = useMemo(() => buildGridItems(interval), [interval]);
 
   const onSubmit = (values: BookingFixedTimeFormValues) => {
-    reset(normalizeValues(values));
+    const next = normalizeValues(values);
+    dispatch(setBookingFixedTime(next));
+    reset(next);
     toast.success("Изменения сохранены");
     router.back();
   };
@@ -60,19 +69,28 @@ const BookingFixedTime = () => {
               className="px-screen"
             >
               <View className="gap-4">
-                <SegmentedControl
-                  value={modeField.value}
-                  options={MODE_OPTIONS}
-                  onChange={(value) =>
-                    modeField.onChange(value as FixedTimeMode)
-                  }
+                <Card
+                  title="Включить фиксированное время"
+                  right={<RHFSwitch name="enabled" />}
                 />
-                <IntervalField />
-                {modeField.value === "fixed" ? (
-                  <FixedTimesTab gridItems={gridItems} />
-                ) : (
-                  <WeeklyTimesTab gridItems={gridItems} />
-                )}
+                <View
+                  pointerEvents={enabled ? "auto" : "none"}
+                  className={enabled ? "gap-4 opacity-100" : "gap-4 opacity-40"}
+                >
+                  <SegmentedControl
+                    value={modeField.value}
+                    options={MODE_OPTIONS}
+                    onChange={(value) =>
+                      modeField.onChange(value as FixedTimeMode)
+                    }
+                  />
+                  <IntervalField />
+                  {modeField.value === "fixed" ? (
+                    <FixedTimesTab gridItems={gridItems} />
+                  ) : (
+                    <WeeklyTimesTab gridItems={gridItems} />
+                  )}
+                </View>
               </View>
             </ScrollView>
 

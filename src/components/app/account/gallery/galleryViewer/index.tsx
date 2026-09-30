@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Modal, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Toasts } from "@backpackapp-io/react-native-toast";
+import { AppToasts } from "@/src/components/ui/toast";
 import { Gallery } from "react-native-zoom-toolkit";
 import { scheduleOnRN } from "react-native-worklets";
 import ZoomableImage from "@/src/components/shared/imageViewer/ZoomableImage";
@@ -73,7 +73,7 @@ export function GalleryViewer({
       presentationStyle="overFullScreen"
     >
       <GestureHandlerRootView className="flex-1">
-        <Toasts overrideDarkMode={true} />
+        <AppToasts />
         {cropVisible && current ? (
           <CropView
             originalUri={current.originalUrl}

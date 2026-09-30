@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -28,6 +29,8 @@ type Props = {
   title?: string;
   data?: DataPoint[];
   periods?: Period[];
+  initialPeriod?: Period;
+  isLoading?: boolean;
   onPeriodChange?: (period: Period) => void;
 };
 
@@ -35,9 +38,13 @@ const TrendChartCard = ({
   title = "Динамика",
   data = [],
   periods = [],
+  initialPeriod,
+  isLoading = false,
   onPeriodChange,
 }: Props) => {
-  const [selectedPeriod, setSelectedPeriod] = useState(periods[0]);
+  const [selectedPeriod, setSelectedPeriod] = useState(
+    initialPeriod ?? periods[0],
+  );
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -131,7 +138,11 @@ const TrendChartCard = ({
       </View>
 
       <View className="flex-1 min-h-[184px]">
-        {data.length === 0 ? (
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center min-h-[150px]">
+            <ActivityIndicator color={colors.neutral[500]} />
+          </View>
+        ) : data.length === 0 ? (
           <View className="flex-1 items-center justify-center min-h-[150px]">
             <Typography className="text-body text-neutral-400">
               Нет данных

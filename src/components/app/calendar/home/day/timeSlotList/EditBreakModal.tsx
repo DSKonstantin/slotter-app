@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, View } from "react-native";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import { StModal, Typography, Button, Input, StSvg } from "@/src/components/ui";
 import { TimeWheelField } from "@/src/components/ui/fields/TimeWheelField";

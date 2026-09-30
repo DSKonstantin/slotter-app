@@ -26,7 +26,7 @@ import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { STEP_PROGRESS, TOTAL_STEPS } from "@/src/utils/getOnboardingStep";
 

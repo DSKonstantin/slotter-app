@@ -20,7 +20,7 @@ import {
   useUpdateServiceCategoryMutation,
 } from "@/src/store/redux/services/api/serviceCategoriesApi";
 import { useSafeAreaPadding } from "@/src/hooks/useSafeAreaPadding";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import map from "lodash/map";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";

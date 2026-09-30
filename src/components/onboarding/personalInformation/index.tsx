@@ -25,7 +25,7 @@ import {
   PersonalInformationSchema,
   type PersonalInformationFormValues,
 } from "@/src/validation/schemas/onboardingPersonalInformation.schema";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { buildUserFormData } from "@/src/utils/formData/buildUserFormData";
 import { assetToFile } from "@/src/utils/files/assetToFile";

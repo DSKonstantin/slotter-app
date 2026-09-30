@@ -16,7 +16,7 @@ import {
 import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import EyeToggle from "@/src/components/shared/EyeToggle";
 
 const Register = () => {

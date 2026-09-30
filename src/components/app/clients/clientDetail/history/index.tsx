@@ -13,6 +13,7 @@ import {
 import { ru } from "date-fns/locale";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import RetryInline from "@/src/components/shared/retryInline";
 import {
   Avatar,
   Card,
@@ -75,7 +76,7 @@ type Props =
 
 const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const [filterActive, setFilterActive] = useState(false);
-  const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[0]);
+  const [financePeriod, setFinancePeriod] = useState(FINANCE_PERIODS[2]);
 
   const auth = useRequiredAuth();
 
@@ -97,7 +98,6 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
 
   const {
     data: financesData,
-    isLoading: financesLoading,
     isFetching: financesFetching,
     isError: financesError,
     refetch: refetchFinances,
@@ -114,7 +114,6 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
 
   const {
     data: appointmentsData,
-    isLoading: appointmentsLoading,
     isFetching: appointmentsFetching,
     isError: appointmentsError,
     refetch: refetchAppointments,
@@ -147,19 +146,22 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
     ? format(parseISO(lastVisitAt), "d MMM yyyy", { locale: ru })
     : "—";
 
-  const isLoading =
-    customerLoading || (filterActive ? appointmentsLoading : financesLoading);
-  const isError =
-    customerError || (filterActive ? appointmentsError : financesError);
-  const isFetching =
-    customerFetching ||
-    (filterActive ? appointmentsFetching : financesFetching);
+  const activeData = filterActive ? appointmentsData : financesData;
+  const activeFetching = filterActive ? appointmentsFetching : financesFetching;
+  const activeError = filterActive ? appointmentsError : financesError;
+  const hasData = activeData !== undefined;
+
+  const isError = (customerError && !customerData) || (!hasData && activeError);
+  const isLoading = !isError && (customerLoading || !hasData);
+  const isFetching = customerFetching || activeFetching;
 
   const handleRefresh = useCallback(
     () => (filterActive ? refetchAppointments() : refetchFinances()),
     [filterActive, refetchAppointments, refetchFinances],
   );
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
+  const isUpdating = hasData && activeFetching && !refreshing;
+  const hasUpdateError = hasData && activeError && !activeFetching;
 
   const handleRetry = useCallback(() => {
     if (customerError) refetchCustomer();
@@ -192,7 +194,7 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
       }
     >
       {({ topInset, bottomInset }) => {
-        if (!isLoading && isError) {
+        if (isError) {
           return (
             <ErrorScreen
               title="Не удалось загрузить историю"
@@ -240,109 +242,131 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
 
             {isLoading ? (
               <HistorySkeleton filterActive={filterActive} />
-            ) : filterActive ? (
-              <View className="gap-6">
-                {appointmentSections.map((section) => (
-                  <View key={section.title} className="gap-4">
-                    <Typography className="text-body">
-                      {section.title}
-                    </Typography>
-                    <FlashList
-                      data={section.items}
-                      keyExtractor={(item) => String(item.id)}
-                      numColumns={2}
-                      scrollEnabled={false}
-                      ItemSeparatorComponent={() => <View className="h-3" />}
-                      renderItem={({ item, index }) => {
-                        const name =
-                          item.services.map((s) => s.name).join(" + ") ||
-                          "Запись";
-                        const firstService = item.services[0];
-                        return (
-                          <View
-                            style={{
-                              flex: 1,
-                              marginRight: index % 2 === 0 ? 6 : 0,
-                            }}
-                          >
-                            <ServiceCard
-                              service={{
-                                name,
-                                main_photo_url: firstService?.main_photo_url,
-                                main_photo_blurhash:
-                                  firstService?.main_photo_blurhash,
-                              }}
-                              date={formatDayMonth(item.date)}
-                              onPress={() =>
-                                router.push(Routers.app.slot(item.id))
-                              }
-                            />
-                          </View>
-                        );
-                      }}
-                    />
-                  </View>
-                ))}
-                {appointmentSections.length === 0 && (
-                  <View className="items-center py-10">
-                    <Typography className="text-body text-neutral-400">
-                      Нет посещений
-                    </Typography>
-                  </View>
-                )}
-              </View>
             ) : (
-              <View className="gap-5">
-                <IncomeCard
-                  totalIncome={formatRublesFromCents(
-                    financesData?.total_income_cents ?? 0,
-                  )}
-                  items={[
-                    {
-                      label: "Визитов",
-                      value: String(financesData?.visits_count ?? 0),
-                    },
-                    { label: "Последний визит", value: lastVisitLabel },
-                  ]}
-                />
+              <>
+                {hasUpdateError && (
+                  <RetryInline
+                    text="Не удалось обновить"
+                    onRetry={handleRefresh}
+                    className="mb-4"
+                  />
+                )}
+                <View className={isUpdating ? "opacity-70" : undefined}>
+                  {filterActive ? (
+                    <View className="gap-6">
+                      {appointmentSections.map((section) => (
+                        <View key={section.title} className="gap-4">
+                          <Typography className="text-body">
+                            {section.title}
+                          </Typography>
+                          <FlashList
+                            data={section.items}
+                            keyExtractor={(item) => String(item.id)}
+                            numColumns={2}
+                            scrollEnabled={false}
+                            ItemSeparatorComponent={() => (
+                              <View className="h-3" />
+                            )}
+                            renderItem={({ item, index }) => {
+                              const name =
+                                item.services.map((s) => s.name).join(" + ") ||
+                                "Запись";
+                              const firstService = item.services[0];
+                              return (
+                                <View
+                                  style={{
+                                    flex: 1,
+                                    marginRight: index % 2 === 0 ? 6 : 0,
+                                  }}
+                                >
+                                  <ServiceCard
+                                    service={{
+                                      name,
+                                      main_photo_url:
+                                        firstService?.main_photo_url,
+                                      main_photo_blurhash:
+                                        firstService?.main_photo_blurhash,
+                                    }}
+                                    date={formatDayMonth(item.date)}
+                                    onPress={() =>
+                                      router.push(Routers.app.slot(item.id))
+                                    }
+                                  />
+                                </View>
+                              );
+                            }}
+                          />
+                        </View>
+                      ))}
+                      {appointmentSections.length === 0 && (
+                        <View className="items-center py-10">
+                          <Typography className="text-body text-neutral-400">
+                            Нет посещений
+                          </Typography>
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    <View className="gap-5">
+                      <IncomeCard
+                        totalIncome={formatRublesFromCents(
+                          financesData?.total_income_cents ?? 0,
+                        )}
+                        items={[
+                          {
+                            label: "Визитов",
+                            value: String(financesData?.visits_count ?? 0),
+                          },
+                          { label: "Последний визит", value: lastVisitLabel },
+                        ]}
+                      />
 
-                <TrendChartCard
-                  title="Динамика"
-                  data={chartData}
-                  periods={FINANCE_PERIODS}
-                  onPeriodChange={(p) =>
-                    setFinancePeriod(p as (typeof FINANCE_PERIODS)[number])
-                  }
-                />
+                      <TrendChartCard
+                        title="Динамика"
+                        data={chartData}
+                        periods={FINANCE_PERIODS}
+                        initialPeriod={financePeriod}
+                        isLoading={isUpdating}
+                        onPeriodChange={(p) =>
+                          setFinancePeriod(
+                            p as (typeof FINANCE_PERIODS)[number],
+                          )
+                        }
+                      />
 
-                <View className="gap-2">
-                  <Typography className="text-caption">
-                    История оплат
-                  </Typography>
-                  {(financesData?.payments ?? []).map((payment) => (
-                    <Card
-                      key={payment.appointment_id}
-                      title={payment.title}
-                      subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
-                      onPress={() =>
-                        router.push(Routers.app.slot(payment.appointment_id))
-                      }
-                      right={
-                        <Typography className="text-body">
-                          {formatRublesFromCents(payment.amount_cents)}
+                      <View className="gap-2">
+                        <Typography className="text-caption">
+                          История оплат
                         </Typography>
-                      }
-                    />
-                  ))}
-                  {(financesData?.payments ?? []).length === 0 && (
-                    <View className="items-center py-6">
-                      <Typography className="text-body text-neutral-400">
-                        Нет оплат за период
-                      </Typography>
+                        {(financesData?.payments ?? []).map((payment) => (
+                          <Card
+                            key={payment.appointment_id}
+                            title={payment.title}
+                            subtitle={`${formatDayMonth(payment.date)} | ${payment.start_time}`}
+                            onPress={() =>
+                              router.push(
+                                Routers.app.slot(payment.appointment_id),
+                              )
+                            }
+                            right={
+                              <Typography className="text-body">
+                                {formatRublesFromCents(payment.amount_cents)}
+                              </Typography>
+                            }
+                          />
+                        ))}
+                        {(financesData?.payments ?? []).length === 0 && (
+                          <View className="items-center py-6">
+                            <Typography className="text-body text-neutral-400">
+                              Нет оплат за период
+                            </Typography>
+                          </View>
+                        )}
+                      </View>
                     </View>
                   )}
                 </View>
-              </View>
+              </>
             )}
           </ScrollView>
         );

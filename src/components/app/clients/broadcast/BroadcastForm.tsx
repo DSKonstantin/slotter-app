@@ -11,7 +11,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {

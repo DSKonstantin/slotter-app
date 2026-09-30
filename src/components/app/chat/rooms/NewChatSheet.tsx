@@ -17,7 +17,7 @@ import { KeyboardEvents } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { StModal } from "@/src/components/ui/StModal";
 import { Avatar, HighlightText, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";

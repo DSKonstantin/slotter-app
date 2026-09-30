@@ -26,7 +26,7 @@ import { useAppSelector } from "@/src/store/redux/store";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { skipToken } from "@reduxjs/toolkit/query";
 import map from "lodash/map";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import ContactsSkeleton from "@/src/components/app/account/contacts/ContactsSkeleton";

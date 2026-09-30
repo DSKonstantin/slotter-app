@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { getDay, parseISO } from "date-fns";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import type { UseFormReturn } from "react-hook-form";
 
 import { useBulkCreateWorkingDaysMutation } from "@/src/store/redux/services/api/workingDaysApi";

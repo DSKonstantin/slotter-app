@@ -1,6 +1,6 @@
 import React from "react";
 import { Linking, View } from "react-native";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { StModal, Button, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { formatPhoneDisplay } from "@/src/utils/mask/maskPhone";

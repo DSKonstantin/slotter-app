@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { Typography } from "@/src/components/ui";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
 import { AuthScreenLayout } from "@/src/components/auth/layout";

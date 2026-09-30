@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Pressable, Share } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import Svg, { Path, Rect } from "react-native-svg";
 import { Typography, Divider, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";

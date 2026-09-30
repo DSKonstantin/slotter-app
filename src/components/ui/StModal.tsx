@@ -8,7 +8,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import { Toasts } from "@backpackapp-io/react-native-toast";
+import { AppToasts } from "@/src/components/ui/toast/AppToasts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal, { ModalProps } from "react-native-modal";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -214,7 +214,7 @@ export const StModal = ({
         {footer}
       </View>
 
-      {visible && <Toasts overrideDarkMode={true} />}
+      {visible && <AppToasts />}
     </Modal>
   );
 };

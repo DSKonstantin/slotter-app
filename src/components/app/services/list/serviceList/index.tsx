@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Alert, LayoutAnimation, Pressable, View } from "react-native";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import {
   NestableDraggableFlatList,
   RenderItemParams,

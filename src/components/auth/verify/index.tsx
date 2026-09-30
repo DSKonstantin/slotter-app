@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { unMask } from "react-native-mask-text";
 
 import { AuthScreenLayout } from "@/src/components/auth/layout";

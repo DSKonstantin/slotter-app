@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";

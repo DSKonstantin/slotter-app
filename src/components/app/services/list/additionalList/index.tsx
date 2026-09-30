@@ -4,7 +4,7 @@ import {
   NestableDraggableFlatList,
   RenderItemParams,
 } from "react-native-draggable-flatlist";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 

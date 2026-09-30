@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Typography } from "@/src/components/ui";

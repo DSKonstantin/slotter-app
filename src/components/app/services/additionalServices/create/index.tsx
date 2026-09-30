@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/additionalServicesApi";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 

@@ -14,7 +14,7 @@ import { RhfWorkingDayTimePickerField } from "@/src/components/hookForm/rhf-work
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import {
   SlotCreateSchema,
   type SlotCreateFormValues,

@@ -64,7 +64,7 @@ import {
   useCreateAppointmentMutation,
   useCustomerAcceptAppointmentMutation,
 } from "@/src/store/redux/services/api/appointmentsApi";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage, isQuotaExceeded } from "@/src/utils/apiError";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import type { Service } from "@/src/store/redux/services/api-types";

@@ -4,7 +4,7 @@ import { Alert, View } from "react-native";
 import { Button, StSvg } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import {
   useConfirmAppointmentMutation,

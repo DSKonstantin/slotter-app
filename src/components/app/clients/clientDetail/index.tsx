@@ -3,7 +3,7 @@ import { Alert, View, RefreshControl, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { FormProvider, useForm } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import BirthdayBadge from "@/src/components/app/clients/shared/birthdayBadge";
@@ -124,12 +124,12 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const handleDeleteCustomer = useCallback(() => {
     if (!auth || !customer || !userCustomer) return;
     Alert.alert(
-      "Удалить клиента?",
-      `${customer.name} и вся история визитов будут удалены без возможности восстановления`,
+      "Заблокировать клиента?",
+      `${customer.name} будет заблокирован(а) без возможности повторной записи к вам`,
       [
         { text: "Отмена", style: "cancel" },
         {
-          text: "Удалить",
+          text: "Заблокировать",
           style: "destructive",
           onPress: () => {
             router.back();
@@ -137,7 +137,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               .unwrap()
               .catch((error) => {
                 toast.error(
-                  getApiErrorMessage(error, "Не удалось удалить клиента"),
+                  getApiErrorMessage(error, "Не удалось заблокировать клиента"),
                 );
               });
           },
@@ -453,7 +453,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
               />
 
               <Button
-                title="Удалить клиента"
+                title="Заблокировать клиента"
                 variant="clear"
                 onPress={handleDeleteCustomer}
                 textClassName="text-accent-red-500"

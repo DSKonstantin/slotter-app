@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { View } from "react-native";
 import { FormProvider, Resolver, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import { Button } from "@/src/components/ui/Button";
 import { Typography } from "@/src/components/ui/Typography";

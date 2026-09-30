@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { CameraType } from "expo-image-picker";
 import type { PickedAssets } from "@/src/components/shared/imagePicker/imagePickerTrigger";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {

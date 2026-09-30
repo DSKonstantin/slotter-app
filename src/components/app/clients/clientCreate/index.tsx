@@ -16,7 +16,7 @@ import {
   ClientCreateSchema,
   type ClientCreateFormValues,
 } from "@/src/validation/schemas/clientCreate.schema";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {

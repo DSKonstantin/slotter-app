@@ -5,7 +5,7 @@ import { StModal, Typography, Button } from "@/src/components/ui";
 import notWorkingImage from "@/assets/images/app/not-working.webp";
 import { useUpdateWorkingDayMutation } from "@/src/store/redux/services/api/workingDaysApi";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type Props = {

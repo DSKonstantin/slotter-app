@@ -3,10 +3,9 @@ import { View } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
-import { StSvg } from "@/src/components/ui";
 import { FormSaveFooter } from "@/src/components/hookForm/FormSaveFooter";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/authApi";
@@ -17,7 +16,6 @@ import {
   changePasswordSchema,
   type ChangePasswordFormValues,
 } from "@/src/validation/schemas/changePassword.schema";
-import { colors } from "@/src/styles/colors";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import EyeToggle from "@/src/components/shared/EyeToggle";
 
@@ -52,15 +50,7 @@ const ChangePassword = () => {
             password_confirmation: values.password_confirmation,
           },
         }).unwrap();
-        toast.success("Пароль изменён", {
-          icon: (
-            <StSvg
-              name="check_ring_round_light"
-              size={20}
-              color={colors.neutral[900]}
-            />
-          ),
-        });
+        toast.security("Пароль изменён");
         methods.reset();
         router.back();
       } catch (error) {

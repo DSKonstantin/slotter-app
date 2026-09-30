@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { isToday, isYesterday } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatTime } from "@/src/utils/date/formatTime";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { Routers } from "@/src/constants/routers";
 
 import {

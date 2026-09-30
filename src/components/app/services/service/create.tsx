@@ -9,7 +9,7 @@ import ServiceFormBody, {
 import { useCreateServiceMutation } from "@/src/store/redux/services/api/servicesApi";
 import { appendPhotosToFormData } from "@/src/utils/appendPhotosToFormData";
 import { buildServiceFormData } from "@/src/utils/formData/buildServiceFormData";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { serviceFormSchema } from "@/src/validation/schemas/serviceForm.schema";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";

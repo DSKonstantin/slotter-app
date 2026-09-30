@@ -18,7 +18,7 @@ import DefaultTheme from "@/src/styles/navigation/DefaultTheme";
 import { useFonts } from "expo-font";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-import { Toasts } from "@backpackapp-io/react-native-toast";
+import { AppToasts } from "@/src/components/ui/toast";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -146,7 +146,7 @@ function InitialLayout() {
         />
         <Stack.Screen name="webview" options={{ headerShown: false }} />
       </Stack>
-      <Toasts overrideDarkMode={true} />
+      <AppToasts />
       <StatusBar style="auto" />
       {appVersionReady && <AppUpdateModal />}
     </>

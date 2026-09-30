@@ -26,9 +26,10 @@ import { Routers } from "@/src/constants/routers";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import type { AppointmentStep } from "@/src/store/redux/services/api-types";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
 
 const DEFAULT_CONSENT_TEXT =
   "Обработку персональных данных осуществляет оператор - ООО Организация (ИНН 12345678910). Даю свое согласие на обработку моих персональных данных, а именно: Настоящее согласие предоставляется на совершении следующих действий с персональными данными: сбор, запись, систематизация, хранение, уточнение (обновление, изменение), использование, обезличивание, удаление, уничтожение.";
@@ -99,6 +100,7 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
 
 const Booking = () => {
   const user = useAppSelector((s) => s.auth.user);
+  const fixedTime = useBookingFixedTime();
   const [updateUser, { isLoading: isSaving }] = useUpdateUserMutation();
   const [updateUserSilent] = useUpdateUserMutation();
 
@@ -232,8 +234,10 @@ const Booking = () => {
                   subtitle="Если заданы конкретные времена — клиенту показываются только они"
                   right={
                     <>
-                      <Typography className="text-body text-primary-green-700">
-                        Вкл
+                      <Typography
+                        className={`text-body ${fixedTime.enabled ? "text-primary-green-700" : "text-neutral-500"}`}
+                      >
+                        {fixedTime.enabled ? "Вкл" : "Выкл"}
                       </Typography>
                       <StSvg
                         name="Expand_right"

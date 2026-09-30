@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { FormProvider, Resolver, useForm, useWatch } from "react-hook-form";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";

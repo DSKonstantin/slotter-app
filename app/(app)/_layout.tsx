@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { Stack } from "expo-router";
 import StTabBar from "@/src/components/navigation/tabBar";
 import TabMenu from "@/src/components/navigation/tabBar/tabMenu";
+import NotificationPermissionPrompt from "@/src/components/app/notificationPermissionPrompt";
 import { useShowTabBar } from "@/src/hooks/useShowTabBar";
 
 export default function AppLayout() {
@@ -27,6 +28,7 @@ export default function AppLayout() {
       </Stack>
       {showTabBar && <StTabBar />}
       <TabMenu />
+      <NotificationPermissionPrompt />
     </View>
   );
 }

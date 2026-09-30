@@ -10,6 +10,7 @@ import uiReducer from "@/src/store/redux/slices/uiSlice";
 import appVersionReducer from "@/src/store/redux/slices/appVersionSlice";
 import slotDraftReducer from "@/src/store/redux/slices/slotDraftSlice";
 import clientsReducer from "@/src/store/redux/slices/clientsSlice";
+import bookingFixedTimeReducer from "@/src/store/redux/slices/bookingFixedTimeSlice";
 import { api } from "@/src/store/redux/services/api";
 
 // Persist only the minimum needed to render the app before `getMe` resolves on
@@ -51,6 +52,7 @@ const rootReducer = combineReducers({
   services: servicesSlice,
   slotDraft: slotDraftReducer,
   clients: clientsReducer,
+  bookingFixedTime: bookingFixedTimeReducer,
   [api.reducerPath]: api.reducer,
 });
 

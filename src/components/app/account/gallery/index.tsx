@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
 import { useImagePicker } from "@/src/hooks/useImagePicker";
@@ -145,6 +145,7 @@ const Gallery = () => {
   );
   const [viewerPhotoId, setViewerPhotoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
+  const [listHeight, setListHeight] = useState(0);
 
   const auth = useRequiredAuth();
   const { userId } = auth!;
@@ -411,8 +412,10 @@ const Gallery = () => {
                   contentOffset={
                     Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
                   }
+                  onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
                   contentContainerStyle={{
-                    flexGrow: 1,
+                    minHeight:
+                      listHeight - (Platform.OS === "ios" ? topInset : 0),
                     paddingTop: Platform.OS === "ios" ? 0 : topInset,
                     paddingHorizontal: HORIZONTAL_PADDING,
                     paddingBottom:

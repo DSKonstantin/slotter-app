@@ -4,7 +4,7 @@ import { ru } from "date-fns/locale";
 import { router } from "expo-router";
 import React from "react";
 import { FormProvider, Resolver, useForm } from "react-hook-form";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { Routers } from "@/src/constants/routers";
