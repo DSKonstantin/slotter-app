@@ -5,7 +5,7 @@ import "dayjs/locale/ru";
 import { useEffect, useRef } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -38,9 +38,8 @@ import {
   loginOneSignal,
   logoutOneSignal,
 } from "@/src/services/oneSignal";
-import { Routers } from "@/src/constants/routers";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
-import { handleKindNavigation } from "@/src/utils/notificationNavigation";
+import { navigateFromNotification } from "@/src/utils/notificationNavigation";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -54,7 +53,6 @@ const FONTS = {
 };
 
 function InitialLayout() {
-  const router = useRouter();
   const authUser = useAppSelector((s) => s.auth.user);
   const authStatus = useAppSelector((s) => s.auth.status);
 
@@ -62,24 +60,19 @@ function InitialLayout() {
   const openPersonalAccount = useOpenPersonalAccount();
 
   useOneSignal((event) => {
-    const { kind, subject_id } = (event.notification.additionalData ?? {}) as {
+    const { kind, subject_id, subject_type } = (event.notification
+      .additionalData ?? {}) as {
       kind?: string;
       subject_id?: number;
+      subject_type?: string;
     };
 
-    if (handleKindNavigation(kind, openPersonalAccount)) return;
-
-    if (
-      kind?.startsWith("appointment_") ||
-      kind?.startsWith("rebook_") ||
-      kind === "review_request"
-    ) {
-      if (subject_id) router.push(Routers.app.slot(subject_id));
-    } else if (kind === "chat_new_activity") {
-      if (subject_id) router.push(Routers.app.chat.room(subject_id));
-    } else {
-      router.push(Routers.app.account.notifications);
-    }
+    navigateFromNotification({
+      kind,
+      subjectId: subject_id,
+      subjectType: subject_type,
+      openPersonalAccount,
+    });
   });
 
   const {

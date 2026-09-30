@@ -41,12 +41,11 @@ export interface UserCustomer {
   note: string | null;
   stats: UserCustomerStats;
   consents: Consent[];
+  blocked_at: string | null;
 }
 
 export type UserCustomerSort =
-  | "name_asc"
-  | "last_visit_desc"
-  | "next_appointment_asc";
+  "name_asc" | "last_visit_desc" | "next_appointment_asc";
 
 export type GetUserCustomersParams = {
   query?: string;
@@ -82,11 +81,7 @@ export type UpdateUserCustomerPayload = {
 };
 
 export type UserCustomerPeriod =
-  | "today"
-  | "current_week"
-  | "current_month"
-  | "last_30_days"
-  | "custom";
+  "today" | "current_week" | "current_month" | "last_30_days" | "custom";
 
 export type GetUserCustomerAppointmentsParams = {
   period?: UserCustomerPeriod;

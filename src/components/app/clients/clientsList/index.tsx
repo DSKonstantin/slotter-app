@@ -33,6 +33,7 @@ import { safeRefetch } from "@/src/utils/safeRefetch";
 import RetryInline from "@/src/components/shared/retryInline";
 import ClientsToolbarButton from "./ClientsToolbarButton";
 import ClientsHeaderCard from "./ClientsHeaderCard";
+import BlockedIcon from "@/src/components/app/clients/shared/blockedIcon";
 import BroadcastEntryCard from "./BroadcastEntryCard";
 import ClientsListSkeleton from "./ClientsListSkeleton";
 import ClientsFiltersSkeleton from "./ClientsFiltersSkeleton";
@@ -88,6 +89,7 @@ const ClientRow = React.memo(function ClientRow({
           size="md"
         />
       }
+      titleAccessory={item.blocked_at ? <BlockedIcon /> : undefined}
       right={
         <StSvg
           name="Expand_right_light"

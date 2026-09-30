@@ -27,10 +27,7 @@ export type SubscriptionPlanWithPrices = SubscriptionPlan & {
 };
 
 export type SubscriptionPaymentMethodType =
-  | "bank_card"
-  | "sbp"
-  | "sberbank"
-  | "sberpay";
+  "bank_card" | "sbp" | "sberbank" | "sberpay";
 
 export type SubscriptionPaymentMethod = {
   id: number;
@@ -71,10 +68,7 @@ export type RenewWithCardResponse = {
 };
 
 export type SubscriptionPaymentStatus =
-  | "pending"
-  | "succeeded"
-  | "failed"
-  | "refunded";
+  "pending" | "succeeded" | "failed" | "refunded";
 
 export type SubscriptionPaymentKind = "initial" | "renewal" | "grace_retry";
 

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { Linking } from "react-native";
 import { Image } from "expo-image";
 import { Badge, Button, StModal, Typography } from "@/src/components/ui";
-import { useAppSelector } from "@/src/store/redux/store";
+import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
+import { dismissUpdate } from "@/src/store/redux/slices/appVersionSlice";
 
 const DESCRIPTION =
   "Приложение стало еще лучше, нам важно, чтобы вы обновили его";
@@ -16,14 +17,15 @@ const UPDATE_BUTTON_GLOW = [
 ].join(", ");
 
 const AppUpdateModal: React.FC = () => {
-  const [dismissed, setDismissed] = useState(false);
-
-  const { updateStatus, storeUrl } = useAppSelector((s) => s.appVersion);
+  const dispatch = useAppDispatch();
+  const { updateStatus, storeUrl, updateDismissed } = useAppSelector(
+    (s) => s.appVersion,
+  );
 
   const isForced = updateStatus === "red";
   const visible =
     (updateStatus === "red" || updateStatus === "yellow") &&
-    (isForced || !dismissed);
+    (isForced || !updateDismissed);
 
   const handleUpdate = () => {
     if (storeUrl) {
@@ -34,7 +36,7 @@ const AppUpdateModal: React.FC = () => {
   return (
     <StModal
       visible={visible}
-      onClose={() => setDismissed(true)}
+      onClose={() => dispatch(dismissUpdate())}
       dismissible={!isForced}
     >
       <Image

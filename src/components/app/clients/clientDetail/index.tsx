@@ -24,7 +24,8 @@ import { Routers } from "@/src/constants/routers";
 import {
   useGetUserCustomerQuery,
   useUpdateUserCustomerMutation,
-  useDeleteUserCustomerMutation,
+  useBlockUserCustomerMutation,
+  useUnblockUserCustomerMutation,
 } from "@/src/store/redux/services/api/userCustomersApi";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
@@ -86,7 +87,8 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
   const [updateUserCustomer, { isLoading: isSaving }] =
     useUpdateUserCustomerMutation();
-  const [deleteUserCustomer] = useDeleteUserCustomerMutation();
+  const [blockUserCustomer] = useBlockUserCustomerMutation();
+  const [unblockUserCustomer] = useUnblockUserCustomerMutation();
   const [createChatRoom] = useCreateChatRoomMutation();
 
   const userCustomer = customerData?.user_customer;
@@ -121,30 +123,45 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const handleCloseContacts = useCallback(() => setContactsVisible(false), []);
 
   const handleOpenMenu = useCallback(() => setMenuVisible(true), []);
-  const handleDeleteCustomer = useCallback(() => {
+  const handleBlockCustomer = useCallback(() => {
     if (!auth || !customer || !userCustomer) return;
     Alert.alert(
       "Заблокировать клиента?",
-      `${customer.name} будет заблокирован(а) без возможности повторной записи к вам`,
+      `${customer.name} будет заблокирован(а) без возможности повторной записи к вам. Будущие записи клиента будут отменены`,
       [
         { text: "Отмена", style: "cancel" },
         {
           text: "Заблокировать",
           style: "destructive",
           onPress: () => {
-            router.back();
-            deleteUserCustomer({ userId: auth.userId, id: userCustomer.id })
+            blockUserCustomer({ userId: auth.userId, id: userCustomer.id })
               .unwrap()
+              .then(() => toast.success("Клиент заблокирован"))
               .catch((error) => {
                 toast.error(
-                  getApiErrorMessage(error, "Не удалось заблокировать клиента"),
+                  getApiErrorMessage(
+                    error,
+                    "Не удалось заблокировать, попробуйте ещё раз",
+                  ),
                 );
               });
           },
         },
       ],
     );
-  }, [auth, customer, userCustomer, deleteUserCustomer]);
+  }, [auth, customer, userCustomer, blockUserCustomer]);
+
+  const handleUnblockCustomer = useCallback(() => {
+    if (!auth || !userCustomer) return;
+    unblockUserCustomer({ userId: auth.userId, id: userCustomer.id })
+      .unwrap()
+      .then(() => toast.success("Клиент разблокирован"))
+      .catch((error) => {
+        toast.error(
+          getApiErrorMessage(error, "Не удалось разблокировать клиента"),
+        );
+      });
+  }, [auth, userCustomer, unblockUserCustomer]);
 
   const handleSaveNote = methods.handleSubmit(async ({ note }) => {
     if (!auth || !userCustomer) return;
@@ -269,6 +286,7 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                     userCustomer?.stats.total_spent_cents ?? 0,
                   )}
                   tag={userCustomer?.customer_tag ?? undefined}
+                  blocked={!!userCustomer?.blocked_at}
                 />
 
                 <Card
@@ -452,19 +470,27 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
                 className="mb-4"
               />
 
-              <Button
-                title="Заблокировать клиента"
-                variant="clear"
-                onPress={handleDeleteCustomer}
-                textClassName="text-accent-red-500"
-                rightIcon={
-                  <StSvg
-                    name="Trash"
-                    size={24}
-                    color={colors.accent.red[500]}
-                  />
-                }
-              />
+              {userCustomer?.blocked_at ? (
+                <Button
+                  title="Разблокировать клиента"
+                  variant="clear"
+                  onPress={handleUnblockCustomer}
+                />
+              ) : (
+                <Button
+                  title="Заблокировать клиента"
+                  variant="clear"
+                  onPress={handleBlockCustomer}
+                  textClassName="text-accent-red-500"
+                  rightIcon={
+                    <StSvg
+                      name="Trash"
+                      size={24}
+                      color={colors.accent.red[500]}
+                    />
+                  }
+                />
+              )}
             </KeyboardAwareScrollView>
           );
         }}

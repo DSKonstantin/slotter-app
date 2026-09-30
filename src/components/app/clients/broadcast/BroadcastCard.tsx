@@ -38,9 +38,7 @@ const BroadcastCard = ({ item }: Props) => {
 
   return (
     <Pressable
-      onPress={() =>
-        router.push(Routers.app.broadcast.detail(item.id))
-      }
+      onPress={() => router.push(Routers.app.broadcast.detail(item.id))}
       className="bg-background-surface rounded-base p-4 active:opacity-70"
     >
       <View className="flex-row items-center gap-2">

@@ -114,6 +114,7 @@ const ClientCreate = ({ initialName, onCreated }: ClientCreateProps = {}) => {
             note: values.comment?.trim() || undefined,
           },
         }).unwrap();
+        if (user_customer.blocked_at) toast.error("Клиент заблокирован");
         onCreated?.(user_customer);
         dispatch(setTagId(undefined));
         methods.reset();

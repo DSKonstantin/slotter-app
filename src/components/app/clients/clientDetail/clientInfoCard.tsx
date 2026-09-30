@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { Avatar, Badge, Typography } from "@/src/components/ui";
+import BlockedIcon from "@/src/components/app/clients/shared/blockedIcon";
 import { pluralize } from "@/src/utils/text/pluralize";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   visitsCount: number;
   totalSpent: string;
   tag?: { name: string; color: string };
+  blocked?: boolean;
 };
 
 const ClientInfoCard = ({
@@ -21,6 +23,7 @@ const ClientInfoCard = ({
   visitsCount,
   totalSpent,
   tag,
+  blocked,
 }: Props) => {
   return (
     <View className="flex-row rounded-base bg-background-surface p-4">
@@ -35,7 +38,12 @@ const ClientInfoCard = ({
 
       <View className="flex-1">
         <View className="flex-row items-center justify-between gap-1 min-h-[26px]">
-          <Typography className="text-body text-neutral-900">{name}</Typography>
+          <View className="flex-1 flex-row items-center gap-1">
+            <Typography className="shrink text-body text-neutral-900">
+              {name}
+            </Typography>
+            {blocked && <BlockedIcon />}
+          </View>
           {tag && (
             <Badge
               title={tag.name}

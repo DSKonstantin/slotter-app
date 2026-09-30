@@ -30,7 +30,7 @@ describe("getNotificationPromptMode", () => {
 });
 
 describe("shouldShowNotificationPrompt", () => {
-  it("waits 3, 7, 14 days for ask and then stops", () => {
+  it("waits 3, 7, 14 days for ask and then repeats every 14 days", () => {
     let state = createNotificationPromptState(T0);
 
     expect(shouldShowNotificationPrompt("ask", state, T0 + 2 * DAY)).toBe(
@@ -52,12 +52,23 @@ describe("shouldShowNotificationPrompt", () => {
     );
     state = markNotificationPromptShown("ask", state, T0 + 24 * DAY);
 
-    expect(shouldShowNotificationPrompt("ask", state, T0 + 1000 * DAY)).toBe(
+    expect(shouldShowNotificationPrompt("ask", state, T0 + 37 * DAY)).toBe(
       false,
+    );
+    expect(shouldShowNotificationPrompt("ask", state, T0 + 38 * DAY)).toBe(
+      true,
+    );
+    state = markNotificationPromptShown("ask", state, T0 + 38 * DAY);
+
+    expect(shouldShowNotificationPrompt("ask", state, T0 + 51 * DAY)).toBe(
+      false,
+    );
+    expect(shouldShowNotificationPrompt("ask", state, T0 + 52 * DAY)).toBe(
+      true,
     );
   });
 
-  it("counts settings separately: 7 then 30 days, max 2", () => {
+  it("counts settings separately: 7 then 30 days, then every 30 days", () => {
     let state = markNotificationPromptShown(
       "ask",
       createNotificationPromptState(T0),
@@ -77,9 +88,12 @@ describe("shouldShowNotificationPrompt", () => {
     );
     state = markNotificationPromptShown("settings", state, T0 + 37 * DAY);
 
-    expect(
-      shouldShowNotificationPrompt("settings", state, T0 + 1000 * DAY),
-    ).toBe(false);
+    expect(shouldShowNotificationPrompt("settings", state, T0 + 66 * DAY)).toBe(
+      false,
+    );
+    expect(shouldShowNotificationPrompt("settings", state, T0 + 67 * DAY)).toBe(
+      true,
+    );
   });
 });
 

@@ -23,6 +23,11 @@ const INTERVAL_DAYS: Record<NotificationPromptMode, number[]> = {
   settings: [7, 30],
 };
 
+const REPEAT_INTERVAL_DAYS: Record<NotificationPromptMode, number> = {
+  ask: 14,
+  settings: 30,
+};
+
 export const getNotificationPromptStorageKey = (userId: number) =>
   `notifPrompt:user_${userId}`;
 
@@ -67,8 +72,7 @@ export const shouldShowNotificationPrompt = (
   now: number,
 ) => {
   const { count, lastShownAt } = state[mode];
-  const intervalDays = INTERVAL_DAYS[mode][count];
-  if (intervalDays === undefined) return false;
+  const intervalDays = INTERVAL_DAYS[mode][count] ?? REPEAT_INTERVAL_DAYS[mode];
 
   const since = lastShownAt ?? state.firstSeenAt;
   return now - since >= intervalDays * DAY_MS;

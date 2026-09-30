@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { Routers } from "@/src/constants/routers";
 import { NOTIFICATION_KIND_CONFIG } from "@/src/constants/notificationKinds";
 import type { NotificationKind } from "@/src/store/redux/services/api-types";
 
@@ -30,4 +31,47 @@ export const handleKindNavigation = (
     return true;
   }
   return false;
+};
+
+export type NotificationSubjectType = "Appointment" | "ChatRoom";
+
+const inferSubjectType = (
+  kind: string | undefined,
+): NotificationSubjectType | undefined => {
+  if (
+    kind?.startsWith("appointment_") ||
+    kind?.startsWith("rebook_") ||
+    kind === "review_request"
+  ) {
+    return "Appointment";
+  }
+  if (kind === "chat_new_activity") return "ChatRoom";
+  return undefined;
+};
+
+type NavigateFromNotificationParams = {
+  kind: string | undefined;
+  subjectId?: number | null;
+  subjectType?: string | null;
+  openPersonalAccount: OpenPersonalAccount;
+};
+
+export const navigateFromNotification = ({
+  kind,
+  subjectId,
+  subjectType,
+  openPersonalAccount,
+}: NavigateFromNotificationParams): boolean => {
+  if (subjectId) {
+    const type = subjectType ?? inferSubjectType(kind);
+    if (type === "Appointment") {
+      router.push(Routers.app.slot(subjectId));
+      return true;
+    }
+    if (type === "ChatRoom") {
+      router.push(Routers.app.chat.room(subjectId));
+      return true;
+    }
+  }
+  return handleKindNavigation(kind, openPersonalAccount);
 };

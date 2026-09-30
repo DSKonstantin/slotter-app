@@ -9,7 +9,6 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { isToday, isYesterday } from "date-fns";
 import { formatDayMonthLong } from "@/src/utils/date/formatDate";
 import { formatTime } from "@/src/utils/date/formatTime";
@@ -39,7 +38,7 @@ import {
 import { useAppSelector } from "@/src/store/redux/store";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
-import { handleKindNavigation } from "@/src/utils/notificationNavigation";
+import { navigateFromNotification } from "@/src/utils/notificationNavigation";
 import { pluralize } from "@/src/utils/text/pluralize";
 import { colors } from "@/src/styles/colors";
 import { SCREEN_PADDING } from "@/src/constants/layout";
@@ -193,21 +192,16 @@ const HistoryScreen = () => {
       if (!notification.read_at) {
         markRead(notification.id);
       }
-      // Subject-based navigation (appointment/chat) takes priority — it's
-      // the more specific target and pre-dates the kind-based routing below.
-      // Kinds like appointment_rescheduled/appointment_reminder have both a
-      // `detailRoute` (used by the separate client-notifications settings
-      // list) and a real subject; tapping them here must still go to the
-      // actual appointment, not the generic settings screen.
-      if (notification.subject) {
-        if (isAppointmentSubject(notification.subject)) {
-          router.push(Routers.app.slot(notification.subject.id));
-        } else {
-          router.push(Routers.app.chat.room(notification.subject.id));
-        }
-        return;
-      }
-      handleKindNavigation(notification.kind, openPersonalAccount);
+      navigateFromNotification({
+        kind: notification.kind,
+        subjectId: notification.subject?.id,
+        subjectType: notification.subject
+          ? isAppointmentSubject(notification.subject)
+            ? "Appointment"
+            : "ChatRoom"
+          : undefined,
+        openPersonalAccount,
+      });
     },
     [markRead, openPersonalAccount],
   );
