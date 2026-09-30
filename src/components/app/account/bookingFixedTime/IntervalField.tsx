@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useController } from "react-hook-form";
 import { Card, StSvg, Typography } from "@/src/components/ui";
+import { formatInterval } from "@/src/constants/bookingSteps";
 import { colors } from "@/src/styles/colors";
 import type { BookingFixedTimeFormValues } from "./constants";
 import IntervalPickerModal from "./IntervalPickerModal";
@@ -24,7 +25,7 @@ const IntervalField = () => {
         right={
           <>
             <Typography className="text-body text-neutral-500">
-              {field.value} мин
+              {formatInterval(field.value)}
             </Typography>
             <StSvg
               name="Expand_right_light"

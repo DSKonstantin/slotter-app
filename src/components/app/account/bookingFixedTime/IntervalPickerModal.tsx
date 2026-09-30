@@ -4,14 +4,18 @@ import { StModal, StSvg, Typography } from "@/src/components/ui";
 import { ValueWheel } from "@/src/components/ui/pickers/ValueWheel";
 import { colors } from "@/src/styles/colors";
 import {
-  INTERVAL_OPTIONS,
+  BOOKING_STEPS,
+  getIntervalAmount,
+  getIntervalUnit,
+} from "@/src/constants/bookingSteps";
+import {
   MODAL_BACK_BUTTON_CLASS,
   MODAL_CONFIRM_BUTTON_CLASS,
 } from "./constants";
 
-const WHEEL_DATA = INTERVAL_OPTIONS.map((value) => ({
-  value,
-  label: String(value),
+const WHEEL_DATA = BOOKING_STEPS.map(({ minutes }) => ({
+  value: minutes,
+  label: String(getIntervalAmount(minutes)),
 }));
 
 type IntervalPickerModalProps = {
@@ -61,14 +65,23 @@ const IntervalPickerModal = ({
         </Typography>
       }
     >
-      <View className="flex-row items-center justify-center gap-4 mb-4">
+      <View className="flex-row items-center mb-4">
+        <View className="flex-1 mr-4" />
         <ValueWheel
           data={WHEEL_DATA}
           value={draft}
           width={96}
           onChange={setDraft}
         />
-        <Typography className="text-body text-neutral-900">мин</Typography>
+        <View className="flex-1 pl-4">
+          <Typography
+            numberOfLines={1}
+            weight="regular"
+            className="text-body text-neutral-900 uppercase"
+          >
+            {getIntervalUnit(draft)}
+          </Typography>
+        </View>
       </View>
     </StModal>
   );

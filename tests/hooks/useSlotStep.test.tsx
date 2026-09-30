@@ -7,7 +7,7 @@ import authReducer, {
   type AuthState,
 } from "@/src/store/redux/slices/authSlice";
 import { useSlotStep } from "@/src/hooks/useSlotStep";
-import type { AppointmentStep } from "@/src/utils/schedule/appointmentStepToMinutes";
+import type { AppointmentStep } from "@/src/store/redux/services/api-types";
 
 const renderWithStep = (appointmentStep: AppointmentStep | undefined) => {
   const authState: AuthState = {

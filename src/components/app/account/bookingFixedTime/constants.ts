@@ -12,8 +12,6 @@ export const MODE_OPTIONS: { label: string; value: FixedTimeMode }[] = [
   { label: "По дням недели", value: "weekly" },
 ];
 
-export const INTERVAL_OPTIONS = [5, 10, 15, 30, 60];
-
 export const MOCK_WORKING_DAY = {
   start: "10:00",
   end: "20:00",
