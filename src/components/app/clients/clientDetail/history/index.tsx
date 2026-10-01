@@ -8,6 +8,7 @@ import {
   isAfter,
   subMonths,
   startOfMonth,
+  addYears,
   format,
 } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -36,16 +37,30 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import { formatDayMonth } from "@/src/utils/date/formatTime";
+import { formatDayMonth, parseTime } from "@/src/utils/date/formatTime";
 import type { Appointment } from "@/src/store/redux/services/api-types";
 import type { UserCustomerPeriod } from "@/src/store/redux/services/api-types/userCustomer";
 import HistorySkeleton from "@/src/components/app/clients/clientDetail/history/HistorySkeleton";
+import UpcomingSection from "@/src/components/app/clients/clientDetail/history/UpcomingSection";
+import { formatApiDate } from "@/src/utils/date/formatDate";
 
 const FINANCE_PERIODS: { label: string; value: UserCustomerPeriod }[] = [
   { label: "День", value: "today" },
   { label: "Неделя", value: "current_week" },
   { label: "Месяц", value: "current_month" },
 ];
+
+const UPCOMING_STATUSES: Appointment["status"][] = [
+  "requested",
+  "pending",
+  "confirmed",
+];
+
+const isUpcoming = (appointment: Appointment, now: Date) => {
+  const start = parseISO(appointment.date);
+  start.setHours(0, parseTime(appointment.start_time), 0, 0);
+  return isAfter(start, now);
+};
 
 const groupAppointmentsByPeriod = (appointments: Appointment[]) => {
   const threeMonthsAgo = subMonths(startOfMonth(new Date()), 3);
@@ -124,6 +139,28 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
     { refetchOnMountOrArgChange: true },
   );
 
+  const {
+    data: upcomingData,
+    isError: upcomingError,
+    isFetching: upcomingFetching,
+    refetch: refetchUpcoming,
+  } = useGetUserCustomerAppointmentsQuery(
+    auth && ucId
+      ? {
+          userId: auth.userId,
+          id: ucId,
+          params: {
+            status: UPCOMING_STATUSES,
+            period: "custom",
+            date_from: formatApiDate(new Date()),
+            date_to: formatApiDate(addYears(new Date(), 1)),
+            sort: "asc",
+          },
+        }
+      : skipToken,
+    { refetchOnMountOrArgChange: true },
+  );
+
   const { user_customer: userCustomer } = customerData ?? {};
   const { customer, stats } = userCustomer ?? {};
 
@@ -141,6 +178,11 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
     [appointmentsData],
   );
 
+  const upcomingAppointments = useMemo(() => {
+    const now = new Date();
+    return (upcomingData?.appointments ?? []).filter((a) => isUpcoming(a, now));
+  }, [upcomingData]);
+
   const lastVisitAt = stats?.last_visit_at;
   const lastVisitLabel = lastVisitAt
     ? format(parseISO(lastVisitAt), "d MMM yyyy", { locale: ru })
@@ -156,8 +198,12 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
   const isFetching = customerFetching || activeFetching;
 
   const handleRefresh = useCallback(
-    () => (filterActive ? refetchAppointments() : refetchFinances()),
-    [filterActive, refetchAppointments, refetchFinances],
+    () =>
+      Promise.all([
+        filterActive ? refetchAppointments() : refetchFinances(),
+        refetchUpcoming(),
+      ]),
+    [filterActive, refetchAppointments, refetchFinances, refetchUpcoming],
   );
   const { refreshing, onRefresh } = useRefresh(handleRefresh);
   const isUpdating = hasData && activeFetching && !refreshing;
@@ -252,8 +298,16 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                   />
                 )}
                 <View className={isUpdating ? "opacity-70" : undefined}>
+                  {upcomingError && !upcomingData && !upcomingFetching && (
+                    <RetryInline
+                      text="Не удалось загрузить предстоящие записи"
+                      onRetry={refetchUpcoming}
+                      className="mb-4"
+                    />
+                  )}
                   {filterActive ? (
                     <View className="gap-6">
+                      <UpcomingSection appointments={upcomingAppointments} />
                       {appointmentSections.map((section) => (
                         <View key={section.title} className="gap-4">
                           <Typography className="text-body">
@@ -333,6 +387,8 @@ const ClientHistory = ({ customerId, userCustomerId }: Props) => {
                           )
                         }
                       />
+
+                      <UpcomingSection appointments={upcomingAppointments} />
 
                       <View className="gap-2">
                         <Typography className="text-caption">
