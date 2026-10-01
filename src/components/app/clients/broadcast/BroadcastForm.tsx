@@ -59,6 +59,7 @@ import ConnectChannelModal from "./ConnectChannelModal";
 const CHANNEL_KIND_BY_VALUE: Record<string, DirectChannelKind> = {
   telegram: "telegram_direct",
   max: "max_direct",
+  whatsapp: "whatsapp_direct",
 };
 
 const AUDIENCE_DEBOUNCE_MS = 400;
@@ -147,8 +148,13 @@ const BroadcastForm = () => {
         disabled: !channels.telegram,
       },
       { label: "Макс Direct", value: "max", disabled: !channels.max },
+      {
+        label: "WhatsApp Direct",
+        value: "whatsapp",
+        disabled: !channels.whatsapp,
+      },
     ],
-    [channels.telegram, channels.max],
+    [channels.telegram, channels.max, channels.whatsapp],
   );
 
   const audienceSummary = summarizeAudienceFilters(audienceFilters);

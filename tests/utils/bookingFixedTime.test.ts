@@ -1,5 +1,6 @@
 import {
   getOnlineWindows,
+  getTimesOutsideHours,
   getUnavailableRanges,
   subtractRanges,
   type BookingFixedTimeSettings,
@@ -109,6 +110,41 @@ describe("getUnavailableRanges", () => {
       getUnavailableRanges(
         [{ start: 600, end: 900 }],
         [{ start: 603, end: 897 }],
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("getTimesOutsideHours", () => {
+  const hours = { start: 600, end: 1080 };
+
+  it("returns fixed times that do not fit the new hours", () => {
+    const s = settings({ interval: 60, fixedTimes: [540, 780, 1050] });
+    expect(getTimesOutsideHours(s, MONDAY, hours)).toEqual([540, 1050]);
+  });
+
+  it("treats a time ending exactly at the day end as fitting", () => {
+    const s = settings({ interval: 60, fixedTimes: [1020] });
+    expect(getTimesOutsideHours(s, MONDAY, hours)).toEqual([]);
+  });
+
+  it("only looks at the weekday list in weekly mode", () => {
+    const s = settings({
+      mode: "weekly",
+      interval: 60,
+      days: ["mon"],
+      dayTimes: { mon: [540], tue: [540] },
+    });
+    expect(getTimesOutsideHours(s, MONDAY, hours)).toEqual([540]);
+    expect(getTimesOutsideHours(s, "2026-09-29", hours)).toEqual([]);
+  });
+
+  it("returns nothing when the feature is disabled", () => {
+    expect(
+      getTimesOutsideHours(
+        settings({ enabled: false, fixedTimes: [540] }),
+        MONDAY,
+        hours,
       ),
     ).toEqual([]);
   });

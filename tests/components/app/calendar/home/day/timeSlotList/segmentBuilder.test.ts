@@ -2,12 +2,14 @@ import {
   createSegments,
   getSegmentHeight,
   getSlotMinHeight,
+  getTimeOffset,
   isMergeableSlot,
   slotOccupiesTime,
   type SegmentContent,
 } from "@/src/components/app/calendar/home/day/timeSlotList/segmentBuilder";
 import {
   LONG_SLOT_MIN_HEIGHT,
+  MINUTE_HEIGHT,
   SHORT_SLOT_MIN_HEIGHT,
   SLOT_GAP,
 } from "@/src/components/app/calendar/home/day/timeSlotList/constants";
@@ -565,5 +567,142 @@ describe("slotOccupiesTime / getSlotMinHeight", () => {
     ).toBe(
       getSlotMinHeight(buildAppointment({ status: "cancelled", duration: 5 })),
     );
+  });
+});
+
+describe("getTimeOffset", () => {
+  const build = (
+    startAt: string,
+    endAt: string,
+    breaks: WorkingDayBreak[] = [],
+    appointments: Appointment[] = [],
+  ) =>
+    createSegments(startAt, endAt, breaks, appointments, ALL_VISIBLE).segments;
+
+  const totalHeight = (segments: ReturnType<typeof build>) =>
+    segments.reduce((y, seg) => y + getSegmentHeight(seg), 0);
+
+  it("offsets a time inside an empty free segment by the container padding", () => {
+    const segments = build("09:00", "12:00");
+
+    expect(getTimeOffset(segments, 9 * 60)).toBe(SLOT_GAP);
+    expect(getTimeOffset(segments, 9 * 60 + 30)).toBe(
+      SLOT_GAP + 30 * MINUTE_HEIGHT,
+    );
+  });
+
+  it("stacks the heights of the preceding segments", () => {
+    const segments = build("09:00", "12:00");
+
+    expect(getTimeOffset(segments, 10 * 60 + 15)).toBe(
+      getSegmentHeight(segments[0]) + SLOT_GAP + 15 * MINUTE_HEIGHT,
+    );
+    expect(getTimeOffset(segments, 11 * 60)).toBe(
+      getSegmentHeight(segments[0]) + getSegmentHeight(segments[1]) + SLOT_GAP,
+    );
+  });
+
+  it("assigns a boundary time to the next segment for the start edge", () => {
+    const segments = build("09:00", "12:00");
+
+    expect(getTimeOffset(segments, 10 * 60, "start")).toBe(
+      getSegmentHeight(segments[0]) + SLOT_GAP,
+    );
+  });
+
+  it("assigns a boundary time to the previous segment for the end edge", () => {
+    const segments = build("09:00", "12:00");
+
+    expect(getTimeOffset(segments, 10 * 60, "end")).toBe(
+      SLOT_GAP + 60 * MINUTE_HEIGHT,
+    );
+    expect(getTimeOffset(segments, 12 * 60, "end")).toBe(
+      getSegmentHeight(segments[0]) +
+        getSegmentHeight(segments[1]) +
+        SLOT_GAP +
+        60 * MINUTE_HEIGHT,
+    );
+  });
+
+  it("makes an online block from 10:00 to 11:00 span exactly one hour of grid", () => {
+    const segments = build("09:00", "12:00");
+
+    const startY = getTimeOffset(segments, 10 * 60);
+    const endY = getTimeOffset(segments, 11 * 60, "end");
+
+    expect(endY - startY).toBe(60 * MINUTE_HEIGHT);
+  });
+
+  it("measures a range crossing several segments across their heights", () => {
+    const segments = build("09:00", "13:00");
+
+    const startY = getTimeOffset(segments, 9 * 60 + 30);
+    const endY = getTimeOffset(segments, 12 * 60 + 30, "end");
+
+    expect(endY - startY).toBe(
+      getSegmentHeight(segments[0]) +
+        getSegmentHeight(segments[1]) +
+        getSegmentHeight(segments[2]),
+    );
+  });
+
+  it("pushes times past non-occupying cards in the same segment", () => {
+    const cancelled = buildAppointment({
+      id: 2,
+      status: "cancelled",
+      start_time: "10:00",
+      end_time: "10:30",
+    });
+    const segments = build("09:00", "12:00", [], [cancelled]);
+    const withCard = segments.findIndex(
+      (seg) => seg.segStart <= 600 && seg.segEnd > 600,
+    );
+    const rowTop = segments
+      .slice(0, withCard)
+      .reduce((y, seg) => y + getSegmentHeight(seg), 0);
+
+    expect(getTimeOffset(segments, segments[withCard].segStart)).toBe(
+      rowTop + SLOT_GAP + SHORT_SLOT_MIN_HEIGHT + SLOT_GAP,
+    );
+  });
+
+  it("does not add a leading offset inside a break segment", () => {
+    const segments = build("09:00", "14:00", [buildBreak()]);
+    const breakIdx = segments.findIndex((seg) => seg.content.kind === "break");
+    const rowTop = segments
+      .slice(0, breakIdx)
+      .reduce((y, seg) => y + getSegmentHeight(seg), 0);
+
+    expect(getTimeOffset(segments, 12 * 60 + 15)).toBe(
+      rowTop + 15 * MINUTE_HEIGHT,
+    );
+  });
+
+  it("returns the full height for a time at or after the end of the grid", () => {
+    const segments = build("09:00", "12:00");
+
+    expect(getTimeOffset(segments, 12 * 60)).toBe(totalHeight(segments));
+    expect(getTimeOffset(segments, 15 * 60)).toBe(totalHeight(segments));
+  });
+
+  it("returns 0 for an empty segment list", () => {
+    expect(getTimeOffset([], 600)).toBe(0);
+  });
+
+  it("is monotonic across the whole day", () => {
+    const appointment = buildAppointment({
+      id: 3,
+      start_time: "10:30",
+      end_time: "11:30",
+      duration: 60,
+    });
+    const segments = build("09:00", "14:00", [buildBreak()], [appointment]);
+
+    let prev = -1;
+    for (let t = 9 * 60; t < 14 * 60; t += 5) {
+      const y = getTimeOffset(segments, t);
+      expect(y).toBeGreaterThanOrEqual(prev);
+      prev = y;
+    }
   });
 });

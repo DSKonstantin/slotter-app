@@ -7,6 +7,10 @@ import { FormProvider, Resolver, useForm } from "react-hook-form";
 import { toast } from "@/src/components/ui/toast";
 
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
+import { getTimesOutsideHours } from "@/src/utils/bookingFixedTime";
+import { confirmFixedTimesOutside } from "@/src/utils/bookingFixedTimeConfirm";
+import { parseEndOfDayMinutes, parseTime } from "@/src/utils/date/formatTime";
 import { Routers } from "@/src/constants/routers";
 import { useCreateWorkingDayMutation } from "@/src/store/redux/services/api/workingDaysApi";
 
@@ -25,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
   const auth = useRequiredAuth();
+  const fixedTime = useBookingFixedTime();
   const [createWorkingDay, { isLoading }] = useCreateWorkingDayMutation();
 
   const parsedDate = parseISO(date);
@@ -47,6 +52,17 @@ const CalendarDayScheduleCreate = ({ date }: { date: string }) => {
 
   const onSubmit = async (data: DayScheduleFormValues) => {
     if (!auth) return;
+    if (data.isActive) {
+      const outside = getTimesOutsideHours(fixedTime, date, {
+        start: parseTime(data.startAt),
+        end: parseEndOfDayMinutes(data.endAt),
+      });
+      if (
+        outside.length > 0 &&
+        !(await confirmFixedTimesOutside(outside.length))
+      )
+        return;
+    }
     try {
       await createWorkingDay({
         userId: auth.userId,

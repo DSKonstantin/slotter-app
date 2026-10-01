@@ -12,13 +12,6 @@ export const MODE_OPTIONS: { label: string; value: FixedTimeMode }[] = [
   { label: "По дням недели", value: "weekly" },
 ];
 
-export const MOCK_WORKING_DAY = {
-  start: "10:00",
-  end: "20:00",
-  breakStart: "13:30",
-  breakEnd: "14:30",
-};
-
 export const MODAL_BACK_BUTTON_CLASS =
   "bg-background-surface h-11 w-11 left-4 top-2";
 export const MODAL_CONFIRM_BUTTON_CLASS =

@@ -38,6 +38,18 @@ export const getOnlineWindows = (
   return times.map((time) => ({ start: time, end: time + settings.interval }));
 };
 
+export const getTimesOutsideHours = (
+  settings: BookingFixedTimeSettings,
+  date: string,
+  hours: TimeRange,
+): number[] => {
+  const windows = getOnlineWindows(settings, date);
+  if (!windows) return [];
+  return windows
+    .filter((w) => w.start < hours.start || w.end > hours.end)
+    .map((w) => w.start);
+};
+
 export const subtractRanges = (
   ranges: TimeRange[],
   cuts: TimeRange[],

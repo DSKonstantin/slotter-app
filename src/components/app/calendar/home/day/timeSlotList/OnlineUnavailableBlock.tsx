@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { View } from "react-native";
 import { HatchPattern, Typography } from "@/src/components/ui";
 import { formatTime } from "./utils";
+import { SCREEN_PADDING } from "@/src/constants/layout";
 import { LEFT_COL, SHORT_SLOT_MIN_HEIGHT } from "./constants";
 
 type OnlineUnavailableBlockProps = {
@@ -19,8 +20,13 @@ const OnlineUnavailableBlock = ({
 }: OnlineUnavailableBlockProps) => (
   <View
     pointerEvents="none"
-    className="absolute right-0 overflow-hidden rounded-base border border-neutral-200 px-4 flex-row items-center justify-between gap-2"
-    style={{ top, height, left: LEFT_COL + 10 }}
+    className="absolute overflow-hidden rounded-base border border-neutral-200 px-4 flex-row items-center justify-between gap-2"
+    style={{
+      top,
+      height,
+      left: SCREEN_PADDING + LEFT_COL + 10,
+      right: SCREEN_PADDING,
+    }}
   >
     <HatchPattern />
     {height >= SHORT_SLOT_MIN_HEIGHT && (

@@ -7,9 +7,7 @@ import { APPOINTMENT_STATUS_CONFIG } from "@/src/constants/appointmentStatuses";
 export type CalendarMode = "day" | "month";
 
 export type ScheduleIntent =
-  | { type: "openTemplate" }
-  | { type: "duplicateFrom"; date: string }
-  | null;
+  { type: "openTemplate" } | { type: "duplicateFrom"; date: string } | null;
 
 const DEFAULT_ACTIVE_STATUSES = Object.values(APPOINTMENT_STATUS_CONFIG)
   .filter(({ defaultActive }) => defaultActive)

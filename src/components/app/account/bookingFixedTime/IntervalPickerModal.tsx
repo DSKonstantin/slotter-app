@@ -4,16 +4,16 @@ import { StModal, StSvg, Typography } from "@/src/components/ui";
 import { ValueWheel } from "@/src/components/ui/pickers/ValueWheel";
 import { colors } from "@/src/styles/colors";
 import {
-  BOOKING_STEPS,
   getIntervalAmount,
   getIntervalUnit,
 } from "@/src/constants/bookingSteps";
+import { FIXED_TIME_INTERVALS } from "@/src/utils/bookingFixedTimeApi";
 import {
   MODAL_BACK_BUTTON_CLASS,
   MODAL_CONFIRM_BUTTON_CLASS,
 } from "./constants";
 
-const WHEEL_DATA = BOOKING_STEPS.map(({ minutes }) => ({
+const WHEEL_DATA = FIXED_TIME_INTERVALS.map(({ minutes }) => ({
   value: minutes,
   label: String(getIntervalAmount(minutes)),
 }));

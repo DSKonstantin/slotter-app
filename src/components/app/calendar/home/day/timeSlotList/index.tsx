@@ -173,18 +173,11 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
     );
 
     return ranges.map((range) => {
-      const segIndex = segments.findIndex(
-        (seg) => range.start >= seg.segStart && range.start < seg.segEnd,
-      );
-      const rowTop = segments
-        .slice(0, segIndex)
-        .reduce((y, seg) => y + getSegmentHeight(seg), 0);
       const startY = getTimeOffset(segments, range.start);
       const endY = getTimeOffset(segments, range.end, "end");
       return {
         ...range,
-        segIndex,
-        top: startY - rowTop,
+        top: startY,
         height: endY - startY,
       };
     });
@@ -443,20 +436,18 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
                   </>
                 )}
               </View>
-              {onlineUnavailableBlocks
-                .filter((block) => block.segIndex === segIndex)
-                .map((block) => (
-                  <OnlineUnavailableBlock
-                    key={block.start}
-                    start={block.start}
-                    end={block.end}
-                    top={block.top}
-                    height={block.height}
-                  />
-                ))}
             </View>
           );
         })}
+        {onlineUnavailableBlocks.map((block) => (
+          <OnlineUnavailableBlock
+            key={block.start}
+            start={block.start}
+            end={block.end}
+            top={block.top}
+            height={block.height}
+          />
+        ))}
       </View>
 
       <FreeSlotStartModal

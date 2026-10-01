@@ -180,7 +180,8 @@ export type NotificationTemplateKind = Extract<
 
 export type NotificationTemplateStage = "booking" | "before" | "retention";
 
-export type TemplateChannel = "auto" | "telegram_direct" | "max_direct";
+export type TemplateChannel =
+  "auto" | "telegram_direct" | "max_direct" | "whatsapp_direct";
 
 export interface NotificationTemplateRow {
   kind: NotificationTemplateKind;

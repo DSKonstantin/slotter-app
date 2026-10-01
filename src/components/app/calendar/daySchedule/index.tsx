@@ -21,7 +21,14 @@ import {
 import { useGetAppointmentsQuery } from "@/src/store/redux/services/api/appointmentsApi";
 import type { WorkingDay } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { formatTimeFromISO } from "@/src/utils/date/formatTime";
+import {
+  formatTimeFromISO,
+  parseEndOfDayMinutes,
+  parseTime,
+} from "@/src/utils/date/formatTime";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
+import { getTimesOutsideHours } from "@/src/utils/bookingFixedTime";
+import { confirmFixedTimesOutside } from "@/src/utils/bookingFixedTimeConfirm";
 import { formatFullDateWithDay } from "@/src/utils/date/formatDate";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
@@ -69,6 +76,7 @@ const DayScheduleEdit = ({
   const initialBreakIds = useRef<number[]>(breaks.map((b) => b.id));
   const prevIsActiveRef = useRef(workingDay.is_active);
 
+  const fixedTime = useBookingFixedTime();
   const [updateWorkingDay, { isLoading }] = useUpdateWorkingDayMutation();
 
   const { refetch: refetchAppointments } = useGetAppointmentsQuery({
@@ -163,7 +171,28 @@ const DayScheduleEdit = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
-  const onSubmit = (data: DayScheduleFormValues) => submitSchedule(data);
+  const onSubmit = async (data: DayScheduleFormValues) => {
+    if (data.isActive) {
+      const before = workingDay.is_active
+        ? new Set(
+            getTimesOutsideHours(fixedTime, workingDay.day, {
+              start: parseTime(workingDay.start_at),
+              end: parseEndOfDayMinutes(workingDay.end_at),
+            }),
+          )
+        : new Set<number>();
+      const newlyOutside = getTimesOutsideHours(fixedTime, workingDay.day, {
+        start: parseTime(data.startAt),
+        end: parseEndOfDayMinutes(data.endAt),
+      }).filter((time) => !before.has(time));
+      if (
+        newlyOutside.length > 0 &&
+        !(await confirmFixedTimesOutside(newlyOutside.length))
+      )
+        return;
+    }
+    await submitSchedule(data);
+  };
 
   return (
     <FormProvider {...methods}>

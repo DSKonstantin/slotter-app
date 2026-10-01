@@ -78,10 +78,10 @@ const TELEGRAM_BOTS = [
 ];
 
 const DIRECT_CHANNEL_UI_CONFIG: Record<
-  "telegram" | "max",
+  "telegram" | "max" | "whatsapp",
   {
     kind: DirectChannelKind;
-    icon: "SocialTelegram" | null;
+    icon: "SocialTelegram" | "SocialWhatsApp" | null;
     iconNode?: React.ReactNode;
     iconColor: string;
     name: string;
@@ -92,6 +92,12 @@ const DIRECT_CHANNEL_UI_CONFIG: Record<
     icon: "SocialTelegram",
     iconColor: "#37B5DB",
     name: "Telegram",
+  },
+  whatsapp: {
+    kind: "whatsapp_direct",
+    icon: "SocialWhatsApp",
+    iconColor: "#25D366",
+    name: "WhatsApp",
   },
   max: {
     kind: "max_direct",
@@ -156,8 +162,7 @@ const ClientNotifications = () => {
       directChannelsData?.subscription_direct_channels,
     );
 
-    return (["telegram", "max"] as const).map((channel) => {
-      const config = DIRECT_CHANNEL_UI_CONFIG[channel];
+    return Object.entries(DIRECT_CHANNEL_UI_CONFIG).map(([channel, config]) => {
       const plan = activePlans.find((p) => p.kind === config.kind);
       const existing = existingChannels.find(
         (c) =>

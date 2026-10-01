@@ -201,6 +201,11 @@ export const Routers = {
       bookingConditions:
         "/(app)/(tabs)/account/booking/booking-conditions" as const,
       bookingFixedTime: "/(app)/(tabs)/account/booking/fixed-time" as const,
+      bookingSchedule: (openTemplate?: boolean) =>
+        ({
+          pathname: "/(app)/(tabs)/account/booking/schedule",
+          params: { ...(openTemplate && { openTemplate: "true" }) },
+        }) as const,
       notifications: "/(app)/(tabs)/account/notifications" as const,
       security: {
         root: "/(app)/(tabs)/account/security" as const,

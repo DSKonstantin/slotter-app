@@ -6,7 +6,14 @@ import { days as WEEK_DAYS } from "@/src/constants/days";
 import { formatMinutes } from "@/src/utils/date/formatTime";
 import { colors } from "@/src/styles/colors";
 import type { BookingFixedTimeFormValues, DayId } from "./constants";
-import { EMPTY_TIMES, pickOnGrid, toggleItem } from "./utils";
+import {
+  buildGridItems,
+  EMPTY_TIMES,
+  getDayRange,
+  getDaySource,
+  toggleItem,
+  type WorkingRanges,
+} from "./utils";
 import ChipGrid from "./ChipGrid";
 import ScheduleHint from "./ScheduleHint";
 import DayTimesModal from "./DayTimesModal";
@@ -14,10 +21,11 @@ import DayTimesModal from "./DayTimesModal";
 const DAY_ITEMS = WEEK_DAYS.map((day) => ({ value: day.id, label: day.label }));
 
 type WeeklyTimesTabProps = {
-  gridItems: { value: number; label: string }[];
+  interval: number;
+  ranges: WorkingRanges;
 };
 
-const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
+const WeeklyTimesTab = ({ interval, ranges }: WeeklyTimesTabProps) => {
   const [editingDay, setEditingDay] = useState<DayId | null>(null);
 
   const { field: daysField } = useController<
@@ -33,15 +41,35 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
     () => WEEK_DAYS.filter((day) => daysField.value.includes(day.id)),
     [daysField.value],
   );
-  const timesByDay = useMemo(() => {
-    const grid = new Set(gridItems.map((item) => item.value));
-    return Object.fromEntries(
-      WEEK_DAYS.map((day) => [
-        day.id,
-        pickOnGrid(dayTimesField.value[day.id] ?? EMPTY_TIMES, grid),
-      ]),
-    ) as Record<DayId, number[]>;
-  }, [gridItems, dayTimesField.value]);
+  const timesByDay = useMemo(
+    () =>
+      Object.fromEntries(
+        WEEK_DAYS.map((day) => [
+          day.id,
+          dayTimesField.value[day.id] ?? EMPTY_TIMES,
+        ]),
+      ) as Record<DayId, number[]>,
+    [dayTimesField.value],
+  );
+  const editingItems = useMemo(
+    () =>
+      editingDay === null
+        ? []
+        : buildGridItems(
+            interval,
+            getDayRange(ranges, editingDay),
+            timesByDay[editingDay],
+          ),
+    [editingDay, interval, ranges, timesByDay],
+  );
+  const editingHint = useMemo(() => {
+    if (editingDay === null) return undefined;
+    const range = getDayRange(ranges, editingDay);
+    const hours = `${formatMinutes(range.start)}–${formatMinutes(range.end)}`;
+    return getDaySource(ranges, editingDay) === "template"
+      ? `По шаблону недели: ${hours}`
+      : `В шаблоне недели для этого дня нет часов, общий диапазон: ${hours}`;
+  }, [editingDay, ranges]);
   const editingDayLabel = useMemo(
     () => WEEK_DAYS.find((day) => day.id === editingDay)?.fullLabel ?? "",
     [editingDay],
@@ -73,7 +101,7 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
         onToggle={handleDayToggle}
       />
 
-      <ScheduleHint />
+      <ScheduleHint range={ranges.all} />
 
       {visibleDays.length > 0 && (
         <View className="bg-background-surface rounded-base">
@@ -122,7 +150,8 @@ const WeeklyTimesTab = ({ gridItems }: WeeklyTimesTabProps) => {
       <DayTimesModal
         visible={editingDay !== null}
         title={editingDayLabel}
-        items={gridItems}
+        items={editingItems}
+        hint={editingHint}
         value={editingDay !== null ? timesByDay[editingDay] : EMPTY_TIMES}
         onConfirm={handleDayTimesConfirm}
         onClose={() => setEditingDay(null)}

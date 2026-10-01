@@ -6,6 +6,7 @@ export default function BookingLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="booking-conditions" />
       <Stack.Screen name="fixed-time" />
+      <Stack.Screen name="schedule" />
     </Stack>
   );
 }

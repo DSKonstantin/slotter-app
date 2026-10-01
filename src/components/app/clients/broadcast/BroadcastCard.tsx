@@ -19,11 +19,15 @@ import {
 const CHANNEL_LABELS: Record<DirectChannelKind, string> = {
   telegram_direct: "Telegram Direct",
   max_direct: "Макс Direct",
+  whatsapp_direct: "WhatsApp Direct",
 };
 
 const ChannelIcon = ({ channel }: { channel: DirectChannelKind }) => {
   if (channel === "telegram_direct") {
     return <StSvg name="SocialTelegram" size={24} color="#37B5DB" />;
+  }
+  if (channel === "whatsapp_direct") {
+    return <StSvg name="SocialWhatsApp" size={24} color="#25D366" />;
   }
   return <MaxLogo size={24} />;
 };

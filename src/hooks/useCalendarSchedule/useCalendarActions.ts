@@ -7,6 +7,10 @@ import { useBulkCreateWorkingDaysMutation } from "@/src/store/redux/services/api
 import type { CalendarScheduleFormValues } from "@/src/validation/schemas/calendarSchedule.schema";
 import type { ScheduleTemplateFormValues } from "@/src/validation/schemas/scheduleTemplate.schema";
 import { getApiErrorMessage } from "@/src/utils/apiError";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
+import { getTimesOutsideHours } from "@/src/utils/bookingFixedTime";
+import { confirmFixedTimesOutside } from "@/src/utils/bookingFixedTimeConfirm";
+import { parseEndOfDayMinutes, parseTime } from "@/src/utils/date/formatTime";
 import {
   applyDraftToDay,
   areSameCalendarDays,
@@ -34,6 +38,8 @@ export const useCalendarActions = ({
   editableSelectedDays,
 }: UseCalendarActionsParams) => {
   const { getValues, setValue, reset, handleSubmit } = methods;
+
+  const fixedTime = useBookingFixedTime();
 
   const [bulkCreateWorkingDays, { isLoading: isSaving }] =
     useBulkCreateWorkingDaysMutation();
@@ -94,6 +100,18 @@ export const useCalendarActions = ({
         return;
       }
 
+      const outsideTimes = new Set<number>();
+      workingDays.forEach((item) => {
+        getTimesOutsideHours(fixedTime, item.day, {
+          start: parseTime(item.start_at),
+          end: parseEndOfDayMinutes(item.end_at),
+        }).forEach((time) => outsideTimes.add(time));
+      });
+      if (outsideTimes.size > 0) {
+        const confirmed = await confirmFixedTimesOutside(outsideTimes.size);
+        if (!confirmed) return;
+      }
+
       try {
         await bulkCreateWorkingDays({
           userId: auth.userId,
@@ -106,7 +124,7 @@ export const useCalendarActions = ({
         );
       }
     },
-    [auth, bulkCreateWorkingDays, initialFormValues, reset],
+    [auth, bulkCreateWorkingDays, fixedTime, initialFormValues, reset],
   );
 
   const applyTemplateDays = useCallback(

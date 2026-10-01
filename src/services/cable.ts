@@ -3,10 +3,7 @@ import { ActionCable, Cable } from "@kesha-antonov/react-native-action-cable";
 const CABLE_URL = process.env.EXPO_PUBLIC_CABLE_URL;
 
 export type CableStatus =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "reconnecting";
+  "disconnected" | "connecting" | "connected" | "reconnecting";
 
 export interface CableSubscription<TMessage = unknown> {
   on(event: "message", handler: (data: TMessage) => void): void;

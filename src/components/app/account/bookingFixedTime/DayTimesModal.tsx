@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { View } from "react-native";
 import { StModal, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import ChipGrid from "./ChipGrid";
+import type { GridItem } from "./utils";
 import {
   MODAL_BACK_BUTTON_CLASS,
   MODAL_CONFIRM_BUTTON_CLASS,
@@ -10,7 +12,8 @@ import {
 type DayTimesModalProps = {
   visible: boolean;
   title: string;
-  items: { value: number; label: string }[];
+  items: GridItem[];
+  hint?: string;
   value: number[];
   onConfirm: (times: number[]) => void;
   onClose: () => void;
@@ -20,6 +23,7 @@ const DayTimesModal = ({
   visible,
   title,
   items,
+  hint,
   value,
   onConfirm,
   onClose,
@@ -55,23 +59,42 @@ const DayTimesModal = ({
         buttonClassName: MODAL_CONFIRM_BUTTON_CLASS,
       }}
       header={
-        <Typography
-          weight="semibold"
-          className="text-display text-neutral-900 text-center mb-2"
-        >
-          {title}
-        </Typography>
+        <View>
+          <Typography
+            weight="semibold"
+            className="text-display text-neutral-900 text-center mb-2"
+          >
+            {title}
+          </Typography>
+          <Typography className="text-caption text-neutral-500 mb-2">
+            Выберите время
+          </Typography>
+          {hint && (
+            <Typography
+              weight="regular"
+              className="text-caption text-neutral-500 mb-2"
+            >
+              {hint}
+            </Typography>
+          )}
+        </View>
       }
     >
-      <Typography className="text-caption text-neutral-500 mb-2">
-        Выберите время
-      </Typography>
       <ChipGrid
         items={items}
         selected={draft}
         columns={4}
         onToggle={handleToggle}
       />
+      {items.some((item) => item.muted) && (
+        <Typography
+          weight="regular"
+          className="text-caption text-neutral-500 mt-2"
+        >
+          Серые времена вне графика: клиентам они не предлагаются. Нажмите,
+          чтобы снять
+        </Typography>
+      )}
     </StModal>
   );
 };

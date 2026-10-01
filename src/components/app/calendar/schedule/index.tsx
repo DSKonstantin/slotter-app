@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useFocusEffect, router, useLocalSearchParams } from "expo-router";
 import {
   Alert,
@@ -38,7 +38,10 @@ type CalendarScheduleProps = {
 };
 
 const CalendarSchedule = ({ showBack = true }: CalendarScheduleProps) => {
-  const { date } = useLocalSearchParams<{ date?: string }>();
+  const { date, openTemplate } = useLocalSearchParams<{
+    date?: string;
+    openTemplate?: string;
+  }>();
   const [current, setCurrent] = useState(() => {
     if (!date) return new Date();
     const parsed = parseISO(date);
@@ -165,6 +168,10 @@ const CalendarSchedule = ({ showBack = true }: CalendarScheduleProps) => {
       return () => clearSelection();
     }, [refetch, clearSelection]),
   );
+
+  useEffect(() => {
+    if (openTemplate === "true") setModalTemplate(true);
+  }, [openTemplate, setModalTemplate]);
 
   return (
     <FormProvider {...methods}>

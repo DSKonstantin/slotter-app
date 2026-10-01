@@ -13,10 +13,14 @@ import { safeRefetch } from "@/src/utils/safeRefetch";
 type ClientNotificationsConnected = {
   connected: boolean;
   isLoading: boolean;
-  channels: { telegram: boolean; max: boolean };
+  channels: { telegram: boolean; max: boolean; whatsapp: boolean };
 };
 
-const NO_CHANNELS = { telegram: false, max: false };
+const NO_CHANNELS = {
+  telegram: false,
+  max: false,
+  whatsapp: false,
+};
 
 export function useClientNotificationsConnected(): ClientNotificationsConnected {
   const ispe = useAppSelector((state) => state.appVersion.ispe);
@@ -48,10 +52,11 @@ export function useClientNotificationsConnected(): ClientNotificationsConnected 
   const channels = {
     telegram: active.some((c) => c.kind === "telegram_direct"),
     max: active.some((c) => c.kind === "max_direct"),
+    whatsapp: active.some((c) => c.kind === "whatsapp_direct"),
   };
 
   return {
-    connected: channels.telegram || channels.max,
+    connected: channels.telegram || channels.max || channels.whatsapp,
     isLoading,
     channels,
   };
