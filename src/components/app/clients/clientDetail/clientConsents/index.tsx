@@ -17,13 +17,20 @@ type Props = { userCustomerId?: number; customerId?: number };
 
 const ClientConsents = ({ userCustomerId, customerId }: Props) => {
   const auth = useRequiredAuth();
-  const safeUserCustomerId = Number.isFinite(userCustomerId) ? userCustomerId : undefined;
+  const safeUserCustomerId = Number.isFinite(userCustomerId)
+    ? userCustomerId
+    : undefined;
   const safeCustomerId = Number.isFinite(customerId) ? customerId : undefined;
-  const hasValidId = safeUserCustomerId !== undefined || safeCustomerId !== undefined;
+  const hasValidId =
+    safeUserCustomerId !== undefined || safeCustomerId !== undefined;
 
   const { data, isLoading, isError, refetch } = useGetUserCustomerQuery(
     auth && hasValidId
-      ? { userId: auth.userId, userCustomerId: safeUserCustomerId, customerId: safeCustomerId }
+      ? {
+          userId: auth.userId,
+          userCustomerId: safeUserCustomerId,
+          customerId: safeCustomerId,
+        }
       : skipToken,
   );
 
@@ -34,8 +41,12 @@ const ClientConsents = ({ userCustomerId, customerId }: Props) => {
   const customerName = userCustomer?.customer?.name;
 
   const enabledKinds: ConsentKind[] = [
-    ...(masterUser?.is_personal_data_consent_enabled ? (["personal_data"] as ConsentKind[]) : []),
-    ...(masterUser?.is_marketing_consent_enabled ? (["marketing"] as ConsentKind[]) : []),
+    ...(masterUser?.is_personal_data_consent_enabled
+      ? (["personal_data"] as ConsentKind[])
+      : []),
+    ...(masterUser?.is_marketing_consent_enabled
+      ? (["marketing"] as ConsentKind[])
+      : []),
   ];
 
   return (
@@ -66,7 +77,9 @@ const ClientConsents = ({ userCustomerId, customerId }: Props) => {
               paddingHorizontal: SCREEN_PADDING,
             }}
             contentInset={Platform.OS === "ios" ? { top: topInset } : undefined}
-            contentOffset={Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined}
+            contentOffset={
+              Platform.OS === "ios" ? { x: 0, y: -topInset } : undefined
+            }
           >
             {consents.length === 0 && enabledKinds.length === 0 ? (
               <View className="mt-6">

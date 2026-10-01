@@ -16,7 +16,7 @@ import {
   ClientCreateSchema,
   type ClientCreateFormValues,
 } from "@/src/validation/schemas/clientCreate.schema";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -114,6 +114,7 @@ const ClientCreate = ({ initialName, onCreated }: ClientCreateProps = {}) => {
             note: values.comment?.trim() || undefined,
           },
         }).unwrap();
+        if (user_customer.blocked_at) toast.error("Клиент заблокирован");
         onCreated?.(user_customer);
         dispatch(setTagId(undefined));
         methods.reset();

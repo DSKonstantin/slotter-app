@@ -63,20 +63,16 @@ const ScheduleDayCard = ({
         </View>
       ) : (
         start && (
-          <View>
-            <Typography
-              weight="regular"
-              className="text-[10px] text-neutral-500 leading-tight"
-            >
-              {start}–
-            </Typography>
-            <Typography
-              weight="regular"
-              className="text-[10px] text-neutral-500 leading-tight"
-            >
-              {end}
-            </Typography>
-          </View>
+          <Typography
+            weight="regular"
+            className="text-[10px] text-neutral-500 leading-tight"
+            numberOfLines={2}
+            maxFontSizeMultiplier={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >
+            {`${start}–\n${end}`}
+          </Typography>
         )
       )}
     </TouchableOpacity>

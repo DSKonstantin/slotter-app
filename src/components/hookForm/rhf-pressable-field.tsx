@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { Typography } from "@/src/components/ui";
 import { useController, useFormContext } from "react-hook-form";
 
 import { BaseField, FieldSize } from "@/src/components/ui/fields/BaseField";
@@ -57,14 +58,15 @@ export function RhfPressableField({
           disabled={disabled}
           onPress={onPress}
         >
-          <Text
-            className="font-inter-regular text-body px-4"
+          <Typography
+            weight="regular"
+            className="text-body px-4"
             style={{
               color: displayValue ? colors.neutral[900] : colors.neutral[300],
             }}
           >
             {displayValue ?? placeholder ?? ""}
-          </Text>
+          </Typography>
         </Pressable>
       )}
     />

@@ -1,5 +1,6 @@
 import React, { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Typography } from "@/src/components/ui";
 
 type CurrentTimeIndicatorProps = {
   top: number;
@@ -22,9 +23,9 @@ const CurrentTimeIndicator = ({ top, time }: CurrentTimeIndicatorProps) => {
           className="w-[52px] h-[28px] justify-center items-center bg-neutral-900"
           style={styles.badge}
         >
-          <Text className="text-caption font-semibold text-neutral-0">
+          <Typography weight="semibold" className="text-caption text-neutral-0">
             {time}
-          </Text>
+          </Typography>
         </View>
       </View>
       <View className="flex-1 h-[2px] bg-neutral-900/20 mr-screen" />

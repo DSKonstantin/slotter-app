@@ -3,7 +3,7 @@ import { StModal, Typography } from "@/src/components/ui";
 import { FormProvider, useForm } from "react-hook-form";
 import AdditionalServicesForm from "@/src/components/app/services/additionalServices/additionalServicesForm";
 import { useCreateAdditionalServiceMutation } from "@/src/store/redux/services/api/additionalServicesApi";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";

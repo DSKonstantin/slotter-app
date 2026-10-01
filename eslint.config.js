@@ -12,6 +12,23 @@ module.exports = defineConfig([
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@backpackapp-io/react-native-toast",
+              message: 'Используйте "@/src/components/ui/toast".',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/components/ui/toast/**"],
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
 ]);

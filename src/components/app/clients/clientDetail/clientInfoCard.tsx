@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { Avatar, Badge } from "@/src/components/ui";
+import { View } from "react-native";
+import { Avatar, Badge, Typography } from "@/src/components/ui";
+import BlockedIcon from "@/src/components/app/clients/shared/blockedIcon";
 import { pluralize } from "@/src/utils/text/pluralize";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   visitsCount: number;
   totalSpent: string;
   tag?: { name: string; color: string };
+  blocked?: boolean;
 };
 
 const ClientInfoCard = ({
@@ -21,6 +23,7 @@ const ClientInfoCard = ({
   visitsCount,
   totalSpent,
   tag,
+  blocked,
 }: Props) => {
   return (
     <View className="flex-row rounded-base bg-background-surface p-4">
@@ -35,9 +38,12 @@ const ClientInfoCard = ({
 
       <View className="flex-1">
         <View className="flex-row items-center justify-between gap-1 min-h-[26px]">
-          <Text className="font-inter-medium text-body text-neutral-900">
-            {name}
-          </Text>
+          <View className="flex-1 flex-row items-center gap-1">
+            <Typography className="shrink text-body text-neutral-900">
+              {name}
+            </Typography>
+            {blocked && <BlockedIcon />}
+          </View>
           {tag && (
             <Badge
               title={tag.name}
@@ -49,15 +55,18 @@ const ClientInfoCard = ({
         </View>
 
         {phone && (
-          <Text className="font-inter-medium text-caption text-neutral-500">
+          <Typography className="text-caption text-neutral-500">
             {phone}
-          </Text>
+          </Typography>
         )}
 
-        <Text className="font-inter-regular text-caption text-neutral-400 mt-1">
+        <Typography
+          weight="regular"
+          className="text-caption text-neutral-400 mt-1"
+        >
           {visitsCount} {pluralize(visitsCount, ["визит", "визита", "визитов"])}{" "}
           | {totalSpent} потрачено
-        </Text>
+        </Typography>
       </View>
     </View>
   );

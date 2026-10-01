@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import DraggableFlatList, {
   RenderItemParams,
 } from "react-native-draggable-flatlist";

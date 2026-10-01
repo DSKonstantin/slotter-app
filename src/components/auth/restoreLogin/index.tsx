@@ -15,7 +15,7 @@ import { unMask } from "react-native-mask-text";
 import { colors } from "@/src/styles/colors";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { useSendCodeMutation } from "@/src/store/redux/services/api/authApi";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 
 type RestoreLoginFormValues = {

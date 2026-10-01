@@ -13,7 +13,7 @@ import {
 } from "@/src/store/redux/services/api/additionalServicesApi";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { additionalServiceFormSchema } from "@/src/validation/schemas/additionalServiceForm.schema";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { centsToRubles } from "@/src/utils/price/formatPrice";
 import { getApiErrorMessage } from "@/src/utils/apiError";

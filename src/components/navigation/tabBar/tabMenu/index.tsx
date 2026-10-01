@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 
 import {
   Badge,
+  Button,
   GlassSurface,
   IconButton,
   StSvg,
@@ -25,6 +26,9 @@ import { SCREEN_PADDING } from "@/src/constants/layout";
 import { COMPACT_BREAKPOINT, TAB_BAR_BOTTOM_GAP } from "@/src/constants/tabs";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
 import { setTabMenuOpen } from "@/src/store/redux/slices/uiSlice";
+import { useOpenPersonalAccount } from "@/src/hooks/useOpenPersonalAccount";
+import { useRunOnNextForeground } from "@/src/hooks/useRunOnNextForeground";
+import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 
 type MenuItem = {
   label: string;
@@ -68,7 +72,6 @@ const MENU_ITEMS: MenuItem[] = [
     label: "Уведомление клиентам",
     icon: "Message_alt_fill",
     route: Routers.app.account.clientNotifications.root,
-    badge: "New",
   },
 ];
 
@@ -79,6 +82,16 @@ const TabMenu = () => {
   const { width } = useWindowDimensions();
   const compact = width < COMPACT_BREAKPOINT;
   const pathname = usePathname();
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const ispe = useAppSelector((s) => s.appVersion.ispe);
+  const membership = useAppSelector(
+    (s) => s.auth.user?.subscription_membership,
+  );
+  const openPersonalAccount = useOpenPersonalAccount();
+  const runOnNextForeground = useRunOnNextForeground();
+  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
+  const showUpgrade =
+    ispe && membership !== undefined && !membership.pro_access;
 
   const handleClose = useCallback(() => {
     dispatch(setTabMenuOpen(false));
@@ -88,6 +101,21 @@ const TabMenu = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     handleClose();
   }, [handleClose]);
+
+  const handleUpgrade = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    handleClose();
+    if (userId != null) {
+      runOnNextForeground(() => getSubscriptionMembership({ userId }));
+    }
+    openPersonalAccount("/go/upgrade");
+  }, [
+    handleClose,
+    userId,
+    runOnNextForeground,
+    getSubscriptionMembership,
+    openPersonalAccount,
+  ]);
 
   const handleNavigate = useCallback(
     (route?: string, isActive?: boolean, isAtRoot?: boolean) => {
@@ -209,6 +237,29 @@ const TabMenu = () => {
                   </Pressable>
                 );
               })}
+              {showUpgrade && (
+                <Button
+                  title="Перейти на Slotter"
+                  variant="lime"
+                  buttonClassName="mx-2.5 mt-1 rounded-base"
+                  onPress={handleUpgrade}
+                  rightIcon={
+                    <View className="flex-row items-center gap-0.5 rounded-full border border-neutral-900 pl-1 pr-2 py-0.5">
+                      <StSvg
+                        name="Star_alt_fill"
+                        size={22}
+                        color={colors.neutral[900]}
+                      />
+                      <Typography
+                        weight="semibold"
+                        className="text-caption text-neutral-900"
+                      >
+                        PRO
+                      </Typography>
+                    </View>
+                  }
+                />
+              )}
             </View>
           </View>
         </View>

@@ -1,6 +1,8 @@
 import React from "react";
 import { Image } from "expo-image";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 import { StSvg } from "@/src/components/ui/StSvg";
 import { colors } from "@/src/styles/colors";
@@ -49,7 +51,9 @@ export function Avatar({
       }}
       className={twMerge(
         "relative items-center justify-center",
-        (!uri && !initials && fallbackIcon) ? "bg-white border border-neutral-100" : "bg-neutral-100",
+        !uri && !initials && fallbackIcon
+          ? "bg-white border border-neutral-100"
+          : "bg-neutral-100",
       )}
     >
       {uri ? (
@@ -64,7 +68,12 @@ export function Avatar({
           }}
         />
       ) : initials ? (
-        <Text className="font-inter-semibold text-neutral-500">{initials}</Text>
+        <AppText
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          className="font-inter-semibold text-neutral-500"
+        >
+          {initials}
+        </AppText>
       ) : (
         fallbackIcon
       )}

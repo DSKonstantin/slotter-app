@@ -4,6 +4,8 @@ import { Bubble, BubbleProps } from "react-native-gifted-chat";
 import { colors } from "@/src/styles/colors";
 import { StSvg, Typography } from "@/src/components/ui";
 import type { ChatIMessage } from "@/src/utils/chat/types";
+import ChatMessageText from "./ChatMessageText";
+import ChatTime from "./ChatTime";
 
 type ChatBubbleProps = BubbleProps<ChatIMessage> & {
   onRetryFailed?: (message: ChatIMessage) => void;
@@ -41,6 +43,10 @@ const ChatBubble = ({ onRetryFailed, ...props }: ChatBubbleProps) => {
       {...props}
       wrapperStyle={WRAPPER_STYLE}
       textStyle={TEXT_STYLE}
+      renderMessageText={(messageTextProps) => (
+        <ChatMessageText {...messageTextProps} />
+      )}
+      renderTime={(timeProps) => <ChatTime {...timeProps} />}
       renderTicks={() => {
         if (!isRight) return null;
         if (isFailed) {

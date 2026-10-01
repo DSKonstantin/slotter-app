@@ -1,5 +1,11 @@
 import React, { ReactNode, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+} from "react-native";
 import { Calendar, type DateData } from "react-native-calendars";
 import { setMonth, setYear } from "date-fns";
 
@@ -71,7 +77,27 @@ const OptionDropdown = ({
   width?: number;
 }) => {
   const scrollRef = useRef<ScrollView>(null);
+  const contentHeightRef = useRef<number | null>(null);
+  const selectedYRef = useRef<number | null>(null);
   const selectedIndex = options.findIndex((option) => option.selected);
+
+  const scrollToSelected = () => {
+    const contentHeight = contentHeightRef.current;
+    const selectedY = selectedYRef.current;
+    if (selectedIndex <= 0 || contentHeight === null || selectedY === null) {
+      return;
+    }
+    const y = Math.min(
+      selectedY,
+      Math.max(0, contentHeight - OPTION_LIST_MAX_HEIGHT),
+    );
+    scrollRef.current?.scrollTo({ y, animated: false });
+  };
+
+  const handleSelectedLayout = (e: LayoutChangeEvent) => {
+    selectedYRef.current = e.nativeEvent.layout.y;
+    scrollToSelected();
+  };
 
   return (
     <View
@@ -97,12 +123,8 @@ const OptionDropdown = ({
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         onContentSizeChange={(_, contentHeight) => {
-          if (selectedIndex <= 0) return;
-          const y = Math.min(
-            selectedIndex * OPTION_ROW_HEIGHT,
-            Math.max(0, contentHeight - OPTION_LIST_MAX_HEIGHT),
-          );
-          scrollRef.current?.scrollTo({ y, animated: false });
+          contentHeightRef.current = contentHeight;
+          scrollToSelected();
         }}
       >
         {options.map((option, index) => (
@@ -110,6 +132,7 @@ const OptionDropdown = ({
             {index > 0 && <View className="h-px bg-neutral-100" />}
             <Pressable
               onPress={() => onSelect(option.value)}
+              onLayout={option.selected ? handleSelectedLayout : undefined}
               className="flex-row items-center justify-between py-2.5"
             >
               <Typography

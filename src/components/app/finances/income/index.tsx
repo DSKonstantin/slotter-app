@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { Platform, RefreshControl, ScrollView, View } from "react-native";
+import { twMerge } from "tailwind-merge";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import TrendChartCard from "@/src/components/shared/cards/trendChartCard";
@@ -28,6 +29,7 @@ import IncomeBreakdownSkeleton from "./IncomeBreakdownSkeleton";
 import IncomeBreakdownServices from "./IncomeBreakdownServices";
 import IncomeBreakdownClients from "./IncomeBreakdownClients";
 import { ErrorScreen } from "@/src/components/shared/emptyStateScreen";
+import RetryInline from "@/src/components/shared/retryInline";
 
 const PERIOD_DEFS = [
   { label: "3 месяца", value: "3m" },
@@ -71,6 +73,7 @@ const FinancesIncomeScreen = () => {
   const [selectedValue, setSelectedValue] = useState<string>(
     PERIOD_DEFS[0].value,
   );
+  const [shownGroupBy, setShownGroupBy] = useState(groupBy);
   const auth = useRequiredAuth();
 
   const today = useToday();
@@ -82,6 +85,7 @@ const FinancesIncomeScreen = () => {
 
   const {
     data,
+    currentData,
     isLoading: isIncomeLoading,
     isError: isIncomeError,
     isFetching,
@@ -98,6 +102,14 @@ const FinancesIncomeScreen = () => {
   );
 
   const { refreshing, onRefresh } = useRefresh(refetch);
+
+  const isUpdating = !!data && isFetching && !refreshing;
+  const hasUpdateError = !!data && isIncomeError && !isFetching;
+  const isGroupSwitching = shownGroupBy !== groupBy;
+
+  useEffect(() => {
+    if (currentData) setShownGroupBy(groupBy);
+  }, [currentData, groupBy]);
 
   useFocusEffect(
     useCallback(() => {
@@ -118,7 +130,7 @@ const FinancesIncomeScreen = () => {
   }));
 
   const renderBreakdown = () => {
-    if (isFetching) return <IncomeBreakdownSkeleton />;
+    if (isGroupSwitching) return <IncomeBreakdownSkeleton />;
     if (!data?.breakdown?.length) {
       return (
         <Typography className="text-body text-neutral-400 text-center py-2">
@@ -139,11 +151,13 @@ const FinancesIncomeScreen = () => {
       {({ topInset, bottomInset }) => {
         if (isIncomeLoading)
           return <FinancesIncomeSkeleton topInset={topInset} />;
-        if (isIncomeError)
+        if (isIncomeError && !data)
           return (
             <ErrorScreen
               title="Не удалось загрузить доходы"
               onRetry={refetch}
+              isLoading={isFetching}
+              topInset={topInset}
             />
           );
         return (
@@ -169,18 +183,25 @@ const FinancesIncomeScreen = () => {
               />
             }
           >
+            {hasUpdateError && (
+              <RetryInline text="Не удалось обновить" onRetry={refetch} />
+            )}
+
             <TrendChartCard
               title="График доходов по месяцам"
               data={chartData.length > 0 ? chartData : undefined}
               periods={periods}
+              isLoading={isUpdating}
               onPeriodChange={(p) => setSelectedValue(p.value)}
             />
 
-            <Card
-              title={data ? formatRublesFromCents(data.total_cents) : "—"}
-              subtitle="Итого за период"
-              titleProps={{ style: { fontSize: 20 } }}
-            />
+            <View className={isUpdating ? "opacity-50" : undefined}>
+              <Card
+                title={data ? formatRublesFromCents(data.total_cents) : "—"}
+                subtitle="Итого за период"
+                titleProps={{ style: { fontSize: 20 } }}
+              />
+            </View>
 
             <Divider />
 
@@ -190,7 +211,14 @@ const FinancesIncomeScreen = () => {
               options={INCOME_GROUP_OPTIONS}
             />
 
-            <View className="gap-3">{renderBreakdown()}</View>
+            <View
+              className={twMerge(
+                "gap-3",
+                isUpdating && !isGroupSwitching && "opacity-50",
+              )}
+            >
+              {renderBreakdown()}
+            </View>
           </ScrollView>
         );
       }}

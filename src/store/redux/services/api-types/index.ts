@@ -20,6 +20,9 @@ export type {
   MeResponse,
   UpdateUserPayload,
   UpdateCredentialsPayload,
+  BookingFixedTimeApi,
+  BookingFixedTimeDay,
+  BookingFixedTimeInterval,
 } from "./user";
 export type {
   ServiceCategory,

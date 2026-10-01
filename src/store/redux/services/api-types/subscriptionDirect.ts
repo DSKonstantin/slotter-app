@@ -1,4 +1,5 @@
-export type DirectChannelKind = "telegram_direct" | "max_direct";
+export type DirectChannelKind =
+  "telegram_direct" | "max_direct" | "whatsapp_direct";
 
 export type DirectChannelStatus =
   "pending" | "paid" | "active" | "grace" | "cancelled" | "expired";

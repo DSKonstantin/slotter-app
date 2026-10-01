@@ -1,6 +1,9 @@
 import { STRICT_TOKEN_RE } from "./tokenPattern";
 import type { TextSelection } from "./insertToken";
 
+const isBoundary = (char: string | undefined) =>
+  char === undefined || char === " " || char === "\n";
+
 export function collapseTokenOnDelete(
   oldText: string,
   newText: string,
@@ -11,17 +14,19 @@ export function collapseTokenOnDelete(
   while (i < newText.length && oldText[i] === newText[i]) i++;
   const removedIndex = i;
 
-  STRICT_TOKEN_RE.lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = STRICT_TOKEN_RE.exec(oldText))) {
-    const start = match.index;
-    const end = start + match[0].length;
-    if (removedIndex >= start && removedIndex < end) {
-      return {
-        text: oldText.slice(0, start) + oldText.slice(end),
-        selection: { start, end: start },
-      };
-    }
+  for (const match of oldText.matchAll(STRICT_TOKEN_RE)) {
+    const tokenStart = match.index;
+    const tokenEnd = tokenStart + match[0].length;
+    if (removedIndex < tokenStart || removedIndex >= tokenEnd) continue;
+
+    const start =
+      oldText[tokenStart - 1] === " " && isBoundary(oldText[tokenEnd])
+        ? tokenStart - 1
+        : tokenStart;
+    return {
+      text: oldText.slice(0, start) + oldText.slice(tokenEnd),
+      selection: { start, end: start },
+    };
   }
   return null;
 }

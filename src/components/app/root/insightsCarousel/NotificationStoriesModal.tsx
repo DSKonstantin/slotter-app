@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Modal,
   Pressable,
@@ -7,6 +13,8 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  cancelAnimation,
+  Easing,
   runOnJS,
   type SharedValue,
   useAnimatedStyle,
@@ -14,6 +22,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import {
   Gesture,
   GestureDetector,
@@ -41,6 +50,41 @@ const SWIPE_VELOCITY = 500;
 const CLOSE_THRESHOLD = 100;
 const CLOSE_VELOCITY = 800;
 const SLIDE_TRANSITION_MS = 250;
+const STORY_DURATION_MS = 7000;
+const HOLD_TO_PAUSE_MS = 200;
+
+const runStoryTimer = (timer: SharedValue<number>, onDone: () => void) => {
+  "worklet";
+  timer.value = withTiming(
+    1,
+    {
+      duration: STORY_DURATION_MS * (1 - timer.value),
+      easing: Easing.linear,
+    },
+    (finished) => {
+      if (finished) runOnJS(onDone)();
+    },
+  );
+};
+
+const restartStoryTimer = (timer: SharedValue<number>, onDone: () => void) => {
+  "worklet";
+  timer.value = 0;
+  runStoryTimer(timer, onDone);
+};
+
+const StoryProgressFill = ({ timer }: { timer: SharedValue<number> }) => {
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: `${timer.value * 100}%`,
+  }));
+
+  return (
+    <Animated.View
+      className="h-full bg-primary-green-500"
+      style={animatedStyle}
+    />
+  );
+};
 
 const groupBaseIndex = (groups: StoryGroup[], groupIdx: number) =>
   groups.slice(0, groupIdx).reduce((acc, g) => acc + g.stories.length, 0);
@@ -87,13 +131,16 @@ const NotificationStoriesModal = ({
 }: Props) => {
   const [groupIndex, setGroupIndex] = useState(0);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [ready, setReady] = useState(false);
 
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(0);
   const progress = useSharedValue(0);
+  const storyTimer = useSharedValue(0);
   const groupIndexRef = useRef(groupIndex);
   const storyIndexRef = useRef(storyIndex);
   const groupsRef = useRef(groups);
+  const autoNextRef = useRef(() => {});
 
   const { top } = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -103,6 +150,7 @@ const NotificationStoriesModal = ({
     const idx = found >= 0 ? found : 0;
     setGroupIndex(idx);
     setStoryIndex(0);
+    setReady(true);
     progress.value = groupBaseIndex(groups, idx);
     opacity.value = 0;
     translateY.value = 0;
@@ -110,10 +158,11 @@ const NotificationStoriesModal = ({
   }, [groups, initialGroupId, progress, opacity, translateY]);
 
   const handleClose = useCallback(() => {
+    cancelAnimation(storyTimer);
     opacity.value = withTiming(0, { duration: 300 }, () => {
       runOnJS(onClose)();
     });
-  }, [opacity, onClose]);
+  }, [opacity, onClose, storyTimer]);
 
   const handleSwipe = useCallback(
     (direction: "left" | "right") => {
@@ -123,6 +172,13 @@ const NotificationStoriesModal = ({
       const storiesLen = allGroups[groupIdx]?.stories.length ?? 0;
       const base = groupBaseIndex(allGroups, groupIdx);
 
+      const moveTo = (nextGroup: number, nextStory: number) => {
+        groupIndexRef.current = nextGroup;
+        storyIndexRef.current = nextStory;
+        setGroupIndex(nextGroup);
+        setStoryIndex(nextStory);
+      };
+
       const slideTo = (globalIdx: number) => {
         progress.value = withTiming(globalIdx, {
           duration: SLIDE_TRANSITION_MS,
@@ -131,23 +187,21 @@ const NotificationStoriesModal = ({
 
       if (direction === "left") {
         if (storyIdx < storiesLen - 1) {
-          setStoryIndex(storyIdx + 1);
+          moveTo(groupIdx, storyIdx + 1);
           slideTo(base + storyIdx + 1);
         } else if (groupIdx < allGroups.length - 1) {
-          setGroupIndex(groupIdx + 1);
-          setStoryIndex(0);
+          moveTo(groupIdx + 1, 0);
           slideTo(base + storiesLen);
         } else {
           handleClose();
         }
       } else {
         if (storyIdx > 0) {
-          setStoryIndex(storyIdx - 1);
+          moveTo(groupIdx, storyIdx - 1);
           slideTo(base + storyIdx - 1);
         } else if (groupIdx > 0) {
           const lastIdx = (allGroups[groupIdx - 1]?.stories.length ?? 1) - 1;
-          setGroupIndex(groupIdx - 1);
-          setStoryIndex(lastIdx);
+          moveTo(groupIdx - 1, lastIdx);
           slideTo(base - 1);
         }
       }
@@ -155,12 +209,26 @@ const NotificationStoriesModal = ({
     [handleClose, progress],
   );
 
+  const handleAutoNext = useCallback(() => {
+    const allGroups = groupsRef.current;
+    const groupIdx = groupIndexRef.current;
+    const isLastStory =
+      groupIdx === allGroups.length - 1 &&
+      storyIndexRef.current === (allGroups[groupIdx]?.stories.length ?? 0) - 1;
+    if (!isLastStory) handleSwipe("left");
+  }, [handleSwipe]);
+
+  const onTimerDone = useCallback(() => autoNextRef.current(), []);
+
   const verticalPan = useMemo(
     () =>
       Gesture.Pan()
         .activeOffsetY(15)
         .failOffsetY(-15)
         .failOffsetX([-10, 10])
+        .onStart(() => {
+          cancelAnimation(storyTimer);
+        })
         .onUpdate((event) => {
           if (event.translationY <= 0) return;
           translateY.value = event.translationY;
@@ -181,9 +249,10 @@ const NotificationStoriesModal = ({
               stiffness: 180,
             });
             opacity.value = withTiming(1, { duration: 200 });
+            runStoryTimer(storyTimer, onTimerDone);
           }
         }),
-    [translateY, opacity, height, onClose],
+    [translateY, opacity, height, onClose, storyTimer, onTimerDone],
   );
 
   const panGesture = useMemo(
@@ -220,9 +289,22 @@ const NotificationStoriesModal = ({
     [handleSwipe, width, top],
   );
 
+  const holdGesture = useMemo(
+    () =>
+      Gesture.LongPress()
+        .minDuration(HOLD_TO_PAUSE_MS)
+        .onStart(() => {
+          cancelAnimation(storyTimer);
+        })
+        .onEnd(() => {
+          runStoryTimer(storyTimer, onTimerDone);
+        }),
+    [storyTimer, onTimerDone],
+  );
+
   const composedGesture = useMemo(
-    () => Gesture.Exclusive(verticalPan, panGesture, tapGesture),
-    [verticalPan, panGesture, tapGesture],
+    () => Gesture.Exclusive(verticalPan, panGesture, holdGesture, tapGesture),
+    [verticalPan, panGesture, holdGesture, tapGesture],
   );
 
   const containerAnimatedStyle = useAnimatedStyle(() => ({
@@ -230,25 +312,38 @@ const NotificationStoriesModal = ({
     transform: [{ translateY: translateY.value }],
   }));
 
-  groupIndexRef.current = groupIndex;
+  const safeGroupIndex = Math.max(0, Math.min(groupIndex, groups.length - 1));
+
+  groupIndexRef.current = safeGroupIndex;
   storyIndexRef.current = storyIndex;
   groupsRef.current = groups;
+  autoNextRef.current = handleAutoNext;
 
-  const activeGroup = groups[groupIndex];
+  useEffect(() => {
+    if (!isVisible) {
+      cancelAnimation(storyTimer);
+      setReady(false);
+      return;
+    }
+    if (!ready) return;
+    scheduleOnUI(restartStoryTimer, storyTimer, onTimerDone);
+  }, [isVisible, ready, safeGroupIndex, storyIndex, storyTimer, onTimerDone]);
+
+  const activeGroup = groups[safeGroupIndex];
 
   if (!activeGroup?.stories.length) return null;
 
-  const baseIndex = groupBaseIndex(groups, groupIndex);
+  const baseIndex = groupBaseIndex(groups, safeGroupIndex);
   const slides: {
     key: string;
     story: Story;
     index: number;
     isActive: boolean;
   }[] = [];
-  const prevLast = groups[groupIndex - 1]?.stories.at(-1);
+  const prevLast = groups[safeGroupIndex - 1]?.stories.at(-1);
   if (prevLast) {
     slides.push({
-      key: `${groups[groupIndex - 1].id}-${prevLast.id}`,
+      key: `${groups[safeGroupIndex - 1].id}-${prevLast.id}`,
       story: prevLast,
       index: baseIndex - 1,
       isActive: false,
@@ -262,10 +357,10 @@ const NotificationStoriesModal = ({
       isActive: idx === storyIndex,
     });
   });
-  const nextFirst = groups[groupIndex + 1]?.stories[0];
+  const nextFirst = groups[safeGroupIndex + 1]?.stories[0];
   if (nextFirst) {
     slides.push({
-      key: `${groups[groupIndex + 1].id}-${nextFirst.id}`,
+      key: `${groups[safeGroupIndex + 1].id}-${nextFirst.id}`,
       story: nextFirst,
       index: baseIndex + activeGroup.stories.length,
       isActive: false,
@@ -322,13 +417,20 @@ const NotificationStoriesModal = ({
                 <View
                   className="flex-row px-screen gap-4 items-center"
                   style={{ paddingTop: top + 8 }}
-
                 >
                   <View className="flex-1 flex-row gap-1">
                     {activeGroup.stories.map((_, idx) => (
                       <Pressable
                         key={idx}
                         onPress={() => {
+                          if (idx === storyIndex) {
+                            scheduleOnUI(
+                              restartStoryTimer,
+                              storyTimer,
+                              onTimerDone,
+                            );
+                            return;
+                          }
                           setStoryIndex(idx);
                           progress.value = withTiming(baseIndex + idx, {
                             duration: SLIDE_TRANSITION_MS,
@@ -337,8 +439,11 @@ const NotificationStoriesModal = ({
                         className="flex-1 active:opacity-70"
                       >
                         <View className="h-1.5 bg-neutral-0 rounded-full overflow-hidden">
-                          {idx <= storyIndex && (
+                          {idx < storyIndex && (
                             <View className="h-full bg-primary-green-500" />
+                          )}
+                          {idx === storyIndex && (
+                            <StoryProgressFill timer={storyTimer} />
                           )}
                         </View>
                       </Pressable>

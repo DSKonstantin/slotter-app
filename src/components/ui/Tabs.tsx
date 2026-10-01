@@ -1,4 +1,6 @@
-import { View, Pressable, Text } from "react-native";
+import { View, Pressable } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 
 export type TabOption<T extends string> = {
   label: string;
@@ -29,13 +31,14 @@ export function Tabs<T extends string>({
               active ? "bg-blue-500" : ""
             }`}
           >
-            <Text
+            <AppText
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               className={`text-sm font-medium ${
                 active ? "text-white" : "text-gray-400"
               }`}
             >
               {opt.label}
-            </Text>
+            </AppText>
           </Pressable>
         );
       })}

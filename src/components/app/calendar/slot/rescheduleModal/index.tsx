@@ -13,7 +13,7 @@ import {
 import { RescheduleSchema } from "@/src/validation/schemas/slotReschedule.schema";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { colors } from "@/src/styles/colors";
 import { parseISO } from "date-fns";
 import {

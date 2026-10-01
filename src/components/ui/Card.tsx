@@ -1,5 +1,7 @@
 import React, { ReactNode } from "react";
-import { Pressable, View, Text, TextProps } from "react-native";
+import { Pressable, View, TextProps } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 
 type CardProps = {
@@ -61,32 +63,37 @@ export const Card = ({
       >
         <View className="flex-row items-center gap-1">
           {titleNode ?? (
-            <Text
+            <AppText
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               {...titleProps}
               className={`flex-shrink font-inter-medium text-body ${active ? "text-primary-blue-500" : "text-neutral-900"}`}
             >
               {title}
-            </Text>
+            </AppText>
           )}
           {titleAccessory}
         </View>
 
         {!!subtitle &&
           (typeof subtitle === "string" ? (
-            <Text
+            <AppText
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               {...subtitleProps}
               className={"font-inter-medium text-caption text-neutral-500"}
             >
               {subtitle}
-            </Text>
+            </AppText>
           ) : (
             subtitle
           ))}
 
         {caption && (
-          <Text className="font-inter-regular text-gray-medium mt-1">
+          <AppText
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            className="font-inter-regular text-gray-medium mt-1"
+          >
             {caption}
-          </Text>
+          </AppText>
         )}
       </ContentComponent>
 

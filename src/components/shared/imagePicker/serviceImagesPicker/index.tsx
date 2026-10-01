@@ -13,8 +13,7 @@ import PhotoPreview from "@/src/components/shared/imagePicker/serviceImagesPicke
 import EmptySlot from "@/src/components/shared/imagePicker/serviceImagesPicker/EmptySlot";
 
 export type PhotoAsset =
-  | (ImagePickerAsset & { id: string })
-  | (DocumentPickerAsset & { id: string });
+  (ImagePickerAsset & { id: string }) | (DocumentPickerAsset & { id: string });
 
 export type PhotoAction = "keep" | "upload" | "clear";
 

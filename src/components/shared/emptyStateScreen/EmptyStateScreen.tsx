@@ -16,6 +16,7 @@ type EmptyStateScreenProps = {
   withTabBar?: boolean;
   topInset?: number;
   onPress: () => void;
+  secondaryButton?: { title: string; onPress: () => void };
 };
 
 const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
@@ -28,6 +29,7 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
   withTabBar = true,
   topInset = 0,
   onPress,
+  secondaryButton,
 }) => {
   const { bottom } = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
@@ -59,7 +61,15 @@ const EmptyStateScreen: React.FC<EmptyStateScreenProps> = ({
           </Typography>
         </View>
       </View>
-      <View className="px-screen">
+      <View className="px-screen gap-2">
+        {secondaryButton && (
+          <Button
+            title={secondaryButton.title}
+            variant="secondary"
+            buttonClassName="self-end border border-neutral-200"
+            onPress={secondaryButton.onPress}
+          />
+        )}
         <Button
           title={buttonTitle}
           loading={isLoading}

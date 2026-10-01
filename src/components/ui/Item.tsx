@@ -1,5 +1,7 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 
 type ItemProps = {
@@ -56,7 +58,8 @@ export function Item({
         )}
       >
         {title && (
-          <Text
+          <AppText
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             className={twMerge(
               active
                 ? "font-inter-regular text-primary-blue-500 text-[16px]"
@@ -65,17 +68,18 @@ export function Item({
             )}
           >
             {title}
-          </Text>
+          </AppText>
         )}
 
         {titleAccessory}
         {subtitle && (
-          <Text
+          <AppText
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             numberOfLines={1}
             className="font-inter-regular text-body text-neutral-400"
           >
             {subtitle}
-          </Text>
+          </AppText>
         )}
       </View>
 

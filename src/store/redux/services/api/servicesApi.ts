@@ -1,4 +1,4 @@
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { api } from "../api";
 import type {

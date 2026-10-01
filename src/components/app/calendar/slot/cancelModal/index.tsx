@@ -6,7 +6,7 @@ import { StModal, Button, Typography } from "@/src/components/ui";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { useCancelAppointmentMutation } from "@/src/store/redux/services/api/appointmentsApi";
 import { getApiErrorMessage } from "@/src/utils/apiError";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 type Props = {
   visible: boolean;

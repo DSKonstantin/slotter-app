@@ -1,8 +1,7 @@
 import { api } from "../api";
 
 type ValidateReferralCodeResponse =
-  | { valid: true; trial_days: number }
-  | { valid: false; error: string };
+  { valid: true; trial_days: number } | { valid: false; error: string };
 
 const referralApi = api.injectEndpoints({
   overrideExisting: __DEV__,

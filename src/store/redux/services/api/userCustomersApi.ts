@@ -96,12 +96,32 @@ const userCustomersApi = api.injectEndpoints({
       invalidatesTags: ["UserCustomers"],
     }),
 
-    deleteUserCustomer: builder.mutation<void, { userId: number; id: number }>({
+    blockUserCustomer: builder.mutation<
+      GetUserCustomerResponse,
+      { userId: number; id: number }
+    >({
       query: ({ userId, id }) => ({
-        url: `/users/${userId}/user_customers/${id}`,
-        method: "DELETE",
+        url: `/users/${userId}/user_customers/${id}/block`,
+        method: "PATCH",
       }),
-      invalidatesTags: ["UserCustomers"],
+      invalidatesTags: [
+        "UserCustomers",
+        "Customers",
+        "Appointments",
+        "Appointment",
+        "WorkingDays",
+      ],
+    }),
+
+    unblockUserCustomer: builder.mutation<
+      GetUserCustomerResponse,
+      { userId: number; id: number }
+    >({
+      query: ({ userId, id }) => ({
+        url: `/users/${userId}/user_customers/${id}/unblock`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["UserCustomers", "Customers"],
     }),
 
     getUserCustomerAppointments: builder.query<
@@ -148,7 +168,8 @@ export const {
   useGetUserCustomerQuery,
   useCreateUserCustomerMutation,
   useUpdateUserCustomerMutation,
-  useDeleteUserCustomerMutation,
+  useBlockUserCustomerMutation,
+  useUnblockUserCustomerMutation,
   useGetUserCustomerAppointmentsQuery,
   useGetUserCustomerFinancesQuery,
   useGetUserCustomersStatisticsQuery,

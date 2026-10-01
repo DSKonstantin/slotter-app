@@ -19,6 +19,10 @@ import type { TextSelection } from "../tokenText/insertToken";
 import { insertToken } from "../tokenText/insertToken";
 import { collapseTokenOnDelete } from "../tokenText/collapseTokenOnDelete";
 import { getActiveTokenTrigger } from "../tokenText/activeTokenTrigger";
+import {
+  moveInsertionOutOfToken,
+  snapSelectionToTokens,
+} from "../tokenText/snapSelectionToTokens";
 import { validateBody } from "../tokenText/validateBody";
 import VariablePicker from "./VariablePicker";
 import TemplateField from "./TemplateField";
@@ -63,6 +67,7 @@ const MessageTemplateEditor = ({
 
   const inputRef = useRef<TextInput | null>(null);
   const selectionRef = useRef(selection);
+  const pendingSelectionRef = useRef<TextSelection | null>(null);
   selectionRef.current = selection;
 
   const isDirty = !bypassGuard && text !== initialValue;
@@ -74,7 +79,6 @@ const MessageTemplateEditor = ({
     [text, allowedKeys],
   );
   const activeServerError = text === serverErrorText ? serverError : null;
-  const error = text.trim() ? (localError ?? activeServerError ?? null) : null;
   const canSave = isDirty && !localError && !isSaving;
   const previewText = text.trim() ? text : fallbackPreview;
 
@@ -85,6 +89,10 @@ const MessageTemplateEditor = ({
         : null,
     [text, selection],
   );
+  const error =
+    text.trim() && !activeTrigger
+      ? (localError ?? activeServerError ?? null)
+      : null;
   const filteredVariables = useMemo(() => {
     if (!activeTrigger || !activeTrigger.query) return variables;
     const q = activeTrigger.query.toLowerCase();
@@ -94,25 +102,30 @@ const MessageTemplateEditor = ({
     );
   }, [variables, activeTrigger]);
 
+  const applySelection = useCallback((next: TextSelection) => {
+    pendingSelectionRef.current = next;
+    setSelection(next);
+  }, []);
+
   const handleInsert = useCallback(
     (variable: TemplateVariable) => {
-      const { start, end } = selectionRef.current;
-      const before = text.slice(0, start);
-      const after = text.slice(end);
+      const target = snapSelectionToTokens(text, selectionRef.current);
+      const before = text.slice(0, target.start);
+      const after = text.slice(target.end);
       const leading = before && !/\s$/.test(before) ? " " : "";
       const trailing = after && !/^\s/.test(after) ? " " : "";
 
       const result = insertToken(
         text,
-        selectionRef.current,
+        target,
         `${leading}{{${variable.key}}}${trailing}`,
         MAX_LENGTH,
       );
       setText(result.text);
-      setSelection(result.selection);
+      applySelection(result.selection);
       inputRef.current?.focus();
     },
-    [text],
+    [text, applySelection],
   );
 
   const handleCompleteTrigger = useCallback(
@@ -131,23 +144,21 @@ const MessageTemplateEditor = ({
         MAX_LENGTH,
       );
       setText(result.text);
-      setSelection(result.selection);
+      applySelection(result.selection);
       inputRef.current?.focus();
     },
-    [text, activeTrigger],
+    [text, activeTrigger, applySelection],
   );
 
   const handleChangeText = useCallback(
     (newText: string) => {
-      const collapsed = collapseTokenOnDelete(text, newText);
-      if (collapsed) {
-        setText(collapsed.text);
-        setSelection(collapsed.selection);
-        return;
-      }
-      setText(newText);
+      const fixed =
+        collapseTokenOnDelete(text, newText) ??
+        moveInsertionOutOfToken(text, newText);
+      setText(fixed ? fixed.text : newText);
+      if (fixed) applySelection(fixed.selection);
     },
-    [text],
+    [text, applySelection],
   );
 
   const handleSave = useCallback(() => {
@@ -169,8 +180,15 @@ const MessageTemplateEditor = ({
 
   useEffect(() => {
     setText(initialValue);
-    setSelection({ start: initialValue.length, end: initialValue.length });
-  }, [initialValue]);
+    applySelection({ start: initialValue.length, end: initialValue.length });
+  }, [initialValue, applySelection]);
+
+  useEffect(() => {
+    const pending = pendingSelectionRef.current;
+    if (!pending) return;
+    pendingSelectionRef.current = null;
+    inputRef.current?.setSelection(pending.start, pending.end);
+  }, [text, selection]);
 
   return (
     <ScreenWithToolbar
@@ -187,6 +205,7 @@ const MessageTemplateEditor = ({
     >
       {({ topInset, bottomInset }) => (
         <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bottomOffset={BOTTOM_OFFSET}
           contentContainerStyle={{
@@ -215,7 +234,6 @@ const MessageTemplateEditor = ({
                   inputRef={inputRef}
                   value={text}
                   onChangeText={handleChangeText}
-                  selection={selection}
                   onSelectionChange={setSelection}
                   maxLength={MAX_LENGTH}
                   error={error}

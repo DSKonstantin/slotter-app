@@ -1,7 +1,7 @@
 import React, { memo, useMemo, useState } from "react";
 import { Linking, View } from "react-native";
 import { useForm, FormProvider } from "react-hook-form";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import {
   StModal,

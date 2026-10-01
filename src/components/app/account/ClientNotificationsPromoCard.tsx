@@ -22,16 +22,18 @@ const ClientNotificationsPromoCard = () => (
       <PaperPlaneIcon size={120} />
     </View>
 
-    <View className="flex-row items-start justify-between">
-      <View className="flex-row gap-2 flex-1 mr-1">
-        <StSvg name="Message_fill" size={24} color={colors.neutral[900]} />
-        <Typography weight="regular" className="text-body flex-1">
+    <View className="flex-row items-start gap-2">
+      <StSvg name="Message_fill" size={24} color={colors.neutral[900]} />
+      <View className="flex-1 flex-row flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <Typography
+          weight="regular"
+          className="text-body grow shrink basis-[130px] min-w-[130px]"
+        >
           Уведомления клиентам
         </Typography>
-      </View>
-
-      <View className="flex-row items-center gap-2">
         <Badge title="-70% неявок" variant="info" size="sm" />
+      </View>
+      <View className="h-6 justify-center">
         <StSvg name="Expand_right" size={20} color={colors.neutral[500]} />
       </View>
     </View>

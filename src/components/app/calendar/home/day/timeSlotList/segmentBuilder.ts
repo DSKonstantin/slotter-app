@@ -394,6 +394,36 @@ export const getSegmentHeight = (segment: Segment) => {
   );
 };
 
+export const getTimeOffset = (
+  segments: Segment[],
+  minutes: number,
+  edge: "start" | "end" = "start",
+): number => {
+  let y = 0;
+  for (const seg of segments) {
+    const { segStart, segEnd, content } = seg;
+    const isInside =
+      edge === "start"
+        ? minutes >= segStart && minutes < segEnd
+        : minutes > segStart && minutes <= segEnd;
+    if (isInside) {
+      const nonOccupying =
+        content.kind === "slots"
+          ? content.slots.filter((s) => !slotOccupiesTime(s))
+          : [];
+      const leadingOffset =
+        content.kind === "slots"
+          ? SLOT_GAP +
+            nonOccupying.reduce((h, s) => h + getSlotMinHeight(s), 0) +
+            SLOT_GAP * nonOccupying.length
+          : 0;
+      return y + leadingOffset + (minutes - segStart) * MINUTE_HEIGHT;
+    }
+    y += getSegmentHeight(seg);
+  }
+  return y;
+};
+
 export const createSegments = (
   startAt: string | undefined,
   endAt: string | undefined,

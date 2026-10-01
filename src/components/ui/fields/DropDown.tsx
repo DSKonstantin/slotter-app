@@ -1,5 +1,7 @@
 import React, { Ref, useCallback, useMemo, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { Dropdown, type IDropdownRef } from "react-native-element-dropdown";
 import { BaseField } from "./BaseField";
 import { FieldError } from "react-hook-form";
@@ -32,9 +34,12 @@ type SelectFieldProps = {
 const Separator = () => <View className="h-px bg-neutral-100 mx-4" />;
 
 const EmptyText = ({ children }: { children: string }) => (
-  <Text className="font-inter-regular text-body text-neutral-500 text-center py-4">
+  <AppText
+    maxFontSizeMultiplier={MAX_FONT_SCALE}
+    className="font-inter-regular text-body text-neutral-500 text-center py-4"
+  >
     {children}
-  </Text>
+  </AppText>
 );
 
 const CenteredOption = ({
@@ -45,14 +50,15 @@ const CenteredOption = ({
   muted?: boolean;
 }) => (
   <View className="px-4 py-3">
-    <Text
+    <AppText
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
       className={`text-center font-inter-regular text-body ${
         muted ? "text-neutral-300" : "text-neutral-900"
       }`}
       numberOfLines={1}
     >
       {label}
-    </Text>
+    </AppText>
   </View>
 );
 
@@ -64,17 +70,21 @@ const DefaultOption = ({
   selected?: boolean;
 }) => (
   <View className="flex-row items-center justify-between py-2.5">
-    <Text
+    <AppText
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
       className={`font-inter-regular text-body ${
         item.disabled ? "text-neutral-300" : "text-neutral-900"
       }`}
     >
       {item.label}
-    </Text>
+    </AppText>
     {item.disabled ? (
-      <Text className="font-inter-regular text-caption text-neutral-400">
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        className="font-inter-regular text-caption text-neutral-400"
+      >
         Не подключено
-      </Text>
+      </AppText>
     ) : (
       selected && (
         <StSvg name="Done_round" size={24} color={colors.primary.blue[500]} />
@@ -144,7 +154,14 @@ export function DropDown({
   );
 
   const renderLabel = useCallback(
-    () => <Text style={styles.labelInline}>{label}</Text>,
+    () => (
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        style={styles.labelInline}
+      >
+        {label}
+      </AppText>
+    ),
     [label],
   );
 
@@ -176,6 +193,7 @@ export function DropDown({
       containerStyle={inline ? styles.panelInline : styles.panel}
       placeholderStyle={inline ? styles.placeholderInline : styles.placeholder}
       selectedTextStyle={inline ? styles.textInline : styles.text}
+      selectedTextProps={{ maxFontSizeMultiplier: MAX_FONT_SCALE }}
       itemContainerStyle={inline ? undefined : styles.itemContainer}
       itemTextStyle={styles.text}
       activeColor={colors.background.surface}
@@ -201,9 +219,12 @@ export function DropDown({
       <View ref={ref} collapsable={false}>
         {renderDropdown()}
         {!!error?.message && (
-          <Text className="mt-[2px] font-inter-medium text-caption text-accent-red-500">
+          <AppText
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            className="mt-[2px] font-inter-medium text-caption text-accent-red-500"
+          >
             {error.message}
-          </Text>
+          </AppText>
         )}
       </View>
     );

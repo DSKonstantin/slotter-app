@@ -1,15 +1,16 @@
 import {
   toast as rnToast,
   resolveValue,
-  ToastPosition,
   type Toast as LibToast,
 } from "@backpackapp-io/react-native-toast";
-import { Easing } from "react-native-reanimated";
 import { createElement } from "react";
-import { ToastCardMorph } from "./ToastCardMorph";
-import type { ToastOptions, ToastVariant } from "./types";
+import { ToastCard } from "./ToastCard";
 
-export type { ToastVariant, ToastOptions };
+export type ToastVariant = "success" | "error" | "loading" | "security";
+
+export type ToastOptions = {
+  id?: string;
+};
 
 const HOLD_MS: Record<ToastVariant, number> = {
   success: 2200,
@@ -18,36 +19,20 @@ const HOLD_MS: Record<ToastVariant, number> = {
   loading: Infinity,
 };
 
-const COMMON = {
-  position: ToastPosition.TOP,
-  maxWidth: 356,
-  animationType: "timing" as const,
-  animationConfig: {
-    duration: 420,
-    easing: Easing.bezier(0.16, 1, 0.3, 1),
-  },
+const getOptions = (variant: ToastVariant) => ({
+  duration: HOLD_MS[variant],
   disableShadow: true,
-};
-
-function renderCard(variant: ToastVariant) {
-  function CustomToast(t: LibToast) {
+  customToast: (t: LibToast) => {
     const resolved = resolveValue(t.message, t);
-    return createElement(ToastCardMorph, {
+    return createElement(ToastCard, {
       variant,
       message: typeof resolved === "string" ? resolved : "",
     });
-  }
-  return CustomToast;
-}
+  },
+});
 
-function show(variant: ToastVariant, message: string, opts?: ToastOptions) {
-  return rnToast(message, {
-    ...COMMON,
-    duration: HOLD_MS[variant],
-    customToast: renderCard(variant),
-    ...opts,
-  });
-}
+const show = (variant: ToastVariant, message: string, opts?: ToastOptions) =>
+  rnToast(message, { ...getOptions(variant), ...opts });
 
 export const toast = {
   success: (message: string, opts?: ToastOptions) =>
@@ -67,15 +52,9 @@ export const toast = {
     },
   ): Promise<T> =>
     rnToast.promise(promise, msgs, {
-      ...COMMON,
-      loading: {
-        duration: HOLD_MS.loading,
-        customToast: renderCard("loading"),
-      },
-      success: {
-        duration: HOLD_MS.success,
-        customToast: renderCard("success"),
-      },
-      error: { duration: HOLD_MS.error, customToast: renderCard("error") },
+      disableShadow: true,
+      loading: getOptions("loading"),
+      success: getOptions("success"),
+      error: getOptions("error"),
     }),
 };

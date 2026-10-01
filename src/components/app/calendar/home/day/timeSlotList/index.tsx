@@ -18,6 +18,8 @@ import BreakBlock from "./BreakBlock";
 import FilteredSlotBlock from "./FilteredSlotBlock";
 import FreeSlotPressable from "./FreeSlotPressable";
 import FreeSlotStartModal, { type FreeSlotRange } from "./FreeSlotStartModal";
+import OnlineUnavailableBlock from "./OnlineUnavailableBlock";
+import { buildOnlineUnavailableLayouts } from "./onlineUnavailable";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import InactiveDayModal from "@/src/components/shared/modals/InactiveDayModal";
 import { isHiddenCustomer } from "@/src/utils/customer";
@@ -35,6 +37,7 @@ import {
   createSegments,
   getSegmentHeight,
   getSlotMinHeight,
+  getTimeOffset,
   slotOccupiesTime,
 } from "./segmentBuilder";
 import CurrentTimeIndicator from "@/src/components/app/calendar/home/day/timeSlotList/CurrentTimeIndicator";
@@ -42,6 +45,12 @@ import { formatApiDate } from "@/src/utils/date/formatDate";
 import { useNow } from "@/src/hooks/useNow";
 import { useToday } from "@/src/hooks/useToday";
 import { useModalAction } from "@/src/hooks/useModalAction";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
+import {
+  getOnlineWindows,
+  getUnavailableRanges,
+  type TimeRange,
+} from "@/src/utils/bookingFixedTime";
 
 type TimeSlotListProps = {
   appointments: Appointment[];
@@ -54,32 +63,6 @@ type TimeSlotListProps = {
   isActive?: boolean;
   onHighlightScroll?: (y: number) => void;
 };
-
-function computeNowOffset(
-  segments: ReturnType<typeof createSegments>["segments"],
-  currentMinutes: number,
-): number {
-  let y = 0;
-  for (const seg of segments) {
-    const { segStart, segEnd, content } = seg;
-    if (currentMinutes >= segStart && currentMinutes < segEnd) {
-      const nonOccupying =
-        content.kind === "slots"
-          ? content.slots.filter((s) => !slotOccupiesTime(s))
-          : [];
-      const cancelledOffset =
-        content.kind === "slots"
-          ? SLOT_GAP +
-            nonOccupying.reduce((h, s) => h + getSlotMinHeight(s), 0) +
-            SLOT_GAP * nonOccupying.length
-          : 0;
-      y += cancelledOffset + (currentMinutes - segStart) * MINUTE_HEIGHT;
-      return y;
-    }
-    y += getSegmentHeight(seg);
-  }
-  return y;
-}
 
 type AutoCurrentTimeIndicatorProps = {
   segments: ReturnType<typeof createSegments>["segments"];
@@ -99,7 +82,7 @@ const AutoCurrentTimeIndicator = memo(function AutoCurrentTimeIndicator({
     if (currentMinutes < effectiveStart) return 0;
     if (currentMinutes > timelineEnd)
       return segments.reduce((acc, seg) => acc + getSegmentHeight(seg), 0);
-    return computeNowOffset(segments, currentMinutes);
+    return getTimeOffset(segments, currentMinutes);
   }, [segments, currentMinutes, effectiveStart, timelineEnd]);
 
   return (
@@ -137,6 +120,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const highlightSlotId = useAppSelector(
     (state) => state.calendar.highlightSlotId,
   );
+  const fixedTime = useBookingFixedTime();
 
   const segmentsResult = useMemo(
     () => createSegments(startAt, endAt, breaks, appointments, visibleStatuses),
@@ -165,9 +149,32 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
   const timelineEnd = parseEndOfDayMinutes(endAt ?? "23:59");
 
   const nowOffset = useMemo(
-    () => computeNowOffset(segments, currentMinutes),
+    () => getTimeOffset(segments, currentMinutes),
     [segments, currentMinutes],
   );
+
+  const onlineUnavailableBlocks = useMemo(() => {
+    if (!date || isActive === false || date < formatApiDate(today)) return [];
+    const windows = getOnlineWindows(fixedTime, date);
+    if (!windows) return [];
+
+    const freeRanges = new Map<number, TimeRange>();
+    segments.forEach(({ content }) => {
+      if (content.kind === "slots" && content.showFreeSlotBlock)
+        freeRanges.set(content.freeRangeStart, {
+          start: content.freeRangeStart,
+          end: content.freeRangeEnd,
+        });
+    });
+
+    const ranges = getUnavailableRanges(
+      Array.from(freeRanges.values()),
+      windows,
+      isToday ? currentMinutes : undefined,
+    );
+
+    return buildOnlineUnavailableLayouts(segments, ranges);
+  }, [date, isActive, today, fixedTime, segments, isToday, currentMinutes]);
 
   const isNowInRange = currentMinutes >= effectiveStart;
 
@@ -425,6 +432,15 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
             </View>
           );
         })}
+        {onlineUnavailableBlocks.map((block) => (
+          <OnlineUnavailableBlock
+            key={block.start}
+            start={block.start}
+            end={block.end}
+            top={block.top}
+            height={block.height}
+          />
+        ))}
       </View>
 
       <FreeSlotStartModal

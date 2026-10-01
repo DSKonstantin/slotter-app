@@ -165,7 +165,7 @@ export type ResourceChannelEvent =
   | { type: "notification.created"; payload: unknown }
   | {
       event: "direct_channel_activated";
-      kind: "telegram_direct" | "max_direct";
+      kind: "telegram_direct" | "max_direct" | "whatsapp_direct";
     };
 
 export type RoomChannelEvent =

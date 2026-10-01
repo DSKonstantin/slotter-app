@@ -18,7 +18,7 @@ import { WorkingHoursFields } from "@/src/components/shared/timeFields/WorkingHo
 import { useBulkCreateWorkingDaysMutation } from "@/src/store/redux/services/api/workingDaysApi";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { format } from "date-fns";
 import { getDatesUntilEndOfWeek } from "@/src/utils/schedule/getDatesUntilEndOfWeek";

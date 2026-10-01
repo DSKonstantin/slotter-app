@@ -11,7 +11,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import {
@@ -59,6 +59,7 @@ import ConnectChannelModal from "./ConnectChannelModal";
 const CHANNEL_KIND_BY_VALUE: Record<string, DirectChannelKind> = {
   telegram: "telegram_direct",
   max: "max_direct",
+  whatsapp: "whatsapp_direct",
 };
 
 const AUDIENCE_DEBOUNCE_MS = 400;
@@ -147,8 +148,13 @@ const BroadcastForm = () => {
         disabled: !channels.telegram,
       },
       { label: "Макс Direct", value: "max", disabled: !channels.max },
+      {
+        label: "WhatsApp Direct",
+        value: "whatsapp",
+        disabled: !channels.whatsapp,
+      },
     ],
-    [channels.telegram, channels.max],
+    [channels.telegram, channels.max, channels.whatsapp],
   );
 
   const audienceSummary = summarizeAudienceFilters(audienceFilters);

@@ -12,11 +12,12 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { KeyboardEvents } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { StModal } from "@/src/components/ui/StModal";
 import { Avatar, HighlightText, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -241,6 +242,7 @@ export function NewChatSheet({ visible, onClose }: Props) {
           <View className="flex-row items-center bg-background-surface rounded-xl px-3 gap-2">
             <StSvg name="Search" size={20} color={colors.neutral[400]} />
             <TextInput
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               value={search}
               onChangeText={handleSearch}
               placeholder="Поиск клиента..."

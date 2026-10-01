@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
   View,
-  Text,
   ActivityIndicator,
   Platform,
   ScrollView,
@@ -37,12 +36,13 @@ const BarChart = ({ data }: BarChartProps) => {
             className="w-full rounded-t-lg bg-primary-blue-500"
             style={{ height: Math.max((item.count / max) * 120, 4) }}
           />
-          <Text
-            className="font-inter-regular text-[10px] text-neutral-400"
+          <Typography
+            weight="regular"
+            className="text-[10px] text-neutral-400"
             numberOfLines={1}
           >
             {item.month}
-          </Text>
+          </Typography>
         </View>
       ))}
     </View>
@@ -135,9 +135,12 @@ const ClientStatistics = ({ customerId }: Props) => {
           ) : (
             <>
               <View className="mx-screen bg-white rounded-2xl p-4">
-                <Text className="font-inter-semibold text-body text-neutral-900 mb-4">
+                <Typography
+                  weight="semibold"
+                  className="text-body text-neutral-900 mb-4"
+                >
                   Визиты
-                </Text>
+                </Typography>
                 {visitsByMonth.length > 0 ? (
                   <BarChart data={visitsByMonth} />
                 ) : (
@@ -151,35 +154,53 @@ const ClientStatistics = ({ customerId }: Props) => {
 
               <View className="px-screen flex-row gap-2">
                 <View className="flex-1 bg-white rounded-2xl p-4 gap-1">
-                  <Text className="font-inter-bold text-[22px] text-neutral-900">
+                  <Typography
+                    weight="bold"
+                    className="text-[22px] text-neutral-900"
+                  >
                     {data?.visits_count ?? 0}
-                  </Text>
-                  <Text className="font-inter-regular text-caption text-neutral-500">
+                  </Typography>
+                  <Typography
+                    weight="regular"
+                    className="text-caption text-neutral-500"
+                  >
                     Всего записей
-                  </Text>
+                  </Typography>
                 </View>
                 <View className="flex-1 bg-white rounded-2xl p-4 gap-1">
-                  <Text className="font-inter-bold text-[22px] text-neutral-900">
+                  <Typography
+                    weight="bold"
+                    className="text-[22px] text-neutral-900"
+                  >
                     {data?.payments?.length ?? 0}
-                  </Text>
-                  <Text className="font-inter-regular text-caption text-neutral-500">
+                  </Typography>
+                  <Typography
+                    weight="regular"
+                    className="text-caption text-neutral-500"
+                  >
                     Завершено
-                  </Text>
+                  </Typography>
                 </View>
               </View>
 
               {lastVisitAt && (
                 <View className="mx-screen bg-white rounded-2xl p-4 flex-row items-center justify-between">
-                  <Text className="font-inter-regular text-body text-neutral-500">
+                  <Typography
+                    weight="regular"
+                    className="text-body text-neutral-500"
+                  >
                     Последний визит
-                  </Text>
-                  <Text className="font-inter-semibold text-body text-neutral-900">
+                  </Typography>
+                  <Typography
+                    weight="semibold"
+                    className="text-body text-neutral-900"
+                  >
                     {new Date(lastVisitAt).toLocaleDateString("ru-RU", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
-                  </Text>
+                  </Typography>
                 </View>
               )}
             </>

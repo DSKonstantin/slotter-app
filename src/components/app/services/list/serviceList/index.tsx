@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo, useRef, useState } from "react";
-import { Alert, LayoutAnimation, Pressable, Text, View } from "react-native";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { Alert, LayoutAnimation, Pressable, View } from "react-native";
+import { toast } from "@/src/components/ui/toast";
 import {
   NestableDraggableFlatList,
   RenderItemParams,
@@ -395,9 +395,9 @@ const ServiceList = ({
   if (isError && !categories.length) {
     return (
       <View className="flex-1 items-center justify-center px-screen gap-4">
-        <Text className="text-body text-accent-red-500">
+        <Typography className="text-body text-accent-red-500">
           Ошибка загрузки услуг.
-        </Text>
+        </Typography>
         <Button
           title="Повторить"
           onPress={onRefresh}

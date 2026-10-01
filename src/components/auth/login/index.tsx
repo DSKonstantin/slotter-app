@@ -13,7 +13,7 @@ import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
 import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
 import { identifierMask } from "@/src/utils/mask/maskPhone";
 import { unMask } from "react-native-mask-text";

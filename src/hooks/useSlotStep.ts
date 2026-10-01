@@ -1,6 +1,6 @@
 import { useAppSelector } from "@/src/store/redux/store";
-import { appointmentStepToMinutes } from "@/src/utils/schedule/appointmentStepToMinutes";
-import type { AppointmentStepMinutes } from "@/src/utils/schedule/appointmentStepToMinutes";
+import { appointmentStepToMinutes } from "@/src/constants/bookingSteps";
+import type { AppointmentStepMinutes } from "@/src/constants/bookingSteps";
 
 type SlotStep = {
   stepMinutes: AppointmentStepMinutes;

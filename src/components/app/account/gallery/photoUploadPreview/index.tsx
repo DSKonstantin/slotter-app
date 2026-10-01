@@ -3,7 +3,7 @@ import { FlatList, Image, Modal, Pressable, View } from "react-native";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Toasts } from "@backpackapp-io/react-native-toast";
+import { AppToasts } from "@/src/components/ui/toast";
 import { Button, IconButton, StSvg, Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { CropView } from "../cropView";
@@ -60,7 +60,7 @@ export function PhotoUploadPreview({
   return (
     <Modal animationType="slide" statusBarTranslucent>
       <GestureHandlerRootView className="flex-1">
-        <Toasts overrideDarkMode={true} />
+        <AppToasts />
         {cropIndex !== null ? (
           <CropView
             originalUri={photos[cropIndex].uri}

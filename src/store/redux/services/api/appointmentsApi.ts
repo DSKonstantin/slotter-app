@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { AppointmentStepMinutes } from "@/src/utils/schedule/appointmentStepToMinutes";
+import type { AppointmentStepMinutes } from "@/src/constants/bookingSteps";
 import type {
   Appointment,
   GetAppointmentsParams,

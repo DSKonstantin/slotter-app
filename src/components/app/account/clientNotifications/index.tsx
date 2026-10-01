@@ -7,13 +7,14 @@ import {
   RefreshControl,
   ScrollView,
   Share,
+  useWindowDimensions,
   View,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import ContentLoader, { Rect } from "react-content-loader/native";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import RetryInline from "@/src/components/shared/retryInline";
 import DirectChannelsSkeleton from "./DirectChannelsSkeleton";
@@ -77,10 +78,10 @@ const TELEGRAM_BOTS = [
 ];
 
 const DIRECT_CHANNEL_UI_CONFIG: Record<
-  "telegram" | "max",
+  "telegram" | "max" | "whatsapp",
   {
     kind: DirectChannelKind;
-    icon: "SocialTelegram" | null;
+    icon: "SocialTelegram" | "SocialWhatsApp" | null;
     iconNode?: React.ReactNode;
     iconColor: string;
     name: string;
@@ -91,6 +92,12 @@ const DIRECT_CHANNEL_UI_CONFIG: Record<
     icon: "SocialTelegram",
     iconColor: "#37B5DB",
     name: "Telegram",
+  },
+  whatsapp: {
+    kind: "whatsapp_direct",
+    icon: "SocialWhatsApp",
+    iconColor: "#25D366",
+    name: "WhatsApp",
   },
   max: {
     kind: "max_direct",
@@ -109,6 +116,7 @@ const ClientNotifications = () => {
   const ispe = useAppSelector((state) => state.appVersion.ispe);
   const auth = useRequiredAuth();
   const openPersonalAccount = useOpenPersonalAccount();
+  const { fontScale } = useWindowDimensions();
 
   const {
     data: templatesData,
@@ -154,8 +162,7 @@ const ClientNotifications = () => {
       directChannelsData?.subscription_direct_channels,
     );
 
-    return (["telegram", "max"] as const).map((channel) => {
-      const config = DIRECT_CHANNEL_UI_CONFIG[channel];
+    return Object.entries(DIRECT_CHANNEL_UI_CONFIG).map(([channel, config]) => {
       const plan = activePlans.find((p) => p.kind === config.kind);
       const existing = existingChannels.find(
         (c) =>
@@ -386,7 +393,7 @@ const ClientNotifications = () => {
             <View className="bg-background-surface p-4 rounded-base">
               <View className="flex-row gap-2 items-center">
                 <SlotterLogo size={32} />
-                <View>
+                <View className="flex-1">
                   <Typography className="text-body">
                     Slotter - трекер услуг и мастеров
                   </Typography>
@@ -413,7 +420,10 @@ const ClientNotifications = () => {
                         size={20}
                         color={colors.neutral[900]}
                       />
-                      <Typography weight="regular" className="text-caption">
+                      <Typography
+                        weight="regular"
+                        className="text-caption flex-1"
+                      >
                         {text}
                       </Typography>
                     </View>
@@ -430,7 +440,10 @@ const ClientNotifications = () => {
                         size={20}
                         color={colors.neutral[900]}
                       />
-                      <Typography weight="regular" className="text-caption">
+                      <Typography
+                        weight="regular"
+                        className="text-caption flex-1"
+                      >
                         {text}
                       </Typography>
                     </View>
@@ -455,7 +468,7 @@ const ClientNotifications = () => {
               />
             </View>
 
-            <View className="my-2 flex-row gap-2">
+            <View className={`my-2 gap-2 ${fontScale > 1 ? "" : "flex-row"}`}>
               {TELEGRAM_BOTS.map(({ title, icon, url }) => (
                 <Card
                   key={title}

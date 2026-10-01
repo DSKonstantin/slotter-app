@@ -20,16 +20,19 @@ export const useScheduleTemplate = () => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(values));
   }, []);
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-      if (raw) {
-        try {
-          setInitialValues(JSON.parse(raw));
-        } catch {}
-      }
-      setIsLoaded(true);
-    });
+  const reload = useCallback(async () => {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        setInitialValues(JSON.parse(raw));
+      } catch {}
+    }
+    setIsLoaded(true);
   }, []);
 
-  return { initialValues, save, isLoaded };
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  return { initialValues, save, isLoaded, reload };
 };

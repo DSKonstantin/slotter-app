@@ -11,6 +11,28 @@ export type AppointmentStep =
   | "three_hours"
   | "four_hours";
 
+export type BookingFixedTimeInterval =
+  | "five_minutes"
+  | "ten_minutes"
+  | "fifteen_minutes"
+  | "thirty_minutes"
+  | "one_hour"
+  | "two_hours"
+  | "three_hours"
+  | "four_hours";
+
+export type BookingFixedTimeDay =
+  "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export interface BookingFixedTimeApi {
+  enabled: boolean;
+  mode: "fixed" | "weekly";
+  interval: BookingFixedTimeInterval;
+  fixed_times: string[];
+  days: BookingFixedTimeDay[];
+  day_times: Partial<Record<BookingFixedTimeDay, string[]>>;
+}
+
 export enum UserType {
   USER = "user",
   CUSTOM = "custom",
@@ -36,6 +58,7 @@ export interface User {
   telegram_id: number | null;
   onboarding_step: string;
   appointment_step: AppointmentStep;
+  booking_fixed_time?: BookingFixedTimeApi;
   appointment_conditions: string | null;
   is_notify_new_appointment: boolean;
   is_notify_customer_cancel: boolean;

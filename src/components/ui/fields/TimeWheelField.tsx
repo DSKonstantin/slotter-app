@@ -1,5 +1,7 @@
 import React, { ReactNode, Ref, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { FieldError } from "react-hook-form";
 
 import { BaseField } from "@/src/components/ui/fields/BaseField";
@@ -94,8 +96,12 @@ export const TimeWheelField = ({
             disabled={fieldDisabled}
             onPress={handleOpen}
           >
-            <Text
+            <AppText
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               className="font-inter-regular text-[16px] px-4"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
               style={{
                 color:
                   (noOptions && emptyMessage) || value == null
@@ -108,7 +114,7 @@ export const TimeWheelField = ({
                 : value != null
                   ? formatDisplay(value)
                   : placeholder}
-            </Text>
+            </AppText>
           </Pressable>
         )}
       />

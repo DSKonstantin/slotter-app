@@ -1,17 +1,19 @@
 import {
   TouchableOpacityProps,
-  Text,
   TouchableOpacity,
   ActivityIndicator,
   TextProps,
 } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { twMerge } from "tailwind-merge";
 
 export interface CustomBtn {
   title?: string;
   onPress: () => void;
   size?: "xs" | "sm" | "md" | "lg";
-  variant?: "primary" | "secondary" | "accent" | "clear" | "destructive";
+  variant?:
+    "primary" | "secondary" | "accent" | "lime" | "clear" | "destructive";
   textVariant?: "default" | "accent";
   direction?: "horizontal" | "vertical";
 
@@ -65,7 +67,8 @@ export const Button: React.FC<CustomBtn> = ({
         <>
           {leftIcon && leftIcon}
           {title && (
-            <Text
+            <AppText
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
               className={twMerge(
                 styles.textBase,
                 styles.textVariants[variant],
@@ -76,7 +79,7 @@ export const Button: React.FC<CustomBtn> = ({
               {...textProps}
             >
               {title}
-            </Text>
+            </AppText>
           )}
           {rightIcon && rightIcon}
         </>
@@ -88,6 +91,7 @@ export const Button: React.FC<CustomBtn> = ({
 const getLoaderColor = (variant: CustomBtn["variant"]) => {
   switch (variant) {
     case "secondary":
+    case "lime":
     case "clear":
       return "#000";
     case "destructive":
@@ -113,6 +117,7 @@ const styles = {
     primary: "bg-background-black",
     secondary: "bg-background-surface",
     accent: "bg-primary-blue-500",
+    lime: "bg-primary-green-500",
     clear: "transparent",
     destructive: "bg-error-500",
   },
@@ -122,6 +127,7 @@ const styles = {
     primary: "text-neutral-0",
     secondary: "text-neutral-900",
     accent: "text-neutral-0",
+    lime: "text-neutral-900",
     clear: "text-neutral-900",
     destructive: "text-accent-red-500",
   },

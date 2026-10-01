@@ -14,7 +14,7 @@ import { RhfWorkingDayTimePickerField } from "@/src/components/hookForm/rhf-work
 import { useForm, useFieldArray } from "react-hook-form";
 import { RhfFormProvider } from "@/src/components/hookForm/rhf-form-provider";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import {
   SlotCreateSchema,
   type SlotCreateFormValues,
@@ -409,11 +409,11 @@ const SlotCreate: React.FC = () => {
                     </View>
                   </View>
 
-                  <View className="flex-row mt-1 gap-2">
+                  <View className="flex-row items-end mt-1 gap-2">
                     <View className="flex-1">
                       <RhfDurationPicker
                         name="duration"
-                        label="Продолжительность"
+                        label="Длительность"
                         placeholder="Выберите длительность"
                       />
                     </View>

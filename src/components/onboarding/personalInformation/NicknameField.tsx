@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import debounce from "lodash/debounce";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { Controller, useFormContext } from "react-hook-form";
 
 import { Input } from "@/src/components/ui/fields/Input";

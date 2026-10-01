@@ -2,7 +2,7 @@
   "expo": {
     "name": "Slotter",
     "slug": "slotter",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon/icon.png",
     "scheme": "slotter",
@@ -95,19 +95,33 @@
         {
           "url": "https://sentry.io/",
           "project": "slotter-app",
-          "organization": "gcode-ay"
+          "organization": "gcode-ay",
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true,
+            "includeProguardMapping": true,
+            "autoUploadProguardMapping": true
+          }
         }
       ],
       [
         "onesignal-expo-plugin",
         {
           "mode": "production",
-          "disableLocation": true
+          "disableLocation": true,
+          "smallIcons": ["./assets/notification/ic_stat_onesignal_default.png"]
         }
       ],
-      "@sentry/react-native",
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

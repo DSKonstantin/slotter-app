@@ -23,7 +23,7 @@ import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { useInfiniteListConfig } from "@/src/hooks/useInfiniteListConfig";
 import { Routers } from "@/src/constants/routers";
 import { formatRublesFromCents } from "@/src/utils/price/formatPrice";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { useRefresh } from "@/src/hooks/useRefresh";
 import { formatDuration } from "@/src/utils/date/formatTime";

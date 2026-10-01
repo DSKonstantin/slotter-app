@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { View } from "react-native";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { buildMinuteOptions } from "@/src/utils/date/timeOptions";
 import { formatMinutes } from "@/src/utils/date/formatTime";
 import { getApiErrorMessage } from "@/src/utils/apiError";

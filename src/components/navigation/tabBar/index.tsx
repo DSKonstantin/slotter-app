@@ -79,6 +79,9 @@ const TabItem = memo(
         <Typography
           weight="semibold"
           className="text-[10px] leading-none text-center text-neutral-800"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
         >
           {tab.label}
         </Typography>

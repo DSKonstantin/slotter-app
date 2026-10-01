@@ -19,32 +19,20 @@ import {
   StSvg,
   Switch,
   Typography,
+  Card,
 } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
 import { Routers } from "@/src/constants/routers";
 import { useAppSelector } from "@/src/store/redux/store";
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
-import type { AppointmentStep } from "@/src/store/redux/services/api-types";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import { BOTTOM_OFFSET_SMALL } from "@/src/constants/tabs";
+import { BOOKING_STEPS, formatBookingStep } from "@/src/constants/bookingSteps";
+import { useBookingFixedTime } from "@/src/hooks/useBookingFixedTime";
 
 const DEFAULT_CONSENT_TEXT =
   "Обработку персональных данных осуществляет оператор - ООО Организация (ИНН 12345678910). Даю свое согласие на обработку моих персональных данных, а именно: Настоящее согласие предоставляется на совершении следующих действий с персональными данными: сбор, запись, систематизация, хранение, уточнение (обновление, изменение), использование, обезличивание, удаление, уничтожение.";
-
-const BOOKING_STEPS: { label: string; value: AppointmentStep }[] = [
-  { label: "5 минут", value: "five_minutes" },
-  { label: "10 минут", value: "ten_minutes" },
-  { label: "15 минут", value: "fifteen_minutes" },
-  { label: "30 минут", value: "thirty_minutes" },
-  { label: "1 час", value: "one_hour" },
-  { label: "2 часа", value: "two_hours" },
-  { label: "3 чаcа", value: "three_hours" },
-  { label: "4 часа", value: "four_hours" },
-];
-
-const formatStep = (value: AppointmentStep) =>
-  BOOKING_STEPS.find((s) => s.value === value)?.label ?? value;
 
 function BookingStepField({ onSelect }: { onSelect: () => void }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -54,16 +42,16 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
 
   return (
     <>
-      <Item
+      <Card
         title="Шаг записи"
-        className="border-0"
-        right={
-          <View className="flex-row items-center gap-1">
-            <Typography className="text-neutral-500 text-body">
-              {formatStep(field.value)}
+        subtitle="Интервал между доступными временами"
+        titleAccessory={
+          <>
+            <Typography className="ml-auto text-neutral-500 text-body">
+              {formatBookingStep(field.value)}
             </Typography>
             <StSvg name="Expand_right" size={20} color={colors.neutral[400]} />
-          </View>
+          </>
         }
         onPress={() => setModalVisible(true)}
       />
@@ -98,6 +86,7 @@ function BookingStepField({ onSelect }: { onSelect: () => void }) {
 
 const Booking = () => {
   const user = useAppSelector((s) => s.auth.user);
+  const fixedTime = useBookingFixedTime();
   const [updateUser, { isLoading: isSaving }] = useUpdateUserMutation();
   const [updateUserSilent] = useUpdateUserMutation();
 
@@ -222,17 +211,37 @@ const Booking = () => {
             className="px-screen"
           >
             <View className="gap-4">
-              <View className="bg-background-surface rounded-base">
+              <View className="gap-2">
                 <BookingStepField
                   onSelect={() => methods.handleSubmit(onSubmit)()}
                 />
-                <View className="px-4">
-                  <Divider />
-                </View>
-
-                <Item
+                <Card
+                  title="Фиксированное время"
+                  subtitle="Если заданы конкретные времена — клиенту показываются только они"
+                  titleAccessory={
+                    <>
+                      <Typography
+                        className={`ml-auto text-body ${fixedTime.enabled ? "text-primary-green-700" : "text-neutral-500"}`}
+                      >
+                        {fixedTime.enabled ? "Вкл" : "Выкл"}
+                      </Typography>
+                      <StSvg
+                        name="Expand_right"
+                        size={20}
+                        color={colors.neutral[400]}
+                      />
+                    </>
+                  }
+                  onPress={() =>
+                    router.push(Routers.app.account.bookingFixedTime)
+                  }
+                />
+                <Card
                   title="Условия записи"
-                  className="border-0"
+                  subtitle="Опиши конкретные правила: сроки отмены, что происходит при опоздании, болезни и т.п."
+                  onPress={() =>
+                    router.push(Routers.app.account.bookingConditions)
+                  }
                   right={
                     <StSvg
                       name="Expand_right"
@@ -240,11 +249,10 @@ const Booking = () => {
                       color={colors.neutral[400]}
                     />
                   }
-                  onPress={() =>
-                    router.push(Routers.app.account.bookingConditions)
-                  }
                 />
               </View>
+
+              <Divider />
 
               <View className="bg-background-surface rounded-base p-4 gap-3">
                 <View className="flex-row items-start  gap-3">

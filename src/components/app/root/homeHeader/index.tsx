@@ -117,7 +117,6 @@ const HomeHeader = () => {
       <ProfileLinkModal
         visible={profileActionsVisible}
         profileUrl={profileUrl}
-        profileLink={profileLink}
         onClose={() => setProfileActionsVisible(false)}
       />
     </View>

@@ -1,5 +1,6 @@
 import React, { ReactNode, Ref } from "react";
 import { TextInput, TextInputProps, View } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 import { FieldError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { colors } from "@/src/styles/colors";
@@ -58,6 +59,7 @@ export function Input({
       onEndAdornmentPress={onEndAdornmentPress}
       renderControl={({ setFocused }) => (
         <TextInput
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           {...props}
           value={props.value ?? ""}
           editable={!disabled && (props.editable ?? true)}

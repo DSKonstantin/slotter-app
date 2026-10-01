@@ -1,5 +1,6 @@
 import React from "react";
 import { TextInput, View } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 
 import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -17,6 +18,7 @@ export const InlineNumberRow = ({ title, value, onChange, unit }: Props) => (
     <Typography className="text-body text-neutral-900">{title}</Typography>
     <View className="flex-row items-center gap-1">
       <TextInput
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         className="font-inter-regular text-body text-neutral-900 min-w-[48px] text-right"
         keyboardType="number-pad"
         placeholder="0"

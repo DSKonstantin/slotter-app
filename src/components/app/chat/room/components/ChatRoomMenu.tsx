@@ -1,7 +1,7 @@
 import React from "react";
 import { Linking, Pressable, View } from "react-native";
 import { router } from "expo-router";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import {
   Avatar,
   StModal,

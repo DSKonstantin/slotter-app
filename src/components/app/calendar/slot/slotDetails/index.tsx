@@ -55,7 +55,7 @@ import {
   rublesToCents,
 } from "@/src/utils/price/formatPrice";
 import EditableCommentRow from "./EditableCommentRow";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import {
   getApiErrorMessage,
   getApiFieldError,

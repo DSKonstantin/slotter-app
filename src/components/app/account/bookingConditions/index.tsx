@@ -7,7 +7,7 @@ import {
   type AccountBookingConditionsFormValues,
 } from "@/src/validation/schemas/accountBookingConditions.schema";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 import { router } from "expo-router";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
 import { Typography } from "@/src/components/ui";

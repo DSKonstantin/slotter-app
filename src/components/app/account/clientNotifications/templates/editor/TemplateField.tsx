@@ -5,6 +5,7 @@ import {
   type NativeSyntheticEvent,
   type TextInputSelectionChangeEventData,
 } from "react-native";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 
 import { Typography } from "@/src/components/ui";
 import { colors } from "@/src/styles/colors";
@@ -15,7 +16,6 @@ type Selection = { start: number; end: number };
 type TemplateFieldProps = {
   value: string;
   onChangeText: (text: string) => void;
-  selection: Selection;
   onSelectionChange: (selection: Selection) => void;
   maxLength: number;
   inputRef?: React.RefObject<TextInput | null>;
@@ -25,7 +25,6 @@ type TemplateFieldProps = {
 const TemplateField = ({
   value,
   onChangeText,
-  selection,
   onSelectionChange,
   maxLength,
   inputRef,
@@ -40,10 +39,10 @@ const TemplateField = ({
   return (
     <View>
       <TextInput
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         ref={inputRef}
         value={value}
         onChangeText={onChangeText}
-        selection={selection}
         onSelectionChange={handleSelectionChange}
         multiline
         maxLength={maxLength}

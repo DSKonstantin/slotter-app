@@ -6,7 +6,7 @@ import ComingSoonModal from "@/src/components/shared/modals/ComingSoonModal";
 import * as Clipboard from "expo-clipboard";
 import * as WebBrowser from "expo-web-browser";
 
-import { toast } from "@backpackapp-io/react-native-toast";
+import { toast } from "@/src/components/ui/toast";
 
 import { Button, StModal, Typography } from "@/src/components/ui";
 
@@ -16,15 +16,12 @@ type ProfileActionsModalProps = {
   onClose: () => void;
 
   profileUrl?: string | null;
-
-  profileLink?: string | null;
 };
 
 const ProfileLinkModal = ({
   visible,
   onClose,
   profileUrl,
-  profileLink,
 }: ProfileActionsModalProps) => {
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const hasProfile = Boolean(profileUrl);
@@ -40,16 +37,16 @@ const ProfileLinkModal = ({
   }, [profileUrl, onClose]);
 
   const handleCopy = useCallback(async () => {
-    if (!profileLink) {
+    if (!profileUrl) {
       return;
     }
 
-    await Clipboard.setStringAsync(profileLink);
+    await Clipboard.setStringAsync(profileUrl);
 
     toast.success("Ссылка скопирована");
 
     onClose();
-  }, [profileLink, onClose]);
+  }, [profileUrl, onClose]);
 
   return (
     <StModal visible={visible} onClose={onClose}>

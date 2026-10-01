@@ -3,10 +3,13 @@ import type { FieldError } from "react-hook-form";
 import {
   AutocompleteDropdown,
   IAutocompleteDropdownRef,
+  type AutocompleteDropdownItem,
 } from "react-native-autocomplete-dropdown";
 import { BaseField } from "@/src/components/ui/fields/BaseField";
 import { View } from "react-native";
+import { AppText } from "@/src/components/ui/AppText";
 import { colors } from "@/src/styles/colors";
+import { MAX_FONT_SCALE } from "@/src/constants/layout";
 
 export type AutocompleteItem = {
   id: string;
@@ -98,7 +101,16 @@ export function Autocomplete({
           loading={loading}
           debounce={debounceDelay}
           dataSet={dataSet ?? []}
-          emptyResultText={emptyText}
+          EmptyResultComponent={
+            <View style={{ padding: 10 }}>
+              <AppText
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
+                style={{ textAlign: "center" }}
+              >
+                {emptyText}
+              </AppText>
+            </View>
+          }
           containerStyle={{ flex: 1 }}
           inputContainerStyle={{
             borderRadius: 14,
@@ -127,8 +139,10 @@ export function Autocomplete({
               }}
             />
           )}
+          renderItem={renderSuggestion}
           textInputProps={{
             placeholder: placeholder,
+            maxFontSizeMultiplier: MAX_FONT_SCALE,
             multiline: false,
             scrollEnabled: false,
             textAlignVertical: "center",
@@ -155,6 +169,39 @@ export function Autocomplete({
     />
   );
 }
+
+const renderSuggestion = (
+  item: AutocompleteDropdownItem,
+  searchText: string,
+) => {
+  const title = item.title ?? "";
+  const index = searchText
+    ? title.toLowerCase().indexOf(searchText.toLowerCase())
+    : -1;
+  const end = index + searchText.length;
+
+  return (
+    <View style={{ padding: 15 }}>
+      <AppText
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        numberOfLines={2}
+        style={styles.text}
+      >
+        {index === -1 ? (
+          title
+        ) : (
+          <>
+            {title.slice(0, index)}
+            <AppText style={{ fontWeight: "bold" }}>
+              {title.slice(index, end)}
+            </AppText>
+            {title.slice(end)}
+          </>
+        )}
+      </AppText>
+    </View>
+  );
+};
 
 const styles = {
   text: {
