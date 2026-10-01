@@ -131,7 +131,12 @@ const userCustomersApi = api.injectEndpoints({
       query: ({ userId, id, params }) => ({
         url: `/users/${userId}/user_customers/${id}/appointments`,
         method: "GET",
-        params,
+        params: params && {
+          ...params,
+          status: Array.isArray(params.status)
+            ? params.status.join(",")
+            : params.status,
+        },
       }),
       providesTags: ["UserCustomers", "Appointments"],
     }),
