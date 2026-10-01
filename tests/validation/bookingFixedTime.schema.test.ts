@@ -93,3 +93,26 @@ describe("off-grid helpers", () => {
     });
   });
 });
+
+describe("bookingFixedTimeSchema with long intervals", () => {
+  it("accepts any whole hour for a two-hour interval", async () => {
+    expect(
+      await errorOf(values({ interval: 120, fixedTimes: [540, 600] })),
+    ).toBeNull();
+  });
+
+  it("rejects a time not on a whole hour for a long interval", async () => {
+    expect(await errorOf(values({ interval: 120, fixedTimes: [630] }))).toBe(
+      "interval",
+    );
+  });
+
+  it("keeps whole hours when switching from one hour to three", () => {
+    const lists = {
+      fixedTimes: [600, 660, 780],
+      dayTimes: { mon: [540] },
+    };
+    expect(collectOffGridTimes(lists, 180)).toEqual([]);
+    expect(dropOffGridTimes(lists, 180)).toEqual(lists);
+  });
+});

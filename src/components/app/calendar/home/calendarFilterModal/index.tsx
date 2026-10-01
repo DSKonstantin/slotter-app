@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 import { Button, StModal, Typography } from "@/src/components/ui";
 import { useAppDispatch, useAppSelector } from "@/src/store/redux/store";
-import { setActiveStatuses } from "@/src/store/redux/slices/calendarSlice";
+import {
+  setActiveStatuses,
+  setFilterModalOpen,
+} from "@/src/store/redux/slices/calendarSlice";
 import type { AppointmentStatus } from "@/src/store/redux/services/api-types";
 import { APPOINTMENT_STATUS_CONFIG } from "@/src/constants/appointmentStatuses";
 import FilterOption from "./filterOption";
@@ -11,23 +14,29 @@ const filterOptions = Object.values(APPOINTMENT_STATUS_CONFIG).map(
   ({ status, filterLabel }) => ({ status, label: filterLabel }),
 );
 
-type CalendarFilterModalProps = {
-  visible: boolean;
-  onClose: () => void;
-};
+const CalendarFilterModal = () => {
+  const [draft, setDraft] = useState<AppointmentStatus[]>([]);
 
-const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
-  visible,
-  onClose,
-}) => {
+  const pendingRef = useRef<AppointmentStatus[] | null>(null);
+
   const dispatch = useAppDispatch();
+  const visible = useAppSelector((s) => s.calendar.isFilterModalOpen);
   const activeStatuses = useAppSelector((s) => s.calendar.activeStatuses);
-  const [draft, setDraft] = useState<AppointmentStatus[]>(activeStatuses);
+
+  const handleClose = useCallback(() => {
+    dispatch(setFilterModalOpen(false));
+  }, [dispatch]);
 
   const handleApply = useCallback(() => {
-    dispatch(setActiveStatuses(draft));
-    onClose();
-  }, [dispatch, draft, onClose]);
+    pendingRef.current = draft;
+    dispatch(setFilterModalOpen(false));
+  }, [dispatch, draft]);
+
+  const handleModalHide = useCallback(() => {
+    if (!pendingRef.current) return;
+    dispatch(setActiveStatuses(pendingRef.current));
+    pendingRef.current = null;
+  }, [dispatch]);
 
   const toggleDraft = useCallback((status: AppointmentStatus) => {
     setDraft((prev) =>
@@ -50,26 +59,23 @@ const CalendarFilterModal: React.FC<CalendarFilterModalProps> = ({
       }
       footer={<Button title="Применить" onPress={handleApply} />}
       visible={visible}
-      onClose={onClose}
+      onClose={handleClose}
+      onModalHide={handleModalHide}
+      scrollable
     >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{ flexShrink: 1 }}
-      >
-        <View className="gap-2 mb-4">
-          <Typography className="text-caption text-neutral-500">
-            Показывать:
-          </Typography>
-          {filterOptions.map(({ status, label }) => (
-            <FilterOption
-              key={status}
-              label={label}
-              value={draft.includes(status)}
-              onPress={() => toggleDraft(status)}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <View className="gap-2 mb-4">
+        <Typography className="text-caption text-neutral-500">
+          Показывать:
+        </Typography>
+        {filterOptions.map(({ status, label }) => (
+          <FilterOption
+            key={status}
+            label={label}
+            value={draft.includes(status)}
+            onPress={() => toggleDraft(status)}
+          />
+        ))}
+      </View>
     </StModal>
   );
 };

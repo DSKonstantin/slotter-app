@@ -104,3 +104,32 @@ describe("week template", () => {
     expect(ranges.byDay).toEqual({});
   });
 });
+
+describe("long-interval grid", () => {
+  it("starts at the schedule start rounded up to a whole hour and steps by the interval", () => {
+    expect(buildGrid(180, { start: 600, end: 1140 })).toEqual([600, 780, 960]);
+  });
+
+  it("allows a time one hour before the end of the day", () => {
+    expect(buildGrid(240, { start: 600, end: 1200 })).toEqual([600, 840, 1080]);
+  });
+
+  it("rounds a half-hour start up to the next whole hour", () => {
+    expect(buildGrid(120, { start: 570, end: 780 })).toEqual([600, 720]);
+  });
+
+  it("shows selected whole hours inside the schedule as regular, outside as muted", () => {
+    const items = buildGridItems(
+      180,
+      { start: 600, end: 1140 },
+      [660, 540, 960],
+    );
+    expect(items.map((i) => [i.value, i.muted ?? false])).toEqual([
+      [540, true],
+      [600, false],
+      [660, false],
+      [780, false],
+      [960, false],
+    ]);
+  });
+});

@@ -1,7 +1,9 @@
 import {
+  getFitMinutes,
   getOnlineWindows,
   getTimesOutsideHours,
   getUnavailableRanges,
+  isOnInterval,
   subtractRanges,
   type BookingFixedTimeSettings,
 } from "@/src/utils/bookingFixedTime";
@@ -147,5 +149,44 @@ describe("getTimesOutsideHours", () => {
         hours,
       ),
     ).toEqual([]);
+  });
+});
+
+describe("long intervals", () => {
+  it("accepts only whole hours from a two-hour interval", () => {
+    expect(isOnInterval(540, 120)).toBe(true);
+    expect(isOnInterval(600, 120)).toBe(true);
+    expect(isOnInterval(630, 120)).toBe(false);
+    expect(isOnInterval(630, 30)).toBe(true);
+    expect(isOnInterval(615, 30)).toBe(false);
+  });
+
+  it("caps the fit length at one hour", () => {
+    expect(getFitMinutes(30)).toBe(30);
+    expect(getFitMinutes(240)).toBe(60);
+  });
+
+  it("ends a window at the next listed time when it comes sooner", () => {
+    const s = settings({ interval: 240, fixedTimes: [540, 600, 840] });
+    expect(getOnlineWindows(s, SUNDAY)).toEqual([
+      { start: 540, end: 600 },
+      { start: 600, end: 840 },
+      { start: 840, end: 1080 },
+    ]);
+  });
+
+  it("sorts unsorted times before building windows", () => {
+    const s = settings({ interval: 60, fixedTimes: [660, 600] });
+    expect(getOnlineWindows(s, SUNDAY)).toEqual([
+      { start: 600, end: 660 },
+      { start: 660, end: 720 },
+    ]);
+  });
+
+  it("checks a long-interval time against one hour of the schedule", () => {
+    const s = settings({ interval: 240, fixedTimes: [1020, 1050] });
+    expect(getTimesOutsideHours(s, SUNDAY, { start: 600, end: 1080 })).toEqual([
+      1050,
+    ]);
   });
 });

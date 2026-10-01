@@ -21,6 +21,14 @@ export type TimeRange = {
 
 export const MIN_UNAVAILABLE_MINUTES = 5;
 
+const MINUTES_IN_HOUR = 60;
+
+export const getFitMinutes = (interval: number) =>
+  Math.min(interval, MINUTES_IN_HOUR);
+
+export const isOnInterval = (time: number, interval: number) =>
+  time % (interval > MINUTES_IN_HOUR ? MINUTES_IN_HOUR : interval) === 0;
+
 export const getOnlineWindows = (
   settings: BookingFixedTimeSettings,
   date: string,
@@ -35,7 +43,11 @@ export const getOnlineWindows = (
   }
   if (times.length === 0) return null;
 
-  return times.map((time) => ({ start: time, end: time + settings.interval }));
+  const sorted = [...times].sort((a, b) => a - b);
+  return sorted.map((time, index) => ({
+    start: time,
+    end: Math.min(time + settings.interval, sorted[index + 1] ?? Infinity),
+  }));
 };
 
 export const getTimesOutsideHours = (
@@ -46,7 +58,11 @@ export const getTimesOutsideHours = (
   const windows = getOnlineWindows(settings, date);
   if (!windows) return [];
   return windows
-    .filter((w) => w.start < hours.start || w.end > hours.end)
+    .filter(
+      (w) =>
+        w.start < hours.start ||
+        w.start + getFitMinutes(settings.interval) > hours.end,
+    )
     .map((w) => w.start);
 };
 

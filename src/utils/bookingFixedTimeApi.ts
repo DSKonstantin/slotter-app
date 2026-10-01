@@ -17,6 +17,9 @@ export const FIXED_TIME_INTERVALS: {
   { key: "fifteen_minutes", minutes: 15 },
   { key: "thirty_minutes", minutes: 30 },
   { key: "one_hour", minutes: 60 },
+  { key: "two_hours", minutes: 120 },
+  { key: "three_hours", minutes: 180 },
+  { key: "four_hours", minutes: 240 },
 ];
 
 const DEFAULT_INTERVAL_MINUTES = 30;

@@ -1,13 +1,12 @@
 import * as Yup from "yup";
 import { days } from "@/src/constants/days";
+import { isOnInterval } from "@/src/utils/bookingFixedTime";
 import type {
   DayId,
   FixedTimeMode,
 } from "@/src/components/app/account/bookingFixedTime/constants";
 
 type DayTimes = Partial<Record<DayId, number[]>>;
-
-const isOnInterval = (time: number, interval: number) => time % interval === 0;
 
 export const bookingFixedTimeSchema = Yup.object({
   enabled: Yup.boolean().required(),

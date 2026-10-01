@@ -19,6 +19,7 @@ import FilteredSlotBlock from "./FilteredSlotBlock";
 import FreeSlotPressable from "./FreeSlotPressable";
 import FreeSlotStartModal, { type FreeSlotRange } from "./FreeSlotStartModal";
 import OnlineUnavailableBlock from "./OnlineUnavailableBlock";
+import { buildOnlineUnavailableLayouts } from "./onlineUnavailable";
 import SlotLimitModal from "@/src/components/shared/modals/SlotLimitModal";
 import InactiveDayModal from "@/src/components/shared/modals/InactiveDayModal";
 import { isHiddenCustomer } from "@/src/utils/customer";
@@ -172,15 +173,7 @@ const TimeSlotListBase: React.FC<TimeSlotListProps> = ({
       isToday ? currentMinutes : undefined,
     );
 
-    return ranges.map((range) => {
-      const startY = getTimeOffset(segments, range.start);
-      const endY = getTimeOffset(segments, range.end, "end");
-      return {
-        ...range,
-        top: startY,
-        height: endY - startY,
-      };
-    });
+    return buildOnlineUnavailableLayouts(segments, ranges);
   }, [date, isActive, today, fixedTime, segments, isToday, currentMinutes]);
 
   const isNowInRange = currentMinutes >= effectiveStart;

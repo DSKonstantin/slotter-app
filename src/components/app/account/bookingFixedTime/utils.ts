@@ -4,7 +4,11 @@ import {
   parseEndOfDayMinutes,
   parseTime,
 } from "@/src/utils/date/formatTime";
-import type { TimeRange } from "@/src/utils/bookingFixedTime";
+import {
+  getFitMinutes,
+  isOnInterval,
+  type TimeRange,
+} from "@/src/utils/bookingFixedTime";
 import type { WorkingDay } from "@/src/store/redux/services/api-types";
 import type { ScheduleTemplateFormValues } from "@/src/validation/schemas/scheduleTemplate.schema";
 import type { BookingFixedTimeFormValues, DayId } from "./constants";
@@ -20,12 +24,23 @@ export const FALLBACK_RANGE: TimeRange = { start: 480, end: 1320 };
 
 export const EMPTY_TIMES: number[] = [];
 
+const MINUTES_IN_HOUR = 60;
+
 export const buildGrid = (interval: number, range: TimeRange) => {
+  const fit = getFitMinutes(interval);
+  const align = interval > MINUTES_IN_HOUR ? MINUTES_IN_HOUR : interval;
   const times: number[] = [];
-  const first = Math.ceil(range.start / interval) * interval;
-  for (let t = first; t + interval <= range.end; t += interval) times.push(t);
+  for (
+    let t = Math.ceil(range.start / align) * align;
+    t + fit <= range.end;
+    t += interval
+  )
+    times.push(t);
   return times;
 };
+
+const isOutsideRange = (time: number, interval: number, range: TimeRange) =>
+  time < range.start || time + getFitMinutes(interval) > range.end;
 
 export const buildGridItems = (
   interval: number,
@@ -37,7 +52,11 @@ export const buildGridItems = (
   const outside = selected.filter((t) => !gridSet.has(t));
   return [
     ...grid.map((t) => ({ value: t, label: formatMinutes(t) })),
-    ...outside.map((t) => ({ value: t, label: formatMinutes(t), muted: true })),
+    ...outside.map((t) => ({
+      value: t,
+      label: formatMinutes(t),
+      muted: isOutsideRange(t, interval, range),
+    })),
   ].sort((a, b) => a.value - b.value);
 };
 
@@ -94,9 +113,6 @@ export const toggleItem = <T>(list: T[], item: T) =>
 
 export const sortMinutes = (times: number[]) =>
   [...times].sort((a, b) => a - b);
-
-export const isOnInterval = (time: number, interval: number) =>
-  time % interval === 0;
 
 type TimeLists = Pick<BookingFixedTimeFormValues, "fixedTimes" | "dayTimes">;
 

@@ -24,9 +24,6 @@ import capitalize from "lodash/capitalize";
 const CalendarHome = () => {
   const dispatch = useAppDispatch();
   const selectedDay = useAppSelector((state) => state.calendar.selectedDay);
-  const isFilterOpen = useAppSelector(
-    (state) => state.calendar.isFilterModalOpen,
-  );
   const router = useRouter();
   const { mode = "day", date } = useLocalSearchParams<CalendarParams>();
 
@@ -38,9 +35,6 @@ const CalendarHome = () => {
 
   const handleOpenFilters = useCallback(() => {
     dispatch(setFilterModalOpen(true));
-  }, [dispatch]);
-  const handleCloseFilters = useCallback(() => {
-    dispatch(setFilterModalOpen(false));
   }, [dispatch]);
 
   const handleModeChange = useCallback(
@@ -99,10 +93,7 @@ const CalendarHome = () => {
         )}
       </ScreenWithToolbar>
 
-      <CalendarFilterModal
-        visible={isFilterOpen}
-        onClose={handleCloseFilters}
-      />
+      <CalendarFilterModal />
     </>
   );
 };
