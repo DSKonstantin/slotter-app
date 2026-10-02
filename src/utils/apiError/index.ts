@@ -80,7 +80,7 @@ export const getApiFieldError = (
 };
 
 const BREAK_AFTER_INTERSECTION_HINT =
-  "Уменьшите перерыв, чтобы он заканчивался до начала следующей записи, выберите «Без перерыва» (0) или другое время записи";
+  "Уменьшите перерыв или выберите «Без перерыва»";
 
 /** Extra hint for break_after_minutes when the 422 is specifically an
  * overlap with another appointment (§8.2/§9.3.4) — undefined for any

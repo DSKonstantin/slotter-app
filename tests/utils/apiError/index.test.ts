@@ -191,9 +191,7 @@ describe("getBreakAfterIntersectionHint", () => {
           },
         },
       }),
-    ).toBe(
-      "Уменьшите перерыв, чтобы он заканчивался до начала следующей записи, выберите «Без перерыва» (0) или другое время записи",
-    );
+    ).toBe("Уменьшите перерыв или выберите «Без перерыва»");
   });
 
   it("returns undefined for a different break_after_minutes error", () => {

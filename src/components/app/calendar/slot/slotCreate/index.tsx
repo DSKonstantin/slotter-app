@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { router } from "expo-router";
@@ -54,7 +54,6 @@ import { PAYMENT_OPTIONS } from "@/src/constants/payment";
 const SlotCreate: React.FC = () => {
   const [comingSoonVisible, setComingSoonVisible] = useState(false);
   const [slotLimitVisible, setSlotLimitVisible] = useState(false);
-  const [breakAfterHint, setBreakAfterHint] = useState<string | undefined>();
 
   const auth = useRequiredAuth();
   const dispatch = useAppDispatch();
@@ -98,10 +97,15 @@ const SlotCreate: React.FC = () => {
     handleSubmit,
     watch,
     setValue,
+    clearErrors,
     formState: { errors },
   } = methods;
   const watchedServices = watch("services");
   const paymentMethod = watch("paymentMethod");
+  const watchedDate = watch("date");
+  const watchedTime = watch("time");
+  const watchedDuration = watch("duration");
+  const watchedBreakAfter = watch("breakAfterMinutes");
 
   const { fields, remove } = useFieldArray({
     control: methods.control,
@@ -167,8 +171,6 @@ const SlotCreate: React.FC = () => {
     async (values: SlotCreateFormValues) => {
       if (!auth) return;
 
-      setBreakAfterHint(undefined);
-
       if (!values.customerId) {
         const confirmed = await new Promise<boolean>((resolve) =>
           Alert.alert(
@@ -219,7 +221,8 @@ const SlotCreate: React.FC = () => {
           setSlotLimitVisible(true);
         } else if (breakError) {
           methods.setError("breakAfterMinutes", { message: breakError });
-          setBreakAfterHint(getBreakAfterIntersectionHint(error));
+          const hint = getBreakAfterIntersectionHint(error);
+          if (hint) toast.error(hint);
         } else {
           toast.error(getApiErrorMessage(error, "Не удалось создать запись"));
         }
@@ -227,6 +230,16 @@ const SlotCreate: React.FC = () => {
     },
     [auth, createAppointment, draft.additionalServices, dispatch, methods],
   );
+
+  useEffect(() => {
+    clearErrors("breakAfterMinutes");
+  }, [
+    watchedDate,
+    watchedTime,
+    watchedDuration,
+    watchedBreakAfter,
+    clearErrors,
+  ]);
 
   return (
     <RhfFormProvider methods={methods} offset={0}>
@@ -409,7 +422,7 @@ const SlotCreate: React.FC = () => {
                     </View>
                   </View>
 
-                  <View className="flex-row items-end mt-1 gap-2">
+                  <View className="flex-row items-start mt-1 gap-2">
                     <View className="flex-1">
                       <RhfDurationPicker
                         name="duration"
@@ -426,12 +439,6 @@ const SlotCreate: React.FC = () => {
                       />
                     </View>
                   </View>
-
-                  {breakAfterHint && (
-                    <Typography className="text-caption text-neutral-500 mt-1">
-                      {breakAfterHint}
-                    </Typography>
-                  )}
 
                   <View className="mt-1">
                     <RhfTextField
