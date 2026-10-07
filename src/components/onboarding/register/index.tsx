@@ -17,6 +17,7 @@ import { useUpdateCredentialsMutation } from "@/src/store/redux/services/api/aut
 import { useUpdateUserMutation } from "@/src/store/redux/services/api/usersApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
 import { toast } from "@/src/components/ui/toast";
+import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
 import EyeToggle from "@/src/components/shared/EyeToggle";
 
 const Register = () => {
@@ -51,15 +52,30 @@ const Register = () => {
         }).unwrap();
 
         router.push(getRedirectPath(user!));
-      } catch {
+      } catch (e) {
+        if (getApiErrorCode(e) !== "invalid_current_password") {
+          toast.error(
+            getApiErrorMessage(
+              e,
+              "Не удалось установить пароль. Попробуйте ещё раз.",
+            ),
+          );
+          return;
+        }
+
         try {
           const { user } = await updateUser({
             id: auth.userId,
             data: { onboarding_step: "personal_information" },
           }).unwrap();
           router.push(getRedirectPath(user));
-        } catch {
-          toast.error("Не удалось установить пароль. Попробуйте ещё раз.");
+        } catch (err) {
+          toast.error(
+            getApiErrorMessage(
+              err,
+              "Не удалось продолжить. Попробуйте ещё раз.",
+            ),
+          );
         }
       }
     },

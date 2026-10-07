@@ -152,6 +152,12 @@ const authSlice = createSlice({
         },
       )
       .addMatcher(
+        authApi.endpoints.updateCredentials.matchFulfilled,
+        (state, { payload }) => {
+          setUserOnly(state, payload);
+        },
+      )
+      .addMatcher(
         subscriptionApi.endpoints.getSubscriptionMembership.matchFulfilled,
         (state, { payload }) => {
           if (!state.user) return;
