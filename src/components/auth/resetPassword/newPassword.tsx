@@ -85,6 +85,8 @@ const ResetPasswordNew = () => {
               placeholder="Минимум 8 символов"
               hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
               textContentType="newPassword"
               autoComplete="new-password"
               endAdornment={
@@ -99,6 +101,8 @@ const ResetPasswordNew = () => {
               label="Подтвердите пароль"
               placeholder="••••••••"
               secureTextEntry={!showConfirm}
+              autoCapitalize="none"
+              autoCorrect={false}
               textContentType="newPassword"
               autoComplete="new-password"
               endAdornment={

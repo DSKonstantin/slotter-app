@@ -81,6 +81,8 @@ const ChangePassword = () => {
                   label="Текущий пароль"
                   placeholder="••••••••"
                   secureTextEntry={!showCurrent}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   textContentType="password"
                   autoComplete="current-password"
                   endAdornment={
@@ -96,6 +98,8 @@ const ChangePassword = () => {
                   placeholder="Минимум 8 символов"
                   hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
                   secureTextEntry={!showNew}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   textContentType="newPassword"
                   autoComplete="new-password"
                   endAdornment={
@@ -110,6 +114,8 @@ const ChangePassword = () => {
                   label="Подтвердите пароль"
                   placeholder="••••••••"
                   secureTextEntry={!showConfirm}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   textContentType="newPassword"
                   autoComplete="new-password"
                   endAdornment={

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
@@ -51,12 +51,12 @@ const Register = () => {
           },
         }).unwrap();
 
-        router.push(getRedirectPath(user!));
-      } catch (e) {
-        if (getApiErrorCode(e) !== "invalid_current_password") {
+        router.replace(getRedirectPath(user!));
+      } catch (error) {
+        if (getApiErrorCode(error) !== "invalid_current_password") {
           toast.error(
             getApiErrorMessage(
-              e,
+              error,
               "Не удалось установить пароль. Попробуйте ещё раз.",
             ),
           );
@@ -68,11 +68,21 @@ const Register = () => {
             id: auth.userId,
             data: { onboarding_step: "personal_information" },
           }).unwrap();
-          router.push(getRedirectPath(user));
-        } catch (err) {
+
+          Alert.alert(
+            "Пароль уже задан",
+            "Используйте его для входа на других устройствах. Не помните — «Забыли пароль?» на экране входа.",
+            [
+              {
+                text: "Понятно",
+                onPress: () => router.replace(getRedirectPath(user)),
+              },
+            ],
+          );
+        } catch (stepError) {
           toast.error(
             getApiErrorMessage(
-              err,
+              stepError,
               "Не удалось продолжить. Попробуйте ещё раз.",
             ),
           );
@@ -114,6 +124,8 @@ const Register = () => {
               placeholder="••••••••"
               hint="Минимум 8 символов, строчные и заглавные буквы, цифры"
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
               endAdornment={
                 <EyeToggle
                   visible={showPassword}
@@ -126,6 +138,8 @@ const Register = () => {
               label="Повторите пароль"
               placeholder="••••••••"
               secureTextEntry={!showConfirm}
+              autoCapitalize="none"
+              autoCorrect={false}
               endAdornment={
                 <EyeToggle
                   visible={showConfirm}

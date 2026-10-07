@@ -116,6 +116,8 @@ const Login = () => {
               }
               placeholder="••••••••"
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
               textContentType="password"
               autoComplete="current-password"
               endAdornment={
