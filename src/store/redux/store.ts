@@ -11,6 +11,7 @@ import {
 } from "redux-persist";
 import rootReducer from "@/src/store/redux/reducers";
 import { api } from "@/src/store/redux/services/api";
+import { analyticsListener } from "@/src/store/redux/analyticsListener";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 
 export const store = configureStore({
@@ -20,7 +21,9 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(api.middleware),
+    })
+      .prepend(analyticsListener.middleware)
+      .concat(api.middleware),
 });
 
 export const persistor = persistStore(store);

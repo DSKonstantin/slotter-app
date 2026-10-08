@@ -10,8 +10,7 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { router } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import { VerifySchema } from "@/src/validation/schemas/verify.schema";
-import { maskPhone } from "@/src/utils/mask/maskPhone";
-import { unMask } from "react-native-mask-text";
+import { maskPhone, normalizePhone } from "@/src/utils/mask/maskPhone";
 import { colors } from "@/src/styles/colors";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { useSendCodeMutation } from "@/src/store/redux/services/api/authApi";
@@ -34,7 +33,7 @@ const RestoreLogin = () => {
 
   const onSubmit = useCallback(
     async (data: RestoreLoginFormValues) => {
-      const phone = `+${unMask(data.phone)}`;
+      const phone = normalizePhone(data.phone);
 
       try {
         await sendCode({ phone, type: UserType.USER }).unwrap();
@@ -67,7 +66,7 @@ const RestoreLogin = () => {
           />
         }
       >
-        <View className="mt-14">
+        <View className="mt-8">
           <Typography weight="semibold" className="text-display mb-2">
             Восстановить доступ
           </Typography>

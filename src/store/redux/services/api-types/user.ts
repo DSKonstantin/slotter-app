@@ -80,10 +80,15 @@ export interface AuthResponse {
   is_created?: boolean;
 }
 
+export type SendCodeMethod = "flashcall" | "callback" | "telegram";
+export type ConfirmCodeMethod = "telegram";
+
 export interface SendCodeResponse {
   status: "verification_started";
-  method: "flashcall" | "callback";
+  method: SendCodeMethod;
   call_phone: string | null;
+  bot_url?: string;
+  is_code_sent?: boolean;
   code_length: number | null;
   expires_in: number;
   resend_after: number;
@@ -135,29 +140,6 @@ export type ConfirmCodeResponse =
   | ConfirmCodeAuthorizedResponse
   | ConfirmCodeWrongCodeResponse
   | ConfirmCodeOtherResponse;
-
-export interface TelegramIntentResponse {
-  url: string;
-  code: string;
-  expires_in: number;
-  poll_interval: number;
-}
-
-export interface TelegramSessionAuthorizedResponse {
-  status: "authorized";
-  token: string;
-  resource_type: "user" | "customer";
-  resource: User;
-  is_created: boolean;
-}
-
-export interface TelegramSessionOtherResponse {
-  status:
-    "pending" | "awaiting_contact" | "consumed" | "expired" | "deactivated";
-}
-
-export type TelegramSessionResponse =
-  TelegramSessionAuthorizedResponse | TelegramSessionOtherResponse;
 
 export interface MeResponse {
   status: "authorized" | "unauthorized";

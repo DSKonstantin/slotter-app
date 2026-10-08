@@ -8,16 +8,24 @@ import {
 import { UserType } from "@/src/store/redux/services/api-types";
 import { getApiErrorMessage } from "@/src/utils/apiError";
 import type { CallSession } from "@/src/components/auth/types";
+import { toCallSession } from "@/src/components/auth/callSession";
+import {
+  trackAuthCodeFailed,
+  trackAuthSuccess,
+} from "@/src/services/analytics";
+import type { AuthFlow } from "@/src/components/auth/enterCode/route";
 import { useHandleAuthorized } from "@/src/components/auth/useHandleAuthorized";
 import type { User } from "@/src/store/redux/services/api-types";
 
 type Params = {
+  flow?: AuthFlow;
   phone: string;
   referralCode?: string;
   onAuthorized?: (token: string, resource: User) => void | Promise<void>;
 };
 
 export const useCallbackSession = ({
+  flow = "login",
   phone,
   referralCode,
   onAuthorized,
@@ -31,6 +39,7 @@ export const useCallbackSession = ({
     if (!callSession) return;
 
     const expiryTimeout = setTimeout(() => {
+      trackAuthCodeFailed("callback", flow, "timeout");
       setCallSession(null);
       toast.error("Сессия истекла. Попробуйте снова");
     }, callSession.expires_in * 1000);
@@ -44,6 +53,11 @@ export const useCallbackSession = ({
         }).unwrap();
 
         if (result.status === "authorized") {
+          trackAuthSuccess({
+            method: "callback",
+            flow,
+            isCreated: result.is_created,
+          });
           setCallSession(null);
           await (onAuthorized
             ? onAuthorized(result.token, result.resource)
@@ -52,6 +66,7 @@ export const useCallbackSession = ({
           result.status === "expired" ||
           result.status === "deactivated"
         ) {
+          trackAuthCodeFailed("callback", flow, result.status);
           setCallSession(null);
           toast.error(
             result.status === "deactivated"
@@ -68,6 +83,7 @@ export const useCallbackSession = ({
     };
   }, [
     callSession,
+    flow,
     phone,
     referralCode,
     confirmCode,
@@ -82,18 +98,8 @@ export const useCallbackSession = ({
         type: UserType.USER,
         method: "callback",
       }).unwrap();
-      if (result.call_phone) {
-        setCallSession((prev) =>
-          prev
-            ? {
-                ...prev,
-                call_phone: result.call_phone!,
-                resend_after: result.resend_after,
-                expires_in: result.expires_in,
-              }
-            : null,
-        );
-      }
+      const next = toCallSession(result);
+      if (next) setCallSession((prev) => (prev ? next : null));
     } catch (e) {
       toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
     }

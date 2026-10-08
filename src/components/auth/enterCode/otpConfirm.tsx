@@ -17,6 +17,7 @@ type OtpConfirmProps = {
   onResend: () => Promise<void>;
   disabled?: boolean;
   resendSeconds?: number;
+  resendLabel?: string;
 };
 
 export function OtpConfirm({
@@ -26,6 +27,7 @@ export function OtpConfirm({
   onResend,
   disabled = false,
   resendSeconds = 60,
+  resendLabel,
 }: OtpConfirmProps) {
   const [value, setValue] = useState("");
 
@@ -74,7 +76,11 @@ export function OtpConfirm({
         )}
       />
 
-      <ResendCodeButton seconds={resendSeconds} onResend={onResend} />
+      <ResendCodeButton
+        seconds={resendSeconds}
+        label={resendLabel}
+        onResend={onResend}
+      />
     </>
   );
 }

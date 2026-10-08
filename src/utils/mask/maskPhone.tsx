@@ -1,4 +1,4 @@
-import { mask } from "react-native-mask-text";
+import { mask, unMask } from "react-native-mask-text";
 
 export const maskPhone = (value: string) => {
   let digits = value.replace(/\D/g, "");
@@ -44,3 +44,5 @@ export const formatCallPhoneDisplay = (value: string) => {
 
   return mask(digits, "8 999 999 99 99");
 };
+
+export const normalizePhone = (value: string) => `+${unMask(value)}`;

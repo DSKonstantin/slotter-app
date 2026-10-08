@@ -52,6 +52,23 @@ describe("useCountDown", () => {
     expect(result.current.seconds).toBe(3);
   });
 
+  it("start() after the countdown finished shows the full duration again right away", async () => {
+    const { result } = await renderHook(() =>
+      useCountDown({ seconds: 3, autoStart: true }),
+    );
+    await act(async () => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(result.current.seconds).toBe(0);
+
+    await act(async () => {
+      result.current.start();
+    });
+
+    expect(result.current.seconds).toBe(3);
+    expect(result.current.isActive).toBe(true);
+  });
+
   it("stops itself at 0 instead of going negative", async () => {
     const { result } = await renderHook(() =>
       useCountDown({ seconds: 2, autoStart: true }),

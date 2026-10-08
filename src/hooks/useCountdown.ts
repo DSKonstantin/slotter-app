@@ -17,6 +17,7 @@ export const useCountDown = ({
 
   const start = useCallback(() => {
     endTimeRef.current = Date.now() + initialSeconds * 1000;
+    setSeconds(initialSeconds);
     setIsActive(true);
   }, [initialSeconds]);
 

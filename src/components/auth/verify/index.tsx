@@ -1,49 +1,36 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
-import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { toast } from "@/src/components/ui/toast";
-import { unMask } from "react-native-mask-text";
 
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
-import { AccountDeactivatedModal } from "@/src/components/auth/verify/AccountDeactivatedModal";
-import { CallModal } from "@/src/components/auth/verify/CallModal";
-import { useCallbackSession } from "@/src/components/auth/useCallbackSession";
+import { useAccountDeactivatedModal } from "@/src/components/auth/useAccountDeactivatedModal";
+import { AuthMethodsFlowSheet } from "@/src/components/auth/AuthMethodsFlowSheet";
+import { useAuthMethodsFlow } from "@/src/components/auth/useAuthMethodsFlow";
 import RhfCheckbox from "@/src/components/hookForm/rhf-checkbox";
 import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import { Button, Typography } from "@/src/components/ui";
-import { Routers } from "@/src/constants/routers";
-import { useSendCodeMutation } from "@/src/store/redux/services/api/authApi";
 import { useLazyValidateReferralCodeQuery } from "@/src/store/redux/services/api/referralApi";
-import { UserType } from "@/src/store/redux/services/api-types";
 import { useAppSelector } from "@/src/store/redux/store";
-import { maskPhone } from "@/src/utils/mask/maskPhone";
-import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
-import {
-  VerifySchema,
-  type VerifyFormValues,
-} from "@/src/validation/schemas/verify.schema";
+import { maskPhone, normalizePhone } from "@/src/utils/mask/maskPhone";
+import { VerifySchema } from "@/src/validation/schemas/verify.schema";
 
 type CodeState = { status: "idle" | "valid" | "invalid"; error: string };
+
+const openDocument = (path: string) =>
+  WebBrowser.openBrowserAsync(
+    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/${path}`,
+  );
 
 const INITIAL_CODE_STATE: CodeState = { status: "idle", error: "" };
 
 const Verify = () => {
   const [codeState, setCodeState] = useState<CodeState>(INITIAL_CODE_STATE);
-  const [isSwitchingToFlashcall, setIsSwitchingToFlashcall] = useState(false);
-  const [accountDeactivatedVisible, setAccountDeactivatedVisible] =
-    useState(false);
-
-  const pendingRouteRef = useRef<Parameters<typeof router.push>[0] | null>(
-    null,
-  );
 
   const ispe = useAppSelector((s) => s.appVersion.ispe);
-  const [sendCode, { isLoading }] = useSendCodeMutation();
   const [validateReferralCode, { isFetching: isValidating }] =
     useLazyValidateReferralCodeQuery();
   const methods = useForm({
@@ -58,12 +45,16 @@ const Verify = () => {
 
   const rawPhone = methods.watch("phone");
   const promoCode = methods.watch("promoCode") ?? "";
-  const sessionPhone = `+${unMask(rawPhone)}`;
+  const sessionPhone = normalizePhone(rawPhone);
   const sessionReferralCode = promoCode.trim() || undefined;
 
-  const { callSession, setCallSession, handleResend } = useCallbackSession({
+  const { show: showAccountDeactivated, modal: accountDeactivatedModal } =
+    useAccountDeactivatedModal();
+
+  const authMethods = useAuthMethodsFlow({
     phone: sessionPhone,
     referralCode: sessionReferralCode,
+    onAccountDeactivated: showAccountDeactivated,
   });
 
   const handleValidateCode = useCallback(async () => {
@@ -81,105 +72,9 @@ const Verify = () => {
     }
   }, [promoCode, validateReferralCode]);
 
-  const onSubmit = useCallback(
-    async (data: VerifyFormValues) => {
-      const referralCode = (data.promoCode ?? "").trim() || undefined;
-      const phone = `+${unMask(data.phone)}`;
-      try {
-        const result = await sendCode({
-          phone,
-          type: UserType.USER,
-          method: "callback",
-        }).unwrap();
-
-        if (result.method === "callback" && result.call_phone) {
-          setCallSession({
-            call_phone: result.call_phone,
-            poll_interval: result.poll_interval,
-            resend_after: result.resend_after,
-            expires_in: result.expires_in,
-          });
-        } else {
-          router.push({
-            pathname: Routers.auth.enterCode,
-            params: {
-              phone,
-              method: result.method,
-              ...(result.code_length != null && {
-                code_length: String(result.code_length),
-              }),
-              poll_interval: String(result.poll_interval),
-              resend_after: String(result.resend_after),
-              expires_in: String(result.expires_in),
-              ...(referralCode && { referralCode }),
-            },
-          });
-        }
-      } catch (e) {
-        const code = getApiErrorCode(e);
-        if (code === "account_deactivated") {
-          setAccountDeactivatedVisible(true);
-        } else if (code === "spend_unavailable") {
-          toast.error("Звонки временно недоступны. Попробуйте позже");
-        } else if (code === "gonec_unavailable") {
-          toast.error("Сервис временно недоступен. Попробуйте позже");
-        } else {
-          toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
-        }
-      }
-    },
-    [sendCode, setCallSession],
-  );
-
-  const handleSwitchToFlashcall = useCallback(async () => {
-    const phone = `+${unMask(methods.getValues("phone"))}`;
-    const referralCode =
-      (methods.getValues("promoCode") ?? "").trim() || undefined;
-    setIsSwitchingToFlashcall(true);
-    try {
-      const result = await sendCode({
-        phone,
-        type: UserType.USER,
-        method: "flashcall",
-      }).unwrap();
-      pendingRouteRef.current = {
-        pathname: Routers.auth.enterCode,
-        params: {
-          phone,
-          method: "flashcall",
-          ...(result.code_length != null && {
-            code_length: String(result.code_length),
-          }),
-          resend_after: String(result.resend_after),
-          expires_in: String(result.expires_in),
-          ...(referralCode && { referralCode }),
-        },
-      };
-      setCallSession(null);
-    } catch (e) {
-      const code = getApiErrorCode(e);
-      if (code === "account_deactivated") {
-        setAccountDeactivatedVisible(true);
-      } else if (code === "flashcall_rate_limited") {
-        toast.error("Лимит звонков исчерпан. Попробуйте другой способ");
-      } else {
-        toast.error(getApiErrorMessage(e, "Не удалось отправить звонок"));
-      }
-    } finally {
-      setIsSwitchingToFlashcall(false);
-    }
-  }, [methods, sendCode, setCallSession]);
-
   useEffect(() => {
     setCodeState(INITIAL_CODE_STATE);
   }, [promoCode]);
-
-  useEffect(() => {
-    if (callSession || !pendingRouteRef.current) return;
-    const route = pendingRouteRef.current;
-    pendingRouteRef.current = null;
-    router.push(route);
-  }, [callSession]);
 
   const trimmedPromo = promoCode.trim();
   const isPromoEntered = trimmedPromo.length >= 4;
@@ -194,14 +89,14 @@ const Verify = () => {
           <AuthFooter
             primary={{
               title: "Продолжить",
-              disabled: isLoading,
-              loading: isLoading,
-              onPress: methods.handleSubmit(onSubmit),
+              disabled: authMethods.isPending,
+              loading: authMethods.isPending,
+              onPress: methods.handleSubmit(authMethods.openSheet),
             }}
           />
         }
       >
-        <View className="mt-14">
+        <View className="mt-8">
           <Typography weight="semibold" className="text-display mb-2">
             Твой номер
           </Typography>
@@ -221,11 +116,7 @@ const Verify = () => {
               Продолжая, вы соглашаетесь с{" "}
               <Typography
                 className="text-caption text-black underline"
-                onPress={() =>
-                  WebBrowser.openBrowserAsync(
-                    `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/user-agreement`,
-                  )
-                }
+                onPress={() => openDocument("user-agreement")}
               >
                 условиями использования
               </Typography>
@@ -270,11 +161,7 @@ const Verify = () => {
                   Я даю ООО «Slotter» согласие на{" "}
                   <Typography
                     className="text-caption text-black underline"
-                    onPress={() =>
-                      WebBrowser.openBrowserAsync(
-                        `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
-                      )
-                    }
+                    onPress={() => openDocument("data-processing")}
                   >
                     обработку персональных данных
                   </Typography>
@@ -293,11 +180,7 @@ const Verify = () => {
                 указанный телефон и email{" "}
                 <Typography
                   className="text-caption text-black underline"
-                  onPress={() =>
-                    WebBrowser.openBrowserAsync(
-                      `${process.env.EXPO_PUBLIC_BOOKING_BASE_URL}/data-processing`,
-                    )
-                  }
+                  onPress={() => openDocument("data-processing")}
                 >
                   (условия)
                 </Typography>
@@ -307,23 +190,9 @@ const Verify = () => {
         </View>
       </AuthScreenLayout>
 
-      <AccountDeactivatedModal
-        visible={accountDeactivatedVisible}
-        onClose={() => setAccountDeactivatedVisible(false)}
-      />
+      <AuthMethodsFlowSheet flow={authMethods} />
 
-      {!!callSession && (
-        <CallModal
-          visible
-          onClose={() => setCallSession(null)}
-          call_phone={callSession.call_phone}
-          expiresIn={callSession.expires_in}
-          resendAfter={callSession.resend_after}
-          onResend={handleResend}
-          onSwitchToFlashcall={handleSwitchToFlashcall}
-          isSwitchingToFlashcall={isSwitchingToFlashcall}
-        />
-      )}
+      {accountDeactivatedModal}
     </FormProvider>
   );
 };

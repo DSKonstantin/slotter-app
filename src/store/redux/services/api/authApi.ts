@@ -1,11 +1,11 @@
 import { api } from "../api";
 import type {
   AuthResponse,
+  ConfirmCodeMethod,
+  SendCodeMethod,
   ConfirmCodeResponse,
   MeResponse,
   SendCodeResponse,
-  TelegramIntentResponse,
-  TelegramSessionResponse,
   UpdateCredentialsPayload,
   User,
   UserType,
@@ -16,7 +16,11 @@ export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     sendCode: builder.mutation<
       SendCodeResponse,
-      { phone: string; type: UserType; method?: "flashcall" | "callback" }
+      {
+        phone: string;
+        type: UserType;
+        method?: SendCodeMethod;
+      }
     >({
       query: ({ phone, type, method }) => ({
         url: "/auth/send_code",
@@ -31,40 +35,20 @@ export const authApi = api.injectEndpoints({
         phone: string;
         type?: UserType;
         code?: string;
+        method?: ConfirmCodeMethod;
         referral_code?: string;
       }
     >({
-      query: ({ phone, type, code, referral_code }) => ({
+      query: ({ phone, type, code, method, referral_code }) => ({
         url: "/auth/confirm_code",
         method: "POST",
         data: {
           phone,
           ...(type && { type }),
           ...(code && { code }),
+          ...(method && { method }),
           ...(referral_code && { referral_code }),
         },
-      }),
-    }),
-
-    createTelegramIntent: builder.mutation<
-      TelegramIntentResponse,
-      { type: UserType }
-    >({
-      query: ({ type }) => ({
-        url: "/auth/telegram_intents",
-        method: "POST",
-        data: { type },
-      }),
-    }),
-
-    getTelegramSession: builder.query<
-      TelegramSessionResponse,
-      { code: string }
-    >({
-      query: ({ code }) => ({
-        url: "/auth/telegram_sessions",
-        method: "GET",
-        params: { code },
       }),
     }),
 
@@ -134,8 +118,6 @@ export const authApi = api.injectEndpoints({
 export const {
   useSendCodeMutation,
   useConfirmCodeMutation,
-  useCreateTelegramIntentMutation,
-  useLazyGetTelegramSessionQuery,
   useLoginMutation,
   useResetPasswordMutation,
   useLazyGetMeQuery,

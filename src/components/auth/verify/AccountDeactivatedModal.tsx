@@ -20,7 +20,7 @@ export function AccountDeactivatedModal({
       </Typography>
       <Typography className="text-body text-neutral-500 text-center mb-6">
         Ваш аккаунт был деактивирован. Обратитесь в поддержку, чтобы
-        восстановить доступ.x
+        восстановить доступ.
       </Typography>
       <View className="gap-3">
         <Button

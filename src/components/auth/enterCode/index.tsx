@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { Linking, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { toast } from "@/src/components/ui/toast";
 
@@ -7,18 +7,33 @@ import AuthHeader from "@/src/components/auth/layout/header";
 import AuthFooter from "@/src/components/auth/layout/footer";
 import { AuthScreenLayout } from "@/src/components/auth/layout";
 import { OtpConfirm } from "@/src/components/auth/enterCode/otpConfirm";
-import { CallModal } from "@/src/components/auth/verify/CallModal";
-import { useCallbackSession } from "@/src/components/auth/useCallbackSession";
+import { useAccountDeactivatedModal } from "@/src/components/auth/useAccountDeactivatedModal";
+import type { AuthFlow } from "@/src/components/auth/enterCode/route";
+import { SubtitleWithPhone } from "@/src/components/auth/enterCode/SubtitleWithPhone";
 import { useHandleAuthorized } from "@/src/components/auth/useHandleAuthorized";
-import { Typography } from "@/src/components/ui";
+import { Button, StSvg, Typography } from "@/src/components/ui";
+import { colors } from "@/src/styles/colors";
 import {
   useConfirmCodeMutation,
   useSendCodeMutation,
 } from "@/src/store/redux/services/api/authApi";
+import {
+  trackAuthCodeFailed,
+  trackAuthFallbackToCall,
+  trackAuthSuccess,
+} from "@/src/services/analytics";
+import { setToken } from "@/src/store/redux/slices/authSlice";
+import { useAppDispatch } from "@/src/store/redux/store";
+import { maskPhone } from "@/src/utils/mask/maskPhone";
+import { Routers } from "@/src/constants/routers";
 import { UserType } from "@/src/store/redux/services/api-types";
-import { getApiErrorMessage } from "@/src/utils/apiError";
-
-const FLASHCALL_FALLBACK_DELAY_MS = 45_000;
+import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
+import {
+  CODE_METHODS,
+  codeSessionFromResponse,
+  resolveCodeMethod,
+  toCodeSession,
+} from "@/src/components/auth/enterCode/codeMethods";
 
 const EnterCode = () => {
   const params = useLocalSearchParams<{
@@ -28,45 +43,47 @@ const EnterCode = () => {
     code_length?: string;
     resend_after?: string;
     expires_in?: string;
+    bot_url?: string;
+    flow?: string;
   }>();
 
   const phone = String(params.phone ?? "");
   const referralCode = params.referralCode
     ? String(params.referralCode)
     : undefined;
-  const isFlashcall = params.method !== "telegram";
-  const codeLength = Number(params.code_length ?? "4");
+  const flow: AuthFlow = params.flow === "reset" ? "reset" : "login";
+  const method = resolveCodeMethod(params.method);
+  const config = CODE_METHODS[method];
+  const codeLength = Number(params.code_length ?? config.defaultCodeLength);
   const initialResendAfter = Number(params.resend_after ?? "60");
+  const formattedPhone = maskPhone(phone);
+  const subtitle = config.subtitle(codeLength, formattedPhone);
 
   const [wrongCode, setWrongCode] = useState<{
     attemptsLeft: number;
   } | null>(null);
   const [otpValue, setOtpValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showFlashcallFallback, setShowFlashcallFallback] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
   const [currentResendAfter, setCurrentResendAfter] =
     useState(initialResendAfter);
-  const [flashcallKey, setFlashcallKey] = useState(0);
+  const [resendKey, setResendKey] = useState(0);
+  const [session, setSession] = useState(() => toCodeSession(params));
+  const [isExpired, setIsExpired] = useState(false);
 
+  const dispatch = useAppDispatch();
+  const { show: showAccountDeactivated, modal: accountDeactivatedModal } =
+    useAccountDeactivatedModal();
   const handleAuthorized = useHandleAuthorized();
   const [confirmCode] = useConfirmCodeMutation();
-  const [sendCode, { isLoading: isSendingCode }] = useSendCodeMutation();
-  const { callSession, setCallSession } = useCallbackSession({
-    phone,
-    referralCode,
-  });
+  const [sendCode] = useSendCodeMutation();
 
-  const handleExpiredOrDeactivated = useCallback(
-    (status: "expired" | "deactivated") => {
-      toast.error(
-        status === "deactivated"
-          ? "Аккаунт деактивирован"
-          : "Сессия истекла. Попробуйте снова",
-      );
-      router.back();
-    },
-    [],
-  );
+  const handleExpired = useCallback(() => {
+    setIsExpired(true);
+    setOtpValue("");
+    setCurrentResendAfter(0);
+    setResendKey((k) => k + 1);
+  }, []);
 
   const handleOtpComplete = useCallback(
     async (code: string) => {
@@ -77,18 +94,31 @@ const EnterCode = () => {
           phone,
           type: UserType.USER,
           code,
-          ...(referralCode && { referral_code: referralCode }),
+          ...(config.confirmMethod && { method: config.confirmMethod }),
+          ...(flow === "login" &&
+            referralCode && { referral_code: referralCode }),
         }).unwrap();
 
         if (result.status === "authorized") {
-          await handleAuthorized(result.token, result.resource);
+          trackAuthSuccess({ method, flow, isCreated: result.is_created });
+          if (flow === "reset") {
+            dispatch(setToken(result.token));
+            router.push({
+              pathname: Routers.resetPassword.newPassword,
+              params: { phone },
+            });
+          } else {
+            await handleAuthorized(result.token, result.resource);
+          }
         } else if (result.status === "wrong_code") {
+          trackAuthCodeFailed(method, flow, "wrong_code");
           setWrongCode({ attemptsLeft: result.attempts_left });
-        } else if (
-          result.status === "expired" ||
-          result.status === "deactivated"
-        ) {
-          handleExpiredOrDeactivated(result.status);
+        } else if (result.status === "expired") {
+          trackAuthCodeFailed(method, flow, "expired");
+          handleExpired();
+        } else if (result.status === "deactivated") {
+          trackAuthCodeFailed(method, flow, "deactivated");
+          showAccountDeactivated();
         }
       } catch (e) {
         toast.error(getApiErrorMessage(e, "Ошибка подтверждения"));
@@ -99,61 +129,76 @@ const EnterCode = () => {
     [
       phone,
       referralCode,
+      config.confirmMethod,
+      method,
+      flow,
+      dispatch,
       confirmCode,
       handleAuthorized,
-      handleExpiredOrDeactivated,
+      handleExpired,
+      showAccountDeactivated,
     ],
   );
 
-  const handleSwitchToCallback = useCallback(async () => {
-    try {
-      const result = await sendCode({
-        phone,
-        type: UserType.USER,
-        method: "callback",
-      }).unwrap();
-      if (result.call_phone) {
-        setCallSession({
-          call_phone: result.call_phone,
-          poll_interval: result.poll_interval,
-          resend_after: result.resend_after,
-          expires_in: result.expires_in,
-        });
-      }
-    } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
-    }
-  }, [sendCode, phone, setCallSession]);
+  const handleConfirmByCall = useCallback(() => {
+    trackAuthFallbackToCall(method, flow);
+    router.dismissTo({
+      pathname:
+        flow === "reset" ? Routers.resetPassword.root : Routers.auth.verify,
+      params: { openMethods: "call" },
+    });
+  }, [method, flow]);
 
   const handleSubmitPress = useCallback(() => {
     if (otpValue.length !== codeLength) return;
     handleOtpComplete(otpValue);
   }, [otpValue, codeLength, handleOtpComplete]);
 
+  const handleOpenLink = useCallback(async () => {
+    if (!session.link) return;
+    try {
+      await Linking.openURL(session.link);
+    } catch {
+      toast.error(config.link?.openError ?? "Не удалось открыть ссылку");
+    }
+  }, [session.link, config.link?.openError]);
+
   const handleResend = useCallback(async () => {
     try {
       const result = await sendCode({
         phone,
         type: UserType.USER,
-        method: "flashcall",
+        method,
       }).unwrap();
       setWrongCode(null);
-      setShowFlashcallFallback(false);
+      setIsExpired(false);
+      setShowFallback(false);
       setCurrentResendAfter(result.resend_after);
-      setFlashcallKey((k) => k + 1);
+      const nextSession = codeSessionFromResponse(result);
+      setSession(nextSession);
+      setResendKey((k) => k + 1);
     } catch (e) {
-      toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
+      const code = getApiErrorCode(e) ?? "";
+      trackAuthCodeFailed(method, flow, code || "unknown");
+      const message = config.errors[code];
+      if (code === "account_deactivated") {
+        showAccountDeactivated();
+      } else if (message) {
+        setShowFallback(true);
+        toast.error(message);
+      } else {
+        toast.error(getApiErrorMessage(e, "Не удалось отправить код"));
+      }
     }
-  }, [sendCode, phone]);
+  }, [sendCode, phone, method, flow, config.errors, showAccountDeactivated]);
 
   useEffect(() => {
-    if (!isFlashcall) return;
     const timeout = setTimeout(
-      () => setShowFlashcallFallback(true),
-      FLASHCALL_FALLBACK_DELAY_MS,
+      () => setShowFallback(true),
+      config.fallbackDelayMs,
     );
     return () => clearTimeout(timeout);
-  }, [isFlashcall, flashcallKey]);
+  }, [config.fallbackDelayMs, resendKey]);
 
   return (
     <AuthScreenLayout
@@ -169,39 +214,68 @@ const EnterCode = () => {
             onPress: handleSubmitPress,
           }}
           secondary={
-            showFlashcallFallback && !callSession
+            showFallback
               ? {
                   title: "Подтвердить звонком",
-                  loading: isSendingCode,
-                  disabled: isSendingCode,
-                  onPress: handleSwitchToCallback,
+                  variant: "secondary",
+                  onPress: handleConfirmByCall,
                 }
               : undefined
           }
         />
       }
     >
-      <View className="mt-14">
+      <View className="mt-8">
         <Typography weight="semibold" className="text-display mb-2">
-          Введите последние {codeLength} цифры
+          {config.title(codeLength)}
         </Typography>
-        <Typography className="text-body text-neutral-500">
-          Вам поступит входящий звонок — введите последние {codeLength} цифры
-          номера
-        </Typography>
+        <SubtitleWithPhone text={subtitle} phone={formattedPhone} />
+
+        {config.link && !!session.link && (
+          <View className="mt-6">
+            <Button
+              title={config.link.title}
+              variant="accent"
+              leftIcon={
+                <StSvg
+                  name={config.link.icon}
+                  size={24}
+                  color={colors.secondary.DEFAULT}
+                />
+              }
+              rightIcon={
+                <View className="absolute right-4 top-0 bottom-0 justify-center">
+                  <StSvg
+                    name="Expand_right"
+                    size={24}
+                    color={colors.secondary.DEFAULT}
+                  />
+                </View>
+              }
+              onPress={handleOpenLink}
+            />
+          </View>
+        )}
 
         <View className="mt-8">
           <OtpConfirm
-            key={flashcallKey}
+            key={resendKey}
             length={codeLength}
             onChange={(value) => {
               setWrongCode(null);
+              if (value.length > 0) setIsExpired(false);
               setOtpValue(value);
             }}
             onResend={handleResend}
             disabled={isSubmitting}
             resendSeconds={currentResendAfter}
+            resendLabel={config.resendLabel}
           />
+          {isExpired && (
+            <Typography className="text-caption text-accent-red-500 mt-3 text-center">
+              {config.expiredText}
+            </Typography>
+          )}
           {wrongCode && (
             <Typography className="text-caption text-accent-red-500 mt-3 text-center">
               Неверный код. Осталось попыток: {wrongCode.attemptsLeft}
@@ -209,24 +283,14 @@ const EnterCode = () => {
           )}
         </View>
 
-        {showFlashcallFallback && !callSession && (
+        {showFallback && (
           <Typography className="text-caption text-neutral-500 mt-4 text-center">
-            Звонок не пришёл? Выберите другой способ входа
+            {config.fallbackHint}
           </Typography>
         )}
       </View>
 
-      {!!callSession && (
-        <CallModal
-          visible
-          onClose={() => setCallSession(null)}
-          call_phone={callSession.call_phone}
-          expiresIn={callSession.expires_in}
-          resendAfter={callSession.resend_after}
-          onResend={handleSwitchToCallback}
-          isResending={isSendingCode}
-        />
-      )}
+      {accountDeactivatedModal}
     </AuthScreenLayout>
   );
 };

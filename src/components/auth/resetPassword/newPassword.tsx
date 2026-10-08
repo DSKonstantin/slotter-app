@@ -70,7 +70,7 @@ const ResetPasswordNew = () => {
           />
         }
       >
-        <View className="mt-14">
+        <View className="mt-8">
           <Typography weight="semibold" className="text-display mb-2">
             Новый пароль
           </Typography>

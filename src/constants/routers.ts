@@ -7,7 +7,7 @@ export const Routers = {
     }) as const,
   resetPassword: {
     root: "/(password-reset)",
-    verify: "/(password-reset)/verify",
+    enterCode: "/(password-reset)/enter-code",
     newPassword: "/(password-reset)/new-password",
   },
   auth: {

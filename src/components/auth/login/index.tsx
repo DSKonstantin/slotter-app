@@ -10,26 +10,22 @@ import AuthFooter from "@/src/components/auth/layout/footer";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "@/src/validation/schemas/login.schema";
 import { useLoginMutation } from "@/src/store/redux/services/api/authApi";
-import { useLazyGetSubscriptionMembershipQuery } from "@/src/store/redux/services/api/subscriptionApi";
 import { UserType } from "@/src/store/redux/services/api-types";
 import { router } from "expo-router";
 import { toast } from "@/src/components/ui/toast";
 import { getApiErrorCode, getApiErrorMessage } from "@/src/utils/apiError";
-import { identifierMask } from "@/src/utils/mask/maskPhone";
-import { unMask } from "react-native-mask-text";
-import { useAuth } from "@/src/contexts/AuthContext";
-import getRedirectPath from "@/src/utils/getOnboardingStep";
+import { identifierMask, normalizePhone } from "@/src/utils/mask/maskPhone";
+import { useHandleAuthorized } from "@/src/components/auth/useHandleAuthorized";
 import { Routers } from "@/src/constants/routers";
-import { AccountDeactivatedModal } from "@/src/components/auth/verify/AccountDeactivatedModal";
+import { useAccountDeactivatedModal } from "@/src/components/auth/useAccountDeactivatedModal";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [accountDeactivatedVisible, setAccountDeactivatedVisible] =
-    useState(false);
 
   const [loginMutation, { isLoading }] = useLoginMutation();
-  const [getSubscriptionMembership] = useLazyGetSubscriptionMembershipQuery();
-  const { login } = useAuth();
+  const handleAuthorized = useHandleAuthorized();
+  const { show: showAccountDeactivated, modal: accountDeactivatedModal } =
+    useAccountDeactivatedModal();
 
   const methods = useForm({
     resolver: yupResolver(loginSchema),
@@ -46,26 +42,22 @@ const Login = () => {
 
         const result = await loginMutation({
           email: isEmail ? data.identifier : undefined,
-          phone: isEmail ? undefined : `+${unMask(data.identifier)}`,
+          phone: isEmail ? undefined : normalizePhone(data.identifier),
           password: data.password,
           type: UserType.USER,
         }).unwrap();
 
-        await login(result.token);
-        getSubscriptionMembership({ userId: result.resource.id }).catch(
-          () => {},
-        );
-        router.replace(getRedirectPath(result.resource));
+        await handleAuthorized(result.token, result.resource);
       } catch (error) {
         const code = getApiErrorCode(error);
         if (code === "account_deactivated") {
-          setAccountDeactivatedVisible(true);
+          showAccountDeactivated();
         } else {
           toast.error(getApiErrorMessage(error, "Произошла ошибка"));
         }
       }
     },
-    [login, loginMutation, getSubscriptionMembership],
+    [loginMutation, handleAuthorized, showAccountDeactivated],
   );
 
   return (
@@ -86,7 +78,7 @@ const Login = () => {
           />
         }
       >
-        <View className="mt-14">
+        <View className="mt-8">
           <Typography weight="semibold" className="text-display mb-2">
             С возвращением!
           </Typography>
@@ -130,10 +122,7 @@ const Login = () => {
           </View>
         </View>
       </AuthScreenLayout>
-      <AccountDeactivatedModal
-        visible={accountDeactivatedVisible}
-        onClose={() => setAccountDeactivatedVisible(false)}
-      />
+      {accountDeactivatedModal}
     </FormProvider>
   );
 };

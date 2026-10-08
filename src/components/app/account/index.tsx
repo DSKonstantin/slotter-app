@@ -27,6 +27,7 @@ import ProfileAvatar from "@/src/components/app/account/ProfileAvatar";
 import { useAppSelector } from "@/src/store/redux/store";
 import { SlotterCardsIcon } from "@/src/components/shared/svg/SlotterCardsIcon";
 import ClientNotificationsPromoCard from "@/src/components/app/account/ClientNotificationsPromoCard";
+import AboutAppItem from "@/src/components/app/account/AboutAppItem";
 
 type NavItem = {
   title: string;
@@ -260,6 +261,12 @@ const AccountScreen = () => {
                         />
                       </React.Fragment>
                     ))}
+                    {section.label === "Система" && (
+                      <>
+                        <Divider className="ml-12 mr-4 flex-1 w-auto" />
+                        <AboutAppItem userId={auth.userId} />
+                      </>
+                    )}
                   </View>
 
                   {section.label === "Запись и оплата" && (

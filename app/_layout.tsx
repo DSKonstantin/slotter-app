@@ -1,4 +1,5 @@
 import { useSentryUserSync } from "@/src/services/sentry";
+import { useAppMetricaUserSync } from "@/src/hooks/useAppMetricaUserSync";
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
@@ -57,6 +58,7 @@ function InitialLayout() {
   const authStatus = useAppSelector((s) => s.auth.status);
 
   useSentryUserSync();
+  useAppMetricaUserSync();
   const openPersonalAccount = useOpenPersonalAccount();
 
   useOneSignal((event) => {
