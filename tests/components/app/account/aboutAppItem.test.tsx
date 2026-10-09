@@ -48,7 +48,7 @@ describe("AboutAppItem", () => {
   it("has an info icon and no chevron", async () => {
     await render(<AboutAppItem userId={1233} />);
 
-    expect(screen.getByTestId("icon-Info")).toBeTruthy();
+    expect(screen.getByTestId("icon-Info_alt")).toBeTruthy();
     expect(screen.queryByTestId("icon-Expand_right")).toBeNull();
   });
 });

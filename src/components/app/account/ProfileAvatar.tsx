@@ -66,10 +66,11 @@ const ProfileAvatar = () => {
                   </View>
                 </View>
               ) : (
-                <View className="absolute -bottom-4 -left-12 -right-12 items-center">
+                <View className="absolute -bottom-4 -left-24 -right-24 items-center">
                   <View className="bg-neutral-100 rounded-full px-2.5 py-0.5 border-[3px] border-background">
                     <Typography
                       weight="semibold"
+                      numberOfLines={1}
                       className="text-caption text-neutral-900"
                     >
                       {planLabel}

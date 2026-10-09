@@ -285,6 +285,7 @@ export const RangeCalendar = ({
         )}
         <View style={{ minHeight: CALENDAR_MIN_HEIGHT }}>
           <Calendar
+            firstDay={1}
             key={visibleMonth}
             initialDate={visibleMonth}
             onDayPress={(day) => onDayPress(day.dateString)}

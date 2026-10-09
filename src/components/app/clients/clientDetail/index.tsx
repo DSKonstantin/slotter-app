@@ -1,7 +1,13 @@
-import React, { useState, useCallback } from "react";
-import { Alert, View, RefreshControl, Platform } from "react-native";
+import React, { useState, useCallback, useEffect } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  View,
+  RefreshControl,
+  Platform,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { toast } from "@/src/components/ui/toast";
 import ScreenWithToolbar from "@/src/components/shared/layout/screenWithToolbar";
@@ -19,7 +25,7 @@ import { RhfTextField } from "@/src/components/hookForm/rhf-text-field";
 import ClientInfoCard from "./clientInfoCard";
 import { colors } from "@/src/styles/colors";
 import HomeCard from "@/src/components/shared/cards/homeCard";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { Routers } from "@/src/constants/routers";
 import {
   useGetUserCustomerQuery,
@@ -29,7 +35,6 @@ import {
 } from "@/src/store/redux/services/api/userCustomersApi";
 import { useCreateChatRoomMutation } from "@/src/store/redux/services/api/chatRoomsApi";
 import { useRequiredAuth } from "@/src/hooks/useRequiredAuth";
-import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 import { useAppDispatch } from "@/src/store/redux/store";
 import {
   clearSlotDraft,
@@ -51,6 +56,8 @@ import ClientDetailSkeleton from "./ClientDetailSkeleton";
 import { isBirthdayToday } from "@/src/utils/date/isBirthdayToday";
 
 type NoteFormValues = { note: string };
+
+const NOTE_AUTOSAVE_DELAY_MS = 1000;
 
 type Props = { userCustomerId?: number; customerId?: number };
 
@@ -100,11 +107,13 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
   const methods = useForm<NoteFormValues>({
     defaultValues: { note: "" },
     values: { note: savedNote },
+    resetOptions: { keepDirtyValues: true },
   });
   const {
     formState: { isDirty },
   } = methods;
-  useFormNavigationGuard(isDirty);
+  const note = useWatch({ control: methods.control, name: "note" });
+  const navigation = useNavigation();
 
   const handleCloseMenu = useCallback(() => setMenuVisible(false), []);
   const { scheduleAction: scheduleMenuAction, onModalHide: onMenuModalHide } =
@@ -163,28 +172,33 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
       });
   }, [auth, userCustomer, unblockUserCustomer]);
 
-  const handleSaveNote = methods.handleSubmit(async ({ note }) => {
-    if (!auth || !userCustomer) return;
-    try {
-      await updateUserCustomer({
-        userId: auth.userId,
-        id: userCustomer.id,
-        body: { note },
-      }).unwrap();
-      methods.reset({ note });
-      toast.success("Заметка сохранена");
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось сохранить заметку"));
-    }
-  });
+  const saveNote = useCallback(
+    async (value: string) => {
+      if (!auth || !userCustomer) return;
+      try {
+        await updateUserCustomer({
+          userId: auth.userId,
+          id: userCustomer.id,
+          body: { note: value },
+        }).unwrap();
+        methods.resetField("note", {
+          defaultValue: value,
+          keepDirty: true,
+        });
+        toast.success("Заметка сохранена");
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось сохранить заметку"));
+      }
+    },
+    [auth, userCustomer, updateUserCustomer, methods],
+  );
 
   const handleBookAppointment = useCallback(() => {
     if (!customer) return;
     dispatch(clearSlotDraft());
     dispatch(setSelectedCustomer({ id: customer.id, name: customer.name }));
-    methods.reset(methods.getValues());
     router.push(Routers.app.createSlotFlow.selectService());
-  }, [customer, dispatch, methods]);
+  }, [customer, dispatch]);
 
   const handleOpenChat = async () => {
     if (!auth || !customer || !userCustomer) return;
@@ -193,12 +207,26 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
         userId: auth.userId,
         customerId: customer.id,
       }).unwrap();
-      methods.reset(methods.getValues());
       router.push(Routers.app.chat.room(room.id));
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Не удалось открыть чат"));
     }
   };
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const timer = setTimeout(() => {
+      saveNote(note);
+    }, NOTE_AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isDirty, note, saveNote]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    return navigation.addListener("beforeRemove", () => {
+      saveNote(note);
+    });
+  }, [isDirty, note, navigation, saveNote]);
 
   return (
     <FormProvider {...methods}>
@@ -376,35 +404,26 @@ const ClientDetail = ({ userCustomerId, customerId }: Props) => {
 
               <Divider className="my-6" />
 
-              <View className="gap-2">
-                <Typography
-                  weight="medium"
-                  className="text-caption text-neutral-500"
-                >
-                  Заметки
-                </Typography>
+              <View>
+                <View className="flex-row items-center justify-between mb-2">
+                  <Typography
+                    weight="medium"
+                    className="text-caption text-neutral-500"
+                  >
+                    Заметки
+                  </Typography>
+                  <ActivityIndicator
+                    size="small"
+                    animating={isSaving}
+                    color={colors.neutral[400]}
+                  />
+                </View>
                 <RhfTextField
                   name="note"
                   multiline
                   numberOfLines={4}
                   placeholder="Добавить заметку о клиенте"
                 />
-                {isDirty && (
-                  <Button
-                    title="Сохранить"
-                    onPress={handleSaveNote}
-                    loading={isSaving}
-                    disabled={isSaving}
-                    buttonClassName="w-full"
-                    rightIcon={
-                      <StSvg
-                        name="Save_fill"
-                        size={24}
-                        color={colors.neutral[0]}
-                      />
-                    }
-                  />
-                )}
               </View>
 
               <Card

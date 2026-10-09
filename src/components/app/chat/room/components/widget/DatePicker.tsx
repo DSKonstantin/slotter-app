@@ -77,6 +77,7 @@ const DatePicker = ({
 
   return (
     <Calendar
+      firstDay={1}
       current={currentMonth}
       markedDates={markedDates}
       onDayPress={handleDayPress}

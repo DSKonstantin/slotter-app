@@ -229,6 +229,7 @@ export const CalendarDatePicker = ({
             </View>
           ) : (
             <Calendar
+              firstDay={1}
               current={visibleMonth ?? value ?? today}
               onDayPress={(day) => handleDayPress(day.dateString)}
               onMonthChange={(month) => {

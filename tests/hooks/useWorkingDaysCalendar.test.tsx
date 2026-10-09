@@ -105,13 +105,55 @@ describe("useWorkingDaysCalendar", () => {
     expect(result.current.minDate).toBe(formatApiDate(new Date()));
   });
 
-  it("onMonthChange re-points the query at the new month without crashing", async () => {
+  it("marks the month around the visible one as disabled until data arrives", async () => {
+    const { result } = await renderWithStore(buildStore(), 1);
+    const keys = Object.keys(result.current.markedDates).sort();
+
+    expect(keys[0]).toBe("2026-06-01");
+    expect(keys[keys.length - 1]).toBe("2026-08-31");
+    expect(keys).toHaveLength(30 + 31 + 31);
+    expect(
+      Object.values(result.current.markedDates).every(
+        (mark) => mark.disabled === true,
+      ),
+    ).toBe(true);
+  });
+
+  it("onMonthChange re-points the query and the marked range at the new month", async () => {
     const { result } = await renderWithStore(buildStore(), 1);
 
     await act(async () => {
       result.current.onMonthChange({ year: 2026, month: 8 });
     });
 
-    expect(result.current.markedDates).toEqual({});
+    const keys = Object.keys(result.current.markedDates).sort();
+    expect(keys[0]).toBe("2026-07-01");
+    expect(keys[keys.length - 1]).toBe("2026-09-30");
+    expect(result.current.markedDates["2026-08-15"]).toEqual({
+      disabled: true,
+    });
+  });
+
+  it("onMonthChange keeps loaded days of the new month enabled", async () => {
+    const store = buildStore();
+    const augustStart = formatApiDate(new Date(2026, 7, 1));
+    const augustEnd = formatApiDate(new Date(2026, 7, 31));
+    const workingDay = formatApiDate(new Date(2026, 7, 10));
+    store.dispatch(
+      upsertApiQueryData(
+        "getWorkingDays",
+        { userId: 1, date_from: augustStart, date_to: augustEnd },
+        { [workingDay]: { id: 9, is_active: true } as WorkingDay },
+      ),
+    );
+    const { result } = await renderWithStore(store, 1);
+
+    await act(async () => {
+      result.current.onMonthChange({ year: 2026, month: 8 });
+    });
+
+    await waitFor(() =>
+      expect(result.current.markedDates[workingDay]).toEqual({}),
+    );
   });
 });
