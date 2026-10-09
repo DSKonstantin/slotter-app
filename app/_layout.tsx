@@ -1,10 +1,12 @@
 import { useSentryUserSync } from "@/src/services/sentry";
 import { useAppMetricaUserSync } from "@/src/hooks/useAppMetricaUserSync";
+import { useAppMetricaDirectChannelsSync } from "@/src/hooks/useAppMetricaDirectChannelsSync";
 import "../global.css";
 import "@/src/utils/languages/i18nextConfig";
 import "dayjs/locale/ru";
 import { useEffect, useRef } from "react";
-import { ThemeProvider } from "@react-navigation/native";
+import { SLOTTER_WIDGET_MOCK, slotterWidget } from "@/src/widget";
+import { ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
 import {
@@ -83,6 +85,7 @@ function InitialLayout() {
     isError: appVersionError,
     retry,
   } = useAppVersionBootstrap();
+  useAppMetricaDirectChannelsSync(appVersionReady);
   const {
     isAuthenticated,
     isOnboardingComplete,
@@ -109,6 +112,10 @@ function InitialLayout() {
       logoutOneSignal();
     }
   }, [authUser, authStatus]);
+
+  useEffect(() => {
+    slotterWidget.updateSnapshot(SLOTTER_WIDGET_MOCK);
+  }, []);
 
   if (!showApp) {
     return null;

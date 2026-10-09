@@ -7,19 +7,13 @@
     "icon": "./assets/images/app-icon/icon.png",
     "scheme": "slotter",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": [
-          "ru",
-          "en"
-        ],
+        "CFBundleLocalizations": ["ru", "en"],
         "NSUserNotificationsUsageDescription": "Разрешите $(PRODUCT_NAME) отправлять уведомления о записях, сообщениях и изменениях в расписании",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": [
-          "remote-notification"
-        ]
+        "UIBackgroundModes": ["remote-notification"]
       },
       "entitlements": {
         "aps-environment": "production"
@@ -34,7 +28,6 @@
         "monochromeImage": "./assets/images/app-icon/android-icon-monochrome.png"
       },
       "softwareKeyboardLayoutMode": "pan",
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.slotter.masters",
       "permissions": [
@@ -64,14 +57,8 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": [
-              "ru",
-              "en"
-            ],
-            "android": [
-              "ru",
-              "en"
-            ]
+            "ios": ["ru", "en"],
+            "android": ["ru", "en"]
           }
         }
       ],
@@ -108,6 +95,7 @@
         {
           "mode": "production",
           "disableLocation": true,
+          "iPhoneDeploymentTarget": "16.4",
           "smallIcons": ["./assets/notification/ic_stat_onesignal_default.png"]
         }
       ],
@@ -120,6 +108,24 @@
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true
           }
+        }
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar",
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "SlotterWidget",
+              "displayName": "Slotter сводка",
+              "description": "Клиенты и финансы за сегодня",
+              "ios": {
+                "supportedFamilies": ["systemMedium", "systemLarge"]
+              }
+            }
+          ]
         }
       ]
     ],

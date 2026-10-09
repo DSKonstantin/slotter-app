@@ -10,6 +10,10 @@ jest.mock("@appmetrica/react-native-analytics", () => ({
     activate: jest.fn(),
     reportEvent: jest.fn(),
     reportError: jest.fn(),
+    reportUserProfile: jest.fn(),
     setUserProfileID: jest.fn(),
   },
+  ...jest.requireActual(
+    "@appmetrica/react-native-analytics/lib/commonjs/public/userProfile",
+  ),
 }));

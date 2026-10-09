@@ -1,13 +1,13 @@
 import { Alert } from "react-native";
 import { useNavigation } from "expo-router";
-import { usePreventRemove } from "@react-navigation/native";
+import { usePreventRemove } from "expo-router/react-navigation";
 import { renderHook } from "@testing-library/react-native";
 import { useFormNavigationGuard } from "@/src/hooks/useFormNavigationGuard";
 
 jest.mock("expo-router", () => ({
   useNavigation: jest.fn(),
 }));
-jest.mock("@react-navigation/native", () => ({
+jest.mock("expo-router/react-navigation", () => ({
   usePreventRemove: jest.fn(),
 }));
 

@@ -279,7 +279,7 @@ export const RangeCalendar = ({
         )}
         {openPicker && (
           <Pressable
-            style={[StyleSheet.absoluteFillObject, { zIndex: 10 }]}
+            style={[StyleSheet.absoluteFill, { zIndex: 10 }]}
             onPress={() => setOpenPicker(null)}
           />
         )}

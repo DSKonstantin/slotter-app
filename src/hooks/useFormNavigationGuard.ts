@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import { useNavigation } from "expo-router";
-import { usePreventRemove } from "@react-navigation/native";
-import type { NavigationAction } from "@react-navigation/native";
+import {
+  usePreventRemove,
+  type NavigationAction,
+} from "expo-router/react-navigation";
 
 type Options = {
   title?: string;

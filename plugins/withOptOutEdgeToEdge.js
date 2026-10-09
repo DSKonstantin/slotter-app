@@ -1,4 +1,4 @@
-const { withAndroidStyles, AndroidConfig } = require("@expo/config-plugins");
+const { withAndroidStyles, AndroidConfig } = require("expo/config-plugins");
 
 module.exports = function withOptOutEdgeToEdge(config) {
   return withAndroidStyles(config, (config) => {

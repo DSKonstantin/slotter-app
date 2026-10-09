@@ -152,12 +152,15 @@ const TabMenu = () => {
     <BlurView
       intensity={5}
       tint="default"
-      className="absolute inset-0 justify-end"
-      style={{
-        paddingBottom: bottom + TAB_BAR_BOTTOM_GAP,
-        paddingLeft: leftInset + SCREEN_PADDING,
-        paddingRight: rightInset + SCREEN_PADDING,
-      }}
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          justifyContent: "flex-end",
+          paddingBottom: bottom + TAB_BAR_BOTTOM_GAP,
+          paddingLeft: leftInset + SCREEN_PADDING,
+          paddingRight: rightInset + SCREEN_PADDING,
+        },
+      ]}
     >
       <Pressable
         className="absolute inset-0"

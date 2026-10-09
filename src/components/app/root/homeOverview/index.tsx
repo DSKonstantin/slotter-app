@@ -53,6 +53,7 @@ const GLOW_COLORS = [
 ] as const;
 const COLLAPSED_INDEX = 0;
 const EXPANDED_INDEX = 1;
+const MIN_SNAP_POINT = 1;
 const HANDLE_GLYPH_WIDTH = 60;
 const HANDLE_GLYPH_HEIGHT = 11;
 const HANDLE_GLYPH_PATH =
@@ -153,7 +154,10 @@ const HomeOverview = ({
   }, [containerHeight, statsHeight, carouselHeight]);
 
   const snapPoints = useMemo(
-    () => [collapsedHeight, expandedHeight],
+    () => [
+      Math.max(collapsedHeight, MIN_SNAP_POINT),
+      Math.max(expandedHeight, MIN_SNAP_POINT),
+    ],
     [collapsedHeight, expandedHeight],
   );
 
@@ -249,7 +253,7 @@ const ContentBody = ({ timeChip }: ContentBodyProps) => {
       </Typography>
 
       <BottomSheetScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
       >
         <SpecialistHomeAssistant />

@@ -24,7 +24,10 @@ import { colors } from "@/src/styles/colors";
 import ServiceCategorySelect from "@/src/components/app/services/service/serviceForm/serviceCategorySelect";
 import BreakAfterField from "@/src/components/app/services/service/serviceForm/BreakAfterField";
 import CreateAdditionalService from "@/src/components/app/services/service/createAdditionalService";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  KeyboardAwareScrollView,
+  type KeyboardAwareScrollViewRef,
+} from "react-native-keyboard-controller";
 import { BOTTOM_OFFSET } from "@/src/constants/tabs";
 import { useRefresh } from "@/src/hooks/useRefresh";
 
@@ -57,7 +60,7 @@ const ServiceFormBody = ({
     formState: { isDirty },
   } = useFormContext();
   const { refreshing, onRefresh } = useRefresh(refetch ?? (() => {}));
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null);
 
   const [infoVisible, setInfoVisible] = useState(false);
 
@@ -81,7 +84,7 @@ const ServiceFormBody = ({
   return (
     <KeyboardAwareScrollView
       ref={scrollRef}
-      className="flex-1"
+      style={{ flex: 1 }}
       bottomOffset={BOTTOM_OFFSET}
       contentContainerStyle={{
         paddingTop: insets.topInset,

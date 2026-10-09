@@ -94,7 +94,7 @@ const ImageViewer = ({
       transparent
       presentationStyle="overFullScreen"
     >
-      <GestureHandlerRootView className="flex-1">
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <View className="flex-1 bg-black">
           {headerNode}
           <Gallery

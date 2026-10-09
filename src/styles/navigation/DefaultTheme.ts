@@ -1,4 +1,4 @@
-import { DefaultTheme as BaseDefaultTheme } from "@react-navigation/native";
+import { DefaultTheme as BaseDefaultTheme } from "expo-router/react-navigation";
 
 const DefaultTheme = {
   ...BaseDefaultTheme,

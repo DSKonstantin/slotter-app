@@ -375,7 +375,7 @@ const NotificationStoriesModal = ({
       onShow={handleAnimateIn}
       onRequestClose={handleClose}
     >
-      <GestureHandlerRootView className="flex-1">
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <Animated.View
           style={[
             { flex: 1, backgroundColor: colors.background.surface },

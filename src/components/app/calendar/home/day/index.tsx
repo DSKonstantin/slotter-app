@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
-import { Platform, RefreshControl, View } from "react-native";
+import { Platform, RefreshControl, ScrollView, View } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -37,8 +37,7 @@ import { isToday } from "@/src/utils/date/isToday";
 const DayCalendarView = ({ bottomInset }: { bottomInset: number }) => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const scrollViewRef =
-    useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const pendingScrollY = useRef<number | null>(null);
   const scrollY = useSharedValue(0);
   const headerTranslateY = useSharedValue(0);

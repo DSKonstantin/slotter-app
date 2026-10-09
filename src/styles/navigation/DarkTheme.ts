@@ -1,4 +1,4 @@
-import { DarkTheme as BaseDarkTheme } from "@react-navigation/native";
+import { DarkTheme as BaseDarkTheme } from "expo-router/react-navigation";
 
 const DarkTheme = {
   ...BaseDarkTheme,

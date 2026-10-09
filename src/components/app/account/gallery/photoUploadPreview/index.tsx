@@ -59,7 +59,7 @@ export function PhotoUploadPreview({
 
   return (
     <Modal animationType="slide" statusBarTranslucent>
-      <GestureHandlerRootView className="flex-1">
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <AppToasts />
         {cropIndex !== null ? (
           <CropView

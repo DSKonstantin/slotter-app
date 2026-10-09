@@ -72,7 +72,7 @@ export function GalleryViewer({
       transparent
       presentationStyle="overFullScreen"
     >
-      <GestureHandlerRootView className="flex-1">
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <AppToasts />
         {cropVisible && current ? (
           <CropView
